@@ -27,6 +27,11 @@ html, body{
   flex-direction:column;
 }
 
+.list{
+  -webkit-user-select:none;
+  user-select:none;
+}
+
 
 
 /* HEADER AREA */

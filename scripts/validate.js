@@ -3,6 +3,7 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const vm = require("vm");
+const zlib = require("zlib");
 const { EventEmitter } = require("events");
 
 const { copyLegacyData } = require("../src/main/data-migration");
@@ -49,8 +50,50 @@ const packageJson = JSON.parse(fs.readFileSync(path.join(root, "package.json"), 
 const stations = validateStations(JSON.parse(fs.readFileSync(path.join(defaultsDir, "stations.json"), "utf8")));
 const groups = validateGroups(JSON.parse(fs.readFileSync(path.join(defaultsDir, "groups.json"), "utf8")));
 
+function assertValidHeaderPng(filePath) {
+  const png = fs.readFileSync(filePath);
+  const signature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+  assert.ok(png.subarray(0, 8).equals(signature), "Header artwork must be a PNG");
+
+  let offset = 8;
+  let ihdr = null;
+  const idat = [];
+  while (offset + 12 <= png.length) {
+    const length = png.readUInt32BE(offset);
+    const type = png.toString("ascii", offset + 4, offset + 8);
+    const dataStart = offset + 8;
+    const dataEnd = dataStart + length;
+    assert.ok(dataEnd + 4 <= png.length, `Truncated PNG chunk: ${type}`);
+    const data = png.subarray(dataStart, dataEnd);
+    if (type === "IHDR") ihdr = data;
+    if (type === "IDAT") idat.push(data);
+    offset = dataEnd + 4;
+    if (type === "IEND") break;
+  }
+
+  assert.ok(ihdr && ihdr.length === 13, "Header PNG must contain IHDR data");
+  assert.ok(idat.length > 0, "Header PNG must contain image data");
+  const width = ihdr.readUInt32BE(0);
+  const height = ihdr.readUInt32BE(4);
+  const bitDepth = ihdr[8];
+  const colorType = ihdr[9];
+  const interlace = ihdr[12];
+  assert.strictEqual(bitDepth, 8, "Header PNG must use 8-bit channels");
+  assert.strictEqual(colorType, 6, "Header PNG must use RGBA color");
+  assert.strictEqual(interlace, 0, "Header PNG must be non-interlaced");
+
+  const scanlines = zlib.inflateSync(Buffer.concat(idat));
+  const rowSize = (width * 4) + 1;
+  assert.strictEqual(scanlines.length, rowSize * height, "Header PNG scanline size is invalid");
+  for (let y = 0; y < height; y += 1) {
+    assert.ok(scanlines[y * rowSize] <= 4, `Header PNG has an invalid filter on row ${y}`);
+  }
+}
+
+assertValidHeaderPng(path.join(root, "assets", "logo.png"));
+
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.2.3");
+assert.strictEqual(packageJson.version, "0.2.4");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -596,6 +639,7 @@ assert.ok(stylesSource.includes(".station-info"));
 assert.ok(stylesSource.includes("column-gap:10px"));
 assert.ok(stylesSource.includes("row-gap:0"));
 assert.ok(stylesSource.includes(".subgroup-header"));
+assert.ok(stylesSource.includes("user-select:none"));
 const preloadSource = fs.readFileSync(path.join(root, "src", "preload.js"), "utf8");
 assert.ok(preloadSource.includes('ipcRenderer.invoke("sidebar:toggle")'));
 assert.ok(preloadSource.includes('subscribe("player:station-changed"'));
@@ -678,7 +722,14 @@ assert.ok(rendererSource.includes("onListeningHistoryChanged"));
 assert.ok(rendererSource.includes("if (sidebarModeEnabled) queueRender()"));
 assert.ok(rendererSource.includes("event.shiftKey"));
 assert.ok(rendererSource.includes("event.ctrlKey"));
-assert.ok(rendererSource.includes("event.altKey"));
+assert.ok(rendererSource.includes("event.ctrlKey && event.shiftKey"));
+assert.ok(rendererSource.includes('row.addEventListener("pointerdown"'));
+assert.ok(!rendererSource.includes("event.altKey"));
+assert.ok(
+  rendererSource.indexOf("event.ctrlKey && event.shiftKey") <
+  rendererSource.indexOf("if (event.ctrlKey)"),
+  "Ctrl+Shift-click must be handled before Ctrl-click"
+);
 assert.ok(rendererSource.includes("station.hasPreRoll = !station.hasPreRoll"));
 assert.ok(rendererSource.includes("editStation(row.dataset.id)"));
 assert.ok(rendererSource.includes("Detecting bitrate"));
@@ -913,7 +964,7 @@ async function validateMediaControls() {
 }
 
 validateMediaControls().then(() => {
-console.log("WaveDeck validation passed: v0.2.3 Presets/Favorites migration, modifier-click controls, pre-roll warnings, collapsed groups, Expand All, preset media keys, listening history, station details, subgroups, Sidebar Mode, notepad, and panel launcher verified.");
+console.log("WaveDeck validation passed: v0.2.4 restored header, Cinnamon-safe modifier-click controls, selection prevention, presets/favorites, pre-roll warnings, collapsed groups, Expand All, preset media keys, listening history, station details, subgroups, Sidebar Mode, notepad, and panel launcher verified.");
 }).catch((error) => {
   console.error(error);
   process.exitCode = 1;

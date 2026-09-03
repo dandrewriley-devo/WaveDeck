@@ -158,7 +158,7 @@ function createStationRow(station, { presetSection = false, listenedSeconds = 0 
   row.dataset.id = String(station.id ?? "");
   row.dataset.url = String(station.url ?? "");
   row.dataset.name = String(station.name ?? "");
-  row.title = "Click to play • Ctrl-click: Preset • Alt-click: pre-roll • Shift-click: edit";
+  row.title = "Click to play • Ctrl-click: Preset • Ctrl+Shift-click: pre-roll • Shift-click: edit";
 
   const starClasses = ["favBtn"];
   if (station.preset) starClasses.push("preset");
@@ -519,7 +519,24 @@ function bindHandlers() {
       });
     }
 
+    row.addEventListener("pointerdown", (event) => {
+      if (event.ctrlKey || event.shiftKey) event.preventDefault();
+    });
+
     row.addEventListener("click", async (event) => {
+      if (event.ctrlKey && event.shiftKey) {
+        event.preventDefault();
+        try {
+          const stations = await window.wavedeck.getStations();
+          const station = stations.find((item) => String(item.id) === row.dataset.id);
+          if (!station) return;
+          station.hasPreRoll = !station.hasPreRoll;
+          await window.wavedeck.saveStations(stations);
+        } catch (error) {
+          nowPlaying.textContent = `Could not update pre-roll marker: ${error.message}`;
+        }
+        return;
+      }
       if (event.ctrlKey) {
         event.preventDefault();
         try {
@@ -530,19 +547,6 @@ function bindHandlers() {
           await window.wavedeck.saveStations(stations);
         } catch (error) {
           nowPlaying.textContent = `Could not update preset: ${error.message}`;
-        }
-        return;
-      }
-      if (event.altKey) {
-        event.preventDefault();
-        try {
-          const stations = await window.wavedeck.getStations();
-          const station = stations.find((item) => String(item.id) === row.dataset.id);
-          if (!station) return;
-          station.hasPreRoll = !station.hasPreRoll;
-          await window.wavedeck.saveStations(stations);
-        } catch (error) {
-          nowPlaying.textContent = `Could not update pre-roll marker: ${error.message}`;
         }
         return;
       }
