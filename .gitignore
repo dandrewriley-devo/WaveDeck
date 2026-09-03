@@ -1,0 +1,10 @@
+node_modules/
+dist/
+release/
+*.AppImage
+*.zip
+WaveDeck-Data/
+WaveDeckSB-Data/
+.DS_Store
+*.log
+npm-debug.log*
