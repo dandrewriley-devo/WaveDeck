@@ -14,7 +14,7 @@
     <header class="header">
       <img class="logo" src="../../assets/logo.png" alt="WaveDeck logo">
       <div class="station-name">WaveDeck</div>
-      <div class="now-playing" id="nowPlaying">Now Playing: (nothing yet)</div>
+      <div class="now-playing" id="nowPlaying">Warming up the airwaves...</div>
 
       <div class="transport">
         <button id="muteBtn" aria-label="Toggle mute" title="Mute">
@@ -45,6 +45,23 @@
 
     <footer class="footer">
       <span id="appVersion" class="footer-version" aria-label="WaveDeck version"></span>
+      <button id="presetSectionToggleBtn" class="active" type="button" aria-label="Hide Presets"
+              aria-pressed="true" title="Presets">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="m12 3 2.78 5.63 6.22.9-4.5 4.39 1.06 6.2L12 17.2l-5.56 2.92 1.06-6.2L3 9.53l6.22-.9L12 3Z"
+                fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <button id="mostPlayedSectionToggleBtn" type="button" aria-label="Show Most Played"
+              aria-pressed="false" title="Most Played">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 5h16M3 10h5M3 15h3" fill="none" stroke="currentColor"
+                stroke-width="1.8" stroke-linecap="round"/>
+          <circle cx="15.5" cy="14.5" r="5.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+          <path d="M15.5 11.5v3.2l2.2 1.4" fill="none" stroke="currentColor"
+                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
       <button id="sidebarModeBtn" type="button" aria-label="Turn Sidebar Mode on"
               aria-pressed="false" title="Sidebar Mode">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">

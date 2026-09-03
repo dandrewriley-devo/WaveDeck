@@ -56,13 +56,16 @@ class CinnamonMediaKeys {
     }
   }
 
-  async claim() {
-    if (!this.interface) return false;
+  async claim({ reconnect = false } = {}) {
+    if (!this.interface) return reconnect ? this.start() : false;
     if (this.claimPromise) return this.claimPromise;
 
     this.claimPromise = Promise.resolve(
       this.interface.GrabMediaPlayerKeys(this.applicationName, 0)
-    ).then(() => true).finally(() => {
+    ).then(() => true).catch((error) => {
+      this.#disconnect();
+      throw error;
+    }).finally(() => {
       this.claimPromise = null;
     });
     return this.claimPromise;
@@ -87,6 +90,11 @@ class CinnamonMediaKeys {
   }
 
   #disconnect() {
+    if (this.interface && this.signalHandler) {
+      try { this.interface.off("MediaPlayerKeyPressed", this.signalHandler); } catch {}
+    }
+    this.interface = null;
+    this.signalHandler = null;
     try { this.bus?.disconnect(); } catch {}
     this.bus = null;
   }

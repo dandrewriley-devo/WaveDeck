@@ -33,6 +33,7 @@ const PROJECT_ROOT = path.resolve(__dirname, "..", "..");
 const FLOATING_NATIVE_TITLE = "WaveDeck";
 const SIDEBAR_NATIVE_TITLE = "WaveDeck Sidebar";
 const SIDEBAR_REALIZE_DELAY_MS = 150;
+const MEDIA_KEY_RECLAIM_INTERVAL_MS = 15_000;
 const PLAYBACK_HEARTBEAT_MS = 10_000;
 
 let mainWindow = null;
@@ -44,9 +45,12 @@ let mprisService = null;
 let cinnamonMediaKeys = null;
 let listeningHistory = null;
 let playbackHeartbeat = null;
+let mediaKeyReclaimTimer = null;
+let mediaKeyReclaimEnabled = false;
 let sidebarApplied = false;
 let sidebarTransitioning = false;
 let floatingBounds = null;
+let sectionVisibility = { presets: true, mostPlayed: false };
 const startupWarnings = [];
 
 function getDataDir() {
@@ -142,9 +146,20 @@ function broadcastPlayerStatus(status = player?.getStatus()) {
 function broadcastStationChanged(station) {
   sendToMain("player:station-changed", station);
   mprisService?.update(mediaController?.getStatus());
-  void cinnamonMediaKeys?.claim().catch((error) => {
+  reclaimMediaKeys();
+}
+
+function reclaimMediaKeys() {
+  if (!mediaKeyReclaimEnabled) return;
+  void cinnamonMediaKeys?.claim({ reconnect: true }).catch((error) => {
     console.warn(`Could not reclaim Cinnamon media keys: ${error.message}`);
   });
+}
+
+function startMediaKeyReclaim() {
+  if (mediaKeyReclaimTimer) clearInterval(mediaKeyReclaimTimer);
+  mediaKeyReclaimTimer = setInterval(reclaimMediaKeys, MEDIA_KEY_RECLAIM_INTERVAL_MS);
+  mediaKeyReclaimTimer.unref?.();
 }
 
 function startPlaybackHeartbeat() {
@@ -173,9 +188,7 @@ function createSecureWindow(options, { showOnReady = true } = {}) {
   window.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
   window.webContents.on("will-navigate", (event) => event.preventDefault());
   window.on("focus", () => {
-    void cinnamonMediaKeys?.claim().catch((error) => {
-      console.warn(`Could not reclaim Cinnamon media keys: ${error.message}`);
-    });
+    reclaimMediaKeys();
   });
   if (showOnReady) window.once("ready-to-show", () => window.show());
   return window;
@@ -471,6 +484,15 @@ function installIpcHandlers() {
 
   ipcMain.handle("listening:get", () => listeningHistory.getStats());
   ipcMain.handle("listening:reset", () => listeningHistory.reset());
+  ipcMain.handle("sections:get-state", () => ({ ...sectionVisibility }));
+  ipcMain.handle("sections:set-state", (_event, state = {}) => {
+    sectionVisibility = {
+      presets: typeof state.presets === "boolean" ? state.presets : sectionVisibility.presets,
+      mostPlayed: typeof state.mostPlayed === "boolean" ? state.mostPlayed : sectionVisibility.mostPlayed
+    };
+    sendToAll("sections:state-changed", { ...sectionVisibility });
+    return { ...sectionVisibility };
+  });
 
   ipcMain.handle("launcher:get-status", () => getDesktopLauncherState());
   ipcMain.handle("launcher:install", () => {
@@ -583,16 +605,14 @@ if (!hasSingleInstanceLock) {
         mainWindow.focus();
       },
       onWarning: (message) => {
-        startupWarnings.push(message);
-        sendToAll("app:warning", message);
+        console.warn(message);
       }
     });
 
     cinnamonMediaKeys = new CinnamonMediaKeys({
       controller: mediaController,
       onWarning: (message) => {
-        startupWarnings.push(message);
-        sendToAll("app:warning", message);
+        console.warn(message);
       }
     });
 
@@ -612,12 +632,17 @@ if (!hasSingleInstanceLock) {
 
     await mprisService.start();
     await cinnamonMediaKeys.start();
+    mediaKeyReclaimEnabled = true;
+    startMediaKeyReclaim();
   });
 }
 
 app.on("before-quit", () => {
   if (playbackHeartbeat) clearInterval(playbackHeartbeat);
   playbackHeartbeat = null;
+  if (mediaKeyReclaimTimer) clearInterval(mediaKeyReclaimTimer);
+  mediaKeyReclaimTimer = null;
+  mediaKeyReclaimEnabled = false;
   listeningHistory?.close();
   cinnamonMediaKeys?.close();
   mprisService?.close();

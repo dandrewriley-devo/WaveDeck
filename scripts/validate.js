@@ -93,7 +93,7 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.2.4");
+assert.strictEqual(packageJson.version, "0.2.5");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -619,11 +619,16 @@ assert.ok(cinnamonCalls.some((call) => (
 )));
 
 const indexHtml = fs.readFileSync(path.join(root, "src", "renderer", "index.html"), "utf8");
+assert.ok(indexHtml.includes('id="presetSectionToggleBtn"'));
+assert.ok(indexHtml.includes('id="mostPlayedSectionToggleBtn"'));
 assert.ok(indexHtml.includes('id="sidebarModeBtn"'));
 assert.ok(indexHtml.includes('id="notepadToggleBtn"'));
 assert.ok(indexHtml.includes('id="notepadPanel"'));
 assert.ok(indexHtml.includes('id="notepadText"'));
 assert.ok(indexHtml.includes('id="appVersion"'));
+assert.ok(indexHtml.includes("Warming up the airwaves..."));
+assert.ok(indexHtml.indexOf('id="presetSectionToggleBtn"') < indexHtml.indexOf('id="sidebarModeBtn"'));
+assert.ok(indexHtml.indexOf('id="mostPlayedSectionToggleBtn"') < indexHtml.indexOf('id="sidebarModeBtn"'));
 assert.ok(indexHtml.indexOf('id="sidebarModeBtn"') < indexHtml.indexOf('id="openSettingsBtn"'));
 assert.ok(indexHtml.indexOf('id="notepadToggleBtn"') < indexHtml.indexOf('id="openSettingsBtn"'));
 const stylesSource = fs.readFileSync(path.join(root, "src", "renderer", "styles.css"), "utf8");
@@ -650,6 +655,9 @@ assert.ok(preloadSource.includes('ipcRenderer.invoke("launcher:install"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("launcher:remove"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("listening:get"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("listening:reset"'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("sections:get-state"'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("sections:set-state", state)'));
+assert.ok(preloadSource.includes('subscribe("sections:state-changed"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("settings:open", stationId)'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("subgroups:get"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("subgroups:rename"'));
@@ -692,6 +700,10 @@ assert.ok(mainSource.includes("new MprisService"));
 assert.ok(mainSource.includes("new CinnamonMediaKeys"));
 assert.ok(mainSource.includes("await mprisService.start()"));
 assert.ok(mainSource.includes("await cinnamonMediaKeys.start()"));
+assert.ok(mainSource.includes("MEDIA_KEY_RECLAIM_INTERVAL_MS = 15_000"));
+assert.ok(mainSource.includes("setInterval(reclaimMediaKeys, MEDIA_KEY_RECLAIM_INTERVAL_MS)"));
+assert.ok(mainSource.includes("claim({ reconnect: true })"));
+assert.ok(mainSource.includes("clearInterval(mediaKeyReclaimTimer)"));
 assert.ok(mainSource.includes("PLAYBACK_HEARTBEAT_MS = 10_000"));
 assert.ok(mainSource.includes("player.refreshPlaybackState()"));
 assert.ok(mainSource.includes('ipcMain.handle("notepad:get"'));
@@ -701,6 +713,10 @@ assert.ok(mainSource.includes('ipcMain.handle("launcher:install"'));
 assert.ok(mainSource.includes('ipcMain.handle("launcher:remove"'));
 assert.ok(mainSource.includes('ipcMain.handle("listening:get"'));
 assert.ok(mainSource.includes('ipcMain.handle("listening:reset"'));
+assert.ok(mainSource.includes('let sectionVisibility = { presets: true, mostPlayed: false }'));
+assert.ok(mainSource.includes('ipcMain.handle("sections:get-state"'));
+assert.ok(mainSource.includes('ipcMain.handle("sections:set-state"'));
+assert.ok(mainSource.includes('sendToAll("sections:state-changed"'));
 assert.ok(mainSource.includes('ipcMain.handle("subgroups:get"'));
 assert.ok(mainSource.includes('ipcMain.handle("subgroups:rename"'));
 assert.ok(mainSource.includes('ipcMain.handle("player:play-station"'));
@@ -716,10 +732,19 @@ assert.ok(rendererSource.includes('createSectionTitle("Presets"'));
 assert.ok(rendererSource.includes("const groups = buildGroupsInOrder(stations, groupOrder)"));
 assert.ok(rendererSource.includes('id: "toggleAllGroupsBtn"'));
 assert.ok(rendererSource.includes("renderedGroupNames.forEach"));
-assert.ok(rendererSource.includes('createSectionTitle("Most Played")'));
+assert.ok(rendererSource.includes('"Most Played",\n      mostListened.length'));
 assert.ok(rendererSource.includes("const MOST_LISTENED_MINIMUM_SECONDS = 5 * 60"));
+assert.ok(rendererSource.includes("mostPlayedSectionVisible"));
+assert.ok(rendererSource.includes("presetSectionVisible"));
+assert.ok(rendererSource.includes(".slice(0, 10)"));
+assert.ok(rendererSource.includes('setAttribute("aria-label", presets ? "Hide Presets" : "Show Presets")'));
+assert.ok(rendererSource.includes('setAttribute("aria-label", mostPlayed ? "Hide Most Played" : "Show Most Played")'));
+assert.ok(rendererSource.includes('getSectionVisibility()'));
+assert.ok(rendererSource.includes('setSectionVisibility({'));
+assert.ok(rendererSource.includes('onSectionVisibilityChanged(setSectionVisibilityUi)'));
+assert.ok(rendererSource.includes("Warming up the airwaves..."));
 assert.ok(rendererSource.includes("onListeningHistoryChanged"));
-assert.ok(rendererSource.includes("if (sidebarModeEnabled) queueRender()"));
+assert.ok(rendererSource.includes("if (mostPlayedSectionVisible) queueRender()"));
 assert.ok(rendererSource.includes("event.shiftKey"));
 assert.ok(rendererSource.includes("event.ctrlKey"));
 assert.ok(rendererSource.includes("event.ctrlKey && event.shiftKey"));
@@ -741,6 +766,8 @@ assert.ok(settingsSource.includes("addSubgroup"));
 assert.ok(settingsSource.includes("renameSubgroup"));
 assert.ok(settingsSource.includes("moveSubgroup"));
 assert.ok(settingsSource.includes("deleteSubgroup"));
+assert.ok(settingsSource.includes('stationsTbody.querySelectorAll("tr[data-station-id]")'));
+assert.ok(settingsSource.includes('row.querySelector(".listened-total")'));
 
 for (const file of [
   "src/main/main.js",
@@ -912,10 +939,15 @@ async function validateMediaControls() {
       super();
       this.grabs = [];
       this.releases = [];
+      this.failNextGrab = false;
     }
 
     async GrabMediaPlayerKeys(application, time) {
       this.grabs.push([application, time]);
+      if (this.failNextGrab) {
+        this.failNextGrab = false;
+        throw new Error("media-key service connection lost");
+      }
     }
 
     async ReleaseMediaPlayerKeys(application) {
@@ -957,14 +989,19 @@ async function validateMediaControls() {
   assert.strictEqual(controller.getCurrentStation().name, "Beta");
   await cinnamonMediaKeys.claim();
   assert.strictEqual(mockMediaKeys.grabs.length, 2);
+  mockMediaKeys.failNextGrab = true;
+  await assert.rejects(cinnamonMediaKeys.claim(), /connection lost/);
+  assert.strictEqual(disconnectCount, 1);
+  assert.strictEqual(await cinnamonMediaKeys.claim({ reconnect: true }), true);
+  assert.strictEqual(mockMediaKeys.grabs.length, 4);
   cinnamonMediaKeys.close();
   await new Promise((resolve) => setImmediate(resolve));
   assert.deepStrictEqual(mockMediaKeys.releases, ["WaveDeck-test"]);
-  assert.strictEqual(disconnectCount, 1);
+  assert.strictEqual(disconnectCount, 2);
 }
 
 validateMediaControls().then(() => {
-console.log("WaveDeck validation passed: v0.2.4 restored header, Cinnamon-safe modifier-click controls, selection prevention, presets/favorites, pre-roll warnings, collapsed groups, Expand All, preset media keys, listening history, station details, subgroups, Sidebar Mode, notepad, and panel launcher verified.");
+console.log("WaveDeck validation passed: v0.2.5 startup messaging, section toggles, ten-station history, focus-safe Settings updates, periodic media-key reclamation and reconnection, station details, Sidebar Mode, notepad, and panel launcher verified.");
 }).catch((error) => {
   console.error(error);
   process.exitCode = 1;

@@ -8,10 +8,10 @@ WaveDeck is a lightweight, portable internet-radio player built for Linux Mint C
 
 - Portable AppImage with station data stored beside the application
 - Linux Mint Cinnamon Sidebar Mode
-- Presets with drag-and-drop ordering and media-key navigation
+- Toggleable Presets with drag-and-drop ordering and media-key navigation
 - Independent Favorites and pre-roll markers
-- Keyboard media-key controls
-- Most Played listening statistics
+- Keyboard media-key controls with periodic Cinnamon reclamation
+- Toggleable ten-station Most Played listening statistics
 - Groups and optional subgroups
 - Shift-click station editing and Ctrl+Shift-click pre-roll marking
 - Country, description, and best-effort bitrate information

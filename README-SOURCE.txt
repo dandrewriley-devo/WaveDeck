@@ -1,5 +1,5 @@
 WaveDeck Portable Linux source package
-Version 0.2.4
+Version 0.2.5
 
 WaveDeck is a portable Linux Mint internet-radio player. The sidebar toggle asks
 Cinnamon to identify the Meta.Window's current monitor, read its work area,
@@ -115,6 +115,17 @@ text selection during modified station clicks, and replaces Cinnamon-conflicted
 Alt-click pre-roll marking with Ctrl+Shift-click. Portable ZIP releases again
 extract into the stable WaveDeck Portable Linux folder so an update merges into
 the existing location while leaving WaveDeck-Data in place.
+
+Version 0.2.5 adds independent footer toggles for Presets and Most Played.
+Presets is visible and Most Played is hidden on each fresh launch; both choices
+remain in effect when switching window modes during the running session. Most
+Played is available in either window mode and lists up to ten qualifying
+stations. WaveDeck now opens with "Warming up the airwaves..." and keeps
+non-fatal media-key integration diagnostics out of the player status line.
+Listening-time updates patch only their displayed totals in Settings instead
+of rebuilding the station table and interrupting an open editor. While running,
+WaveDeck also reclaims Cinnamon's media keys every 15 seconds and reconnects to
+the Cinnamon media-key service if that direct integration was interrupted.
 
 Build requirements:
 - 64-bit Linux

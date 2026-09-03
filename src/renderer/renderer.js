@@ -5,6 +5,8 @@ const muteIcon = document.getElementById("muteIcon");
 const stopBtn = document.getElementById("stopBtn");
 const volumeSlider = document.getElementById("volSlider");
 const openSettingsBtn = document.getElementById("openSettingsBtn");
+const presetSectionToggleBtn = document.getElementById("presetSectionToggleBtn");
+const mostPlayedSectionToggleBtn = document.getElementById("mostPlayedSectionToggleBtn");
 const sidebarModeBtn = document.getElementById("sidebarModeBtn");
 const notepadToggleBtn = document.getElementById("notepadToggleBtn");
 const notepadPanel = document.getElementById("notepadPanel");
@@ -20,6 +22,8 @@ let notepadSaveTimer = null;
 let notepadDirty = false;
 let notepadOpen = false;
 let sidebarModeEnabled = false;
+let presetSectionVisible = true;
+let mostPlayedSectionVisible = false;
 let draggedPresetId = null;
 let listeningHistory = { version: 1, stations: {} };
 let currentPlayerStatus = null;
@@ -118,6 +122,23 @@ function setSidebarUi(state) {
   notepadToggleBtn.hidden = !enabled;
   notepadToggleBtn.disabled = !enabled;
   if (!enabled) setNotepadOpen(false);
+  if (changed) queueRender();
+}
+
+function setSectionVisibilityUi(state = {}) {
+  const presets = state.presets !== false;
+  const mostPlayed = state.mostPlayed === true;
+  const changed = presetSectionVisible !== presets || mostPlayedSectionVisible !== mostPlayed;
+  presetSectionVisible = presets;
+  mostPlayedSectionVisible = mostPlayed;
+
+  presetSectionToggleBtn.classList.toggle("active", presets);
+  presetSectionToggleBtn.setAttribute("aria-pressed", String(presets));
+  presetSectionToggleBtn.setAttribute("aria-label", presets ? "Hide Presets" : "Show Presets");
+  mostPlayedSectionToggleBtn.classList.toggle("active", mostPlayed);
+  mostPlayedSectionToggleBtn.setAttribute("aria-pressed", String(mostPlayed));
+  mostPlayedSectionToggleBtn.setAttribute("aria-label", mostPlayed ? "Hide Most Played" : "Show Most Played");
+
   if (changed) queueRender();
 }
 
@@ -309,12 +330,12 @@ async function renderAll() {
 
   const presets = stations.filter((station) => station.preset).sort(sortPresets);
   const stationStats = listeningHistory.stations || {};
-  const mostListened = sidebarModeEnabled
+  const mostListened = mostPlayedSectionVisible
     ? stations
       .map((station) => ({ station, seconds: Number(stationStats[station.id]?.seconds) || 0 }))
       .filter((item) => item.seconds >= MOST_LISTENED_MINIMUM_SECONDS)
       .sort((a, b) => b.seconds - a.seconds || sortByName(a.station, b.station))
-      .slice(0, 5)
+      .slice(0, 10)
     : [];
   const groups = buildGroupsInOrder(stations, groupOrder);
   renderedGroupNames = groups.map((group) => group.name);
@@ -337,22 +358,28 @@ async function renderAll() {
   }
 
   listEl.replaceChildren();
-  if (sidebarModeEnabled && mostListened.length) {
-    listEl.append(createSectionTitle("Most Played"));
-    const mostListenedBlock = element("div", "section-block most-listened-block");
-    mostListenedBlock.append(...mostListened.map(({ station, seconds }) => (
-      createStationRow(station, { listenedSeconds: seconds })
-    )));
-    listEl.append(mostListenedBlock);
+  if (mostPlayedSectionVisible) {
+    listEl.append(createSectionTitle(
+      "Most Played",
+      mostListened.length ? "" : "Stations appear here after five minutes."
+    ));
+    if (mostListened.length) {
+      const mostListenedBlock = element("div", "section-block most-listened-block");
+      mostListenedBlock.append(...mostListened.map(({ station, seconds }) => (
+        createStationRow(station, { listenedSeconds: seconds })
+      )));
+      listEl.append(mostListenedBlock);
+    }
   }
-  listEl.append(createSectionTitle("Presets", presets.length ? "" : "None yet — Ctrl-click a station to add."));
-
-  if (presets.length) {
-    const block = element("div", "section-block");
-    block.append(...presets.map((station) => createStationRow(station, { presetSection: true })));
-    listEl.append(block);
-  } else {
-    listEl.append(element("div", "placeholder", "No presets yet."));
+  if (presetSectionVisible) {
+    listEl.append(createSectionTitle("Presets", presets.length ? "" : "None yet — Ctrl-click a station to add."));
+    if (presets.length) {
+      const block = element("div", "section-block");
+      block.append(...presets.map((station) => createStationRow(station, { presetSection: true })));
+      listEl.append(block);
+    } else {
+      listEl.append(element("div", "placeholder", "No presets yet."));
+    }
   }
 
   const allExpanded = collapsedGroups.size === 0 && collapsedSubgroups.size === 0;
@@ -657,6 +684,32 @@ openSettingsBtn.addEventListener("click", async () => {
   }
 });
 
+presetSectionToggleBtn.addEventListener("click", async () => {
+  presetSectionToggleBtn.disabled = true;
+  try {
+    setSectionVisibilityUi(await window.wavedeck.setSectionVisibility({
+      presets: !presetSectionVisible
+    }));
+  } catch (error) {
+    nowPlaying.textContent = `Could not toggle Presets: ${error.message}`;
+  } finally {
+    presetSectionToggleBtn.disabled = false;
+  }
+});
+
+mostPlayedSectionToggleBtn.addEventListener("click", async () => {
+  mostPlayedSectionToggleBtn.disabled = true;
+  try {
+    setSectionVisibilityUi(await window.wavedeck.setSectionVisibility({
+      mostPlayed: !mostPlayedSectionVisible
+    }));
+  } catch (error) {
+    nowPlaying.textContent = `Could not toggle Most Played: ${error.message}`;
+  } finally {
+    mostPlayedSectionToggleBtn.disabled = false;
+  }
+});
+
 sidebarModeBtn.addEventListener("click", async () => {
   sidebarModeBtn.disabled = true;
   try {
@@ -727,24 +780,27 @@ window.wavedeck.onPlayerStatus((status) => {
 window.wavedeck.onSidebarState(setSidebarUi);
 window.wavedeck.onListeningHistoryChanged((history) => {
   listeningHistory = history || { version: 1, stations: {} };
-  if (sidebarModeEnabled) queueRender();
+  if (mostPlayedSectionVisible) queueRender();
 });
+
+window.wavedeck.onSectionVisibilityChanged(setSectionVisibilityUi);
 
 window.wavedeck.onStationsChanged(queueRender);
 window.wavedeck.onGroupsChanged(queueRender);
 window.wavedeck.onSubgroupsChanged(queueRender);
 window.wavedeck.onWarning((warning) => {
-  if (warning) nowPlaying.textContent = warning;
+  if (warning && !/media[- ]key/i.test(warning)) nowPlaying.textContent = warning;
 });
 
 (async function initialize() {
-  nowPlaying.textContent = "Starting playback engine…";
+  nowPlaying.textContent = "Warming up the airwaves...";
   setMuteUi(false);
   await renderAll();
   try {
-    const [status, sidebarState, savedNotepad, info] = await Promise.all([
+    const [status, sidebarState, sectionVisibility, savedNotepad, info] = await Promise.all([
       window.wavedeck.getPlayerStatus(),
       window.wavedeck.getSidebarState(),
+      window.wavedeck.getSectionVisibility(),
       window.wavedeck.getNotepad(),
       window.wavedeck.getAppInfo()
     ]);
@@ -754,6 +810,7 @@ window.wavedeck.onWarning((warning) => {
     notepadDirty = false;
     setNotepadOpen(false);
     setSidebarUi(sidebarState);
+    setSectionVisibilityUi(sectionVisibility);
     if (typeof status?.muted === "boolean") setMuteUi(status.muted);
     if (Number.isFinite(status?.volume)) volumeSlider.value = String(Math.round(status.volume));
     if (status?.currentStation && status?.mediaState !== "stopped") {
@@ -765,7 +822,7 @@ window.wavedeck.onWarning((warning) => {
     else if (status?.mediaState === "paused") nowPlaying.textContent = "Paused";
     else if (status?.mediaState === "playing") {
       nowPlaying.textContent = status?.state === "connecting" ? "Connecting…" : (status.message || "Playing");
-    } else nowPlaying.textContent = "Now Playing: (ready)";
+    } else nowPlaying.textContent = "Warming up the airwaves...";
   } catch (error) {
     nowPlaying.textContent = `Playback unavailable: ${error.message}`;
   }

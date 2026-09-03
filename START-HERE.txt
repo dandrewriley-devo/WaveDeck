@@ -1,5 +1,5 @@
 WAVEDECK PORTABLE FOR LINUX MINT
-Version 0.2.4 (64-bit Intel/AMD)
+Version 0.2.5 (64-bit Intel/AMD)
 
 QUICK START
 
@@ -33,7 +33,7 @@ AppImage:
 2. Launch WaveDeck.AppImage directly.
 3. Open Settings, select Panel Shortcut, and click "Update WaveDeck
    Applications Menu Entry."
-4. Confirm your panel shortcut opens version 0.2.4. You may then delete the
+4. Confirm your panel shortcut opens version 0.2.5. You may then delete the
    older version-numbered AppImage.
 
 Starting with version 0.1.11, the executable is always named WaveDeck.AppImage.
@@ -112,10 +112,12 @@ detected bitrate, and the optional station description. The Edit button in
 Settings uses the same inline editor.
 
 WaveDeck begins counting from its active station/play state and ignores visits
-shorter than 30 seconds. In Sidebar Mode, stations with at least five
-minutes of listening time can appear in a five-item Most Played section above
-Presets. Settings shows each station's total and provides a Reset Listening
-History button. History is saved as listening-history.json in WaveDeck-Data.
+shorter than 30 seconds. Stations with at least five minutes of listening time
+can appear in the ten-item Most Played section. Use the footer's clock-and-list
+button to show it and the star button to show or hide Presets. Each fresh launch
+starts with Presets visible and Most Played hidden. Settings shows each station's
+total and provides a Reset Listening History button. History is saved as
+listening-history.json in WaveDeck-Data.
 
 Version 0.2.1 attributes playback and listening time by each station's unique
 ID rather than its stream URL. Stations that share a stream URL therefore keep
@@ -137,6 +139,13 @@ Version 0.2.4 restores the full header artwork, prevents Shift-click from
 selecting station-list text, and replaces Alt-click with Ctrl+Shift-click for
 the pre-roll marker because Linux Mint Cinnamon reserves Alt-click for window
 management. The ZIP extracts into the stable WaveDeck Portable Linux folder.
+
+Version 0.2.5 adds footer toggles for Presets and the ten-station Most Played
+section. Presets starts visible, Most Played starts hidden, and both are
+available in normal and Sidebar Mode. The startup status now says "Warming up
+the airwaves..." without displaying harmless media-key availability warnings.
+Listening-history refreshes no longer interrupt typing in Settings, and
+WaveDeck reclaims Cinnamon media-key control every 15 seconds while it runs.
 
 PRESETS, FAVORITES, AND PRE-ROLL MARKERS
 

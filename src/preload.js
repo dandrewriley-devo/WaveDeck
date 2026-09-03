@@ -33,6 +33,10 @@ contextBridge.exposeInMainWorld("wavedeck", {
   resetListeningHistory: () => ipcRenderer.invoke("listening:reset"),
   onListeningHistoryChanged: (callback) => subscribe("listening:changed", callback),
 
+  getSectionVisibility: () => ipcRenderer.invoke("sections:get-state"),
+  setSectionVisibility: (state) => ipcRenderer.invoke("sections:set-state", state),
+  onSectionVisibilityChanged: (callback) => subscribe("sections:state-changed", callback),
+
   getLauncherStatus: () => ipcRenderer.invoke("launcher:get-status"),
   installLauncher: () => ipcRenderer.invoke("launcher:install"),
   removeLauncher: () => ipcRenderer.invoke("launcher:remove"),

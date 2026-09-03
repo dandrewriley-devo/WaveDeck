@@ -744,7 +744,13 @@ window.wavedeck.onGroupsChanged(queueReload);
 window.wavedeck.onSubgroupsChanged(queueReload);
 window.wavedeck.onListeningHistoryChanged((history) => {
   listeningHistory = history || { version: 1, stations: {} };
-  renderStationsTable();
+  for (const row of stationsTbody.querySelectorAll("tr[data-station-id]")) {
+    const listenedCell = row.querySelector(".listened-total");
+    if (!listenedCell) continue;
+    listenedCell.textContent = formatListeningTotal(
+      listeningHistory.stations?.[row.dataset.stationId]?.seconds
+    );
+  }
 });
 window.wavedeck.onEditStationRequested(requestStationEdit);
 window.wavedeck.onWarning((warning) => setStatus(statusStations, warning, false));
