@@ -125,8 +125,12 @@ select:focus{
   cursor: not-allowed;
 }
 
-.fav-star.no-preroll{
+.fav-star.preset{
   color:#9bea43;
+}
+
+.fav-star.has-preroll{
+  color:#e65324;
 }
 
 /* Groups list */

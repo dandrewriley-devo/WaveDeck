@@ -20,12 +20,15 @@ let notepadSaveTimer = null;
 let notepadDirty = false;
 let notepadOpen = false;
 let sidebarModeEnabled = false;
-let draggedFavoriteId = null;
+let draggedPresetId = null;
 let listeningHistory = { version: 1, stations: {} };
 let currentPlayerStatus = null;
 let expandedStationId = "";
 const collapsedGroups = new Set();
 const collapsedSubgroups = new Set();
+let collapseStateInitialized = false;
+let renderedGroupNames = [];
+let renderedSubgroupKeys = [];
 const MOST_LISTENED_MINIMUM_SECONDS = 5 * 60;
 
 const ICON_SPEAKER_WAVE = `
@@ -56,40 +59,40 @@ function sortByName(a, b) {
   });
 }
 
-function favoriteRank(station) {
-  const raw = station?.favoriteOrder;
+function presetRank(station) {
+  const raw = station?.presetOrder;
   if (raw === null || raw === undefined || raw === "") return null;
   const value = Number(raw);
   return Number.isSafeInteger(value) && value >= 0 ? value : null;
 }
 
-function sortFavorites(a, b) {
-  const aRank = favoriteRank(a);
-  const bRank = favoriteRank(b);
+function sortPresets(a, b) {
+  const aRank = presetRank(a);
+  const bRank = presetRank(b);
   if (aRank !== null && bRank !== null && aRank !== bRank) return aRank - bRank;
   if (aRank !== null && bRank === null) return -1;
   if (aRank === null && bRank !== null) return 1;
   return sortByName(a, b);
 }
 
-function normalizeFavoriteOrder(stations) {
-  const favorites = stations.filter((station) => station.favorite).sort(sortFavorites);
-  favorites.forEach((station, index) => { station.favoriteOrder = index; });
-  stations.filter((station) => !station.favorite).forEach((station) => { station.favoriteOrder = null; });
-  return favorites;
+function normalizePresetOrder(stations) {
+  const presets = stations.filter((station) => station.preset).sort(sortPresets);
+  presets.forEach((station, index) => { station.presetOrder = index; });
+  stations.filter((station) => !station.preset).forEach((station) => { station.presetOrder = null; });
+  return presets;
 }
 
-function setFavoriteState(stations, station, favorite) {
-  const next = Boolean(favorite);
-  if (next === Boolean(station.favorite)) return;
+function setPresetState(stations, station, preset) {
+  const next = Boolean(preset);
+  if (next === Boolean(station.preset)) return;
   if (next) {
-    const favorites = normalizeFavoriteOrder(stations);
-    station.favorite = true;
-    station.favoriteOrder = favorites.length;
+    const presets = normalizePresetOrder(stations);
+    station.preset = true;
+    station.presetOrder = presets.length;
   } else {
-    station.favorite = false;
-    station.favoriteOrder = null;
-    normalizeFavoriteOrder(stations);
+    station.preset = false;
+    station.presetOrder = null;
+    normalizePresetOrder(stations);
   }
 }
 
@@ -150,16 +153,19 @@ function formatListeningTime(seconds) {
   return minutes ? `${hours}h ${minutes}m` : `${hours}h`;
 }
 
-function createStationRow(station, { favoriteSection = false, listenedSeconds = 0 } = {}) {
+function createStationRow(station, { presetSection = false, listenedSeconds = 0 } = {}) {
   const row = element("div", `station${String(station.id) === String(currentStationId) ? " active" : ""}`);
   row.dataset.id = String(station.id ?? "");
   row.dataset.url = String(station.url ?? "");
   row.dataset.name = String(station.name ?? "");
-  row.title = "Click to play • Shift-click to edit";
+  row.title = "Click to play • Ctrl-click: Preset • Alt-click: pre-roll • Shift-click: edit";
 
-  const favorite = element("button", `favBtn${station.noPreRoll ? " no-preroll" : ""}`, station.favorite ? "★" : "☆");
+  const starClasses = ["favBtn"];
+  if (station.preset) starClasses.push("preset");
+  if (station.hasPreRoll) starClasses.push("has-preroll");
+  const favorite = element("button", starClasses.join(" "), station.favorite ? "★" : "☆");
   favorite.type = "button";
-  favorite.title = station.noPreRoll ? "No pre-roll • Toggle favorite" : "Toggle favorite";
+  favorite.title = `${station.favorite ? "Remove from" : "Add to"} Favorites`;
   favorite.setAttribute("aria-label", `Toggle favorite for ${station.name}`);
 
   const meta = element("div", "meta");
@@ -167,8 +173,8 @@ function createStationRow(station, { favoriteSection = false, listenedSeconds = 
   if (listenedSeconds > 0) {
     meta.append(element("div", "listening-time", formatListeningTime(listenedSeconds)));
   }
-  if (favoriteSection) {
-    row.classList.add("favorite-row");
+  if (presetSection) {
+    row.classList.add("preset-row");
     const handle = element("button", "drag-handle", "≡");
     handle.type = "button";
     handle.draggable = true;
@@ -191,9 +197,17 @@ function createStationRow(station, { favoriteSection = false, listenedSeconds = 
   return row;
 }
 
-function createSectionTitle(title, subtitle = "") {
+function createSectionTitle(title, subtitle = "", action = null) {
   const section = element("div", "section-title");
-  section.append(element("div", "section-main", title));
+  const titleRow = element("div", "section-title-row");
+  titleRow.append(element("div", "section-main", title));
+  if (action) {
+    const button = element("button", "section-action", action.label);
+    button.type = "button";
+    button.id = action.id;
+    titleRow.append(button);
+  }
+  section.append(titleRow);
   if (subtitle) section.append(element("div", "section-sub", subtitle));
   return section;
 }
@@ -293,7 +307,7 @@ async function renderAll() {
   ]);
   listeningHistory = history || { version: 1, stations: {} };
 
-  const favorites = stations.filter((station) => station.favorite).sort(sortFavorites);
+  const presets = stations.filter((station) => station.preset).sort(sortPresets);
   const stationStats = listeningHistory.stations || {};
   const mostListened = sidebarModeEnabled
     ? stations
@@ -302,10 +316,25 @@ async function renderAll() {
       .sort((a, b) => b.seconds - a.seconds || sortByName(a.station, b.station))
       .slice(0, 5)
     : [];
-  const groups = buildGroupsInOrder(
-    stations.filter((station) => !station.favorite),
-    groupOrder
-  );
+  const groups = buildGroupsInOrder(stations, groupOrder);
+  renderedGroupNames = groups.map((group) => group.name);
+  renderedSubgroupKeys = groups.flatMap((group) => (
+    [...new Set(group.items.map((station) => String(station.subgroup || "").trim()).filter(Boolean))]
+      .map((subgroup) => subgroupKey(group.name, subgroup))
+  ));
+  const currentGroups = new Set(renderedGroupNames);
+  const currentSubgroups = new Set(renderedSubgroupKeys);
+  for (const name of collapsedGroups) {
+    if (!currentGroups.has(name)) collapsedGroups.delete(name);
+  }
+  for (const key of collapsedSubgroups) {
+    if (!currentSubgroups.has(key)) collapsedSubgroups.delete(key);
+  }
+  if (!collapseStateInitialized) {
+    renderedGroupNames.forEach((name) => collapsedGroups.add(name));
+    renderedSubgroupKeys.forEach((key) => collapsedSubgroups.add(key));
+    collapseStateInitialized = true;
+  }
 
   listEl.replaceChildren();
   if (sidebarModeEnabled && mostListened.length) {
@@ -316,17 +345,21 @@ async function renderAll() {
     )));
     listEl.append(mostListenedBlock);
   }
-  listEl.append(createSectionTitle("Favorites", favorites.length ? "" : "None yet — hit ☆ to add."));
+  listEl.append(createSectionTitle("Presets", presets.length ? "" : "None yet — Ctrl-click a station to add."));
 
-  if (favorites.length) {
+  if (presets.length) {
     const block = element("div", "section-block");
-    block.append(...favorites.map((station) => createStationRow(station, { favoriteSection: true })));
+    block.append(...presets.map((station) => createStationRow(station, { presetSection: true })));
     listEl.append(block);
   } else {
-    listEl.append(element("div", "placeholder", "No favorites yet."));
+    listEl.append(element("div", "placeholder", "No presets yet."));
   }
 
-  listEl.append(createSectionTitle("stations"));
+  const allExpanded = collapsedGroups.size === 0 && collapsedSubgroups.size === 0;
+  listEl.append(createSectionTitle("stations", "", {
+    id: "toggleAllGroupsBtn",
+    label: allExpanded ? "Collapse All" : "Expand All"
+  }));
   if (!stations.length) {
     listEl.append(element("div", "placeholder", "No stations yet."));
   } else {
@@ -394,25 +427,25 @@ function updateExpandedStationInfo(status = currentPlayerStatus) {
   }
 }
 
-function clearFavoriteDragState() {
-  listEl.querySelectorAll(".favorite-row").forEach((row) => {
+function clearPresetDragState() {
+  listEl.querySelectorAll(".preset-row").forEach((row) => {
     row.classList.remove("dragging", "drop-before", "drop-after");
   });
-  draggedFavoriteId = null;
+  draggedPresetId = null;
 }
 
-async function saveFavoriteOrder(orderedIds) {
+async function savePresetOrder(orderedIds) {
   const stations = await window.wavedeck.getStations();
-  const favorites = stations.filter((station) => station.favorite);
+  const presets = stations.filter((station) => station.preset);
   const requested = orderedIds.map(String);
-  const favoriteIds = new Set(favorites.map((station) => String(station.id)));
-  if (requested.length !== favorites.length || requested.some((id) => !favoriteIds.has(id))) {
-    throw new Error("The favorites changed while they were being reordered.");
+  const presetIds = new Set(presets.map((station) => String(station.id)));
+  if (requested.length !== presets.length || requested.some((id) => !presetIds.has(id))) {
+    throw new Error("The presets changed while they were being reordered.");
   }
 
   const orderById = new Map(requested.map((id, index) => [id, index]));
   for (const station of stations) {
-    station.favoriteOrder = station.favorite ? orderById.get(String(station.id)) : null;
+    station.presetOrder = station.preset ? orderById.get(String(station.id)) : null;
   }
   await window.wavedeck.saveStations(stations);
 }
@@ -426,7 +459,7 @@ function bindHandlers() {
         const stations = await window.wavedeck.getStations();
         const station = stations.find((item) => String(item.id) === row.dataset.id);
         if (!station) return;
-        setFavoriteState(stations, station, !station.favorite);
+        station.favorite = !station.favorite;
         await window.wavedeck.saveStations(stations);
       } catch (error) {
         nowPlaying.textContent = `Could not update favorite: ${error.message}`;
@@ -441,16 +474,16 @@ function bindHandlers() {
       });
 
       handle.addEventListener("dragstart", (event) => {
-        draggedFavoriteId = row.dataset.id;
+        draggedPresetId = row.dataset.id;
         row.classList.add("dragging");
         event.dataTransfer.effectAllowed = "move";
-        event.dataTransfer.setData("text/plain", draggedFavoriteId);
+        event.dataTransfer.setData("text/plain", draggedPresetId);
       });
 
-      handle.addEventListener("dragend", clearFavoriteDragState);
+      handle.addEventListener("dragend", clearPresetDragState);
 
       row.addEventListener("dragover", (event) => {
-        if (!draggedFavoriteId || draggedFavoriteId === row.dataset.id) return;
+        if (!draggedPresetId || draggedPresetId === row.dataset.id) return;
         event.preventDefault();
         event.dataTransfer.dropEffect = "move";
         const after = event.clientY > row.getBoundingClientRect().top + row.offsetHeight / 2;
@@ -465,28 +498,54 @@ function bindHandlers() {
       row.addEventListener("drop", async (event) => {
         event.preventDefault();
         event.stopPropagation();
-        const sourceId = draggedFavoriteId || event.dataTransfer.getData("text/plain");
+        const sourceId = draggedPresetId || event.dataTransfer.getData("text/plain");
         const targetId = row.dataset.id;
         const after = row.classList.contains("drop-after");
-        const orderedIds = [...listEl.querySelectorAll(".favorite-row")]
-          .map((favoriteRow) => favoriteRow.dataset.id)
+        const orderedIds = [...listEl.querySelectorAll(".preset-row")]
+          .map((presetRow) => presetRow.dataset.id)
           .filter((id) => id !== sourceId);
         const targetIndex = orderedIds.indexOf(targetId);
         if (sourceId && targetIndex >= 0) {
           orderedIds.splice(targetIndex + (after ? 1 : 0), 0, sourceId);
         }
-        clearFavoriteDragState();
+        clearPresetDragState();
         if (!sourceId || sourceId === targetId) return;
         try {
-          await saveFavoriteOrder(orderedIds);
+          await savePresetOrder(orderedIds);
         } catch (error) {
-          nowPlaying.textContent = `Could not reorder favorites: ${error.message}`;
+          nowPlaying.textContent = `Could not reorder presets: ${error.message}`;
           queueRender();
         }
       });
     }
 
     row.addEventListener("click", async (event) => {
+      if (event.ctrlKey) {
+        event.preventDefault();
+        try {
+          const stations = await window.wavedeck.getStations();
+          const station = stations.find((item) => String(item.id) === row.dataset.id);
+          if (!station) return;
+          setPresetState(stations, station, !station.preset);
+          await window.wavedeck.saveStations(stations);
+        } catch (error) {
+          nowPlaying.textContent = `Could not update preset: ${error.message}`;
+        }
+        return;
+      }
+      if (event.altKey) {
+        event.preventDefault();
+        try {
+          const stations = await window.wavedeck.getStations();
+          const station = stations.find((item) => String(item.id) === row.dataset.id);
+          if (!station) return;
+          station.hasPreRoll = !station.hasPreRoll;
+          await window.wavedeck.saveStations(stations);
+        } catch (error) {
+          nowPlaying.textContent = `Could not update pre-roll marker: ${error.message}`;
+        }
+        return;
+      }
       if (event.shiftKey) {
         event.preventDefault();
         try {
@@ -538,6 +597,17 @@ function bindHandlers() {
       if (body) body.hidden = collapsed;
       if (caret) caret.textContent = collapsed ? "▸" : "▾";
     });
+  });
+
+  document.getElementById("toggleAllGroupsBtn")?.addEventListener("click", () => {
+    const allExpanded = collapsedGroups.size === 0 && collapsedSubgroups.size === 0;
+    collapsedGroups.clear();
+    collapsedSubgroups.clear();
+    if (allExpanded) {
+      renderedGroupNames.forEach((name) => collapsedGroups.add(name));
+      renderedSubgroupKeys.forEach((key) => collapsedSubgroups.add(key));
+    }
+    queueRender();
   });
 }
 

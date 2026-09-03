@@ -6,8 +6,8 @@ const OBJECT_PATH = "/org/gnome/SettingsDaemon/MediaKeys";
 const INTERFACE_NAME = "org.gnome.SettingsDaemon.MediaKeys";
 
 const KEY_COMMANDS = Object.freeze({
-  Next: "nextFavorite",
-  Previous: "previousFavorite",
+  Next: "nextPreset",
+  Previous: "previousPreset",
   Play: "togglePlayPause",
   Pause: "pause",
   Stop: "stop"

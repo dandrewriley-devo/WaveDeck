@@ -1,5 +1,5 @@
 WAVEDECK PORTABLE FOR LINUX MINT
-Version 0.2.2 (64-bit Intel/AMD)
+Version 0.2.3 (64-bit Intel/AMD)
 
 QUICK START
 
@@ -33,7 +33,7 @@ AppImage:
 2. Launch WaveDeck.AppImage directly.
 3. Open Settings, select Panel Shortcut, and click "Update WaveDeck
    Applications Menu Entry."
-4. Confirm your panel shortcut opens version 0.2.2. You may then delete the
+4. Confirm your panel shortcut opens version 0.2.3. You may then delete the
    older version-numbered AppImage.
 
 Starting with version 0.1.11, the executable is always named WaveDeck.AppImage.
@@ -92,10 +92,10 @@ is running, even when another window has focus.
 
   - Play/Pause stops the live stream. Press it again to reconnect to the same
     station at the current live point.
-  - If you have not selected a station, Play starts your first favorite.
-  - Next and Previous immediately play the next or previous favorite.
-  - The favorite order matches the order shown in WaveDeck and wraps from the
-    last favorite to the first (and vice versa).
+  - If you have not selected a station, Play starts your first preset.
+  - Next and Previous immediately play the next or previous preset.
+  - The preset order matches the order shown in WaveDeck and wraps from the
+    last preset to the first (and vice versa).
 
 WaveDeck registers directly with Linux Mint Cinnamon's media-key service and
 also provides the standard Linux MPRIS controls. The Cinnamon route calls the
@@ -114,7 +114,7 @@ Settings uses the same inline editor.
 WaveDeck begins counting from its active station/play state and ignores visits
 shorter than 30 seconds. In Sidebar Mode, stations with at least five
 minutes of listening time can appear in a five-item Most Played section above
-Favorites. Settings shows each station's total and provides a Reset Listening
+Presets. Settings shows each station's total and provides a Reset Listening
 History button. History is saved as listening-history.json in WaveDeck-Data.
 
 Version 0.2.1 attributes playback and listening time by each station's unique
@@ -128,11 +128,26 @@ rechecks mpv every 10 seconds, so a missed notification cannot leave a station
 untracked. Failed, paused, and stopped playback still ends the session. The
 expanded station details now sit more tightly beneath the station name.
 
-NO PRE-ROLL MARKERS
+Version 0.2.3 separates the quick-access Presets list from Favorite markers,
+keeps Presets in their normal listings, adds Ctrl/Alt/Shift-click shortcuts,
+reverses the pre-roll field into an ad warning, and starts station groups
+collapsed with an Expand All / Collapse All control.
 
-The station editor includes a No pre-roll ads checkbox. Marked stations use the
-small lime-green WaveDeck star instead of the standard gold star. The filled or
-outline shape still indicates whether the station is a favorite.
+PRESETS, FAVORITES, AND PRE-ROLL MARKERS
+
+WaveDeck keeps these independent. Ctrl-click a station to add or remove it from
+Presets, Alt-click to mark whether it has pre-roll ads, and Shift-click to edit
+it. Click the star itself to toggle Favorite status. The same controls are also
+available in the station editor.
+
+Star shape shows Favorite status: filled is a Favorite and outline is not. Star
+color shows station status: lime green is a Preset, gold is ordinary, and dark
+orange-red warns of pre-roll ads. The pre-roll warning color takes priority over
+Preset green. Any station can be a Favorite regardless of its color.
+
+Preset stations remain in their normal group and subgroup listings. Station
+groups and subgroups start collapsed; use Expand All beside STATIONS to open
+everything, and Collapse All to close everything again.
 
 SUBGROUPS
 
@@ -141,16 +156,16 @@ inside any main group. Assign a station to one of its group's subgroups in the
 station editor. The player displays those stations under compact nested headers.
 Subgroups and their order are saved in subgroups.json in WaveDeck-Data.
 
-CUSTOM FAVORITES ORDER
+CUSTOM PRESET ORDER
 
-Favorites have a small drag handle at the left edge of each row. Drag that
-handle up or down to arrange the Favorites section in any order. WaveDeck saves
+Presets have a small drag handle at the left edge of each row. Drag that
+handle up or down to arrange the Presets section in any order. WaveDeck saves
 the order automatically in stations.json inside WaveDeck-Data.
 
 Previous and Next media keys follow this custom order and wrap at either end.
-New favorites are added at the bottom. Regular station groups remain
-alphabetical. Existing favorites begin in their previous alphabetical order
-until you rearrange them.
+New presets are added at the bottom. Regular station groups remain alphabetical.
+When upgrading from v0.2.2 or earlier, existing Favorites become Presets and
+retain their saved order; the new independent Favorite markers begin clear.
 
 APPLICATION MENU AND PANEL SHORTCUT
 
@@ -167,13 +182,13 @@ portable data.
 PORTABLE DATA
 
 WaveDeck creates a folder named WaveDeck-Data beside the AppImage. Your
-station list, groups, subgroups, favorites, listening history, notes, backups,
+station list, groups, subgroups, presets, favorites, listening history, notes, backups,
 and small runtime files stay there.
 Keep the AppImage and WaveDeck-Data folder together when moving WaveDeck.
 
 On first launch, WaveDeck looks for data from the previous WaveDeckSB release.
 If found beside the old AppImage or in the original extracted package folder,
-it copies the stations, groups, favorites, and backups into WaveDeck-Data. The
+it copies the stations, groups, presets, and backups into WaveDeck-Data. The
 old WaveDeckSB-Data folder is left untouched as a backup.
 
 PLAYBACK REQUIREMENT

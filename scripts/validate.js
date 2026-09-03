@@ -50,7 +50,7 @@ const stations = validateStations(JSON.parse(fs.readFileSync(path.join(defaultsD
 const groups = validateGroups(JSON.parse(fs.readFileSync(path.join(defaultsDir, "groups.json"), "utf8")));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.2.2");
+assert.strictEqual(packageJson.version, "0.2.3");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -114,18 +114,18 @@ try {
   storage.writeStations(changed);
   assert.strictEqual(storage.readStations()[0].favorite, changed[0].favorite);
   const customOrder = storage.readStations();
-  customOrder[0].favorite = true;
-  customOrder[0].favoriteOrder = 1;
-  customOrder[1].favorite = true;
-  customOrder[1].favoriteOrder = 0;
+  customOrder[0].preset = true;
+  customOrder[0].presetOrder = 1;
+  customOrder[1].preset = true;
+  customOrder[1].presetOrder = 0;
   storage.writeStations(customOrder);
-  assert.strictEqual(storage.readStations()[0].favoriteOrder, 1);
-  assert.strictEqual(storage.readStations()[1].favoriteOrder, 0);
-  const legacyOrder = storage.readStations();
-  legacyOrder[0].favorite = true;
-  legacyOrder[0].favoriteOrder = null;
-  storage.writeStations(legacyOrder);
-  assert.strictEqual(storage.readStations()[0].favoriteOrder, null);
+  assert.strictEqual(storage.readStations()[0].presetOrder, 1);
+  assert.strictEqual(storage.readStations()[1].presetOrder, 0);
+  const unorderedPreset = storage.readStations();
+  unorderedPreset[0].preset = true;
+  unorderedPreset[0].presetOrder = null;
+  storage.writeStations(unorderedPreset);
+  assert.strictEqual(storage.readStations()[0].presetOrder, null);
   assert.ok(fs.existsSync(path.join(dataDir, "backups", "stations.json.bak")));
   assert.strictEqual(storage.readNotepad(), "");
   storage.writeNotepad("Call Ben\nOrder filters");
@@ -144,7 +144,7 @@ try {
   const subgroupGroup = subgroupStations[0].group;
   subgroupStations[0].subgroup = "Pacific Northwest";
   subgroupStations[0].description = "Independent alternative and local music.";
-  subgroupStations[0].noPreRoll = true;
+  subgroupStations[0].hasPreRoll = true;
   reloadedStorage.writeStations(subgroupStations);
   reloadedStorage.syncSubgroupsWithStations(subgroupStations);
   assert.deepStrictEqual(reloadedStorage.readSubgroups().groups, [{
@@ -152,11 +152,35 @@ try {
     subgroups: ["Pacific Northwest"]
   }]);
   assert.strictEqual(reloadedStorage.readStations()[0].description, "Independent alternative and local music.");
-  assert.strictEqual(reloadedStorage.readStations()[0].noPreRoll, true);
+  assert.strictEqual(reloadedStorage.readStations()[0].hasPreRoll, true);
   assert.strictEqual(reloadedStorage.renameSubgroup(subgroupGroup, "Pacific Northwest", "PNW").ok, true);
   assert.strictEqual(reloadedStorage.readStations()[0].subgroup, "PNW");
   assert.strictEqual(reloadedStorage.removeSubgroup(subgroupGroup, "PNW").ok, true);
   assert.strictEqual(reloadedStorage.readStations()[0].subgroup, "");
+
+  const legacySchemaDir = path.join(testRoot, "Legacy-Schema-Data");
+  fs.mkdirSync(legacySchemaDir, { recursive: true });
+  fs.writeFileSync(path.join(legacySchemaDir, "stations.json"), JSON.stringify([{
+    id: "legacy-one",
+    name: "Legacy Preset",
+    url: "https://example.com/legacy",
+    group: "Rock",
+    favorite: true,
+    favoriteOrder: 4,
+    noPreRoll: true
+  }]), "utf8");
+  const legacySchemaStorage = new PortableStorage({ dataDir: legacySchemaDir, defaultsDir });
+  legacySchemaStorage.initialize();
+  const migratedStation = legacySchemaStorage.readStations()[0];
+  assert.strictEqual(migratedStation.preset, true);
+  assert.strictEqual(migratedStation.presetOrder, 4);
+  assert.strictEqual(migratedStation.favorite, false);
+  assert.strictEqual(migratedStation.hasPreRoll, false);
+  const migratedRaw = JSON.parse(fs.readFileSync(path.join(legacySchemaDir, "stations.json"), "utf8"))[0];
+  assert.ok(Object.hasOwn(migratedRaw, "preset"));
+  assert.ok(!Object.hasOwn(migratedRaw, "favoriteOrder"));
+  assert.ok(!Object.hasOwn(migratedRaw, "noPreRoll"));
+  assert.ok(fs.existsSync(path.join(legacySchemaDir, "backups", "stations.json.bak")));
 
   const legacyDir = path.join(testRoot, "WaveDeckSB-Data");
   const legacyStorage = new PortableStorage({ dataDir: legacyDir, defaultsDir });
@@ -563,8 +587,11 @@ const stylesSource = fs.readFileSync(path.join(root, "src", "renderer", "styles.
 assert.ok(stylesSource.includes("flex: 0 0 20vh"));
 assert.ok(stylesSource.includes("height: 32px"));
 assert.ok(stylesSource.includes(".drag-handle"));
-assert.ok(stylesSource.includes(".favorite-row.drop-before"));
-assert.ok(stylesSource.includes(".favBtn.no-preroll"));
+assert.ok(stylesSource.includes(".preset-row.drop-before"));
+assert.ok(stylesSource.includes(".favBtn.preset"));
+assert.ok(stylesSource.includes(".favBtn.has-preroll"));
+assert.ok(stylesSource.includes("#e65324"));
+assert.ok(stylesSource.includes(".section-action"));
 assert.ok(stylesSource.includes(".station-info"));
 assert.ok(stylesSource.includes("column-gap:10px"));
 assert.ok(stylesSource.includes("row-gap:0"));
@@ -594,7 +621,9 @@ assert.ok(settingsHtml.includes('id="resetListeningBtn"'));
 assert.ok(settingsHtml.includes("Listened"));
 assert.ok(settingsHtml.includes('id="st_subgroup"'));
 assert.ok(settingsHtml.includes('id="st_description"'));
-assert.ok(settingsHtml.includes('id="st_no_preroll"'));
+assert.ok(settingsHtml.includes('id="st_favorite"'));
+assert.ok(settingsHtml.includes('id="st_preset"'));
+assert.ok(settingsHtml.includes('id="st_has_preroll"'));
 const mainSource = fs.readFileSync(path.join(root, "src", "main", "main.js"), "utf8");
 assert.ok(!mainSource.includes("loadSidebarState"));
 assert.ok(!mainSource.includes("saveSidebarState"));
@@ -636,14 +665,21 @@ const desktopLauncherSource = fs.readFileSync(path.join(root, "src", "main", "de
 assert.ok(desktopLauncherSource.includes('.local", "share", "applications"'));
 assert.ok(desktopLauncherSource.includes("X-WaveDeck-Managed=true"));
 const rendererSource = fs.readFileSync(path.join(root, "src", "renderer", "renderer.js"), "utf8");
-assert.ok(rendererSource.includes("saveFavoriteOrder"));
+assert.ok(rendererSource.includes("savePresetOrder"));
 assert.ok(rendererSource.includes('handle.draggable = true'));
-assert.ok(rendererSource.includes("normalizeFavoriteOrder"));
+assert.ok(rendererSource.includes("normalizePresetOrder"));
+assert.ok(rendererSource.includes('createSectionTitle("Presets"'));
+assert.ok(rendererSource.includes("const groups = buildGroupsInOrder(stations, groupOrder)"));
+assert.ok(rendererSource.includes('id: "toggleAllGroupsBtn"'));
+assert.ok(rendererSource.includes("renderedGroupNames.forEach"));
 assert.ok(rendererSource.includes('createSectionTitle("Most Played")'));
 assert.ok(rendererSource.includes("const MOST_LISTENED_MINIMUM_SECONDS = 5 * 60"));
 assert.ok(rendererSource.includes("onListeningHistoryChanged"));
 assert.ok(rendererSource.includes("if (sidebarModeEnabled) queueRender()"));
 assert.ok(rendererSource.includes("event.shiftKey"));
+assert.ok(rendererSource.includes("event.ctrlKey"));
+assert.ok(rendererSource.includes("event.altKey"));
+assert.ok(rendererSource.includes("station.hasPreRoll = !station.hasPreRoll"));
 assert.ok(rendererSource.includes("editStation(row.dataset.id)"));
 assert.ok(rendererSource.includes("Detecting bitrate"));
 assert.ok(rendererSource.includes("createSubgroupBlock"));
@@ -696,10 +732,10 @@ async function validateMediaControls() {
   assert.strictEqual(heartbeatEvents.length, 1);
 
   const stationList = [
-    { id: "beta-alias", name: "Beta Alias", url: "https://example.com/beta", favorite: false },
-    { id: "beta", name: "Beta", url: "https://example.com/beta", favorite: true, favoriteOrder: 0 },
-    { id: "other", name: "Other", url: "https://example.com/other", favorite: false },
-    { id: "alpha", name: "Alpha", url: "https://example.com/alpha", favorite: true, favoriteOrder: 1 }
+    { id: "beta-alias", name: "Beta Alias", url: "https://example.com/beta", preset: false },
+    { id: "beta", name: "Beta", url: "https://example.com/beta", preset: true, presetOrder: 0 },
+    { id: "other", name: "Other", url: "https://example.com/other", preset: false },
+    { id: "alpha", name: "Alpha", url: "https://example.com/alpha", preset: true, presetOrder: 1 }
   ];
   let missingEventTime = 0;
   const missingEventHistory = new ListeningHistory({
@@ -762,24 +798,24 @@ async function validateMediaControls() {
     onStationChanged: (station) => stationEvents.push(station),
     onStateChanged: (status) => stateEvents.push(status.mediaState)
   });
-  assert.deepStrictEqual(controller.getFavorites().map((station) => station.name), ["Beta", "Alpha"]);
+  assert.deepStrictEqual(controller.getPresets().map((station) => station.name), ["Beta", "Alpha"]);
   assert.strictEqual(await controller.togglePlayPause(), true);
   assert.strictEqual(controller.getCurrentStation().name, "Beta");
-  assert.strictEqual(await controller.nextFavorite(), true);
+  assert.strictEqual(await controller.nextPreset(), true);
   assert.strictEqual(controller.getCurrentStation().name, "Alpha");
-  assert.strictEqual(await controller.nextFavorite(), true);
+  assert.strictEqual(await controller.nextPreset(), true);
   assert.strictEqual(controller.getCurrentStation().name, "Beta");
-  assert.strictEqual(await controller.previousFavorite(), true);
+  assert.strictEqual(await controller.previousPreset(), true);
   assert.strictEqual(controller.getCurrentStation().name, "Alpha");
   assert.strictEqual(await controller.pause(), true);
   assert.strictEqual(controller.getMediaState(), "paused");
   assert.strictEqual(await controller.togglePlayPause(), true);
   assert.strictEqual(controller.getCurrentStation().name, "Alpha");
   await controller.playUrl("https://example.com/other");
-  assert.strictEqual(await controller.nextFavorite(), true);
+  assert.strictEqual(await controller.nextPreset(), true);
   assert.strictEqual(controller.getCurrentStation().name, "Beta");
   await controller.playUrl("https://example.com/other");
-  assert.strictEqual(await controller.previousFavorite(), true);
+  assert.strictEqual(await controller.previousPreset(), true);
   assert.strictEqual(controller.getCurrentStation().name, "Alpha");
   assert.strictEqual(await controller.stop(), true);
   assert.strictEqual(controller.getMediaState(), "stopped");
@@ -808,7 +844,7 @@ async function validateMediaControls() {
   assert.ok(methodNames.includes("PlayPause"));
   assert.ok(methodNames.includes("Next"));
   assert.ok(methodNames.includes("Previous"));
-  mpris.update(controller.getStatus(), controller.getCurrentStation(), controller.getFavorites().length);
+  mpris.update(controller.getStatus(), controller.getCurrentStation(), controller.getPresets().length);
   assert.strictEqual(mpris.PlaybackStatus, "Stopped");
   assert.strictEqual(mpris.CanGoNext, true);
   await mpris.Play();
@@ -877,7 +913,7 @@ async function validateMediaControls() {
 }
 
 validateMediaControls().then(() => {
-console.log("WaveDeck validation passed: v0.2.2 IndieXL-style listening fallback, mpv heartbeat, compact station details, ID-based playback, live Most Played refresh, Shift-click editing, subgroups, no-pre-roll markers, bitrate detection, launch layout, notepad, Sidebar Mode, favorite order, MPRIS, Cinnamon media keys, and panel launcher verified.");
+console.log("WaveDeck validation passed: v0.2.3 Presets/Favorites migration, modifier-click controls, pre-roll warnings, collapsed groups, Expand All, preset media keys, listening history, station details, subgroups, Sidebar Mode, notepad, and panel launcher verified.");
 }).catch((error) => {
   console.error(error);
   process.exitCode = 1;

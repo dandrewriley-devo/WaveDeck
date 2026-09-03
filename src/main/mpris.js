@@ -71,8 +71,8 @@ class MprisPlayerInterface extends Interface {
     this._shuffle = false;
   }
 
-  async Next() { await this.#run(() => this.controller.nextFavorite()); }
-  async Previous() { await this.#run(() => this.controller.previousFavorite()); }
+  async Next() { await this.#run(() => this.controller.nextPreset()); }
+  async Previous() { await this.#run(() => this.controller.previousPreset()); }
   async Pause() { await this.#run(() => this.controller.pause()); }
   async PlayPause() { await this.#run(() => this.controller.togglePlayPause()); }
   async Stop() { await this.#run(() => this.controller.stop()); }
@@ -89,7 +89,7 @@ class MprisPlayerInterface extends Interface {
     }
   }
 
-  update(status, station, favoriteCount) {
+  update(status, station, presetCount) {
     const mediaState = status?.mediaState || "stopped";
     this._playbackStatus = mediaState === "playing"
       ? "Playing"
@@ -101,9 +101,9 @@ class MprisPlayerInterface extends Interface {
       PlaybackStatus: this._playbackStatus,
       Metadata: this._metadata,
       Volume: this._volume,
-      CanGoNext: favoriteCount > 0,
-      CanGoPrevious: favoriteCount > 0,
-      CanPlay: favoriteCount > 0 || Boolean(station)
+      CanGoNext: presetCount > 0,
+      CanGoPrevious: presetCount > 0,
+      CanPlay: presetCount > 0 || Boolean(station)
     });
   }
 
@@ -123,8 +123,8 @@ class MprisPlayerInterface extends Interface {
   get Position() { return 0n; }
   get MinimumRate() { return 1; }
   get MaximumRate() { return 1; }
-  get CanGoNext() { return this.controller.getFavorites().length > 0; }
-  get CanGoPrevious() { return this.controller.getFavorites().length > 0; }
+  get CanGoNext() { return this.controller.getPresets().length > 0; }
+  get CanGoPrevious() { return this.controller.getPresets().length > 0; }
   get CanPlay() { return this.CanGoNext || Boolean(this.controller.getCurrentStation()); }
   get CanPause() { return true; }
   get CanSeek() { return false; }
@@ -204,7 +204,7 @@ class MprisService {
     this.playerInterface.update(
       status,
       this.controller.getCurrentStation(),
-      this.controller.getFavorites().length
+      this.controller.getPresets().length
     );
   }
 

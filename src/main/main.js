@@ -83,7 +83,7 @@ function configurePortableRuntimePaths() {
     try {
       const migration = copyLegacyData({ legacyDirs: getLegacyDataDirs(), targetDir: getDataDir() });
       if (migration.copied.length) {
-        startupWarnings.push("Your existing WaveDeckSB stations and favorites were copied into WaveDeck-Data. The original folder was left untouched as a backup.");
+        startupWarnings.push("Your existing WaveDeckSB stations and presets were copied into WaveDeck-Data. The original folder was left untouched as a backup.");
       }
     } catch (error) {
       startupWarnings.push(`WaveDeck could not copy the previous WaveDeckSB data automatically: ${error.message}`);

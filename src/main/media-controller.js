@@ -4,16 +4,16 @@ function sortByName(a, b) {
   });
 }
 
-function favoriteRank(station) {
-  const raw = station?.favoriteOrder;
+function presetRank(station) {
+  const raw = station?.presetOrder;
   if (raw === null || raw === undefined || raw === "") return null;
   const value = Number(raw);
   return Number.isSafeInteger(value) && value >= 0 ? value : null;
 }
 
-function sortFavorites(a, b) {
-  const aRank = favoriteRank(a);
-  const bRank = favoriteRank(b);
+function sortPresets(a, b) {
+  const aRank = presetRank(a);
+  const bRank = presetRank(b);
   if (aRank !== null && bRank !== null && aRank !== bRank) return aRank - bRank;
   if (aRank !== null && bRank === null) return -1;
   if (aRank === null && bRank !== null) return 1;
@@ -29,7 +29,9 @@ function publicStation(station) {
     country: String(station.country ?? ""),
     description: String(station.description ?? ""),
     subgroup: String(station.subgroup ?? ""),
-    noPreRoll: Boolean(station.noPreRoll)
+    favorite: Boolean(station.favorite),
+    preset: Boolean(station.preset),
+    hasPreRoll: Boolean(station.hasPreRoll)
   };
 }
 
@@ -59,10 +61,10 @@ class MediaController {
     };
   }
 
-  getFavorites() {
+  getPresets() {
     return this.getStations()
-      .filter((station) => station.favorite)
-      .sort(sortFavorites);
+      .filter((station) => station.preset)
+      .sort(sortPresets);
   }
 
   async playUrl(url) {
@@ -129,9 +131,9 @@ class MediaController {
       return true;
     }
 
-    const favorites = this.getFavorites();
-    if (!favorites.length) return false;
-    await this.playStation(favorites[0]);
+    const presets = this.getPresets();
+    if (!presets.length) return false;
+    await this.playStation(presets[0]);
     return true;
   }
 
@@ -140,29 +142,29 @@ class MediaController {
     return this.play();
   }
 
-  async nextFavorite() {
-    return this.#moveFavorite(1);
+  async nextPreset() {
+    return this.#movePreset(1);
   }
 
-  async previousFavorite() {
-    return this.#moveFavorite(-1);
+  async previousPreset() {
+    return this.#movePreset(-1);
   }
 
-  async #moveFavorite(direction) {
-    const favorites = this.getFavorites();
-    if (!favorites.length) return false;
+  async #movePreset(direction) {
+    const presets = this.getPresets();
+    if (!presets.length) return false;
 
-    const currentIndex = favorites.findIndex((station) => (
+    const currentIndex = presets.findIndex((station) => (
       String(station.id) === String(this.currentStation?.id) ||
       station.url === this.currentStation?.url
     ));
     let targetIndex;
-    if (currentIndex < 0) targetIndex = direction > 0 ? 0 : favorites.length - 1;
-    else targetIndex = (currentIndex + direction + favorites.length) % favorites.length;
+    if (currentIndex < 0) targetIndex = direction > 0 ? 0 : presets.length - 1;
+    else targetIndex = (currentIndex + direction + presets.length) % presets.length;
 
-    await this.playStation(favorites[targetIndex]);
+    await this.playStation(presets[targetIndex]);
     return true;
   }
 }
 
-module.exports = { MediaController, publicStation, sortByName, sortFavorites };
+module.exports = { MediaController, publicStation, sortByName, sortPresets };

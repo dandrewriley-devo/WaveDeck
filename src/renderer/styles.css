@@ -306,6 +306,27 @@ html, body{
   color: var(--muted);
 }
 
+.section-title-row{
+  align-items:center;
+  display:flex;
+  justify-content:space-between;
+  padding-right:7px;
+}
+
+.section-action{
+  background:transparent;
+  border:0;
+  color:#717171;
+  cursor:pointer;
+  font-size:10px;
+  padding:2px 3px;
+}
+
+.section-action:hover,
+.section-action:focus-visible{
+  color:#b8b8b8;
+}
+
 .section-sub{
   margin-top: 4px;
   font-size: 11px;
@@ -468,8 +489,12 @@ html, body{
   border: none;
 }
 
-.favBtn.no-preroll{
+.favBtn.preset{
   color:#9bea43;
+}
+
+.favBtn.has-preroll{
+  color:#e65324;
 }
 
 .drag-handle{
@@ -498,15 +523,15 @@ html, body{
   cursor:grabbing;
 }
 
-.favorite-row.dragging{
+.preset-row.dragging{
   opacity:0.35;
 }
 
-.favorite-row.drop-before{
+.preset-row.drop-before{
   box-shadow:inset 0 2px 0 #8feab3;
 }
 
-.favorite-row.drop-after{
+.preset-row.drop-after{
   box-shadow:inset 0 -2px 0 #8feab3;
 }
 
@@ -533,7 +558,7 @@ html, body{
   white-space:normal;
 }
 
-.favorite-row .station-info{
+.preset-row .station-info{
   padding-left:60px;
 }
 

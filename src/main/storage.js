@@ -62,10 +62,14 @@ function createStationId() {
   return `st_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
 }
 
-function cleanFavoriteOrder(value) {
+function cleanPresetOrder(value) {
   if (value === null || value === undefined || value === "") return null;
   const order = Number(value);
   return Number.isSafeInteger(order) && order >= 0 ? order : null;
+}
+
+function hasOwn(value, key) {
+  return Object.prototype.hasOwnProperty.call(value, key);
 }
 
 function cleanStation(raw, index = 0) {
@@ -90,18 +94,27 @@ function cleanStation(raw, index = 0) {
     throw new Error(`Station ${index + 1} must use an HTTP or HTTPS URL.`);
   }
 
-  const favorite = Boolean(raw.favorite);
+  // Before v0.2.3, `favorite` represented the quick-access list that is now
+  // called Presets. The presence of the new `preset` field is our unambiguous
+  // schema marker: legacy favorites become presets, while the new independent
+  // Favorite flag starts clear. Legacy noPreRoll=true is intentionally not
+  // inverted into an ad warning.
+  const currentSchema = hasOwn(raw, "preset");
+  const preset = currentSchema ? Boolean(raw.preset) : Boolean(raw.favorite);
+  const favorite = currentSchema ? Boolean(raw.favorite) : false;
+  const presetOrderSource = currentSchema ? raw.presetOrder : raw.favoriteOrder;
   return {
     id: String(raw.id ?? "").trim() || createStationId(),
     name,
     url: parsed.toString(),
     group: normalizeGroupName(raw.group),
     favorite,
-    favoriteOrder: favorite ? cleanFavoriteOrder(raw.favoriteOrder) : null,
+    preset,
+    presetOrder: preset ? cleanPresetOrder(presetOrderSource) : null,
     country: String(raw.country ?? "").trim(),
     subgroup: normalizeSubgroupName(raw.subgroup),
     description: String(raw.description ?? "").trim().slice(0, 2000),
-    noPreRoll: Boolean(raw.noPreRoll)
+    hasPreRoll: currentSchema && Boolean(raw.hasPreRoll)
   };
 }
 
@@ -169,6 +182,7 @@ class PortableStorage {
     fs.mkdirSync(this.dataDir, { recursive: true });
     fs.mkdirSync(this.backupDir, { recursive: true });
     this.#initializeFile(STATIONS_FILE, []);
+    this.#migrateStationSchema();
     this.#initializeFile(GROUPS_FILE, ["Other"]);
     if (!fs.existsSync(this.getSubgroupsPath())) {
       const bundled = path.join(this.defaultsDir, SUBGROUPS_FILE);
@@ -409,6 +423,23 @@ class PortableStorage {
     }
 
     this.#atomicWrite(fileName, fallback, { createBackup: false });
+  }
+
+  #migrateStationSchema() {
+    const target = this.getStationsPath();
+    let raw;
+    try {
+      raw = JSON.parse(fs.readFileSync(target, "utf8"));
+    } catch {
+      return;
+    }
+    if (!Array.isArray(raw)) return;
+    const needsMigration = raw.some((station) => (
+      station && typeof station === "object" && !Array.isArray(station) &&
+      (!hasOwn(station, "preset") || hasOwn(station, "favoriteOrder") || hasOwn(station, "noPreRoll"))
+    ));
+    if (!needsMigration) return;
+    this.#atomicWrite(STATIONS_FILE, validateStations(raw));
   }
 
   #readValidated(fileName, validator, fallback) {

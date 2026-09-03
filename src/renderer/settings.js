@@ -24,7 +24,8 @@ const stationSubgroup = document.getElementById("st_subgroup");
 const stationCountry = document.getElementById("st_country");
 const stationDescription = document.getElementById("st_description");
 const stationFavorite = document.getElementById("st_favorite");
-const stationNoPreRoll = document.getElementById("st_no_preroll");
+const stationPreset = document.getElementById("st_preset");
+const stationHasPreRoll = document.getElementById("st_has_preroll");
 const cancelEditBtn = document.getElementById("cancelEditBtn");
 const testUrlBtn = document.getElementById("testUrlBtn");
 const testUrlStatus = document.getElementById("testUrlStatus");
@@ -78,41 +79,27 @@ function ensureOtherLast(values) {
   return result;
 }
 
-function favoriteRank(station) {
-  const raw = station?.favoriteOrder;
+function presetRank(station) {
+  const raw = station?.presetOrder;
   if (raw === null || raw === undefined || raw === "") return null;
   const value = Number(raw);
   return Number.isSafeInteger(value) && value >= 0 ? value : null;
 }
 
-function sortFavorites(a, b) {
-  const aRank = favoriteRank(a);
-  const bRank = favoriteRank(b);
+function sortPresets(a, b) {
+  const aRank = presetRank(a);
+  const bRank = presetRank(b);
   if (aRank !== null && bRank !== null && aRank !== bRank) return aRank - bRank;
   if (aRank !== null && bRank === null) return -1;
   if (aRank === null && bRank !== null) return 1;
   return String(a.name ?? "").localeCompare(String(b.name ?? ""), undefined, { sensitivity: "base" });
 }
 
-function normalizeFavoriteOrder(values) {
-  const favorites = values.filter((station) => station.favorite).sort(sortFavorites);
-  favorites.forEach((station, index) => { station.favoriteOrder = index; });
-  values.filter((station) => !station.favorite).forEach((station) => { station.favoriteOrder = null; });
-  return favorites;
-}
-
-function setFavoriteState(values, station, favorite) {
-  const next = Boolean(favorite);
-  if (next === Boolean(station.favorite)) return;
-  if (next) {
-    const favorites = normalizeFavoriteOrder(values);
-    station.favorite = true;
-    station.favoriteOrder = favorites.length;
-  } else {
-    station.favorite = false;
-    station.favoriteOrder = null;
-    normalizeFavoriteOrder(values);
-  }
+function normalizePresetOrder(values) {
+  const presets = values.filter((station) => station.preset).sort(sortPresets);
+  presets.forEach((station, index) => { station.presetOrder = index; });
+  values.filter((station) => !station.preset).forEach((station) => { station.presetOrder = null; });
+  return presets;
 }
 
 function createId() {
@@ -291,10 +278,11 @@ function renderStationsTable() {
     const row = element("tr");
     const favoriteCell = element("td");
     const favoriteButton = miniButton(station.favorite ? "★" : "☆", "fav-star", async () => {
-      setFavoriteState(stations, station, !station.favorite);
+      station.favorite = !station.favorite;
       await saveStations();
     });
-    favoriteButton.classList.toggle("no-preroll", Boolean(station.noPreRoll));
+    favoriteButton.classList.toggle("preset", Boolean(station.preset));
+    favoriteButton.classList.toggle("has-preroll", Boolean(station.hasPreRoll));
     favoriteButton.title = `Toggle favorite for ${station.name}`;
     favoriteCell.append(favoriteButton);
 
@@ -389,7 +377,8 @@ function clearForm() {
   stationCountry.value = "";
   stationDescription.value = "";
   stationFavorite.checked = false;
-  stationNoPreRoll.checked = false;
+  stationPreset.checked = false;
+  stationHasPreRoll.checked = false;
   stationGroup.value = "Other";
   rebuildSubgroupControl("");
   setStatus(statusStations);
@@ -408,7 +397,8 @@ function startEdit(id) {
   stationCountry.value = station.country || "";
   stationDescription.value = station.description || "";
   stationFavorite.checked = Boolean(station.favorite);
-  stationNoPreRoll.checked = Boolean(station.noPreRoll);
+  stationPreset.checked = Boolean(station.preset);
+  stationHasPreRoll.checked = Boolean(station.hasPreRoll);
   stationGroup.value = normalizeGroupName(station.group);
   rebuildSubgroupControl(station.subgroup || "");
   testUrlStatus.textContent = "";
@@ -428,7 +418,8 @@ function startNewStation() {
   stationCountry.value = "";
   stationDescription.value = "";
   stationFavorite.checked = false;
-  stationNoPreRoll.checked = false;
+  stationPreset.checked = false;
+  stationHasPreRoll.checked = false;
   stationGroup.value = "Other";
   rebuildSubgroupControl("");
   testUrlStatus.textContent = "";
@@ -475,11 +466,11 @@ stationForm.addEventListener("submit", async (event) => {
   if (!name || !url) return setStatus(statusStations, "Name and URL are required.", false);
 
   const existing = editingId ? stations.find((station) => station.id === editingId) : null;
-  let favoriteOrder = null;
-  if (stationFavorite.checked) {
-    favoriteOrder = existing?.favorite
-      ? existing.favoriteOrder
-      : normalizeFavoriteOrder(stations).length;
+  let presetOrder = null;
+  if (stationPreset.checked) {
+    presetOrder = existing?.preset
+      ? existing.presetOrder
+      : normalizePresetOrder(stations).length;
   }
 
   const next = {
@@ -488,11 +479,12 @@ stationForm.addEventListener("submit", async (event) => {
     url,
     group: normalizeGroupName(stationGroup.value),
     favorite: stationFavorite.checked,
-    favoriteOrder,
+    preset: stationPreset.checked,
+    presetOrder,
     country: stationCountry.value.trim(),
     subgroup: stationSubgroup.value.trim(),
     description: stationDescription.value.trim(),
-    noPreRoll: stationNoPreRoll.checked
+    hasPreRoll: stationHasPreRoll.checked
   };
 
   if (editingId) {
