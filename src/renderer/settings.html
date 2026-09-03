@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; style-src 'self'; script-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>WaveDeck Settings</title>
+  <link rel="stylesheet" href="./settings.css">
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <h1>Settings</h1>
+      <div class="tabs">
+        <button class="tab active" data-tab="stations">Stations</button>
+        <button class="tab" data-tab="groups">Groups</button>
+        <button class="tab" data-tab="importexport">Import / Export</button>
+        <button class="tab" data-tab="launcher">Panel Shortcut</button>
+        <button class="tab" data-tab="about">About</button>
+      </div>
+    </header>
+
+    <main>
+      <!-- STATIONS -->
+      <section id="tab-stations" class="panel">
+        <div class="row">
+          <div class="label">Stations</div>
+          <div class="hint">
+            Add, edit, or remove stations. Changes save in WaveDeck's portable
+            <b>Data</b> folder and the main window updates automatically.
+          </div>
+        </div>
+
+        <div class="stations-toolbar">
+          <input id="stationSearch" class="input" type="text"
+            placeholder="Search (name / group / subgroup / country / description / url)..." />
+          <select id="stationGroupFilter" class="select">
+            <option value="">All groups</option>
+          </select>
+          <button id="newStationBtn" class="btn">Add Station</button>
+        </div>
+
+        <div class="listening-history-bar">
+          <span>Listening time is counted after 30 seconds of continuous playback.</span>
+          <button id="resetListeningBtn" class="btn danger" type="button">Reset Listening History</button>
+        </div>
+
+        <div class="table-wrap">
+          <table class="table" id="stationsTable">
+            <thead>
+              <tr>
+                <th class="col-fav">Fav</th>
+                <th>Name</th>
+                <th class="col-group">Group</th>
+                <th class="col-country">Country</th>
+                <th class="col-listened">Listened</th>
+                <th class="col-actions">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="stationsTbody"></tbody>
+          </table>
+        </div>
+
+        <div id="stationEditor" class="station-editor" hidden>
+          <div class="row">
+            <div class="label" id="stationFormTitle">Add / Edit Station</div>
+            <div class="hint">
+              Name and URL are required. Group defaults to <b>Other</b>.
+            </div>
+          </div>
+
+          <form id="stationForm" class="form-grid">
+            <input id="st_name" class="input" type="text" placeholder="name *" required />
+
+            <input id="st_url" class="input" type="text" placeholder="url *" required />
+
+            <div class="form-actions span-all mt-neg-6">
+              <button id="testUrlBtn" class="btn" type="button">Test URL</button>
+              <span id="testUrlStatus" class="status-inline"></span>
+            </div>
+
+            <select id="st_group" class="select"></select>
+
+            <select id="st_subgroup" class="select">
+              <option value="">No subgroup</option>
+            </select>
+
+            <input id="st_country" class="input" type="text" placeholder="country (optional)" />
+
+            <textarea id="st_description" class="input span-all" rows="3"
+              maxlength="2000" placeholder="description (optional)"></textarea>
+
+            <label class="check">
+              <input id="st_favorite" type="checkbox" />
+              <span>Favorite</span>
+            </label>
+
+            <label class="check">
+              <input id="st_no_preroll" type="checkbox" />
+              <span>No pre-roll ads (lime-green star)</span>
+            </label>
+
+            <div class="form-actions span-all">
+              <button id="saveStationBtn" class="btn" type="submit">Save</button>
+              <button id="cancelEditBtn" class="btn" type="button">Cancel</button>
+              <span id="stationStatus" class="status-inline"></span>
+            </div>
+          </form>
+        </div>
+
+        <div id="status" class="status"></div>
+      </section>
+
+      <!-- GROUPS -->
+      <section id="tab-groups" class="panel hidden">
+        <div class="row">
+          <div class="label">Groups</div>
+          <div class="hint">
+            Add/remove and reorder groups. Each group can also contain optional, named subgroups.
+            Removing a group moves its stations to <b>Other</b>; removing a subgroup leaves its stations in the main group.
+          </div>
+        </div>
+
+        <div class="add-row">
+          <input id="newGroupInput" type="text" placeholder="New group name…" />
+          <button id="addGroupBtn">Add</button>
+        </div>
+
+        <div id="groupsList" class="groups-list"></div>
+
+        <div class="muted mt-10">
+          Tip: After changing groups here, the Stations tab will reflect the new group list.
+        </div>
+
+        <div id="statusGroups" class="status"></div>
+      </section>
+
+      <!-- IMPORT / EXPORT -->
+      <section id="tab-importexport" class="panel hidden">
+        <div class="row">
+          <div class="label">Import / Export</div>
+          <div class="hint">
+            Import replaces <b>stations.json</b> (with a backup). Export writes your current stations to a file you choose.
+          </div>
+        </div>
+
+        <div class="io-box">
+          <button id="exportStationsBtn" class="btn">Export stations.json…</button>
+          <div class="muted mt-6">
+            Exports your current stations list to a JSON file.
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="io-box">
+          <button id="importStationsBtn" class="btn danger">Import stations.json… (Replace)</button>
+          <div class="muted mt-6">
+            Replace mode only. Before importing, the app will create a backup of your existing file.
+          </div>
+        </div>
+
+        <div id="statusImportExport" class="status"></div>
+      </section>
+
+      <!-- PANEL SHORTCUT -->
+      <section id="tab-launcher" class="panel hidden">
+        <div class="row">
+          <div class="label">Linux Mint Panel Shortcut</div>
+          <div class="hint">
+            WaveDeck can add this portable AppImage to Linux Mint's Applications
+            menu without installing or moving the app itself.
+          </div>
+        </div>
+
+        <div class="launcher-box">
+          <div id="launcherState" class="launcher-state">Checking launcher…</div>
+          <div class="launcher-actions">
+            <button id="installLauncherBtn" class="btn" type="button">Add WaveDeck to Applications Menu</button>
+            <button id="removeLauncherBtn" class="btn danger" type="button">Remove WaveDeck Launcher</button>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="row">
+          <div class="label">Add it to the bottom panel</div>
+          <div class="hint launcher-instructions">
+            After adding the launcher, open the Mint menu, find <b>WaveDeck</b>,
+            right-click it, and choose <b>Add to panel</b>. If you later move the
+            AppImage, launch it directly and return here to update the launcher.
+          </div>
+        </div>
+
+        <div id="statusLauncher" class="status"></div>
+      </section>
+
+      <!-- ABOUT -->
+      <section id="tab-about" class="panel hidden">
+        <p class="muted"><b>WaveDeck version <span id="aboutVersion">0.2.2</span></b><br>
+          Station library: <span id="aboutDataDir">Data</span></p>
+        <p class="muted">WaveDeck is a lightweight, desktop-focused streaming controller designed for fast access to your favorite internet radio stations without clutter or distraction. Its optional Sidebar Mode reserves the right edge of the Linux Mint desktop so the player stays available beside maximized windows. It organizes stations into customizable groups, lets you mark favorites for quick access, and provides subtle transport controls with real-time metadata display.</p>
+        <p class="muted">Under the ample hood, the ghost of Wolfgang Amadeus Mozart manages streams with the unholy stability of Quincy Jones' broadcast console and the responsiveness of a studio-grade monitor rig. Its architecture is so efficient, it actually has negative overhead, adding extra processing power to your computer while maintaining flawless playback and gently massaging your shoulders as you listen. Advanced internal signal routing keeps everything smooth, balanced, and ready at a moment’s notice.</p>
+        <p class="muted">With its proprietary quantum-adaptive resonance engine, it will subtly align waveform harmonics with local planetary magnetic flux, optimizing atmospheric coherence and gently curving the space-time substrate around your desk for improved acoustic clarity. Science people report enhanced focus, minor gravitational stabilization, and the spontaneous synchronization of parallel timelines.</p>
+      </section>
+    </main>
+  </div>
+
+  <script src="./settings.js"></script>
+</body>
+</html>

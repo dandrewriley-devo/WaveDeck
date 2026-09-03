@@ -1,0 +1,882 @@
+[
+  {
+    "id": "b538cdd699c04b80ae807acf3db9296b",
+    "name": "Dailycast News (US)",
+    "url": "http://ec3.yesstreaming.net:1390/stream",
+    "group": "News",
+    "favorite": false,
+    "country": "United States"
+  },
+  {
+    "id": "6d9331a2fab5484aba679b0c3c149d4b",
+    "name": "EWTN Radio",
+    "url": "https://ewtn-ice.streamguys1.com/english-aac",
+    "group": "Christian",
+    "favorite": false,
+    "country": ""
+  },
+  {
+    "id": "ad221815b8984eb7b8d4938f899c4ac2",
+    "name": "Infowars (US)",
+    "url": "http://ice-v13.infowars.com/alexjonesshow",
+    "group": "Talk",
+    "favorite": false,
+    "country": "United States"
+  },
+  {
+    "id": "5ba408b882d4433ea16ce8942a76e169",
+    "name": "KNIM Maryville MO",
+    "url": "https://stream.aiir.com/4uwhg0d2qfhtv",
+    "group": "Talk",
+    "favorite": false,
+    "country": "United States"
+  },
+  {
+    "id": "85919f18c3c049bba2ac1bec5209038e",
+    "name": "NPR Seattle WA",
+    "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/KUOWFM_HIGH_MP3.mp3",
+    "group": "Public Radio",
+    "favorite": false,
+    "country": "United States"
+  },
+  {
+    "id": "0d26c7b11044443d971853d97f9bc8ee",
+    "name": "VCY Christian Talk",
+    "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/KVCXFM_64.mp3",
+    "group": "Christian",
+    "favorite": false,
+    "country": ""
+  },
+  {
+    "id": "0a2e8f23c6c548ce9206dbd833bab3ce",
+    "name": "WBAP (Dallas)",
+    "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/WBAPAM.mp3",
+    "group": "Talk",
+    "favorite": false,
+    "country": "United States"
+  },
+  {
+    "id": "17f601e61ff642ccbcb48f890fd5fde3",
+    "name": "Folk Forward",
+    "url": "https://ice5.somafm.com/folkfwd-128-mp3",
+    "group": "Other",
+    "favorite": false,
+    "country": "United States"
+  },
+  {
+    "id": "41cbdae53d8343f7875e3be6828282c0",
+    "name": "Hair Band Radio",
+    "url": "http://listen.181fm.com/181-hairband_128k.mp3",
+    "group": "Other",
+    "favorite": false,
+    "country": "United States"
+  },
+  {
+    "id": "24854e2a481544b0bef9f461677c816a",
+    "name": "Radio Paradise Rock",
+    "url": "http://stream.radioparadise.com/rock-flac",
+    "group": "Rock",
+    "favorite": true,
+    "country": ""
+  },
+  {
+    "id": "3ba00d08f5af4c0c82056fb3b46d9701",
+    "name": "Rock 40",
+    "url": "http://listen.181fm.com/181-rock40_128k.mp3",
+    "group": "Rock",
+    "favorite": false,
+    "country": "United States"
+  },
+  {
+    "id": "61df63b5b2f84a72894f8d2f3499853c",
+    "name": "The Buzz",
+    "url": "http://listen.181fm.com/181-buzz_128k.mp3",
+    "group": "Alternative",
+    "favorite": false,
+    "country": "United States"
+  },
+  {
+    "id": "88f5eac5033947e4b480c7cbb77e8efc",
+    "name": "The Eagle",
+    "url": "http://listen.181fm.com/181-eagle_128k.mp3",
+    "group": "Classic Rock",
+    "favorite": false,
+    "country": "United States"
+  },
+  {
+    "id": "0ab1fe6255c24545956f46b11e96af93",
+    "name": "Triple J (AU)",
+    "url": "http://live-radio01.mediahubaustralia.com/2TJW/mp3/",
+    "group": "Pop",
+    "favorite": false,
+    "country": "Australia"
+  },
+  {
+    "id": "4094770db4744d51841a66ca327908af",
+    "name": "Litt Yacht Rock",
+    "url": "http://listen.181fm.com/181-yachtrock_128k.mp3",
+    "group": "Rock",
+    "favorite": false,
+    "country": "United States"
+  },
+  {
+    "id": "9698d3d34821438288d61ad35db0cfdc",
+    "name": "Awesome 80s",
+    "url": "http://listen.181fm.com/181-awesome80s_128k.mp3",
+    "group": "1980's",
+    "favorite": false,
+    "country": "United States"
+  },
+  {
+    "id": "b1e59369d88540469dea6f7ea50f6ff0",
+    "name": "RTÉ 2FM (IE)",
+    "url": "http://icecast.rte.ie/2fm",
+    "group": "Pop",
+    "favorite": false,
+    "country": "Ireland"
+  },
+  {
+    "id": "18a6162ca86e49d29bc01c7def9f5bce",
+    "name": "Star 90s",
+    "url": "http://listen.181fm.com/181-star90s_128k.mp3",
+    "group": "1990's",
+    "favorite": false,
+    "country": "United States"
+  },
+  {
+    "id": "7e9edd0ecfdf4d84a695b18004cb2743",
+    "name": "Swiss Pop",
+    "url": "http://stream.srg-ssr.ch/m/rsp/mp3_128",
+    "group": "Pop",
+    "favorite": false,
+    "country": "Switzerland"
+  },
+  {
+    "id": "3955d3f4b50840d3b1aa7cbd3d74ed6e",
+    "name": "UK Top 40 (UK)",
+    "url": "http://listen.181fm.com/181-uktop40_128k.mp3",
+    "group": "Pop",
+    "favorite": false,
+    "country": "United States"
+  },
+  {
+    "id": "29f983c62bcc4732a11ffe2c09db967a",
+    "name": "Underground 80s",
+    "url": "https://ice5.somafm.com/u80s-128-mp3",
+    "group": "1980's",
+    "favorite": false,
+    "country": "United States"
+  },
+  {
+    "id": "e854ba7c97cd4cea91e7dabde446422f",
+    "name": "DEF CON Radio",
+    "url": "https://ice5.somafm.com/defcon-128-mp3",
+    "group": "Ambient / Chill",
+    "favorite": false,
+    "country": "United States"
+  },
+  {
+    "id": "cb796bc58cab40a8b00708b9739a5a24",
+    "name": "Drone Zone",
+    "url": "https://ice5.somafm.com/dronezone-128-mp3",
+    "group": "Ambient / Chill",
+    "favorite": false,
+    "country": "United States"
+  },
+  {
+    "id": "9c560c60d1e34f98af23eed10f27bcce",
+    "name": "Groove Salad",
+    "url": "https://ice5.somafm.com/groovesalad-128-mp3",
+    "group": "Ambient / Chill",
+    "favorite": true,
+    "country": "United States"
+  },
+  {
+    "id": "b74a0b8e96a64ee4b43cf80816f3728d",
+    "name": "Groove Salad Classic",
+    "url": "https://ice5.somafm.com/gsclassic-128-mp3",
+    "group": "Ambient / Chill",
+    "favorite": true,
+    "country": "United States"
+  },
+  {
+    "id": "a5268625ba974204adc1e4d9b023d0a9",
+    "name": "Secret Agent",
+    "url": "https://ice5.somafm.com/secretagent-128-mp3",
+    "group": "Ambient / Chill",
+    "favorite": false,
+    "country": "United States"
+  },
+  {
+    "id": "215ae2c634a2410d9c95774709698c26",
+    "name": "80's Country",
+    "url": "http://listen.181fm.com/181-80scountry_128k.mp3",
+    "group": "Country",
+    "favorite": false,
+    "country": "United States"
+  },
+  {
+    "id": "bb395e8b0336434ba8f9cd2bcc1aa68b",
+    "name": "Front Porch Bluegrass",
+    "url": "http://listen.181fm.com/181-frontporch_128k.mp3",
+    "group": "Country",
+    "favorite": false,
+    "country": "United States"
+  },
+  {
+    "id": "cf5e62b12ddb4081a097516d59898753",
+    "name": "Highway 181",
+    "url": "http://listen.181fm.com/181-highway_128k.mp3",
+    "group": "Country",
+    "favorite": false,
+    "country": "United States"
+  },
+  {
+    "id": "262d1348dd9746778bba85f7ad6f9f76",
+    "name": "Kickin' Country",
+    "url": "http://listen.181fm.com/181-kickincountry_128k.mp3",
+    "group": "Country",
+    "favorite": false,
+    "country": "United States"
+  },
+  {
+    "id": "bd28e97ace3c4527bd836fdbc656af15",
+    "name": "Real Country",
+    "url": "http://listen.181fm.com/181-realcountry_128k.mp3",
+    "group": "Country",
+    "favorite": false,
+    "country": "United States"
+  },
+  {
+    "id": "d9ba270ef18e4fb48b5287d4fa6837e0",
+    "name": "Classical Jazz Radio",
+    "url": "http://ec1.yesstreaming.net:2900/stream",
+    "group": "Jazz",
+    "favorite": false,
+    "country": ""
+  },
+  {
+    "id": "8bc9b9fb3a3a42f581f77f00797e251b",
+    "name": "KCSM Jazz 91",
+    "url": "http://ice5.securenetsystems.net/KCSM",
+    "group": "Jazz",
+    "favorite": false,
+    "country": "United States"
+  },
+  {
+    "id": "274e2c1887b340d2a439debd210330c9",
+    "name": "Jazz Radio (FR)",
+    "url": "http://jazzradio.ice.infomaniak.ch/jazzradio-high.mp3",
+    "group": "Jazz",
+    "favorite": false,
+    "country": "France"
+  },
+  {
+    "id": "c84cc346857046edb610c3a8bc55e3bd",
+    "name": "Jazz Radio Blues (FR)",
+    "url": "http://jazzblues.ice.infomaniak.ch/jazzblues-high.mp3",
+    "group": "Jazz",
+    "favorite": false,
+    "country": "France"
+  },
+  {
+    "id": "da5277c34c9149cdbd27f2b66ae29204",
+    "name": "Swiss Radio Jazz",
+    "url": "http://stream.srg-ssr.ch/m/rsj/mp3_128",
+    "group": "Jazz",
+    "favorite": false,
+    "country": "Switzerland"
+  },
+  {
+    "id": "e456c40a51454d6797ae107364540567",
+    "name": "Feel Jah FM",
+    "url": "http://solid9.streamupsolutions.com:8018/autodj",
+    "group": "Reggae",
+    "favorite": false,
+    "country": ""
+  },
+  {
+    "id": "9462b871b571430f818c7bef303f45e2",
+    "name": "Heavyweight Reggae",
+    "url": "https://ice5.somafm.com/reggae-128-mp3",
+    "group": "Reggae",
+    "favorite": true,
+    "country": "United States"
+  },
+  {
+    "id": "ea540f2bffa94f6eb98354a17a640685",
+    "name": "RTÉ Raidió na Gaeltachta",
+    "url": "http://icecast.rte.ie/rnag",
+    "group": "World",
+    "favorite": false,
+    "country": "Ireland"
+  },
+  {
+    "id": "453a1ad0830846068094f238c34c0cdc",
+    "name": "Thistle Radio Celtic",
+    "url": "https://ice5.somafm.com/thistle-128-mp3",
+    "group": "World",
+    "favorite": false,
+    "country": "United States"
+  },
+  {
+    "id": "a151f63d0f3f4e5ca756c55b01dfbdc6",
+    "name": "Tiki Time",
+    "url": "https://ice5.somafm.com/tikitime-128-mp3",
+    "group": "World",
+    "favorite": false,
+    "country": "United States"
+  },
+  {
+    "id": "70b96ba994f44922b0a2895182cae1a1",
+    "name": "RNZ Concert (NZ)",
+    "url": "http://radionz-ice.streamguys.com/concert.mp3",
+    "group": "Classical",
+    "favorite": false,
+    "country": "New Zealand"
+  },
+  {
+    "id": "b5da24434bf14a55ae9ed2015bcaa72d",
+    "name": "Swiss Classic",
+    "url": "http://stream.srg-ssr.ch/m/rsc_de/mp3_128",
+    "group": "Classical",
+    "favorite": false,
+    "country": "Switzerland"
+  },
+  {
+    "id": "0b893899ec4e40ce888837e0faedf30e",
+    "name": "Swiss Classic (French)",
+    "url": "http://stream.srg-ssr.ch/m/rsc_fr/mp3_128",
+    "group": "Classical",
+    "favorite": false,
+    "country": "Switzerland"
+  },
+  {
+    "id": "4cfbfdf528944864a4b9dd3124901b9f",
+    "name": "Swiss Classic (Italian)",
+    "url": "http://stream.srg-ssr.ch/m/rsc_it/mp3_128",
+    "group": "Classical",
+    "favorite": false,
+    "country": "Switzerland"
+  },
+  {
+    "id": "f0991be4c4e44286b69c47d6a7653b85",
+    "name": "WQXR New York",
+    "url": "http://stream.wqxr.org/wqxr",
+    "group": "Classical",
+    "favorite": false,
+    "country": "United States"
+  },
+  {
+    "id": "4dc6c7467d8544c59e067b9aa544fd4f",
+    "name": "ABC Radio National (AU)",
+    "url": "http://live-radio01.mediahubaustralia.com/2RNW/mp3/",
+    "group": "International",
+    "favorite": false,
+    "country": "Australia"
+  },
+  {
+    "id": "6b94bdf188544f34bd9bfac1e8d94257",
+    "name": "BBC (UK)",
+    "url": "http://stream.live.vc.bbcmedia.co.uk/bbc_world_service",
+    "group": "News",
+    "favorite": false,
+    "country": "United Kingdom"
+  },
+  {
+    "id": "9055381b21044a81a7c71293aa69ecf4",
+    "name": "Capital FM Kenya",
+    "url": "http://streamingv2.shoutcast.com/capital-fm-kenya",
+    "group": "International",
+    "favorite": false,
+    "country": "Kenya"
+  },
+  {
+    "id": "cf2b50c436ee44cd885b472ea030d9db",
+    "name": "RNZ National (NZ)",
+    "url": "http://radionz-ice.streamguys.com/national.mp3",
+    "group": "International",
+    "favorite": false,
+    "country": "New Zealand"
+  },
+  {
+    "id": "fed9dec27a7b4114997894a6e8d39c0e",
+    "name": "RNZ Pacific (NZ)",
+    "url": "http://radionz-ice.streamguys.com/international.mp3",
+    "group": "International",
+    "favorite": false,
+    "country": "New Zealand"
+  },
+  {
+    "id": "e79a165ffe544ae3b38d0932585840b4",
+    "name": "RTÉ Radio 1 (IE)",
+    "url": "http://icecast.rte.ie/radio1",
+    "group": "International",
+    "favorite": false,
+    "country": "Ireland"
+  },
+  {
+    "id": "7fd5f6bf2e4a4468bd49b70b81b9b629",
+    "name": "Deep FM (RU)",
+    "url": "https://dirxiph.amgradio.ru/DeepFM?dirxiph",
+    "group": "Pop",
+    "favorite": false,
+    "country": "Russia"
+  },
+  {
+    "id": "e9077e4fb4d54b38bed7f68d8fd11c99",
+    "name": "Radio Fresh (RU)",
+    "url": "https://dirxiph.amgradio.ru/Fresh?dirxiph",
+    "group": "Pop",
+    "favorite": false,
+    "country": "Russia"
+  },
+  {
+    "id": "ebb52852315d47bc992a0767657cedb6",
+    "name": "Radio Monster: 90's",
+    "url": "https://ic.radiomonster.fm/90s.ultra",
+    "group": "1990's",
+    "favorite": false,
+    "country": "Germany"
+  },
+  {
+    "id": "92e4ad14651840948b9215018e5e3bd2",
+    "name": "Radio Monster: Rock",
+    "url": "https://ic.radiomonster.fm/rock.ultra",
+    "group": "Rock",
+    "favorite": false,
+    "country": "Germany"
+  },
+  {
+    "id": "387febf01969404cb03e3adf00485867",
+    "name": "Radio Monster: Evergreen",
+    "url": "https://ic.radiomonster.fm/evergreens.ultra",
+    "group": "Pop",
+    "favorite": true,
+    "country": "Germany"
+  },
+  {
+    "id": "905211550d6142dabd0b1ac11d1572d7",
+    "name": "Radio Monster: 2000's",
+    "url": "https://ic.radiomonster.fm/2000s.ultra",
+    "group": "2000's",
+    "favorite": false,
+    "country": "Germany"
+  },
+  {
+    "id": "561ad9f3a4074dd48ff72b0809816cc2",
+    "name": "I Love Radio Pop",
+    "url": "https://ilm.stream18.radiohost.de/ilm_iloveradio_mp3-192",
+    "group": "Pop",
+    "favorite": false,
+    "country": "Germany"
+  },
+  {
+    "id": "6546c5ccf2ef47e4afdd0571fc0cb213",
+    "name": "I Love HIp-Hop",
+    "url": "https://play.ilovemusic.de/ilm_ilovehiphop/",
+    "group": "Hip-Hop",
+    "favorite": false,
+    "country": "Germany"
+  },
+  {
+    "id": "71df09a252c94c1dac99d13e498a6079",
+    "name": "I Love Rock Radio",
+    "url": "https://play.ilovemusic.de/ilm_iloveradiorock/",
+    "group": "Rock",
+    "favorite": false,
+    "country": "Germany"
+  },
+  {
+    "id": "076bcf014e7c42d7ab9cffec8af129bf",
+    "name": "I Love The 90's",
+    "url": "https://play.ilovemusic.de/ilm_ilovethe90s/",
+    "group": "1990's",
+    "favorite": false,
+    "country": "Germany"
+  },
+  {
+    "id": "476e4cbee5d2439f96888132ecfe3521",
+    "name": "Smoov",
+    "url": "http://live.powerhitz.com/smoothjazz?aw_0_req.gdpr=true",
+    "group": "Jazz",
+    "favorite": false,
+    "country": "United States"
+  },
+  {
+    "id": "6abfa794e54148faaa81ee8fe4ae7a6a",
+    "name": "Pure Classic Rock",
+    "url": "http://live.powerhitz.com/pureclassicrock?aw_0_req.gdpr=true",
+    "group": "Classic Rock",
+    "favorite": false,
+    "country": "United States"
+  },
+  {
+    "id": "8adc730668eb45979722a49dee0eed50",
+    "name": "The Planet",
+    "url": "http://live.powerhitz.com/planet?aw_0_req.gdpr=true",
+    "group": "Alternative",
+    "favorite": false,
+    "country": "United States"
+  },
+  {
+    "id": "e3955954570649d296d055ae99b21a1d",
+    "name": "Sensational 70's",
+    "url": "http://live.powerhitz.com/70s?aw_0_req.gdpr=true",
+    "group": "1970's",
+    "favorite": false,
+    "country": "United States"
+  },
+  {
+    "id": "67bd15ab840847f7aff29a719820aa52",
+    "name": "Reggae141",
+    "url": "https://das-edge24-sa23-chi03.cdnstream.com/1301_128",
+    "group": "Reggae",
+    "favorite": false,
+    "country": ""
+  },
+  {
+    "id": "7190a5a03424409c87d5f3a2ee40728f",
+    "name": "100% Bob Marley",
+    "url": "http://ekila1.pro-fhi.net:3630/stream",
+    "group": "Reggae",
+    "favorite": false,
+    "country": "Jamaica"
+  },
+  {
+    "id": "f72ef98f2fac45e68ed21aa92eab9fd3",
+    "name": "TBN Reggae Radio",
+    "url": "http://puma.streemlion.com:1080/stream",
+    "group": "Reggae",
+    "favorite": false,
+    "country": ""
+  },
+  {
+    "id": "8d7fc19b74ca48cfb010e81a1bb2370f",
+    "name": "Rub-A-Dub Mix",
+    "url": "https://chourmovs.ddnsfree.com/listen/rub-a-dub_mix/radio64.aac",
+    "group": "Reggae",
+    "favorite": false,
+    "country": ""
+  },
+  {
+    "id": "a08a2cb291924bcbb0fc5f0a5bf07d4d",
+    "name": "Retro 80's Radio",
+    "url": "https://c17.radioboss.fm:8040/stream",
+    "group": "1980's",
+    "favorite": false,
+    "country": ""
+  },
+  {
+    "id": "63d72ad917f8428c9a9c8086940d41c9",
+    "name": "Cool Oldies",
+    "url": "https://c8.radioboss.fm:18114/stream",
+    "group": "Oldies",
+    "favorite": false,
+    "country": ""
+  },
+  {
+    "id": "51f3041c05b94198b73c14b94912caf1",
+    "name": "Caribbean Views Radio",
+    "url": "https://c34.radioboss.fm:8204/stream",
+    "group": "International",
+    "favorite": false,
+    "country": ""
+  },
+  {
+    "id": "a23d516c8319441f88de559fbf833239",
+    "name": "Triple H (AU)",
+    "url": "https://c17.radioboss.fm:8193/stream",
+    "group": "Pop",
+    "favorite": false,
+    "country": "Australia"
+  },
+  {
+    "id": "04256d20309d4171b420fd62020b33d6",
+    "name": "Radio Paradise Mix",
+    "url": "http://stream.radioparadise.com/flac",
+    "group": "Pop",
+    "favorite": false,
+    "country": ""
+  },
+  {
+    "id": "6855380128494ea39a13e21a0aa60e13",
+    "name": "Radio Paradise Mellow",
+    "url": "http://stream.radioparadise.com/mellow-flac",
+    "group": "Pop",
+    "favorite": false,
+    "country": ""
+  },
+  {
+    "id": "ead16d447b30479ba233a9b3d25033d0",
+    "name": "Radio Paradise Global",
+    "url": "http://stream.radioparadise.com/global-flac",
+    "group": "World",
+    "favorite": false,
+    "country": ""
+  },
+  {
+    "id": "06175daa8d914387a725b88fc47c7ccd",
+    "name": "Radio Paradise Jazz",
+    "url": "http://stream.radioparadise.com/beyond-flac",
+    "group": "Jazz",
+    "favorite": false,
+    "country": ""
+  },
+  {
+    "id": "bee70c2ba2b345318d35a48c6ff98ca1",
+    "name": "Radio Paradise Serenity",
+    "url": "http://stream.radioparadise.com/serenity",
+    "group": "Ambient / Chill",
+    "favorite": true,
+    "country": ""
+  },
+  {
+    "id": "049593bbc25e44de9d21fb4bfd8b2ba1",
+    "name": "Radio Sidewinder (Elite Dangerous)",
+    "url": "https://radiosidewinder.out.airtime.pro:8000/radiosidewinder_b",
+    "group": "Electronic",
+    "favorite": true,
+    "country": ""
+  },
+  {
+    "id": "7062abedd71644049ce114e8a6f9d15a",
+    "name": "JoeTown 107.5",
+    "url": "https://live.amperwave.net/direct/eagleradio-kesjamaac-ibc4",
+    "group": "Pop",
+    "favorite": true,
+    "country": ""
+  },
+  {
+    "id": "063c30c24c4d4d319376a976cab57cf0",
+    "name": "KCMO (Kansas City)",
+    "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/KCMOAMAAC.aac",
+    "group": "Talk",
+    "favorite": false,
+    "country": ""
+  },
+  {
+    "id": "6e1e7f507c1b476781d2d04ee979a96f",
+    "name": "Boise State Public Radio",
+    "url": "https://media.publicbroadcasting.net/idaho/newscast/newscast.wav",
+    "group": "Public Radio",
+    "favorite": false,
+    "country": "United States"
+  },
+  {
+    "id": "8699df7059194765ac1a7a26c6443ce5",
+    "name": "KBOI (Boise)",
+    "url": "https://17803.live.streamtheworld.com/KBOIFMAAC.aac",
+    "group": "Talk",
+    "favorite": false,
+    "country": ""
+  },
+  {
+    "id": "bde6ae99fd3e4f8fbc7e65e8c9293282",
+    "name": "Magic 97.9 Boise",
+    "url": "https://22973.live.streamtheworld.com/KQFCFMAAC.aac",
+    "group": "Pop",
+    "favorite": false,
+    "country": ""
+  },
+  {
+    "id": "cc163fdf3345429ca47e251a017aee82",
+    "name": "WABC (New York)",
+    "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/WABCAMAAC.aac",
+    "group": "Talk",
+    "favorite": false,
+    "country": "United States"
+  },
+  {
+    "id": "19a79162d9fe482894c88a070de8d596",
+    "name": "GB News (UK)",
+    "url": "https://tunein-live-c.cdnstream1.com/4994_96_2.mp3",
+    "group": "News",
+    "favorite": false,
+    "country": "UK"
+  },
+  {
+    "id": "d479da1cd83745978a04083e6953240d",
+    "name": "KRMS (Osage Beach)",
+    "url": "https://ice8.securenetsystems.net/KRMS",
+    "group": "Talk",
+    "favorite": false,
+    "country": ""
+  },
+  {
+    "id": "st_mm0vwjsg_meznll",
+    "name": "Timeblender",
+    "url": "http://live.powerhitz.com/timeblender?aw_0_req.gdpr=true",
+    "group": "Oldies",
+    "favorite": false,
+    "country": ""
+  },
+  {
+    "id": "st_mmh4450g_yonphq",
+    "name": "KINK Alternative",
+    "url": "http://playerservices.streamtheworld.com/api/livestream-redirect/KINK.mp3",
+    "group": "Rock",
+    "favorite": true,
+    "country": ""
+  },
+  {
+    "id": "st_mmh47353_tum81d",
+    "name": "Studio Brussel",
+    "url": "http://icecast.vrtcdn.be/stubru-high.mp3",
+    "group": "Alternative",
+    "favorite": false,
+    "country": "Belgium"
+  },
+  {
+    "id": "st_mmhpj4nx_t3xbx9",
+    "name": "Litt Hits",
+    "url": "https://das-sa39.cdnstream1.com/5572_128",
+    "group": "Pop",
+    "favorite": false,
+    "country": ""
+  },
+  {
+    "id": "st_mmhpk08k_rl7gsx",
+    "name": "Litt Alt",
+    "url": "https://das-sa39.cdnstream1.com/5561_128",
+    "group": "Alternative",
+    "favorite": false,
+    "country": ""
+  },
+  {
+    "id": "st_mmhpku96_ycbvs0",
+    "name": "Litt Legends of Rock",
+    "url": "https://das-sa39.cdnstream1.com/5602_128",
+    "group": "Classic Rock",
+    "favorite": false,
+    "country": ""
+  },
+  {
+    "id": "st_mmhpm3d0_9syctc",
+    "name": "Litt 80's",
+    "url": "https://das-sa39.cdnstream1.com/5559_128",
+    "group": "1980's",
+    "favorite": false,
+    "country": ""
+  },
+  {
+    "id": "st_mmhpncit_px415w",
+    "name": "Litt Lofi",
+    "url": "https://das-sa39.cdnstream1.com/5582_128",
+    "group": "Ambient / Chill",
+    "favorite": false,
+    "country": ""
+  },
+  {
+    "id": "st_mmhpqg9i_km6uyu",
+    "name": "Litt Grunge",
+    "url": "https://das-sa39.cdnstream1.com/5570_128",
+    "group": "Alternative",
+    "favorite": false,
+    "country": ""
+  },
+  {
+    "id": "st_mmhprtlx_mk3edb",
+    "name": "Litt Rock",
+    "url": "https://das-sa39.cdnstream1.com/5591_128",
+    "group": "Rock",
+    "favorite": false,
+    "country": ""
+  },
+  {
+    "id": "st_mmhpu0q3_ilhbxx",
+    "name": "Litt Sunny Pop",
+    "url": "https://das-sa39.cdnstream1.com/5598_128",
+    "group": "Pop",
+    "favorite": false,
+    "country": ""
+  },
+  {
+    "id": "st_mmhsuqe5_18sq28",
+    "name": "Litt Pop",
+    "url": "https://das-sa39.cdnstream1.com/5587_128",
+    "group": "Pop",
+    "favorite": false,
+    "country": ""
+  },
+  {
+    "id": "st_mmhsvz1m_sg5r5x",
+    "name": "Litt Doggystyle",
+    "url": "https://das-sa39.cdnstream1.com/5567_128",
+    "group": "Hip-Hop",
+    "favorite": false,
+    "country": ""
+  },
+  {
+    "id": "st_mmhszny8_xodq7h",
+    "name": "Litt 90's",
+    "url": "https://das-sa39.cdnstream1.com/5560_128",
+    "group": "1990's",
+    "favorite": false,
+    "country": ""
+  },
+  {
+    "id": "st_mmht0d6z_5zcpee",
+    "name": "Litt 70's",
+    "url": "https://das-sa39.cdnstream1.com/5558_128",
+    "group": "1970's",
+    "favorite": false,
+    "country": ""
+  },
+  {
+    "id": "st_mmht1cdl_cpk9yh",
+    "name": "Litt 60's",
+    "url": "https://das-sa39.cdnstream1.com/5557_128",
+    "group": "Oldies",
+    "favorite": false,
+    "country": ""
+  },
+  {
+    "id": "st_mmht29lh_o4dq3x",
+    "name": "Litt 2010's",
+    "url": "https://das-sa39.cdnstream1.com/5555_128",
+    "group": "2000's",
+    "favorite": false,
+    "country": ""
+  },
+  {
+    "id": "st_mmht49qw_uszw33",
+    "name": "Litt 2000's",
+    "url": "https://das-sa39.cdnstream1.com/5604_128",
+    "group": "2000's",
+    "favorite": false,
+    "country": ""
+  },
+  {
+    "id": "st_mmht5qqr_efw5yk",
+    "name": "AP News (US)",
+    "url": "https://apnews.cdnstream1.com/apnews",
+    "group": "News",
+    "favorite": false,
+    "country": "United States"
+  },
+  {
+    "id": "st_mmht7d0x_3y8qg2",
+    "name": "Litt Country",
+    "url": "https://das-sa39.cdnstream1.com/5563_128",
+    "group": "Country",
+    "favorite": false,
+    "country": ""
+  },
+  {
+    "id": "st_mmht7t76_9nvici",
+    "name": "Litt Classic Country",
+    "url": "https://das-sa39.cdnstream1.com/5601_128",
+    "group": "Country",
+    "favorite": false,
+    "country": ""
+  },
+  {
+    "id": "st_mmht8vly_6ms5j0",
+    "name": "Litt Island Fever",
+    "url": "https://das-sa39.cdnstream1.com/5578_128",
+    "group": "Reggae",
+    "favorite": false,
+    "country": ""
+  }
+]

@@ -1,0 +1,194 @@
+WAVEDECK PORTABLE FOR LINUX MINT
+Version 0.2.2 (64-bit Intel/AMD)
+
+QUICK START
+
+1. Unzip the package to your computer or thumb drive.
+2. Double-click WaveDeck.AppImage.
+
+The file is already marked executable inside this ZIP. If your unzip program
+does not preserve that setting:
+
+  - Right-click the AppImage and choose Properties.
+  - Open the Permissions tab.
+  - Enable "Allow executing file as program."
+  - Close Properties and double-click the AppImage again.
+
+UPDATING WAVEDECK
+
+If you already use the stable WaveDeck.AppImage filename:
+
+1. Close WaveDeck.
+2. Replace the existing WaveDeck.AppImage with the new one from this ZIP.
+3. Leave the adjacent WaveDeck-Data folder untouched.
+
+Your Applications-menu and panel shortcuts will continue working because the
+AppImage's full path has not changed.
+
+If you are updating directly from version 0.1.10 or an older version-numbered
+AppImage:
+
+1. Place WaveDeck.AppImage in the same folder as your existing WaveDeck-Data
+   folder. Do not delete or replace WaveDeck-Data.
+2. Launch WaveDeck.AppImage directly.
+3. Open Settings, select Panel Shortcut, and click "Update WaveDeck
+   Applications Menu Entry."
+4. Confirm your panel shortcut opens version 0.2.2. You may then delete the
+   older version-numbered AppImage.
+
+Starting with version 0.1.11, the executable is always named WaveDeck.AppImage.
+For future updates, replace that file in the same folder. Because its full path
+will remain unchanged, the Applications-menu and panel shortcuts will continue
+to work without being updated.
+
+STARTING POSITION
+
+WaveDeck always starts in normal floating-window mode at the bottom-right of
+the primary screen, above the Linux panel. You can move it normally afterward.
+The Settings window opens centered on the screen containing WaveDeck.
+
+SIDEBAR MODE
+
+The small sidebar icon beside the settings gear toggles Sidebar Mode.
+
+  - Move WaveDeck to the screen you want, then click once to lock it to that
+    screen's right edge.
+  - Maximized windows will use the remaining desktop space.
+  - Click the icon again to return to the previous floating window.
+  - WaveDeck always starts in normal floating-window mode.
+
+Sidebar Mode is designed for Linux Mint Cinnamon running an X11 session.
+Cinnamon performs the entire docking operation itself: it identifies the
+window's current monitor, reads that monitor's usable work area, moves the real
+desktop window, and reserves the same rectangle. This avoids translating
+coordinates between mixed-size or mixed-scale monitors. True fullscreen
+applications may still cover the sidebar.
+
+When Sidebar Mode is activated, WaveDeck replaces its ordinary application
+window with a true Linux dock-type window carrying the same player interface.
+Cinnamon can then reserve the matching strip without forcing WaveDeck into
+the reduced work area beside it. Turning Sidebar Mode off recreates the ordinary
+floating window at its previous position.
+
+On scaled monitors, Sidebar Mode uses the width Cinnamon measures from the real
+WaveDeck desktop window. It does not assume Electron's nominal 300-unit width.
+This keeps the player inside the reserved strip without an unused gap.
+
+If Cinnamon cannot perform that operation, WaveDeck stays in normal mode and
+shows the reason beneath the logo instead of silently applying a partial dock.
+
+SIDEBAR NOTEPAD
+
+The notepad button appears in the bottom bar while Sidebar Mode is active.
+Click it to open or collapse a plain-text notepad at the bottom of the sidebar.
+When open, it uses about 20 percent of the screen height and the station list
+shrinks to make room. Notes save automatically in WaveDeck-Data and remain
+available after a restart. The notepad always starts collapsed.
+
+MEDIA KEYS
+
+WaveDeck supports the Play/Pause, Previous, and Next media keys while the app
+is running, even when another window has focus.
+
+  - Play/Pause stops the live stream. Press it again to reconnect to the same
+    station at the current live point.
+  - If you have not selected a station, Play starts your first favorite.
+  - Next and Previous immediately play the next or previous favorite.
+  - The favorite order matches the order shown in WaveDeck and wraps from the
+    last favorite to the first (and vice versa).
+
+WaveDeck registers directly with Linux Mint Cinnamon's media-key service and
+also provides the standard Linux MPRIS controls. The Cinnamon route calls the
+player directly; MPRIS remains available when Cinnamon's service is not. The
+app reclaims the Cinnamon keys whenever a WaveDeck window receives focus or a
+station is selected.
+
+STATION EDITING, DETAILS, AND LISTENING HISTORY
+
+Hold Shift and click any station in the player to edit it. Settings opens
+centered with the editor directly beneath that station. A normal click still
+plays the station and expands a small detail area showing country, a best-effort
+detected bitrate, and the optional station description. The Edit button in
+Settings uses the same inline editor.
+
+WaveDeck begins counting from its active station/play state and ignores visits
+shorter than 30 seconds. In Sidebar Mode, stations with at least five
+minutes of listening time can appear in a five-item Most Played section above
+Favorites. Settings shows each station's total and provides a Reset Listening
+History button. History is saved as listening-history.json in WaveDeck-Data.
+
+Version 0.2.1 attributes playback and listening time by each station's unique
+ID rather than its stream URL. Stations that share a stream URL therefore keep
+separate, correct totals. A short status grace period also prevents momentary
+playback-engine state changes from breaking an otherwise continuous session.
+
+Version 0.2.2 no longer requires a one-time mpv "playing" notification to begin
+a listening session. It follows WaveDeck's active station/play state and also
+rechecks mpv every 10 seconds, so a missed notification cannot leave a station
+untracked. Failed, paused, and stopped playback still ends the session. The
+expanded station details now sit more tightly beneath the station name.
+
+NO PRE-ROLL MARKERS
+
+The station editor includes a No pre-roll ads checkbox. Marked stations use the
+small lime-green WaveDeck star instead of the standard gold star. The filled or
+outline shape still indicates whether the station is a favorite.
+
+SUBGROUPS
+
+Settings > Groups lets you add, rename, reorder, and delete optional subgroups
+inside any main group. Assign a station to one of its group's subgroups in the
+station editor. The player displays those stations under compact nested headers.
+Subgroups and their order are saved in subgroups.json in WaveDeck-Data.
+
+CUSTOM FAVORITES ORDER
+
+Favorites have a small drag handle at the left edge of each row. Drag that
+handle up or down to arrange the Favorites section in any order. WaveDeck saves
+the order automatically in stations.json inside WaveDeck-Data.
+
+Previous and Next media keys follow this custom order and wrap at either end.
+New favorites are added at the bottom. Regular station groups remain
+alphabetical. Existing favorites begin in their previous alphabetical order
+until you rearrange them.
+
+APPLICATION MENU AND PANEL SHORTCUT
+
+Open Settings and select Panel Shortcut. Click "Add WaveDeck to Applications
+Menu." WaveDeck registers the current AppImage in your Linux Mint menu without
+installing or moving the portable app.
+
+Then open the Mint menu, find WaveDeck, right-click it, and choose "Add to
+panel." If you move or rename the AppImage later, launch it directly and use
+the same Settings screen to update the menu entry. The Remove button deletes
+only the launcher and icon created by WaveDeck; it does not remove your app or
+portable data.
+
+PORTABLE DATA
+
+WaveDeck creates a folder named WaveDeck-Data beside the AppImage. Your
+station list, groups, subgroups, favorites, listening history, notes, backups,
+and small runtime files stay there.
+Keep the AppImage and WaveDeck-Data folder together when moving WaveDeck.
+
+On first launch, WaveDeck looks for data from the previous WaveDeckSB release.
+If found beside the old AppImage or in the original extracted package folder,
+it copies the stations, groups, favorites, and backups into WaveDeck-Data. The
+old WaveDeckSB-Data folder is left untouched as a backup.
+
+PLAYBACK REQUIREMENT
+
+WaveDeck uses mpv for dependable radio-stream playback. If WaveDeck opens
+but says the playback engine is unavailable, open Terminal and run:
+
+  sudo apt install mpv
+
+This installs the playback engine through Linux Mint's normal software system;
+WaveDeck itself remains portable.
+
+NOTES
+
+- This build is for normal 64-bit Intel/AMD Linux Mint computers.
+- It does not install WaveDeck or require an installer.
+- On a thumb drive, the first launch can be a little slower than a local drive.
+- To remove it, delete the AppImage and its WaveDeck-Data folder.

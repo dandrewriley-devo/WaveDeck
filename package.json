@@ -1,0 +1,51 @@
+{
+  "name": "wavedeck",
+  "version": "0.2.2",
+  "description": "WaveDeck portable sidebar internet radio player for Linux Mint",
+  "author": "Andrew Riley",
+  "license": "MIT",
+  "desktopName": "wavedeck.desktop",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node scripts/validate.js",
+    "dist:linux": "electron-builder --linux AppImage --x64"
+  },
+  "devDependencies": {
+    "electron": "30.5.1",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "com.a17press.wavedeck",
+    "productName": "WaveDeck",
+    "asar": true,
+    "files": [
+      "assets/**/*",
+      "build/**/*",
+      "defaults/**/*",
+      "src/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "category": "AudioVideo",
+      "icon": "build/icon.png",
+      "syncDesktopName": true,
+      "artifactName": "WaveDeck.${ext}"
+    }
+  },
+  "dependencies": {
+    "dbus-next": "^0.10.2",
+    "x11": "^4.1.0"
+  }
+}

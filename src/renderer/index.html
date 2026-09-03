@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>WaveDeck</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+
+<body>
+  <div class="app">
+    <header class="header">
+      <img class="logo" src="../../assets/logo.png" alt="WaveDeck logo">
+      <div class="station-name">WaveDeck</div>
+      <div class="now-playing" id="nowPlaying">Now Playing: (nothing yet)</div>
+
+      <div class="transport">
+        <button id="muteBtn" aria-label="Toggle mute" title="Mute">
+          <svg id="muteIcon" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+               viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path d="M8.25 6.75 4.5 9H2.25A.75.75 0 0 0 1.5 9.75v4.5c0 .414.336.75.75.75H4.5l3.75 2.25V6.75Z"/>
+            <path d="M14.75 8.75a.75.75 0 0 1 1.06 0 4.5 4.5 0 0 1 0 6.364.75.75 0 1 1-1.06-1.06 3 3 0 0 0 0-4.244.75.75 0 0 1 0-1.06Z"/>
+            <path d="M17.5 6a.75.75 0 0 1 1.06 0 8.25 8.25 0 0 1 0 12 .75.75 0 1 1-1.06-1.06 6.75 6.75 0 0 0 0-9.88.75.75 0 0 1 0-1.06Z"/>
+          </svg>
+        </button>
+
+        <input id="volSlider" type="range" min="0" max="100" value="100" />
+
+        <button id="stopBtn" aria-label="Stop playback" title="Stop">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+               viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <path d="M6 6h12v12H6z"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="list"></main>
+
+    <section id="notepadPanel" class="notepad-panel" aria-label="Notepad" aria-hidden="true" hidden>
+      <textarea id="notepadText" aria-label="WaveDeck notepad" placeholder="Notes…" spellcheck="true"></textarea>
+    </section>
+
+    <footer class="footer">
+      <span id="appVersion" class="footer-version" aria-label="WaveDeck version"></span>
+      <button id="sidebarModeBtn" type="button" aria-label="Turn Sidebar Mode on"
+              aria-pressed="false" title="Sidebar Mode">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="3" y="4" width="18" height="16" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+          <path d="M15 5h5v14h-5z" fill="currentColor"/>
+        </svg>
+      </button>
+      <button id="notepadToggleBtn" type="button" aria-label="Open notepad"
+              aria-pressed="false" title="Notepad" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 3.75h9.75L19.5 7.5v12.75H6z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+          <path d="M15.5 3.9v3.85h3.8M9 11h7.5M9 14.5h7.5M9 18h5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <button id="openSettingsBtn" type="button" aria-label="Open settings" title="Settings">⚙</button>
+    </footer>
+  </div>
+
+  <script src="./renderer.js"></script>
+</body>
+</html>
