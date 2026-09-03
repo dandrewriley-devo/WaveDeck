@@ -36,6 +36,7 @@ const {
   OBJECT_PATH: CINNAMON_MEDIA_KEYS_PATH,
   SERVICE_NAME
 } = require("../src/main/cinnamon-media-keys");
+const { MEDIA_KEY_BINDINGS, WindowsMediaKeys } = require("../src/main/windows-media-keys");
 const {
   PortableStorage,
   validateGroups,
@@ -93,13 +94,14 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.2.5");
+assert.strictEqual(packageJson.version, "0.3.0");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
 assert.strictEqual(packageJson.dependencies["dbus-next"], "^0.10.2");
 assert.strictEqual(packageJson.build.linux.syncDesktopName, true);
 assert.strictEqual(packageJson.build.linux.artifactName, "WaveDeck.${ext}");
+assert.ok(packageJson.scripts["dist:windows"].includes("electron-builder.windows.json"));
 assert.strictEqual(stations.length, 110);
 assert.strictEqual(groups.length, 23);
 assert.strictEqual(new Set(stations.map((station) => station.id)).size, 110);
@@ -133,6 +135,15 @@ assert.deepStrictEqual(resolveLegacyDataDirs({
   path.normalize("/media/USB/WaveDeck Portable Linux/WaveDeckSB-Data"),
   path.normalize("/media/USB/WaveDeckSB Portable Linux/WaveDeckSB-Data")
 ]);
+
+assert.strictEqual(resolveDataDir({
+  platform: "win32",
+  isPackaged: true,
+  portableExecutableDir: "D:\\Radio\\WaveDeck Portable Windows",
+  execPath: "C:\\Users\\tester\\AppData\\Local\\Temp\\wavedeck\\WaveDeck.exe",
+  projectRoot: "C:\\source",
+  homeDir: "C:\\Users\\tester"
+}), path.win32.normalize("D:\\Radio\\WaveDeck Portable Windows\\Data"));
 
 assert.strictEqual(resolveDataDir({
   platform: "win32",
@@ -662,6 +673,7 @@ assert.ok(preloadSource.includes('ipcRenderer.invoke("settings:open", stationId)
 assert.ok(preloadSource.includes('ipcRenderer.invoke("subgroups:get"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("subgroups:rename"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("player:play-station", stationId)'));
+assert.ok(preloadSource.includes("platform: process.platform"));
 assert.ok(!preloadSource.includes("showStationContextMenu"));
 const settingsHtml = fs.readFileSync(path.join(root, "src", "renderer", "settings.html"), "utf8");
 assert.ok(settingsHtml.includes('data-tab="launcher"'));
@@ -696,10 +708,14 @@ assert.ok(mainSource.includes("Cinnamon could not apply Sidebar Mode"));
 assert.ok(!mainSource.includes("mainWindow.setBounds(layout.bounds)"));
 assert.ok(!mainSource.includes("mainWindow.setResizable(false)"));
 assert.ok(mainSource.includes("new MediaController"));
+assert.ok(mainSource.includes('process.platform === "linux"'));
+assert.ok(mainSource.includes('process.platform === "win32"'));
+assert.ok(mainSource.includes('CinnamonMediaKeys: PlatformMediaKeys'));
+assert.ok(mainSource.includes('WindowsMediaKeys: PlatformMediaKeys'));
 assert.ok(mainSource.includes("new MprisService"));
-assert.ok(mainSource.includes("new CinnamonMediaKeys"));
-assert.ok(mainSource.includes("await mprisService.start()"));
-assert.ok(mainSource.includes("await cinnamonMediaKeys.start()"));
+assert.ok(mainSource.includes("new PlatformMediaKeys"));
+assert.ok(mainSource.includes("await mprisService?.start()"));
+assert.ok(mainSource.includes("await platformMediaKeys?.start()"));
 assert.ok(mainSource.includes("MEDIA_KEY_RECLAIM_INTERVAL_MS = 15_000"));
 assert.ok(mainSource.includes("setInterval(reclaimMediaKeys, MEDIA_KEY_RECLAIM_INTERVAL_MS)"));
 assert.ok(mainSource.includes("claim({ reconnect: true })"));
@@ -761,6 +777,7 @@ assert.ok(rendererSource.includes("Detecting bitrate"));
 assert.ok(rendererSource.includes("createSubgroupBlock"));
 assert.ok(rendererSource.includes("playStation(row.dataset.id)"));
 assert.ok(rendererSource.includes("currentStationId"));
+assert.ok(rendererSource.includes('platform !== "linux"'));
 const settingsSource = fs.readFileSync(path.join(root, "src", "renderer", "settings.js"), "utf8");
 assert.ok(settingsSource.includes("addSubgroup"));
 assert.ok(settingsSource.includes("renameSubgroup"));
@@ -768,6 +785,18 @@ assert.ok(settingsSource.includes("moveSubgroup"));
 assert.ok(settingsSource.includes("deleteSubgroup"));
 assert.ok(settingsSource.includes('stationsTbody.querySelectorAll("tr[data-station-id]")'));
 assert.ok(settingsSource.includes('row.querySelector(".listened-total")'));
+assert.ok(settingsSource.includes('platform !== "linux"'));
+assert.ok(settingsSource.includes('platform === "linux" ? loadLauncherStatus()'));
+
+const windowsBuild = JSON.parse(fs.readFileSync(path.join(root, "electron-builder.windows.json"), "utf8"));
+assert.strictEqual(windowsBuild.win.artifactName, "WaveDeck.exe");
+assert.strictEqual(windowsBuild.win.target[0].target, "portable");
+assert.deepStrictEqual(windowsBuild.win.target[0].arch, ["x64"]);
+assert.strictEqual(windowsBuild.extraResources[0].to, "playback/mpv.exe");
+assert.strictEqual(windowsBuild.extraResources[1].to, "licenses/mpv-GPL-2.0.txt");
+assert.ok(fs.existsSync(path.join(root, "licenses", "mpv-GPL-2.0.txt")));
+const windowsIcon = fs.readFileSync(path.join(root, "build", "icon.ico"));
+assert.deepStrictEqual([...windowsIcon.subarray(0, 4)], [0, 0, 1, 0]);
 
 for (const file of [
   "src/main/main.js",
@@ -780,6 +809,7 @@ for (const file of [
   "src/main/sidebar.js",
   "src/main/cinnamon-reservation.js",
   "src/main/cinnamon-media-keys.js",
+  "src/main/windows-media-keys.js",
   "src/main/media-controller.js",
   "src/main/listening-history.js",
   "src/main/mpris.js",
@@ -911,6 +941,43 @@ async function validateMediaControls() {
   assert.ok(stationEvents.length >= 7);
   assert.ok(stateEvents.includes("paused"));
 
+  const windowsActions = [];
+  const windowsCallbacks = new Map();
+  const windowsWarnings = [];
+  const mockGlobalShortcut = {
+    register(accelerator, callback) {
+      windowsCallbacks.set(accelerator, callback);
+      return true;
+    },
+    isRegistered: (accelerator) => windowsCallbacks.has(accelerator),
+    unregister: (accelerator) => windowsCallbacks.delete(accelerator)
+  };
+  const windowsMediaKeys = new WindowsMediaKeys({
+    platform: "win32",
+    globalShortcut: mockGlobalShortcut,
+    controller: {
+      togglePlayPause: () => windowsActions.push("togglePlayPause"),
+      nextPreset: () => windowsActions.push("nextPreset"),
+      previousPreset: () => windowsActions.push("previousPreset"),
+      stop: () => windowsActions.push("stop")
+    },
+    onWarning: (warning) => windowsWarnings.push(warning)
+  });
+  assert.strictEqual(await windowsMediaKeys.start(), true);
+  assert.deepStrictEqual([...windowsCallbacks.keys()], MEDIA_KEY_BINDINGS.map(([accelerator]) => accelerator));
+  windowsCallbacks.get("MediaPlayPause")();
+  windowsCallbacks.get("MediaNextTrack")();
+  windowsCallbacks.get("MediaPreviousTrack")();
+  windowsCallbacks.get("MediaStop")();
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.deepStrictEqual(windowsActions, ["togglePlayPause", "nextPreset", "previousPreset", "stop"]);
+  mockGlobalShortcut.unregister("MediaNextTrack");
+  assert.strictEqual(await windowsMediaKeys.claim(), true);
+  assert.ok(windowsCallbacks.has("MediaNextTrack"));
+  windowsMediaKeys.close();
+  assert.strictEqual(windowsCallbacks.size, 0);
+  assert.deepStrictEqual(windowsWarnings, []);
+
   assert.strictEqual(stationTrackPath({ id: "alpha-one" }), "/com/a17press/wavedeck/station/alpha_one");
   const metadata = metadataForStation(controller.getCurrentStation());
   assert.strictEqual(metadata["xesam:title"].value, "Alpha");
@@ -1001,7 +1068,7 @@ async function validateMediaControls() {
 }
 
 validateMediaControls().then(() => {
-console.log("WaveDeck validation passed: v0.2.5 startup messaging, section toggles, ten-station history, focus-safe Settings updates, periodic media-key reclamation and reconnection, station details, Sidebar Mode, notepad, and panel launcher verified.");
+console.log("WaveDeck validation passed: v0.3.0 Windows portability, native media keys, portable data, platform-aware controls, shared station features, Linux Sidebar Mode, and packaging configuration verified.");
 }).catch((error) => {
   console.error(error);
   process.exitCode = 1;

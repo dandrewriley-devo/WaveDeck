@@ -1,5 +1,5 @@
-WaveDeck Portable Linux source package
-Version 0.2.5
+WaveDeck portable Windows and Linux source package
+Version 0.3.0
 
 WaveDeck is a portable Linux Mint internet-radio player. The sidebar toggle asks
 Cinnamon to identify the Meta.Window's current monitor, read its work area,
@@ -127,8 +127,17 @@ of rebuilding the station table and interrupting an open editor. While running,
 WaveDeck also reclaims Cinnamon's media keys every 15 seconds and reconnects to
 the Cinnamon media-key service if that direct integration was interrupted.
 
+Version 0.3.0 introduces the first current portable Windows build. The shared
+player and Settings features remain intact, while Cinnamon Sidebar Mode, its
+notepad button, and the Linux panel-shortcut tab are hidden on Windows. Windows
+uses Electron's native global media-key registrations for Play/Pause, Previous,
+Next, and Stop and retries missing registrations every 15 seconds. The portable
+EXE bundles a generic x86-64 mpv playback engine and keeps its Data directory
+beside the outer portable executable rather than electron-builder's temporary
+unpack directory.
+
 Build requirements:
-- 64-bit Linux
+- 64-bit Windows or Linux
 - Node.js and npm
 
 Build command:
@@ -137,6 +146,14 @@ Build command:
 
 The AppImage is written to dist/.
 
+Windows build command:
+  npm install
+  npm run dist:windows
+
+Before building Windows, place the pinned generic 64-bit mpv.exe described in
+playback/win32/README.txt at playback/win32/mpv.exe. The portable executable is
+written to dist/windows/WaveDeck.exe.
+
 The Linux AppImage stores portable data in a WaveDeck-Data folder beside the
 AppImage. When run from source, WaveDeck uses ~/.config/wavedeck instead.
 
@@ -144,3 +161,7 @@ Playback uses the mpv executable available on the Linux system. Sidebar Mode is
 intended for Linux Mint Cinnamon on X11 and uses the pure-JavaScript x11 package.
 Desktop media keys use Cinnamon's media-key D-Bus API plus the Linux MPRIS
 interface through dbus-next.
+
+The Windows portable executable stores its data in Data beside WaveDeck.exe.
+It uses the bundled mpv.exe and Electron global shortcuts for Windows media
+keys. Sidebar Mode remains Linux-only.

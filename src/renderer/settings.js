@@ -39,6 +39,10 @@ const statusLauncher = document.getElementById("statusLauncher");
 const installLauncherBtn = document.getElementById("installLauncherBtn");
 const removeLauncherBtn = document.getElementById("removeLauncherBtn");
 const resetListeningBtn = document.getElementById("resetListeningBtn");
+const platform = window.wavedeck.platform;
+const launcherTab = document.querySelector('[data-tab="launcher"]');
+
+if (platform !== "linux") launcherTab.hidden = true;
 
 let stations = [];
 let groups = [];
@@ -757,7 +761,10 @@ window.wavedeck.onWarning((warning) => setStatus(statusStations, warning, false)
 
 (async function initialize() {
   showTab(document.querySelector(".tab.active")?.dataset.tab || "stations");
-  await Promise.all([reloadEverything(), loadLauncherStatus()]);
+  await Promise.all([
+    reloadEverything(),
+    platform === "linux" ? loadLauncherStatus() : Promise.resolve()
+  ]);
   clearForm();
   initialized = true;
   if (pendingEditId) {

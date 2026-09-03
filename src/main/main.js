@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog, ipcMain, Menu, screen } = require("electron");
+const { app, BrowserWindow, dialog, globalShortcut, ipcMain, Menu, screen } = require("electron");
 const { execFile } = require("child_process");
 const fs = require("fs");
 const os = require("os");
@@ -6,8 +6,6 @@ const path = require("path");
 
 const { MpvPlayer, getIpcPath, getMpvExecutable } = require("./player");
 const { MediaController } = require("./media-controller");
-const { MprisService } = require("./mpris");
-const { CinnamonMediaKeys } = require("./cinnamon-media-keys");
 const { ListeningHistory } = require("./listening-history");
 const { copyLegacyData } = require("./data-migration");
 const {
@@ -28,6 +26,15 @@ const {
 } = require("./sidebar");
 const { calculateBottomRightBounds, calculateCenteredBounds } = require("./window-layout");
 
+let MprisService = null;
+let PlatformMediaKeys = null;
+if (process.platform === "linux") {
+  ({ MprisService } = require("./mpris"));
+  ({ CinnamonMediaKeys: PlatformMediaKeys } = require("./cinnamon-media-keys"));
+} else if (process.platform === "win32") {
+  ({ WindowsMediaKeys: PlatformMediaKeys } = require("./windows-media-keys"));
+}
+
 const FIXED_WIDTH = SIDEBAR_WIDTH;
 const PROJECT_ROOT = path.resolve(__dirname, "..", "..");
 const FLOATING_NATIVE_TITLE = "WaveDeck";
@@ -42,7 +49,7 @@ let storage = null;
 let player = null;
 let mediaController = null;
 let mprisService = null;
-let cinnamonMediaKeys = null;
+let platformMediaKeys = null;
 let listeningHistory = null;
 let playbackHeartbeat = null;
 let mediaKeyReclaimTimer = null;
@@ -59,6 +66,7 @@ function getDataDir() {
     platform: process.platform,
     isPackaged: app.isPackaged,
     appImagePath: process.env.APPIMAGE,
+    portableExecutableDir: process.env.PORTABLE_EXECUTABLE_DIR,
     execPath: process.execPath,
     projectRoot: PROJECT_ROOT,
     homeDir: os.homedir()
@@ -151,8 +159,8 @@ function broadcastStationChanged(station) {
 
 function reclaimMediaKeys() {
   if (!mediaKeyReclaimEnabled) return;
-  void cinnamonMediaKeys?.claim({ reconnect: true }).catch((error) => {
-    console.warn(`Could not reclaim Cinnamon media keys: ${error.message}`);
+  void platformMediaKeys?.claim({ reconnect: true }).catch((error) => {
+    console.warn(`Could not reclaim media keys: ${error.message}`);
   });
 }
 
@@ -534,6 +542,7 @@ function installIpcHandlers() {
 
   ipcMain.handle("app:info", () => ({
     version: app.getVersion(),
+    platform: process.platform,
     portable: isPortableBuild(),
     dataDir: storage.dataDir
   }));
@@ -596,25 +605,30 @@ if (!hasSingleInstanceLock) {
       onChanged: (history) => sendToAll("listening:changed", history)
     });
 
-    mprisService = new MprisService({
-      controller: mediaController,
-      onRaise: () => {
-        if (!mainWindow || mainWindow.isDestroyed()) return;
-        if (mainWindow.isMinimized()) mainWindow.restore();
-        mainWindow.show();
-        mainWindow.focus();
-      },
-      onWarning: (message) => {
-        console.warn(message);
-      }
-    });
+    if (MprisService) {
+      mprisService = new MprisService({
+        controller: mediaController,
+        onRaise: () => {
+          if (!mainWindow || mainWindow.isDestroyed()) return;
+          if (mainWindow.isMinimized()) mainWindow.restore();
+          mainWindow.show();
+          mainWindow.focus();
+        },
+        onWarning: (message) => {
+          console.warn(message);
+        }
+      });
+    }
 
-    cinnamonMediaKeys = new CinnamonMediaKeys({
-      controller: mediaController,
-      onWarning: (message) => {
-        console.warn(message);
-      }
-    });
+    if (PlatformMediaKeys) {
+      platformMediaKeys = new PlatformMediaKeys({
+        controller: mediaController,
+        globalShortcut,
+        onWarning: (message) => {
+          console.warn(message);
+        }
+      });
+    }
 
     installIpcHandlers();
     createMainWindow();
@@ -630,10 +644,10 @@ if (!hasSingleInstanceLock) {
     }
     startPlaybackHeartbeat();
 
-    await mprisService.start();
-    await cinnamonMediaKeys.start();
-    mediaKeyReclaimEnabled = true;
-    startMediaKeyReclaim();
+    await mprisService?.start();
+    await platformMediaKeys?.start();
+    mediaKeyReclaimEnabled = Boolean(platformMediaKeys);
+    if (mediaKeyReclaimEnabled) startMediaKeyReclaim();
   });
 }
 
@@ -644,7 +658,7 @@ app.on("before-quit", () => {
   mediaKeyReclaimTimer = null;
   mediaKeyReclaimEnabled = false;
   listeningHistory?.close();
-  cinnamonMediaKeys?.close();
+  platformMediaKeys?.close();
   mprisService?.close();
   player?.close();
 });

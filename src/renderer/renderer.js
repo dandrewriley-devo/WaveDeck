@@ -13,6 +13,9 @@ const notepadPanel = document.getElementById("notepadPanel");
 const notepadText = document.getElementById("notepadText");
 const appVersion = document.getElementById("appVersion");
 const listEl = document.querySelector(".list");
+const platform = window.wavedeck.platform;
+
+if (platform !== "linux") sidebarModeBtn.hidden = true;
 
 let currentStationId = null;
 let isMuted = false;

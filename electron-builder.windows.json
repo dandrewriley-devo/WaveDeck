@@ -1,0 +1,42 @@
+{
+  "appId": "com.a17press.wavedeck",
+  "productName": "WaveDeck",
+  "asar": true,
+  "npmRebuild": false,
+  "files": [
+    "assets/**/*",
+    "build/**/*",
+    "defaults/**/*",
+    "src/**/*",
+    "package.json"
+  ],
+  "extraResources": [
+    {
+      "from": "playback/win32/mpv.exe",
+      "to": "playback/mpv.exe"
+    },
+    {
+      "from": "licenses/mpv-GPL-2.0.txt",
+      "to": "licenses/mpv-GPL-2.0.txt"
+    },
+    {
+      "from": "THIRD-PARTY-NOTICES.txt",
+      "to": "THIRD-PARTY-NOTICES.txt"
+    }
+  ],
+  "directories": {
+    "output": "dist/windows"
+  },
+  "win": {
+    "target": [
+      {
+        "target": "portable",
+        "arch": [
+          "x64"
+        ]
+      }
+    ],
+    "icon": "build/icon.ico",
+    "artifactName": "WaveDeck.exe"
+  }
+}

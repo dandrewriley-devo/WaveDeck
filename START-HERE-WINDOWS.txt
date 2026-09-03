@@ -1,0 +1,56 @@
+WAVEDECK PORTABLE FOR WINDOWS
+Version 0.3.0 (64-bit Intel/AMD)
+
+QUICK START
+
+1. Unzip the whole package to a normal folder or thumb drive.
+2. Double-click WaveDeck.exe.
+3. If Windows SmartScreen appears, choose More info, confirm that the app is
+   WaveDeck, then choose Run anyway.
+
+WaveDeck is portable. It does not install itself or write an uninstaller.
+
+PORTABLE DATA
+
+WaveDeck creates a folder named Data beside WaveDeck.exe on first launch. Your
+stations, groups, presets, favorites, listening history, backups, and runtime
+files remain there. Keep WaveDeck.exe and Data together when moving the app.
+
+To update later, close WaveDeck and replace only WaveDeck.exe. Leave Data
+untouched.
+
+WINDOWS MEDIA KEYS
+
+While WaveDeck is running, it registers the standard media keys directly with
+Windows:
+
+  - Play/Pause stops the live stream; press again to reconnect at the live point.
+  - Next and Previous move through your custom Presets order and wrap around.
+  - Stop stops playback.
+
+WaveDeck retries any unavailable media-key registrations every 15 seconds and
+whenever its window receives focus. Windows grants a global key to one app at a
+time, so another program that already owns a key can temporarily prevent
+WaveDeck from registering it.
+
+PRESETS AND MOST PLAYED
+
+The star button in the bottom bar shows or hides Presets. Presets is visible on
+each fresh launch. The clock-and-list button shows or hides the ten-station Most
+Played section, which begins hidden on each fresh launch.
+
+STATION SHORTCUTS
+
+  - Click a station: play it and show its details.
+  - Click its star: toggle Favorite status.
+  - Ctrl-click: toggle Preset status.
+  - Ctrl+Shift-click: toggle the pre-roll warning.
+  - Shift-click: edit the station in Settings.
+
+WINDOWS NOTES
+
+This first Windows release uses the normal floating WaveDeck window. Linux
+Mint's Sidebar Mode, sidebar notepad, and panel-shortcut controls are not shown
+because they depend on Cinnamon and X11.
+
+Playback is provided by the bundled mpv engine; no separate player is needed.

@@ -11,6 +11,7 @@ function resolveDataDir({
   platform,
   isPackaged,
   appImagePath,
+  portableExecutableDir,
   execPath,
   projectRoot,
   homeDir
@@ -19,7 +20,8 @@ function resolveDataDir({
   if (envDataDir) return pathApi.resolve(envDataDir);
 
   if (platform === "win32" && isPackaged) {
-    return pathApi.join(pathApi.dirname(execPath), "Data");
+    const executableDir = portableExecutableDir || pathApi.dirname(execPath);
+    return pathApi.join(pathApi.resolve(executableDir), "Data");
   }
 
   if (platform === "linux" && isPackaged && appImagePath) {

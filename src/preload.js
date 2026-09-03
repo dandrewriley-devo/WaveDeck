@@ -8,6 +8,7 @@ function subscribe(channel, callback) {
 }
 
 contextBridge.exposeInMainWorld("wavedeck", {
+  platform: process.platform,
   getStations: () => ipcRenderer.invoke("stations:get"),
   saveStations: (stations) => ipcRenderer.invoke("stations:save", stations),
   onStationsChanged: (callback) => subscribe("stations:changed", callback),

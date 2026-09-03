@@ -1,6 +1,11 @@
-const x11 = require("x11");
-
 const SIDEBAR_WIDTH = 300;
+
+let x11 = null;
+
+function getX11() {
+  if (!x11) x11 = require("x11");
+  return x11;
+}
 
 function calculateSidebarLayout(display, displays, width = SIDEBAR_WIDTH) {
   if (!display?.bounds || !display?.workArea) throw new Error("No display is available for Sidebar Mode.");
@@ -41,7 +46,7 @@ function internAtom(X, name) {
 
 function withX11Client(task) {
   return new Promise((resolve, reject) => {
-    x11.createClient((connectionError, display) => {
+    getX11().createClient((connectionError, display) => {
       if (connectionError) {
         reject(new Error(`Could not connect to the X11 desktop: ${connectionError.message}`));
         return;

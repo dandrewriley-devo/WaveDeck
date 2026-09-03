@@ -1,7 +1,19 @@
 WAVEDECK THIRD-PARTY NOTICES
 
 WaveDeck uses Electron. Electron and Chromium license information is included
-inside the AppImage distribution.
+inside each distribution.
+
+The WaveDeck Windows package bundles mpv from the shinchiro Windows builds:
+  https://github.com/shinchiro/mpv-winbuild-cmake/releases
+  https://mpv.io/
+
+mpv is free software. The bundled build is distributed under GNU GPL version 2
+or later. A copy of
+GPL version 2 is included as licenses/mpv-GPL-2.0.txt. Corresponding mpv source,
+the Windows cross-build scripts, dependency recipes, and their revision history
+are available from:
+  https://github.com/mpv-player/mpv
+  https://github.com/shinchiro/mpv-winbuild-cmake
 
 WaveDeck uses dbus-next for Linux MPRIS and Cinnamon media-key integration:
   https://github.com/dbusjs/node-dbus-next
