@@ -1,5 +1,5 @@
 WaveDeck portable Windows and Linux source package
-Version 0.4.1
+Version 0.4.2
 
 WaveDeck is a portable Linux Mint internet-radio player. The sidebar toggle asks
 Cinnamon to identify the Meta.Window's current monitor, read its work area,
@@ -155,6 +155,12 @@ Portable with both WaveDeck.AppImage and WaveDeck.exe sharing the adjacent Data
 folder. The bundled default library contains 360 stations, 17 groups, and 105
 subgroups. Seven starter Presets are generated only for a genuinely new user;
 existing library and preferences files remain untouched.
+
+Version 0.4.2 moves Linux mpv's temporary Unix control socket out of the shared
+USB Data folder and into WaveDeck's computer-local runtime directory. This lets
+the playback engine start when WaveDeck Portable is stored on exFAT, FAT, and
+other removable filesystems that cannot host Unix sockets. The library,
+preferences, listening history, and notes remain shared beside both executables.
 
 Build requirements:
 - 64-bit Windows or Linux

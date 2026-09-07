@@ -60,7 +60,7 @@ npm run dist:linux
 
 The AppImage is written to `dist/`. Release builds use the stable filename `WaveDeck.AppImage`. Keep future replacements at the same path so an Applications-menu or panel shortcut continues to work.
 
-For a portable release, WaveDeck stores user data in a `Data` folder beside both executables. The Windows EXE and Linux AppImage share `library.json` and `preferences.json`; Electron's temporary runtime state stays on the local computer so WaveDeck can launch from common USB filesystems. The `Data` folder is intentionally excluded from this repository because it can contain personal preferences, listening history, and notes.
+For a portable release, WaveDeck stores user data in a `Data` folder beside both executables. The Windows EXE and Linux AppImage share `library.json` and `preferences.json`; Electron's temporary runtime state and Linux playback-control socket stay on the local computer so WaveDeck can launch and play from common USB filesystems. The `Data` folder is intentionally excluded from this repository because it can contain personal preferences, listening history, and notes.
 
 ## Platform notes
 

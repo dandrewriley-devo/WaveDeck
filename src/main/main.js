@@ -588,7 +588,7 @@ if (!hasSingleInstanceLock) {
       startupWarnings.push(`WaveDeck's Data folder is not writable. Changes may not be saved. ${error.message}`);
     }
 
-    const ipcPath = getIpcPath(process.platform, storage.dataDir);
+    const ipcPath = getIpcPath(process.platform, app.getPath("userData"));
     const executable = getMpvExecutable({
       platform: process.platform,
       packaged: app.isPackaged,

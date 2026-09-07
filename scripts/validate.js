@@ -32,6 +32,7 @@ const {
   MpvPlayer,
   bitrateFromMetadata,
   bitrateFromTrackList,
+  getIpcPath,
   normalizeBitrateKbps
 } = require("../src/main/player");
 const { MprisPlayerInterface, metadataForStation, stationTrackPath } = require("../src/main/mpris");
@@ -102,7 +103,7 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.4.1");
+assert.strictEqual(packageJson.version, "0.4.2");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -177,6 +178,11 @@ assert.strictEqual(resolveRuntimeDir({
   platform: "win32",
   appDataDir: "C:\\Users\\tester\\AppData\\Roaming"
 }), path.win32.normalize("C:\\Users\\tester\\AppData\\Roaming\\wavedeck-runtime\\win32"));
+assert.strictEqual(
+  getIpcPath("linux", "/home/tester/.config/wavedeck-runtime/linux", 4242),
+  path.normalize("/home/tester/.config/wavedeck-runtime/linux/mpv-4242.sock")
+);
+assert.strictEqual(getIpcPath("win32", "D:\\WaveDeck Portable\\Data", 4242), "\\\\.\\pipe\\wavedeck-4242");
 
 const testRoot = fs.mkdtempSync(path.join(os.tmpdir(), "wavedeck-validate-"));
 try {
@@ -820,6 +826,8 @@ assert.ok(mainSource.includes("mediaKeyReclaimPaused = true"));
 assert.ok(mainSource.includes("resolveRuntimeDir({"));
 assert.ok(mainSource.includes('appDataDir: app.getPath("appData")'));
 assert.ok(!mainSource.includes('path.join(getDataDir(), "runtime"'));
+assert.ok(mainSource.includes('getIpcPath(process.platform, app.getPath("userData"))'));
+assert.ok(!mainSource.includes("getIpcPath(process.platform, storage.dataDir)"));
 assert.ok(mainSource.includes("clearInterval(mediaKeyReclaimTimer)"));
 assert.ok(mainSource.includes("PLAYBACK_HEARTBEAT_MS = 10_000"));
 assert.ok(mainSource.includes("player.refreshPlaybackState()"));
@@ -1201,7 +1209,7 @@ async function validateMediaControls() {
 }
 
 validateMediaControls().then(() => {
-console.log("WaveDeck validation passed: v0.4.1 USB-safe runtime, 360-station default library, starter Presets, shared portable data, native media keys, and packaging verified.");
+console.log("WaveDeck validation passed: v0.4.2 USB-safe Linux playback socket, 360-station default library, starter Presets, shared portable data, native media keys, and packaging verified.");
 }).catch((error) => {
   console.error(error);
   process.exitCode = 1;

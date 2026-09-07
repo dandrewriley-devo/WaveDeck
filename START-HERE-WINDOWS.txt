@@ -1,5 +1,5 @@
 WAVEDECK PORTABLE FOR WINDOWS
-Version 0.4.1 (64-bit Intel/AMD)
+Version 0.4.2 (64-bit Intel/AMD)
 
 QUICK START
 

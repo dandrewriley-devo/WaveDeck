@@ -3,11 +3,11 @@ const net = require("net");
 const path = require("path");
 const { spawn } = require("child_process");
 
-function getIpcPath(platform, dataDir, processId = process.pid) {
+function getIpcPath(platform, runtimeDir, processId = process.pid) {
   if (platform === "win32") {
     return `\\\\.\\pipe\\wavedeck-${processId}`;
   }
-  return path.join(dataDir, `mpv-${processId}.sock`);
+  return path.join(runtimeDir, `mpv-${processId}.sock`);
 }
 
 function getMpvExecutable({ platform, packaged, resourcesPath, projectRoot }) {
