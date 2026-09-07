@@ -1,5 +1,5 @@
 WaveDeck portable Windows and Linux source package
-Version 0.4.0
+Version 0.4.1
 
 WaveDeck is a portable Linux Mint internet-radio player. The sidebar toggle asks
 Cinnamon to identify the Meta.Window's current monitor, read its work area,
@@ -147,6 +147,15 @@ key registration is now single-flight and pauses during Sidebar Mode window
 replacement, preventing the D-Bus write-after-end race seen when leaving the
 sidebar. Platform runtime data is isolated below Data/runtime/<platform>.
 
+Version 0.4.1 moves Electron's temporary runtime, cache, and SingletonLock files
+from the USB Data folder to each computer's local application-data directory.
+This fixes launches from removable filesystems that do not support Chromium's
+Linux lock-file symlink. The release is now one ZIP extracting into WaveDeck
+Portable with both WaveDeck.AppImage and WaveDeck.exe sharing the adjacent Data
+folder. The bundled default library contains 360 stations, 17 groups, and 105
+subgroups. Seven starter Presets are generated only for a genuinely new user;
+existing library and preferences files remain untouched.
+
 Build requirements:
 - 64-bit Windows or Linux
 - Node.js and npm
@@ -166,8 +175,9 @@ playback/win32/README.txt at playback/win32/mpv.exe. The portable executable is
 written to dist/windows/WaveDeck.exe.
 
 The Linux AppImage and Windows portable executable both use a Data folder beside
-the executable. They can share that folder; platform runtime state is isolated
-under Data/runtime. When run from source, Linux uses ~/.config/wavedeck instead.
+the executable. They can share that folder; temporary platform runtime state is
+stored in the computer's local application-data directory. When run from source,
+Linux uses ~/.config/wavedeck for WaveDeck's data instead.
 
 Playback uses the mpv executable available on the Linux system. Sidebar Mode is
 intended for Linux Mint Cinnamon on X11 and uses the pure-JavaScript x11 package.

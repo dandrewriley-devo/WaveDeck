@@ -15,7 +15,12 @@ const {
   installLauncher,
   removeLauncher
 } = require("../src/main/desktop-launcher");
-const { resolveDataDir, resolveLegacyDataDirs, resolvePortableState } = require("../src/main/portable-paths");
+const {
+  resolveDataDir,
+  resolveLegacyDataDirs,
+  resolvePortableState,
+  resolveRuntimeDir
+} = require("../src/main/portable-paths");
 const {
   calculateSidebarLayout,
   getX11WindowId
@@ -39,6 +44,7 @@ const {
 const { MEDIA_KEY_BINDINGS, WindowsMediaKeys } = require("../src/main/windows-media-keys");
 const {
   PortableStorage,
+  STARTER_PRESET_NAMES,
   validateGroups,
   validateLibrary,
   validateStations,
@@ -96,7 +102,7 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.4.0");
+assert.strictEqual(packageJson.version, "0.4.1");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -104,9 +110,15 @@ assert.strictEqual(packageJson.dependencies["dbus-next"], "^0.10.2");
 assert.strictEqual(packageJson.build.linux.syncDesktopName, true);
 assert.strictEqual(packageJson.build.linux.artifactName, "WaveDeck.${ext}");
 assert.ok(packageJson.scripts["dist:windows"].includes("electron-builder.windows.json"));
-assert.strictEqual(stations.length, 110);
-assert.strictEqual(groups.length, 23);
-assert.strictEqual(new Set(stations.map((station) => station.id)).size, 110);
+assert.strictEqual(stations.length, 360);
+assert.strictEqual(groups.length, 17);
+assert.strictEqual(new Set(stations.map((station) => station.id)).size, 360);
+assert.strictEqual(defaultLibrary.subgroups.groups.reduce((sum, entry) => sum + entry.subgroups.length, 0), 105);
+assert.ok(defaultLibrary.stations.every((station) => (
+  !Object.hasOwn(station, "favorite") &&
+  !Object.hasOwn(station, "preset") &&
+  !Object.hasOwn(station, "presetOrder")
+)));
 assert.ok(!fs.existsSync(path.join(defaultsDir, "preferences.json")));
 
 assert.strictEqual(resolvePortableState({
@@ -157,15 +169,45 @@ assert.strictEqual(resolveDataDir({
   homeDir: "C:\\Users\\tester"
 }), path.win32.normalize("C:\\WaveDeck\\Data"));
 
+assert.strictEqual(resolveRuntimeDir({
+  platform: "linux",
+  appDataDir: "/home/tester/.config"
+}), path.normalize("/home/tester/.config/wavedeck-runtime/linux"));
+assert.strictEqual(resolveRuntimeDir({
+  platform: "win32",
+  appDataDir: "C:\\Users\\tester\\AppData\\Roaming"
+}), path.win32.normalize("C:\\Users\\tester\\AppData\\Roaming\\wavedeck-runtime\\win32"));
+
 const testRoot = fs.mkdtempSync(path.join(os.tmpdir(), "wavedeck-validate-"));
 try {
   const dataDir = path.join(testRoot, "Data");
   const storage = new PortableStorage({ dataDir, defaultsDir });
   storage.initialize();
   storage.assertWritable();
-  assert.strictEqual(storage.readStations().length, 110);
-  assert.strictEqual(storage.readGroups().length, 23);
-  assert.deepStrictEqual(storage.readSubgroups(), { version: 1, groups: [] });
+  assert.strictEqual(storage.readStations().length, 360);
+  assert.strictEqual(storage.readGroups().length, 17);
+  assert.strictEqual(storage.readSubgroups().groups.reduce((sum, entry) => sum + entry.subgroups.length, 0), 105);
+  const seededPresets = storage.readStations()
+    .filter((station) => station.preset)
+    .sort((a, b) => a.presetOrder - b.presetOrder)
+    .map((station) => station.name);
+  assert.deepStrictEqual(seededPresets, [...STARTER_PRESET_NAMES]);
+  assert.strictEqual(Object.keys(storage.readPreferences().stations).length, STARTER_PRESET_NAMES.length);
+
+  const existingLibraryDir = path.join(testRoot, "Existing-Data");
+  fs.mkdirSync(existingLibraryDir, { recursive: true });
+  fs.writeFileSync(path.join(existingLibraryDir, "library.json"), JSON.stringify({
+    version: 1,
+    groups: ["Other"],
+    subgroups: { version: 1, groups: [] },
+    stations: [{ id: "existing-one", name: "Existing Station", url: "https://example.com/existing", group: "Other" }]
+  }), "utf8");
+  const existingStorage = new PortableStorage({ dataDir: existingLibraryDir, defaultsDir });
+  existingStorage.initialize();
+  assert.strictEqual(existingStorage.readStations().length, 1);
+  assert.strictEqual(existingStorage.readStations()[0].name, "Existing Station");
+  assert.strictEqual(existingStorage.readStations()[0].preset, false);
+  assert.deepStrictEqual(existingStorage.readPreferences(), { version: 1, stations: {} });
 
   const changed = storage.readStations();
   changed[0].favorite = !changed[0].favorite;
@@ -209,10 +251,8 @@ try {
   subgroupStations[0].hasPreRoll = true;
   reloadedStorage.writeStations(subgroupStations);
   reloadedStorage.syncSubgroupsWithStations(subgroupStations);
-  assert.deepStrictEqual(reloadedStorage.readSubgroups().groups, [{
-    group: subgroupGroup,
-    subgroups: ["Pacific Northwest"]
-  }]);
+  const updatedSubgroupEntry = reloadedStorage.readSubgroups().groups.find((entry) => entry.group === subgroupGroup);
+  assert.ok(updatedSubgroupEntry?.subgroups.includes("Pacific Northwest"));
   assert.strictEqual(reloadedStorage.readStations()[0].description, "Independent alternative and local music.");
   assert.strictEqual(reloadedStorage.readStations()[0].hasPreRoll, true);
   assert.strictEqual(reloadedStorage.renameSubgroup(subgroupGroup, "Pacific Northwest", "PNW").ok, true);
@@ -777,7 +817,9 @@ assert.ok(mainSource.includes("MEDIA_KEY_RECLAIM_INTERVAL_MS = 15_000"));
 assert.ok(mainSource.includes("setInterval(reclaimMediaKeys, MEDIA_KEY_RECLAIM_INTERVAL_MS)"));
 assert.ok(mainSource.includes("claim({ reconnect: true })"));
 assert.ok(mainSource.includes("mediaKeyReclaimPaused = true"));
-assert.ok(mainSource.includes('path.join(getDataDir(), "runtime", process.platform)'));
+assert.ok(mainSource.includes("resolveRuntimeDir({"));
+assert.ok(mainSource.includes('appDataDir: app.getPath("appData")'));
+assert.ok(!mainSource.includes('path.join(getDataDir(), "runtime"'));
 assert.ok(mainSource.includes("clearInterval(mediaKeyReclaimTimer)"));
 assert.ok(mainSource.includes("PLAYBACK_HEARTBEAT_MS = 10_000"));
 assert.ok(mainSource.includes("player.refreshPlaybackState()"));
@@ -1159,7 +1201,7 @@ async function validateMediaControls() {
 }
 
 validateMediaControls().then(() => {
-console.log("WaveDeck validation passed: v0.4.0 shared portable data, isolated preferences, library import/export, Settings layout, native media keys, Linux Sidebar Mode, and packaging verified.");
+console.log("WaveDeck validation passed: v0.4.1 USB-safe runtime, 360-station default library, starter Presets, shared portable data, native media keys, and packaging verified.");
 }).catch((error) => {
   console.error(error);
   process.exitCode = 1;

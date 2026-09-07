@@ -1,5 +1,5 @@
 WAVEDECK PORTABLE FOR WINDOWS
-Version 0.4.0 (64-bit Intel/AMD)
+Version 0.4.1 (64-bit Intel/AMD)
 
 QUICK START
 
@@ -10,16 +10,25 @@ QUICK START
 
 WaveDeck is portable. It does not install itself or write an uninstaller.
 
+On a completely new installation, WaveDeck creates its library with 360
+stations and adds seven varied stations to Presets as a useful starting point.
+Existing Data files are never replaced during startup.
+
+Existing users can open Settings > Import / Export, choose "Add New from
+Library," and select WaveDeck-Default-Library.json from this folder. WaveDeck
+adds new listings without changing existing stations, Favorites, or Presets.
+
 PORTABLE DATA
 
 WaveDeck creates a folder named Data beside WaveDeck.exe on first launch. The
 shareable station library is stored in library.json; personal Favorites and
-Presets are stored separately in preferences.json. Listening history, backups,
-and platform-specific runtime files also remain under Data.
+Presets are stored separately in preferences.json. Listening history and
+backups also remain under Data. Electron's temporary runtime files stay on the
+Windows computer so the app can run from ordinary USB filesystems.
 
 The Linux AppImage and Windows EXE can sit beside the same Data folder on a USB
 stick. Whichever version you launch will use the same library and preferences,
-while each operating system keeps its runtime files in a separate subfolder.
+while each operating system keeps its temporary runtime files on that computer.
 
 To update later, close WaveDeck and replace only WaveDeck.exe. Leave Data
 untouched.

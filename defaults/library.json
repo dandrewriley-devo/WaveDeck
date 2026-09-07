@@ -1,804 +1,3819 @@
 {
   "version": 1,
   "groups": [
-    "Talk",
-    "News",
     "Rock",
-    "Classic Rock",
-    "Alternative",
     "Pop",
-    "2000's",
-    "1990's",
-    "1980's",
-    "1970's",
-    "Oldies",
-    "Ambient / Chill",
-    "Christian",
+    "Decades",
+    "Jazz",
+    "Blues",
     "Classical",
     "Country",
+    "Hip-Hop & R&B",
+    "Reggae & Ska",
     "Electronic",
-    "Hip-Hop",
-    "International",
-    "Jazz",
-    "Public Radio",
-    "Reggae",
+    "Ambient & Chill",
+    "Folk & Americana",
     "World",
+    "Christian",
+    "News & Talk",
+    "Public Radio",
     "Other"
   ],
   "subgroups": {
     "version": 1,
-    "groups": []
+    "groups": [
+      {
+        "group": "Rock",
+        "subgroups": [
+          "Alternative",
+          "Classic Rock",
+          "Grunge",
+          "Indie Rock",
+          "Hard Rock",
+          "Metal",
+          "Progressive Rock",
+          "Rock Ballads",
+          "Soft Rock",
+          "Rockabilly",
+          "General Rock"
+        ]
+      },
+      {
+        "group": "Pop",
+        "subgroups": [
+          "Top 40",
+          "Adult Contemporary",
+          "Indie Pop",
+          "Dance Pop",
+          "Soft Pop",
+          "Eclectic Pop",
+          "General Pop"
+        ]
+      },
+      {
+        "group": "Decades",
+        "subgroups": [
+          "1950s & Earlier",
+          "1960s",
+          "1970s",
+          "1980s",
+          "1990s",
+          "2000s",
+          "2010s",
+          "Mixed Decades"
+        ]
+      },
+      {
+        "group": "Jazz",
+        "subgroups": [
+          "Traditional Jazz",
+          "Contemporary Jazz",
+          "Smooth Jazz",
+          "Jazz Fusion",
+          "Jazz & Classical",
+          "General Jazz"
+        ]
+      },
+      {
+        "group": "Blues",
+        "subgroups": [
+          "Traditional Blues",
+          "Electric Blues",
+          "Blues Rock",
+          "General Blues"
+        ]
+      },
+      {
+        "group": "Classical",
+        "subgroups": [
+          "Early Music",
+          "Baroque",
+          "Orchestral",
+          "Opera & Vocal",
+          "Relaxing Classical",
+          "General Classical"
+        ]
+      },
+      {
+        "group": "Country",
+        "subgroups": [
+          "Classic Country",
+          "Contemporary Country",
+          "1980s Country",
+          "1990s Country",
+          "Bluegrass",
+          "Americana",
+          "Trucking Country",
+          "General Country"
+        ]
+      },
+      {
+        "group": "Hip-Hop & R&B",
+        "subgroups": [
+          "Hip-Hop",
+          "R&B",
+          "Funk",
+          "Soul",
+          "Motown",
+          "General Urban"
+        ]
+      },
+      {
+        "group": "Reggae & Ska",
+        "subgroups": [
+          "Roots Reggae",
+          "Reggae",
+          "Dub",
+          "Ska & Rocksteady",
+          "Dancehall",
+          "Bob Marley"
+        ]
+      },
+      {
+        "group": "Electronic",
+        "subgroups": [
+          "House",
+          "Deep House",
+          "Trance",
+          "Techno",
+          "EDM",
+          "Eurodance",
+          "Breakbeat",
+          "General Electronic"
+        ]
+      },
+      {
+        "group": "Ambient & Chill",
+        "subgroups": [
+          "Ambient",
+          "Chillout",
+          "Downtempo",
+          "Lo-fi",
+          "Space Music",
+          "General Chill"
+        ]
+      },
+      {
+        "group": "Folk & Americana",
+        "subgroups": [
+          "Folk",
+          "Americana",
+          "Celtic",
+          "Acoustic",
+          "General Roots"
+        ]
+      },
+      {
+        "group": "World",
+        "subgroups": [
+          "African",
+          "Caribbean",
+          "Irish & Celtic",
+          "Latin",
+          "Middle Eastern",
+          "Pacific",
+          "Global Mix"
+        ]
+      },
+      {
+        "group": "Christian",
+        "subgroups": [
+          "Catholic",
+          "Christian Talk",
+          "Christian Rock",
+          "Gospel",
+          "Christian Music"
+        ]
+      },
+      {
+        "group": "News & Talk",
+        "subgroups": [
+          "News",
+          "News & Talk",
+          "General Talk",
+          "Business",
+          "Conservative Talk",
+          "Paranormal"
+        ]
+      },
+      {
+        "group": "Public Radio",
+        "subgroups": [
+          "Public News & Talk",
+          "AAA & Eclectic",
+          "Community Radio",
+          "Culture"
+        ]
+      },
+      {
+        "group": "Other",
+        "subgroups": [
+          "Video Game",
+          "Mixed Variety"
+        ]
+      }
+    ]
   },
   "stations": [
     {
       "id": "b538cdd699c04b80ae807acf3db9296b",
       "name": "Dailycast News (US)",
       "url": "http://ec3.yesstreaming.net:1390/stream",
-      "group": "News",
-      "country": "United States"
+      "group": "News & Talk",
+      "country": "United States",
+      "subgroup": "News",
+      "description": "United States. English-language news.",
+      "hasPreRoll": false
     },
     {
       "id": "6d9331a2fab5484aba679b0c3c149d4b",
       "name": "EWTN Radio",
       "url": "https://ewtn-ice.streamguys1.com/english-aac",
       "group": "Christian",
-      "country": ""
+      "country": "United States",
+      "subgroup": "Catholic",
+      "description": "Irondale, Alabama, United States. Catholic teaching, news, and devotional programming.",
+      "hasPreRoll": false
     },
     {
       "id": "ad221815b8984eb7b8d4938f899c4ac2",
       "name": "Infowars (US)",
       "url": "http://ice-v13.infowars.com/alexjonesshow",
-      "group": "Talk",
-      "country": "United States"
+      "group": "News & Talk",
+      "country": "United States",
+      "subgroup": "Conservative Talk",
+      "description": "United States. Conservative news and talk.",
+      "hasPreRoll": false
     },
     {
       "id": "5ba408b882d4433ea16ce8942a76e169",
-      "name": "KNIM Maryville MO",
+      "name": "KNIM (Maryville)",
       "url": "https://stream.aiir.com/4uwhg0d2qfhtv",
-      "group": "Talk",
-      "country": "United States"
+      "group": "News & Talk",
+      "country": "United States",
+      "subgroup": "News & Talk",
+      "description": "Maryville, Missouri, United States. English-language news and talk.",
+      "hasPreRoll": false
     },
     {
       "id": "85919f18c3c049bba2ac1bec5209038e",
-      "name": "NPR Seattle WA",
+      "name": "NPR (Seattle)",
       "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/KUOWFM_HIGH_MP3.mp3",
       "group": "Public Radio",
-      "country": "United States"
+      "country": "United States",
+      "subgroup": "Public News & Talk",
+      "description": "Seattle, Washington, United States. Public-radio news, culture, and talk.",
+      "hasPreRoll": false
     },
     {
       "id": "0d26c7b11044443d971853d97f9bc8ee",
       "name": "VCY Christian Talk",
       "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/KVCXFM_64.mp3",
       "group": "Christian",
-      "country": ""
+      "country": "United States",
+      "subgroup": "Christian Talk",
+      "description": "Milwaukee, Wisconsin, United States. Christian teaching and talk programming.",
+      "hasPreRoll": false
     },
     {
       "id": "0a2e8f23c6c548ce9206dbd833bab3ce",
       "name": "WBAP (Dallas)",
       "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/WBAPAM.mp3",
-      "group": "Talk",
-      "country": "United States"
+      "group": "News & Talk",
+      "country": "United States",
+      "subgroup": "News & Talk",
+      "description": "Dallas–Fort Worth, Texas, United States. English-language news and talk.",
+      "hasPreRoll": false
     },
     {
       "id": "17f601e61ff642ccbcb48f890fd5fde3",
       "name": "Folk Forward",
       "url": "https://ice5.somafm.com/folkfwd-128-mp3",
-      "group": "Other",
-      "country": "United States"
+      "group": "Folk & Americana",
+      "country": "United States",
+      "subgroup": "Folk",
+      "description": "United States. Folk music.",
+      "hasPreRoll": false
     },
     {
       "id": "41cbdae53d8343f7875e3be6828282c0",
       "name": "Hair Band Radio",
       "url": "http://listen.181fm.com/181-hairband_128k.mp3",
-      "group": "Other",
-      "country": "United States"
+      "group": "Rock",
+      "country": "United States",
+      "subgroup": "Hard Rock",
+      "description": "United States. Hard rock.",
+      "hasPreRoll": false
     },
     {
       "id": "24854e2a481544b0bef9f461677c816a",
       "name": "Radio Paradise Rock",
       "url": "http://stream.radioparadise.com/rock-flac",
       "group": "Rock",
-      "country": ""
+      "country": "United States",
+      "subgroup": "General Rock",
+      "description": "Eureka, California, United States. Rock music.",
+      "hasPreRoll": false
     },
     {
       "id": "3ba00d08f5af4c0c82056fb3b46d9701",
       "name": "Rock 40",
       "url": "http://listen.181fm.com/181-rock40_128k.mp3",
       "group": "Rock",
-      "country": "United States"
+      "country": "United States",
+      "subgroup": "General Rock",
+      "description": "United States. Rock music.",
+      "hasPreRoll": false
     },
     {
       "id": "61df63b5b2f84a72894f8d2f3499853c",
       "name": "The Buzz",
       "url": "http://listen.181fm.com/181-buzz_128k.mp3",
-      "group": "Alternative",
-      "country": "United States"
+      "group": "Rock",
+      "country": "United States",
+      "subgroup": "Alternative",
+      "description": "United States. Alternative rock.",
+      "hasPreRoll": true
     },
     {
       "id": "88f5eac5033947e4b480c7cbb77e8efc",
       "name": "The Eagle",
       "url": "http://listen.181fm.com/181-eagle_128k.mp3",
-      "group": "Classic Rock",
-      "country": "United States"
+      "group": "Rock",
+      "country": "United States",
+      "subgroup": "Classic Rock",
+      "description": "United States. Classic rock.",
+      "hasPreRoll": false
     },
     {
       "id": "0ab1fe6255c24545956f46b11e96af93",
       "name": "Triple J (AU)",
       "url": "http://live-radio01.mediahubaustralia.com/2TJW/mp3/",
-      "group": "Pop",
-      "country": "Australia"
+      "group": "Public Radio",
+      "country": "Australia",
+      "subgroup": "AAA & Eclectic",
+      "description": "Australia. Listener-supported AAA and eclectic music.",
+      "hasPreRoll": false
     },
     {
       "id": "4094770db4744d51841a66ca327908af",
       "name": "Litt Yacht Rock",
       "url": "http://listen.181fm.com/181-yachtrock_128k.mp3",
       "group": "Rock",
-      "country": "United States"
+      "country": "United States",
+      "subgroup": "Soft Rock",
+      "description": "United States. Soft rock.",
+      "hasPreRoll": false
     },
     {
       "id": "9698d3d34821438288d61ad35db0cfdc",
       "name": "Awesome 80s",
       "url": "http://listen.181fm.com/181-awesome80s_128k.mp3",
-      "group": "1980's",
-      "country": "United States"
+      "group": "Decades",
+      "country": "United States",
+      "subgroup": "1980s",
+      "description": "United States. Music of the 1980s.",
+      "hasPreRoll": false
     },
     {
       "id": "b1e59369d88540469dea6f7ea50f6ff0",
       "name": "RTÉ 2FM (IE)",
       "url": "http://icecast.rte.ie/2fm",
       "group": "Pop",
-      "country": "Ireland"
+      "country": "Ireland",
+      "subgroup": "Adult Contemporary",
+      "description": "Ireland. Adult contemporary pop.",
+      "hasPreRoll": false
     },
     {
       "id": "18a6162ca86e49d29bc01c7def9f5bce",
       "name": "Star 90s",
       "url": "http://listen.181fm.com/181-star90s_128k.mp3",
-      "group": "1990's",
-      "country": "United States"
+      "group": "Decades",
+      "country": "United States",
+      "subgroup": "1990s",
+      "description": "United States. Music of the 1990s.",
+      "hasPreRoll": false
     },
     {
       "id": "7e9edd0ecfdf4d84a695b18004cb2743",
       "name": "Swiss Pop",
       "url": "http://stream.srg-ssr.ch/m/rsp/mp3_128",
       "group": "Pop",
-      "country": "Switzerland"
+      "country": "Switzerland",
+      "subgroup": "Adult Contemporary",
+      "description": "Switzerland. Adult contemporary pop.",
+      "hasPreRoll": false
     },
     {
       "id": "3955d3f4b50840d3b1aa7cbd3d74ed6e",
       "name": "UK Top 40 (UK)",
       "url": "http://listen.181fm.com/181-uktop40_128k.mp3",
       "group": "Pop",
-      "country": "United States"
+      "country": "United Kingdom",
+      "subgroup": "Top 40",
+      "description": "United Kingdom. Contemporary hits and Top 40 pop.",
+      "hasPreRoll": false
     },
     {
       "id": "29f983c62bcc4732a11ffe2c09db967a",
       "name": "Underground 80s",
       "url": "https://ice5.somafm.com/u80s-128-mp3",
-      "group": "1980's",
-      "country": "United States"
+      "group": "Decades",
+      "country": "United States",
+      "subgroup": "1980s",
+      "description": "Soma.fm - Music of the 1980s.",
+      "hasPreRoll": false
     },
     {
       "id": "e854ba7c97cd4cea91e7dabde446422f",
       "name": "DEF CON Radio",
       "url": "https://ice5.somafm.com/defcon-128-mp3",
-      "group": "Ambient / Chill",
-      "country": "United States"
+      "group": "Ambient & Chill",
+      "country": "United States",
+      "subgroup": "Ambient",
+      "description": "United States. Ambient music.",
+      "hasPreRoll": false
     },
     {
       "id": "cb796bc58cab40a8b00708b9739a5a24",
       "name": "Drone Zone",
       "url": "https://ice5.somafm.com/dronezone-128-mp3",
-      "group": "Ambient / Chill",
-      "country": "United States"
+      "group": "Ambient & Chill",
+      "country": "United States",
+      "subgroup": "Space Music",
+      "description": "United States. Ambient space music.",
+      "hasPreRoll": false
     },
     {
       "id": "9c560c60d1e34f98af23eed10f27bcce",
       "name": "Groove Salad",
       "url": "https://ice5.somafm.com/groovesalad-128-mp3",
-      "group": "Ambient / Chill",
-      "country": "United States"
+      "group": "Ambient & Chill",
+      "country": "United States",
+      "subgroup": "Downtempo",
+      "description": "United States. Downtempo and lounge music.",
+      "hasPreRoll": false
     },
     {
       "id": "b74a0b8e96a64ee4b43cf80816f3728d",
       "name": "Groove Salad Classic",
       "url": "https://ice5.somafm.com/gsclassic-128-mp3",
-      "group": "Ambient / Chill",
-      "country": "United States"
+      "group": "Ambient & Chill",
+      "country": "United States",
+      "subgroup": "Downtempo",
+      "description": "United States. Downtempo and lounge music.",
+      "hasPreRoll": false
     },
     {
       "id": "a5268625ba974204adc1e4d9b023d0a9",
       "name": "Secret Agent",
       "url": "https://ice5.somafm.com/secretagent-128-mp3",
-      "group": "Ambient / Chill",
-      "country": "United States"
+      "group": "Ambient & Chill",
+      "country": "United States",
+      "subgroup": "Downtempo",
+      "description": "United States. Downtempo and lounge music.",
+      "hasPreRoll": false
     },
     {
       "id": "215ae2c634a2410d9c95774709698c26",
       "name": "80's Country",
       "url": "http://listen.181fm.com/181-80scountry_128k.mp3",
-      "group": "Country",
-      "country": "United States"
+      "group": "Decades",
+      "country": "United States",
+      "subgroup": "1980s",
+      "description": "United States. Music of the 1980s.",
+      "hasPreRoll": false
     },
     {
       "id": "bb395e8b0336434ba8f9cd2bcc1aa68b",
       "name": "Front Porch Bluegrass",
       "url": "http://listen.181fm.com/181-frontporch_128k.mp3",
       "group": "Country",
-      "country": "United States"
+      "country": "United States",
+      "subgroup": "Bluegrass",
+      "description": "United States. Bluegrass.",
+      "hasPreRoll": false
     },
     {
       "id": "cf5e62b12ddb4081a097516d59898753",
       "name": "Highway 181",
       "url": "http://listen.181fm.com/181-highway_128k.mp3",
       "group": "Country",
-      "country": "United States"
+      "country": "United States",
+      "subgroup": "Classic Country",
+      "description": "United States. Classic country.",
+      "hasPreRoll": false
     },
     {
       "id": "262d1348dd9746778bba85f7ad6f9f76",
       "name": "Kickin' Country",
       "url": "http://listen.181fm.com/181-kickincountry_128k.mp3",
       "group": "Country",
-      "country": "United States"
+      "country": "United States",
+      "subgroup": "Contemporary Country",
+      "description": "United States. Contemporary country.",
+      "hasPreRoll": false
     },
     {
       "id": "bd28e97ace3c4527bd836fdbc656af15",
       "name": "Real Country",
       "url": "http://listen.181fm.com/181-realcountry_128k.mp3",
       "group": "Country",
-      "country": "United States"
+      "country": "United States",
+      "subgroup": "Classic Country",
+      "description": "United States. Classic country.",
+      "hasPreRoll": false
     },
     {
       "id": "d9ba270ef18e4fb48b5287d4fa6837e0",
       "name": "Classical Jazz Radio",
       "url": "http://ec1.yesstreaming.net:2900/stream",
-      "group": "Jazz",
-      "country": ""
+      "group": "Classical",
+      "country": "Canada",
+      "subgroup": "General Classical",
+      "description": "Canada. Classical music.",
+      "hasPreRoll": false
     },
     {
       "id": "8bc9b9fb3a3a42f581f77f00797e251b",
       "name": "KCSM Jazz 91",
       "url": "http://ice5.securenetsystems.net/KCSM",
       "group": "Jazz",
-      "country": "United States"
+      "country": "United States",
+      "subgroup": "General Jazz",
+      "description": "San Mateo, California, United States. Jazz music.",
+      "hasPreRoll": false
     },
     {
       "id": "274e2c1887b340d2a439debd210330c9",
       "name": "Jazz Radio (FR)",
       "url": "http://jazzradio.ice.infomaniak.ch/jazzradio-high.mp3",
       "group": "Jazz",
-      "country": "France"
+      "country": "France",
+      "subgroup": "General Jazz",
+      "description": "France. Jazz music.",
+      "hasPreRoll": false
     },
     {
       "id": "c84cc346857046edb610c3a8bc55e3bd",
       "name": "Jazz Radio Blues (FR)",
       "url": "http://jazzblues.ice.infomaniak.ch/jazzblues-high.mp3",
       "group": "Jazz",
-      "country": "France"
+      "country": "France",
+      "subgroup": "General Jazz",
+      "description": "France. Jazz music.",
+      "hasPreRoll": false
     },
     {
       "id": "da5277c34c9149cdbd27f2b66ae29204",
       "name": "Swiss Radio Jazz",
       "url": "http://stream.srg-ssr.ch/m/rsj/mp3_128",
       "group": "Jazz",
-      "country": "Switzerland"
+      "country": "Switzerland",
+      "subgroup": "General Jazz",
+      "description": "Switzerland. Jazz music.",
+      "hasPreRoll": false
     },
     {
       "id": "e456c40a51454d6797ae107364540567",
       "name": "Feel Jah FM",
       "url": "http://solid9.streamupsolutions.com:8018/autodj",
-      "group": "Reggae",
-      "country": ""
+      "group": "Reggae & Ska",
+      "country": "Jamaica",
+      "subgroup": "Reggae",
+      "description": "Kingston, Jamaica. Reggae.",
+      "hasPreRoll": false
     },
     {
       "id": "9462b871b571430f818c7bef303f45e2",
       "name": "Heavyweight Reggae",
       "url": "https://ice5.somafm.com/reggae-128-mp3",
-      "group": "Reggae",
-      "country": "United States"
+      "group": "Reggae & Ska",
+      "country": "United States",
+      "subgroup": "Roots Reggae",
+      "description": "United States. Roots reggae.",
+      "hasPreRoll": false
     },
     {
       "id": "ea540f2bffa94f6eb98354a17a640685",
       "name": "RTÉ Raidió na Gaeltachta",
       "url": "http://icecast.rte.ie/rnag",
       "group": "World",
-      "country": "Ireland"
+      "country": "Ireland",
+      "subgroup": "Irish & Celtic",
+      "description": "Ireland. Irish and Celtic programming.",
+      "hasPreRoll": false
     },
     {
       "id": "453a1ad0830846068094f238c34c0cdc",
       "name": "Thistle Radio Celtic",
       "url": "https://ice5.somafm.com/thistle-128-mp3",
-      "group": "World",
-      "country": "United States"
+      "group": "Folk & Americana",
+      "country": "United States",
+      "subgroup": "Celtic",
+      "description": "United States. Celtic music.",
+      "hasPreRoll": false
     },
     {
       "id": "a151f63d0f3f4e5ca756c55b01dfbdc6",
       "name": "Tiki Time",
       "url": "https://ice5.somafm.com/tikitime-128-mp3",
       "group": "World",
-      "country": "United States"
+      "country": "United States",
+      "subgroup": "Pacific",
+      "description": "United States. Pacific and island music.",
+      "hasPreRoll": false
     },
     {
       "id": "70b96ba994f44922b0a2895182cae1a1",
       "name": "RNZ Concert (NZ)",
       "url": "http://radionz-ice.streamguys.com/concert.mp3",
       "group": "Classical",
-      "country": "New Zealand"
+      "country": "New Zealand",
+      "subgroup": "General Classical",
+      "description": "New Zealand. Classical music.",
+      "hasPreRoll": false
     },
     {
       "id": "b5da24434bf14a55ae9ed2015bcaa72d",
       "name": "Swiss Classic",
       "url": "http://stream.srg-ssr.ch/m/rsc_de/mp3_128",
       "group": "Classical",
-      "country": "Switzerland"
+      "country": "Switzerland",
+      "subgroup": "General Classical",
+      "description": "Switzerland. Classical music.",
+      "hasPreRoll": false
     },
     {
       "id": "0b893899ec4e40ce888837e0faedf30e",
       "name": "Swiss Classic (French)",
       "url": "http://stream.srg-ssr.ch/m/rsc_fr/mp3_128",
       "group": "Classical",
-      "country": "Switzerland"
+      "country": "Switzerland",
+      "subgroup": "General Classical",
+      "description": "Switzerland. Classical music.",
+      "hasPreRoll": false
     },
     {
       "id": "4cfbfdf528944864a4b9dd3124901b9f",
       "name": "Swiss Classic (Italian)",
       "url": "http://stream.srg-ssr.ch/m/rsc_it/mp3_128",
       "group": "Classical",
-      "country": "Switzerland"
+      "country": "Switzerland",
+      "subgroup": "General Classical",
+      "description": "Switzerland. Classical music.",
+      "hasPreRoll": false
     },
     {
       "id": "f0991be4c4e44286b69c47d6a7653b85",
       "name": "WQXR New York",
       "url": "http://stream.wqxr.org/wqxr",
       "group": "Classical",
-      "country": "United States"
+      "country": "United States",
+      "subgroup": "General Classical",
+      "description": "New York City, New York, United States. Classical music.",
+      "hasPreRoll": false
     },
     {
       "id": "4dc6c7467d8544c59e067b9aa544fd4f",
       "name": "ABC Radio National (AU)",
       "url": "http://live-radio01.mediahubaustralia.com/2RNW/mp3/",
-      "group": "International",
-      "country": "Australia"
+      "group": "News & Talk",
+      "country": "Australia",
+      "subgroup": "News & Talk",
+      "description": "Australia. English-language news and talk.",
+      "hasPreRoll": false
     },
     {
       "id": "6b94bdf188544f34bd9bfac1e8d94257",
       "name": "BBC (UK)",
       "url": "http://stream.live.vc.bbcmedia.co.uk/bbc_world_service",
-      "group": "News",
-      "country": "United Kingdom"
+      "group": "News & Talk",
+      "country": "United Kingdom",
+      "subgroup": "News",
+      "description": "United Kingdom. English-language news.",
+      "hasPreRoll": false
     },
     {
       "id": "9055381b21044a81a7c71293aa69ecf4",
-      "name": "Capital FM Kenya",
+      "name": "Capital FM (Nairobi)",
       "url": "http://streamingv2.shoutcast.com/capital-fm-kenya",
-      "group": "International",
-      "country": "Kenya"
+      "group": "Hip-Hop & R&B",
+      "country": "Kenya",
+      "subgroup": "General Urban",
+      "description": "Nairobi, Kenya.",
+      "hasPreRoll": false
     },
     {
       "id": "cf2b50c436ee44cd885b472ea030d9db",
       "name": "RNZ National (NZ)",
       "url": "http://radionz-ice.streamguys.com/national.mp3",
-      "group": "International",
-      "country": "New Zealand"
+      "group": "News & Talk",
+      "country": "New Zealand",
+      "subgroup": "News & Talk",
+      "description": "New Zealand. English-language news and talk.",
+      "hasPreRoll": false
     },
     {
       "id": "fed9dec27a7b4114997894a6e8d39c0e",
       "name": "RNZ Pacific (NZ)",
       "url": "http://radionz-ice.streamguys.com/international.mp3",
-      "group": "International",
-      "country": "New Zealand"
+      "group": "Public Radio",
+      "country": "New Zealand",
+      "subgroup": "Public News & Talk",
+      "description": "New Zealand. Public-radio news, culture, and talk.",
+      "hasPreRoll": false
     },
     {
       "id": "e79a165ffe544ae3b38d0932585840b4",
       "name": "RTÉ Radio 1 (IE)",
       "url": "http://icecast.rte.ie/radio1",
-      "group": "International",
-      "country": "Ireland"
+      "group": "News & Talk",
+      "country": "Ireland",
+      "subgroup": "News & Talk",
+      "description": "Ireland. English-language news and talk.",
+      "hasPreRoll": false
     },
     {
       "id": "7fd5f6bf2e4a4468bd49b70b81b9b629",
       "name": "Deep FM (RU)",
       "url": "https://dirxiph.amgradio.ru/DeepFM?dirxiph",
       "group": "Pop",
-      "country": "Russia"
+      "country": "Russia",
+      "subgroup": "Adult Contemporary",
+      "description": "Russia. Adult contemporary pop.",
+      "hasPreRoll": false
     },
     {
       "id": "e9077e4fb4d54b38bed7f68d8fd11c99",
       "name": "Radio Fresh (RU)",
       "url": "https://dirxiph.amgradio.ru/Fresh?dirxiph",
       "group": "Pop",
-      "country": "Russia"
+      "country": "Russia",
+      "subgroup": "Adult Contemporary",
+      "description": "Russia. Adult contemporary pop.",
+      "hasPreRoll": false
     },
     {
       "id": "ebb52852315d47bc992a0767657cedb6",
       "name": "Radio Monster: 90's",
       "url": "https://ic.radiomonster.fm/90s.ultra",
-      "group": "1990's",
-      "country": "Germany"
+      "group": "Decades",
+      "country": "Germany",
+      "subgroup": "1990s",
+      "description": "Germany. Music of the 1990s.",
+      "hasPreRoll": false
     },
     {
       "id": "92e4ad14651840948b9215018e5e3bd2",
       "name": "Radio Monster: Rock",
       "url": "https://ic.radiomonster.fm/rock.ultra",
       "group": "Rock",
-      "country": "Germany"
+      "country": "Germany",
+      "subgroup": "General Rock",
+      "description": "Germany. Rock music.",
+      "hasPreRoll": false
     },
     {
       "id": "387febf01969404cb03e3adf00485867",
       "name": "Radio Monster: Evergreen",
       "url": "https://ic.radiomonster.fm/evergreens.ultra",
       "group": "Pop",
-      "country": "Germany"
+      "country": "Germany",
+      "subgroup": "Adult Contemporary",
+      "description": "Germany. Adult contemporary pop.",
+      "hasPreRoll": false
     },
     {
       "id": "905211550d6142dabd0b1ac11d1572d7",
       "name": "Radio Monster: 2000's",
       "url": "https://ic.radiomonster.fm/2000s.ultra",
-      "group": "2000's",
-      "country": "Germany"
+      "group": "Decades",
+      "country": "Germany",
+      "subgroup": "2000s",
+      "description": "Germany. Music of the 2000s.",
+      "hasPreRoll": false
     },
     {
       "id": "561ad9f3a4074dd48ff72b0809816cc2",
       "name": "I Love Radio Pop",
       "url": "https://ilm.stream18.radiohost.de/ilm_iloveradio_mp3-192",
       "group": "Pop",
-      "country": "Germany"
+      "country": "Germany",
+      "subgroup": "Adult Contemporary",
+      "description": "Germany. Adult contemporary pop.",
+      "hasPreRoll": false
     },
     {
       "id": "6546c5ccf2ef47e4afdd0571fc0cb213",
-      "name": "I Love HIp-Hop",
+      "name": "I Love Hip-Hop",
       "url": "https://play.ilovemusic.de/ilm_ilovehiphop/",
-      "group": "Hip-Hop",
-      "country": "Germany"
+      "group": "Hip-Hop & R&B",
+      "country": "Germany",
+      "subgroup": "Hip-Hop",
+      "description": "Germany. Hip-hop.",
+      "hasPreRoll": false
     },
     {
       "id": "71df09a252c94c1dac99d13e498a6079",
       "name": "I Love Rock Radio",
       "url": "https://play.ilovemusic.de/ilm_iloveradiorock/",
       "group": "Rock",
-      "country": "Germany"
+      "country": "Germany",
+      "subgroup": "General Rock",
+      "description": "Germany. Rock music.",
+      "hasPreRoll": false
     },
     {
       "id": "076bcf014e7c42d7ab9cffec8af129bf",
       "name": "I Love The 90's",
       "url": "https://play.ilovemusic.de/ilm_ilovethe90s/",
-      "group": "1990's",
-      "country": "Germany"
+      "group": "Decades",
+      "country": "Germany",
+      "subgroup": "1990s",
+      "description": "Germany. Music of the 1990s.",
+      "hasPreRoll": false
     },
     {
       "id": "476e4cbee5d2439f96888132ecfe3521",
       "name": "Smoov",
       "url": "http://live.powerhitz.com/smoothjazz?aw_0_req.gdpr=true",
       "group": "Jazz",
-      "country": "United States"
+      "country": "United States",
+      "subgroup": "Smooth Jazz",
+      "description": "United States. Smooth jazz.",
+      "hasPreRoll": false
     },
     {
       "id": "6abfa794e54148faaa81ee8fe4ae7a6a",
       "name": "Pure Classic Rock",
       "url": "http://live.powerhitz.com/pureclassicrock?aw_0_req.gdpr=true",
-      "group": "Classic Rock",
-      "country": "United States"
+      "group": "Rock",
+      "country": "United States",
+      "subgroup": "Classic Rock",
+      "description": "United States. Classic rock.",
+      "hasPreRoll": false
     },
     {
       "id": "8adc730668eb45979722a49dee0eed50",
       "name": "The Planet",
       "url": "http://live.powerhitz.com/planet?aw_0_req.gdpr=true",
-      "group": "Alternative",
-      "country": "United States"
+      "group": "Rock",
+      "country": "United States",
+      "subgroup": "Alternative",
+      "description": "United States. Alternative rock.",
+      "hasPreRoll": false
     },
     {
       "id": "e3955954570649d296d055ae99b21a1d",
       "name": "Sensational 70's",
       "url": "http://live.powerhitz.com/70s?aw_0_req.gdpr=true",
-      "group": "1970's",
-      "country": "United States"
+      "group": "Decades",
+      "country": "United States",
+      "subgroup": "1970s",
+      "description": "United States. Music of the 1970s.",
+      "hasPreRoll": false
     },
     {
       "id": "67bd15ab840847f7aff29a719820aa52",
       "name": "Reggae141",
       "url": "https://das-edge24-sa23-chi03.cdnstream.com/1301_128",
-      "group": "Reggae",
-      "country": ""
+      "group": "Reggae & Ska",
+      "country": "Saint Vincent and the Grenadines",
+      "subgroup": "Roots Reggae",
+      "description": "Kingstown, Saint Vincent and the Grenadines. Roots reggae.",
+      "hasPreRoll": false
     },
     {
       "id": "7190a5a03424409c87d5f3a2ee40728f",
       "name": "100% Bob Marley",
       "url": "http://ekila1.pro-fhi.net:3630/stream",
-      "group": "Reggae",
-      "country": "Jamaica"
+      "group": "Reggae & Ska",
+      "country": "Jamaica",
+      "subgroup": "Bob Marley",
+      "description": "Jamaica. Music by Bob Marley.",
+      "hasPreRoll": false
     },
     {
       "id": "f72ef98f2fac45e68ed21aa92eab9fd3",
       "name": "TBN Reggae Radio",
       "url": "http://puma.streemlion.com:1080/stream",
-      "group": "Reggae",
-      "country": ""
+      "group": "Reggae & Ska",
+      "country": "Jamaica",
+      "subgroup": "Dancehall",
+      "description": "Kingston, Jamaica. Reggae and dancehall.",
+      "hasPreRoll": false
     },
     {
       "id": "8d7fc19b74ca48cfb010e81a1bb2370f",
       "name": "Rub-A-Dub Mix",
       "url": "https://chourmovs.ddnsfree.com/listen/rub-a-dub_mix/radio64.aac",
-      "group": "Reggae",
-      "country": ""
+      "group": "Reggae & Ska",
+      "country": "France",
+      "subgroup": "Dub",
+      "description": "France. Dub reggae.",
+      "hasPreRoll": false
     },
     {
       "id": "a08a2cb291924bcbb0fc5f0a5bf07d4d",
       "name": "Retro 80's Radio",
       "url": "https://c17.radioboss.fm:8040/stream",
-      "group": "1980's",
-      "country": ""
+      "group": "Decades",
+      "country": "Utica, New York",
+      "subgroup": "1980s",
+      "description": "Music of the 1980s.",
+      "hasPreRoll": false
     },
     {
       "id": "63d72ad917f8428c9a9c8086940d41c9",
       "name": "Cool Oldies",
       "url": "https://c8.radioboss.fm:18114/stream",
-      "group": "Oldies",
-      "country": ""
+      "group": "Decades",
+      "country": "United States",
+      "subgroup": "1950s & Earlier",
+      "description": "United States. Oldies centered on the 1950s and earlier.",
+      "hasPreRoll": false
     },
     {
       "id": "51f3041c05b94198b73c14b94912caf1",
       "name": "Caribbean Views Radio",
       "url": "https://c34.radioboss.fm:8204/stream",
-      "group": "International",
-      "country": ""
+      "group": "News & Talk",
+      "country": "United States",
+      "subgroup": "News & Talk",
+      "description": "Orlando, Florida, United States. English-language news and talk.",
+      "hasPreRoll": false
     },
     {
       "id": "a23d516c8319441f88de559fbf833239",
       "name": "Triple H (AU)",
       "url": "https://c17.radioboss.fm:8193/stream",
       "group": "Pop",
-      "country": "Australia"
+      "country": "Australia",
+      "subgroup": "Adult Contemporary",
+      "description": "Australia. Adult contemporary pop.",
+      "hasPreRoll": false
     },
     {
       "id": "04256d20309d4171b420fd62020b33d6",
       "name": "Radio Paradise Mix",
       "url": "http://stream.radioparadise.com/flac",
       "group": "Pop",
-      "country": ""
+      "country": "United States",
+      "subgroup": "Eclectic Pop",
+      "description": "Eureka, California, United States. Curated eclectic pop and rock.",
+      "hasPreRoll": false
     },
     {
       "id": "6855380128494ea39a13e21a0aa60e13",
       "name": "Radio Paradise Mellow",
       "url": "http://stream.radioparadise.com/mellow-flac",
       "group": "Pop",
-      "country": ""
+      "country": "United States",
+      "subgroup": "Soft Pop",
+      "description": "Eureka, California, United States. Mellow and soft pop.",
+      "hasPreRoll": false
     },
     {
       "id": "ead16d447b30479ba233a9b3d25033d0",
       "name": "Radio Paradise Global",
       "url": "http://stream.radioparadise.com/global-flac",
       "group": "World",
-      "country": ""
+      "country": "United States",
+      "subgroup": "Global Mix",
+      "description": "Eureka, California, United States. World music and global sounds.",
+      "hasPreRoll": false
     },
     {
       "id": "06175daa8d914387a725b88fc47c7ccd",
       "name": "Radio Paradise Jazz",
       "url": "http://stream.radioparadise.com/beyond-flac",
       "group": "Jazz",
-      "country": ""
+      "country": "United States",
+      "subgroup": "General Jazz",
+      "description": "Eureka, California, United States. Jazz music.",
+      "hasPreRoll": false
     },
     {
       "id": "bee70c2ba2b345318d35a48c6ff98ca1",
       "name": "Radio Paradise Serenity",
       "url": "http://stream.radioparadise.com/serenity",
-      "group": "Ambient / Chill",
-      "country": ""
+      "group": "Ambient & Chill",
+      "country": "United States",
+      "subgroup": "Ambient",
+      "description": "Eureka, California, United States. Ambient music.",
+      "hasPreRoll": false
     },
     {
       "id": "049593bbc25e44de9d21fb4bfd8b2ba1",
-      "name": "Radio Sidewinder (Elite Dangerous)",
+      "name": "Radio Sidewinder",
       "url": "https://radiosidewinder.out.airtime.pro:8000/radiosidewinder_b",
       "group": "Electronic",
-      "country": ""
+      "country": "Elite Dangerous",
+      "subgroup": "General Electronic",
+      "description": "United Kingdom. Electronic music.",
+      "hasPreRoll": false
     },
     {
       "id": "7062abedd71644049ce114e8a6f9d15a",
       "name": "JoeTown 107.5",
       "url": "https://live.amperwave.net/direct/eagleradio-kesjamaac-ibc4",
       "group": "Pop",
-      "country": ""
+      "country": "United States",
+      "subgroup": "Adult Contemporary",
+      "description": "St. Joseph, MO",
+      "hasPreRoll": false
     },
     {
       "id": "063c30c24c4d4d319376a976cab57cf0",
       "name": "KCMO (Kansas City)",
       "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/KCMOAMAAC.aac",
-      "group": "Talk",
-      "country": ""
+      "group": "News & Talk",
+      "country": "United States",
+      "subgroup": "News & Talk",
+      "description": "Kansas City, Missouri, United States. English-language news and talk.",
+      "hasPreRoll": false
     },
     {
       "id": "6e1e7f507c1b476781d2d04ee979a96f",
       "name": "Boise State Public Radio",
       "url": "https://media.publicbroadcasting.net/idaho/newscast/newscast.wav",
       "group": "Public Radio",
-      "country": "United States"
-    },
-    {
-      "id": "8699df7059194765ac1a7a26c6443ce5",
-      "name": "KBOI (Boise)",
-      "url": "https://17803.live.streamtheworld.com/KBOIFMAAC.aac",
-      "group": "Talk",
-      "country": ""
+      "country": "United States",
+      "subgroup": "Public News & Talk",
+      "description": "Boise, Idaho, United States. Public-radio news, culture, and talk.",
+      "hasPreRoll": false
     },
     {
       "id": "bde6ae99fd3e4f8fbc7e65e8c9293282",
-      "name": "Magic 97.9 Boise",
+      "name": "Magic 97.9 (Boise)",
       "url": "https://22973.live.streamtheworld.com/KQFCFMAAC.aac",
       "group": "Pop",
-      "country": ""
+      "country": "United States",
+      "subgroup": "Adult Contemporary",
+      "description": "Boise, Idaho, United States. Adult contemporary pop.",
+      "hasPreRoll": false
     },
     {
       "id": "cc163fdf3345429ca47e251a017aee82",
       "name": "WABC (New York)",
       "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/WABCAMAAC.aac",
-      "group": "Talk",
-      "country": "United States"
+      "group": "News & Talk",
+      "country": "United States",
+      "subgroup": "News & Talk",
+      "description": "New York City, New York, United States. English-language news and talk.",
+      "hasPreRoll": false
     },
     {
       "id": "19a79162d9fe482894c88a070de8d596",
       "name": "GB News (UK)",
       "url": "https://tunein-live-c.cdnstream1.com/4994_96_2.mp3",
-      "group": "News",
-      "country": "UK"
+      "group": "News & Talk",
+      "country": "United Kingdom",
+      "subgroup": "News",
+      "description": "United Kingdom. English-language news.",
+      "hasPreRoll": false
     },
     {
       "id": "d479da1cd83745978a04083e6953240d",
       "name": "KRMS (Osage Beach)",
       "url": "https://ice8.securenetsystems.net/KRMS",
-      "group": "Talk",
-      "country": ""
+      "group": "News & Talk",
+      "country": "United States",
+      "subgroup": "News & Talk",
+      "description": "Osage Beach, Missouri, United States. English-language news and talk.",
+      "hasPreRoll": false
     },
     {
       "id": "st_mm0vwjsg_meznll",
       "name": "Timeblender",
       "url": "http://live.powerhitz.com/timeblender?aw_0_req.gdpr=true",
-      "group": "Oldies",
-      "country": ""
+      "group": "Decades",
+      "country": "United States",
+      "subgroup": "Mixed Decades",
+      "description": "United States. Classic hits spanning multiple decades.",
+      "hasPreRoll": false
     },
     {
       "id": "st_mmh4450g_yonphq",
       "name": "KINK Alternative",
       "url": "http://playerservices.streamtheworld.com/api/livestream-redirect/KINK.mp3",
       "group": "Rock",
-      "country": ""
+      "country": "Hilversum, Netherlands",
+      "subgroup": "Alternative",
+      "description": "Modern Alternative Rock",
+      "hasPreRoll": false
     },
     {
       "id": "st_mmh47353_tum81d",
       "name": "Studio Brussel",
       "url": "http://icecast.vrtcdn.be/stubru-high.mp3",
-      "group": "Alternative",
-      "country": "Belgium"
+      "group": "Public Radio",
+      "country": "Belgium",
+      "subgroup": "AAA & Eclectic",
+      "description": "Belgium. Listener-supported AAA and eclectic music.",
+      "hasPreRoll": false
     },
     {
       "id": "st_mmhpj4nx_t3xbx9",
       "name": "Litt Hits",
       "url": "https://das-sa39.cdnstream1.com/5572_128",
       "group": "Pop",
-      "country": ""
+      "country": "United States",
+      "subgroup": "Top 40",
+      "description": "United States. Contemporary hits and Top 40 pop.",
+      "hasPreRoll": false
     },
     {
       "id": "st_mmhpk08k_rl7gsx",
       "name": "Litt Alt",
       "url": "https://das-sa39.cdnstream1.com/5561_128",
-      "group": "Alternative",
-      "country": ""
+      "group": "Rock",
+      "country": "United States",
+      "subgroup": "Alternative",
+      "description": "United States. Alternative rock.",
+      "hasPreRoll": true
     },
     {
       "id": "st_mmhpku96_ycbvs0",
       "name": "Litt Legends of Rock",
       "url": "https://das-sa39.cdnstream1.com/5602_128",
-      "group": "Classic Rock",
-      "country": ""
+      "group": "Rock",
+      "country": "United States",
+      "subgroup": "Classic Rock",
+      "description": "United States. Classic rock.",
+      "hasPreRoll": false
     },
     {
       "id": "st_mmhpm3d0_9syctc",
       "name": "Litt 80's",
       "url": "https://das-sa39.cdnstream1.com/5559_128",
-      "group": "1980's",
-      "country": ""
+      "group": "Decades",
+      "country": "United States",
+      "subgroup": "1980s",
+      "description": "United States. Music of the 1980s.",
+      "hasPreRoll": false
     },
     {
       "id": "st_mmhpncit_px415w",
       "name": "Litt Lofi",
       "url": "https://das-sa39.cdnstream1.com/5582_128",
-      "group": "Ambient / Chill",
-      "country": ""
+      "group": "Ambient & Chill",
+      "country": "United States",
+      "subgroup": "Lo-fi",
+      "description": "United States. Lo-fi beats.",
+      "hasPreRoll": false
     },
     {
       "id": "st_mmhpqg9i_km6uyu",
       "name": "Litt Grunge",
       "url": "https://das-sa39.cdnstream1.com/5570_128",
-      "group": "Alternative",
-      "country": ""
+      "group": "Rock",
+      "country": "United States",
+      "subgroup": "Grunge",
+      "description": "United States. Grunge and related alternative rock.",
+      "hasPreRoll": false
     },
     {
       "id": "st_mmhprtlx_mk3edb",
       "name": "Litt Rock",
       "url": "https://das-sa39.cdnstream1.com/5591_128",
       "group": "Rock",
-      "country": ""
+      "country": "United States",
+      "subgroup": "General Rock",
+      "description": "United States. Rock music.",
+      "hasPreRoll": false
     },
     {
       "id": "st_mmhpu0q3_ilhbxx",
       "name": "Litt Sunny Pop",
       "url": "https://das-sa39.cdnstream1.com/5598_128",
       "group": "Pop",
-      "country": ""
+      "country": "United States",
+      "subgroup": "Adult Contemporary",
+      "description": "United States. Adult contemporary pop.",
+      "hasPreRoll": false
     },
     {
       "id": "st_mmhsuqe5_18sq28",
       "name": "Litt Pop",
       "url": "https://das-sa39.cdnstream1.com/5587_128",
       "group": "Pop",
-      "country": ""
+      "country": "United States",
+      "subgroup": "Top 40",
+      "description": "United States. Contemporary hits and Top 40 pop.",
+      "hasPreRoll": false
     },
     {
       "id": "st_mmhsvz1m_sg5r5x",
       "name": "Litt Doggystyle",
       "url": "https://das-sa39.cdnstream1.com/5567_128",
-      "group": "Hip-Hop",
-      "country": ""
+      "group": "Hip-Hop & R&B",
+      "country": "United States",
+      "subgroup": "Hip-Hop",
+      "description": "United States. Hip-hop.",
+      "hasPreRoll": false
     },
     {
       "id": "st_mmhszny8_xodq7h",
       "name": "Litt 90's",
       "url": "https://das-sa39.cdnstream1.com/5560_128",
-      "group": "1990's",
-      "country": ""
+      "group": "Decades",
+      "country": "United States",
+      "subgroup": "1990s",
+      "description": "United States. Music of the 1990s.",
+      "hasPreRoll": false
     },
     {
       "id": "st_mmht0d6z_5zcpee",
       "name": "Litt 70's",
       "url": "https://das-sa39.cdnstream1.com/5558_128",
-      "group": "1970's",
-      "country": ""
+      "group": "Decades",
+      "country": "United States",
+      "subgroup": "1970s",
+      "description": "United States. Music of the 1970s.",
+      "hasPreRoll": false
     },
     {
       "id": "st_mmht1cdl_cpk9yh",
       "name": "Litt 60's",
       "url": "https://das-sa39.cdnstream1.com/5557_128",
-      "group": "Oldies",
-      "country": ""
+      "group": "Decades",
+      "country": "United States",
+      "subgroup": "1960s",
+      "description": "United States. Music of the 1960s.",
+      "hasPreRoll": false
     },
     {
       "id": "st_mmht29lh_o4dq3x",
       "name": "Litt 2010's",
       "url": "https://das-sa39.cdnstream1.com/5555_128",
-      "group": "2000's",
-      "country": ""
+      "group": "Decades",
+      "country": "United States",
+      "subgroup": "2010s",
+      "description": "United States. Music of the 2010s.",
+      "hasPreRoll": false
     },
     {
       "id": "st_mmht49qw_uszw33",
       "name": "Litt 2000's",
       "url": "https://das-sa39.cdnstream1.com/5604_128",
-      "group": "2000's",
-      "country": ""
+      "group": "Decades",
+      "country": "United States",
+      "subgroup": "2000s",
+      "description": "United States. Music of the 2000s.",
+      "hasPreRoll": false
     },
     {
       "id": "st_mmht5qqr_efw5yk",
       "name": "AP News (US)",
       "url": "https://apnews.cdnstream1.com/apnews",
-      "group": "News",
-      "country": "United States"
+      "group": "News & Talk",
+      "country": "United States",
+      "subgroup": "News",
+      "description": "United States. English-language news.",
+      "hasPreRoll": false
     },
     {
       "id": "st_mmht7d0x_3y8qg2",
       "name": "Litt Country",
       "url": "https://das-sa39.cdnstream1.com/5563_128",
       "group": "Country",
-      "country": ""
+      "country": "United States",
+      "subgroup": "General Country",
+      "description": "United States. Country music.",
+      "hasPreRoll": false
     },
     {
       "id": "st_mmht7t76_9nvici",
       "name": "Litt Classic Country",
       "url": "https://das-sa39.cdnstream1.com/5601_128",
       "group": "Country",
-      "country": ""
+      "country": "United States",
+      "subgroup": "Classic Country",
+      "description": "United States. Classic country.",
+      "hasPreRoll": false
     },
     {
       "id": "st_mmht8vly_6ms5j0",
       "name": "Litt Island Fever",
       "url": "https://das-sa39.cdnstream1.com/5578_128",
-      "group": "Reggae",
-      "country": ""
+      "group": "Reggae & Ska",
+      "country": "United States",
+      "subgroup": "Reggae",
+      "description": "United States. Reggae.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "st_mtj5ap6j_z3ui8mbf",
+      "name": "Best of Art Bell",
+      "url": "http://stream1.u7radio.org:8000/",
+      "group": "News & Talk",
+      "country": "United States",
+      "subgroup": "Paranormal",
+      "description": "United States. Archived paranormal and late-night talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "st_mtj5bf70_f6wtjsyb",
+      "name": "Ultimate Art Bell",
+      "url": "http://stream.willstare.com:8450/",
+      "group": "News & Talk",
+      "country": "United States",
+      "subgroup": "Paranormal",
+      "description": "United States. Archived paranormal and late-night talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "st_mtj5clyc_oj4ucl26",
+      "name": "RTE Gold",
+      "url": "https://25453.live.streamtheworld.com/RTE_GOLD",
+      "group": "Pop",
+      "country": "Ireland",
+      "subgroup": "Adult Contemporary",
+      "description": "Ireland. Adult contemporary pop.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "st_mtjjupg0_b5vd9i9i",
+      "name": "KEXP Seattle",
+      "url": "https://kexp.streamguys1.com/kexp160.aac",
+      "group": "Public Radio",
+      "country": "United States",
+      "subgroup": "AAA & Eclectic",
+      "description": "Seattle, Washington, United States. Listener-supported AAA and eclectic music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "st_mtjk0vhy_8udneodw",
+      "name": "Pinguin Indie",
+      "url": "https://streams.pinguinradio.com/PinguinRadio192.mp3",
+      "group": "Rock",
+      "country": "Netherlands",
+      "subgroup": "Indie Rock",
+      "description": "Rotterdam, Netherlands",
+      "hasPreRoll": false
+    },
+    {
+      "id": "st_mtjk1ipc_cdt3a6ik",
+      "name": "Pinguin On The Rocks",
+      "url": "https://streams.pinguinradio.com/PinguinOnTheRocks192.mp3",
+      "group": "Rock",
+      "country": "Netherlands",
+      "subgroup": "Classic Rock",
+      "description": "Rotterdam, Netherlands",
+      "hasPreRoll": false
+    },
+    {
+      "id": "st_mtjk2dw5_kn5p33sb",
+      "name": "IndieXL",
+      "url": "https://server-23.stream-server.nl:18438/",
+      "group": "Rock",
+      "country": "Netherlands",
+      "subgroup": "Indie Rock",
+      "description": "The Netherlands. Independent and emerging rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "d216b19b64f1e83e9dbfa08cb27843ff",
+      "name": "CLASSIC HITS RADIO Italia",
+      "url": "https://classichitsradio.streamingmedia.it/play",
+      "group": "Decades",
+      "country": "Italy",
+      "subgroup": "1970s",
+      "description": "Italy. Music of the 1970s.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "d7a113f457996451509f0bb5c678b097",
+      "name": "Heart 70s",
+      "url": "https://media-ssl.musicradio.com/Heart70sMP3",
+      "group": "Decades",
+      "country": "United Kingdom",
+      "subgroup": "1970s",
+      "description": "United Kingdom. Music of the 1970s.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "131a40566df710855107fb19412a1a09",
+      "name": "Heart 80s",
+      "url": "https://media-ssl.musicradio.com/Heart80sMP3",
+      "group": "Decades",
+      "country": "United Kingdom",
+      "subgroup": "1980s",
+      "description": "United Kingdom. Music of the 1980s.",
+      "hasPreRoll": true
+    },
+    {
+      "id": "306e589dd53682a2cbb754704d6e791d",
+      "name": "The Big 80s Station",
+      "url": "http://158.69.114.190:8065/;",
+      "group": "Decades",
+      "country": "United States",
+      "subgroup": "1980s",
+      "description": "United States. Music of the 1980s.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "c4deeece19ec34e5edffca00808b5007",
+      "name": "Dance Wave Retro!",
+      "url": "https://dancewave.online/retrodance.mp3",
+      "group": "Electronic",
+      "country": "Hungary",
+      "subgroup": "Eurodance",
+      "description": "Hungary. Eurodance.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "6f3fc16540ee945f29656a51e094f17d",
+      "name": "Heart 90s",
+      "url": "https://media-ssl.musicradio.com/Heart90sMP3",
+      "group": "Decades",
+      "country": "United Kingdom",
+      "subgroup": "1990s",
+      "description": "United Kingdom. Music of the 1990s.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "b5b8839c4cd1729afffede6ea70668de",
+      "name": "Play 90's",
+      "url": "http://live.playradio.org:9090/90HD",
+      "group": "Decades",
+      "country": "Romania",
+      "subgroup": "1990s",
+      "description": "Romania. Music of the 1990s.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "62c6d1031464b0918b9f69ab4fcba84d",
+      "name": "1.FM Y2K Radio (2000s)",
+      "url": "http://strm112.1.fm/hits2000_mobile_mp3",
+      "group": "Decades",
+      "country": "Switzerland",
+      "subgroup": "2000s",
+      "description": "Switzerland. Music of the 2000s.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "0a81f4b4001700069391b40dd464f5cc",
+      "name": "2000 FM - Alternative Rock",
+      "url": "http://bigrradio.cdnstream1.com/5101_128",
+      "group": "Rock",
+      "country": "United States",
+      "subgroup": "Alternative",
+      "description": "United States. Alternative rock.",
+      "hasPreRoll": true
+    },
+    {
+      "id": "e1aca39153cecf955e3582e1325a78fe",
+      "name": "Magic Radio UK",
+      "url": "https://stream-mz.hellorayo.co.uk/magicnational.mp3?direct=true&aw_0_1st.playerid=BMUK_TuneIn&aw_0_1st.skey=7374499933&stationCode=mag",
+      "group": "Pop",
+      "country": "United Kingdom",
+      "subgroup": "Adult Contemporary",
+      "description": "United Kingdom. Adult contemporary pop.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "21a22d40a60ce9d6496b6c4ba6f62061",
+      "name": "Radio X 00s",
+      "url": "https://media-ice.musicradio.com/RadioX00sMP3",
+      "group": "Decades",
+      "country": "United Kingdom",
+      "subgroup": "2000s",
+      "description": "United Kingdom. Music of the 2000s.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "ccd398bb2796acf9ea1879f2fc05b18b",
+      "name": "1.FM - Alt Rock X Hits",
+      "url": "http://strm112.1.fm/x_mobile_mp3",
+      "group": "Rock",
+      "country": "Switzerland",
+      "subgroup": "Alternative",
+      "description": "Switzerland. Alternative rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "c566d34e9162654612e352cf7546c505",
+      "name": "1.FM - Gorilla FM Radio",
+      "url": "http://strm112.1.fm/gorillafm_mobile_mp3",
+      "group": "Rock",
+      "country": "Switzerland",
+      "subgroup": "Alternative",
+      "description": "Switzerland. Alternative rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "9f089a50f137dc07a898e49432560bfa",
+      "name": "181.FM - 90's Alternative",
+      "url": "https://listen.181fm.com/181-90salt_128k.mp3",
+      "group": "Rock",
+      "country": "United States",
+      "subgroup": "Alternative",
+      "description": "United States. Alternative rock.",
+      "hasPreRoll": true
+    },
+    {
+      "id": "e87b0978396d1a0844d3fe5a2aba2d91",
+      "name": "90.7 WFUV",
+      "url": "https://onair.wfuv.org/onair-aacplus",
+      "group": "Public Radio",
+      "country": "United States",
+      "subgroup": "AAA & Eclectic",
+      "description": "New York City, New York, United States. Listener-supported AAA and eclectic music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "7c71abc24f31c8c671a7ba47300797fa",
+      "name": "ABC Double J",
+      "url": "http://live-radio01.mediahubaustralia.com/DJDW/mp3/",
+      "group": "Public Radio",
+      "country": "Australia",
+      "subgroup": "AAA & Eclectic",
+      "description": "Australia. Listener-supported AAA and eclectic music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "5a170e34b1ecc22b49e66ef9c5242ac5",
+      "name": "Amazing Radio",
+      "url": "http://amazingradio.stream.laut.fm/amazingradio?t302=2023-11-01_18-04-38&uuid=9dc21e5d-5102-400a-b0a3-acf860947777",
+      "group": "Rock",
+      "country": "United Kingdom",
+      "subgroup": "Indie Rock",
+      "description": "United Kingdom. Independent and emerging rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "41bec80f21ef83adfcc150bc64030866",
+      "name": "Australian Digital Radio - Grunge",
+      "url": "http://abm21.com.au:8000/CONTAINER92",
+      "group": "Rock",
+      "country": "Australia",
+      "subgroup": "Grunge",
+      "description": "Australia. Grunge and related alternative rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "9d317cf44f0f939c95a1259ebcf8d4cc",
+      "name": "BFBS Edge",
+      "url": "http://edge-audio-04-thn.sharp-stream.com/ssvcbfbs22.mp3",
+      "group": "Rock",
+      "country": "United Kingdom",
+      "subgroup": "Alternative",
+      "description": "British Forces Broadcasting Service. Alternative rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "00bdd42038afab823cc51f209ab56a15",
+      "name": "Big R Radio - Grunge FM",
+      "url": "http://bigrradio.cdnstream1.com/5200_128",
+      "group": "Rock",
+      "country": "United States",
+      "subgroup": "Grunge",
+      "description": "United States. Grunge and related alternative rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "978d1d1a4555383aaeae4afaa9acaa9f",
+      "name": "Big R Radio - Post Grunge Rock",
+      "url": "http://bigrradio.cdnstream1.com/5203_128",
+      "group": "Rock",
+      "country": "United States",
+      "subgroup": "Grunge",
+      "description": "United States. Grunge and related alternative rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "2168a5b1cd5679dc0573a56c1b74b7bb",
+      "name": "Dandelion Radio",
+      "url": "http://solid41.streamupsolutions.com:9414/stream",
+      "group": "Public Radio",
+      "country": "United Kingdom",
+      "subgroup": "AAA & Eclectic",
+      "description": "United Kingdom. Listener-supported AAA and eclectic music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "6d40b35e24519bd94ccc1a377b3b183f",
+      "name": "DKFM Classic",
+      "url": "https://radio.streemlion.com:4245/stream",
+      "group": "Rock",
+      "country": "United States",
+      "subgroup": "Alternative",
+      "description": "Fresno, California, United States. Alternative rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "a8432766204bcf42e27403f6b199474d",
+      "name": "DKFM Edge",
+      "url": "https://radio.streemlion.com:4405/stream",
+      "group": "Rock",
+      "country": "Canada",
+      "subgroup": "Alternative",
+      "description": "Canada. Alternative rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "8f10bcd0180d2524b3432af684fcbc37",
+      "name": "Exclusively Nirvana",
+      "url": "https://streaming.exclusive.radio/er/nirvana/icecast.audio",
+      "group": "Rock",
+      "country": "United Arab Emirates",
+      "subgroup": "Grunge",
+      "description": "United Arab Emirates. Grunge and related alternative rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "e868abe39ae16d98f1095e1c0a727638",
+      "name": "Exclusively Stone Temple Pilots",
+      "url": "https://streaming.exclusive.radio/er/stonetemplepilots/icecast.audio",
+      "group": "Rock",
+      "country": "United Arab Emirates",
+      "subgroup": "Grunge",
+      "description": "United Arab Emirates. Grunge and related alternative rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "be15d70a0a4ac22a6a29a56ca4b4b14c",
+      "name": "FM4",
+      "url": "https://orf-live.ors-shoutcast.at/fm4-q2a",
+      "group": "Public Radio",
+      "country": "Austria",
+      "subgroup": "AAA & Eclectic",
+      "description": "Austria. Listener-supported AAA and eclectic music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "6220c4fffb97c4dbeed75dc5d980cc31",
+      "name": "Guerrilla Radio",
+      "url": "http://s2.stationplaylist.com:9460/guerrilla",
+      "group": "Rock",
+      "country": "United States",
+      "subgroup": "Indie Rock",
+      "description": "United States. Independent and emerging rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "c55828130acb4e4992f7c312b109be6d",
+      "name": "Indie X FM",
+      "url": "http://kathy.torontocast.com:2690/stream",
+      "group": "Rock",
+      "country": "United States",
+      "subgroup": "Alternative",
+      "description": "United States. Alternative rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "fd98b37c5a9f0a94b8005e589905004f",
+      "name": "KCRW ECLECTIC 24",
+      "url": "https://streams.kcrw.com/e24_mp3",
+      "group": "Public Radio",
+      "country": "United States",
+      "subgroup": "AAA & Eclectic",
+      "description": "Santa Monica, California, United States. Listener-supported AAA and eclectic music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "b838c2e69cbc0c6da89b8cd59be1acb1",
+      "name": "KRCL 90.9 FM Salt Lake City, UT",
+      "url": "http://stream.xmission.com/krcl-high",
+      "group": "Public Radio",
+      "country": "United States",
+      "subgroup": "AAA & Eclectic",
+      "description": "Salt Lake City, Utah, United States. Listener-supported AAA and eclectic music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "f02824b91bcfd8c3b7672c78a1989780",
+      "name": "KUTX 98.9",
+      "url": "https://streams.kut.org/4428_192.mp3",
+      "group": "Public Radio",
+      "country": "United States",
+      "subgroup": "AAA & Eclectic",
+      "description": "Austin, Texas, United States. Listener-supported AAA and eclectic music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "a3b8e555dcdc93cd85038b52bd089f65",
+      "name": "MPR The Current",
+      "url": "http://current.stream.publicradio.org/kcmp.mp3",
+      "group": "Public Radio",
+      "country": "United States",
+      "subgroup": "AAA & Eclectic",
+      "description": "Minneapolis–Saint Paul, Minnesota, United States. Listener-supported AAA and eclectic music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "3ed3a217b179a8cee393983cf0baa683",
+      "name": "Pearl Jam Ten Club Radio",
+      "url": "http://radio.nugs.net/pearljam",
+      "group": "Rock",
+      "country": "United States",
+      "subgroup": "Grunge",
+      "description": "United States. Grunge and related alternative rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "30e0b476213bd8665f0a66e29889d67e",
+      "name": "Radio Boise 89.9/93.5",
+      "url": "http://radioboise-ice.streamguys1.com/live",
+      "group": "Public Radio",
+      "country": "United States",
+      "subgroup": "AAA & Eclectic",
+      "description": "Boise, Idaho, United States. Listener-supported AAA and eclectic music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "8898e56aad67f44993f48a13feff11e5",
+      "name": "Radio DHT (kanał główny)",
+      "url": "https://radiodht.com/stream_main/",
+      "group": "Decades",
+      "country": "Poland",
+      "subgroup": "Mixed Decades",
+      "description": "Wrocław, Poland. Classic hits spanning multiple decades.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "8cd0b8606e97b61ca33414aace90cefc",
+      "name": "Radio X 90s",
+      "url": "http://media-ice.musicradio.com/RadioX90sMP3",
+      "group": "Rock",
+      "country": "United Kingdom",
+      "subgroup": "Alternative",
+      "description": "United Kingdom. Alternative rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "aa993e00371f9571af352a8b995d910b",
+      "name": "RTRFM",
+      "url": "https://live.rtrfm.com.au/stream1",
+      "group": "Public Radio",
+      "country": "Australia",
+      "subgroup": "AAA & Eclectic",
+      "description": "Perth, Western Australia. Listener-supported AAA and eclectic music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "6fd0a9588070812c7d502a16b550b649",
+      "name": "SomaFM Digitalis",
+      "url": "https://ice5.somafm.com/digitalis-256-mp3",
+      "group": "Ambient & Chill",
+      "country": "United States",
+      "subgroup": "Ambient",
+      "description": "United States. Ambient music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "7c8ec88f36e3f73af4bf1992fd13f273",
+      "name": "SomaFM Indie Pop Rocks!",
+      "url": "https://ice2.somafm.com/indiepop-128-aac",
+      "group": "Rock",
+      "country": "United States",
+      "subgroup": "Indie Rock",
+      "description": "United States. Independent and emerging rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "ff46f91dcc01bf5670bf7e27fbf76d5b",
+      "name": "Static – 90s & 2000s Alt Rock",
+      "url": "https://r.bgp.rodeo/listen/static/radio.mp3",
+      "group": "Rock",
+      "country": "United States",
+      "subgroup": "Alternative",
+      "description": "United States. Alternative rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "879e4386d46587898919fcd326cf9033",
+      "name": "The Independent FM",
+      "url": "https://listen.radioking.com/radio/293701/stream/340084",
+      "group": "Rock",
+      "country": "United States",
+      "subgroup": "Alternative",
+      "description": "Los Angeles, California\nText: 888-544-9920",
+      "hasPreRoll": false
+    },
+    {
+      "id": "402fd781d66d5429b8e6c5e57f171baf",
+      "name": "TMM 1",
+      "url": "https://listen-msmn.sharp-stream.com/nme1high.mp3",
+      "group": "Rock",
+      "country": "United Kingdom",
+      "subgroup": "Indie Rock",
+      "description": "United Kingdom. Independent and emerging rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "9c67c9fc18eaa11ab6d3a693c6aa9a81",
+      "name": "Today FM",
+      "url": "https://stream.audioxi.com/TD",
+      "group": "Pop",
+      "country": "Ireland",
+      "subgroup": "Adult Contemporary",
+      "description": "Ireland. Adult contemporary pop.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "1fa9fe1a2ea130110a5730e5d780f1fa",
+      "name": "WERS",
+      "url": "http://marconi.emerson.edu:8000/wers",
+      "group": "Public Radio",
+      "country": "United States",
+      "subgroup": "AAA & Eclectic",
+      "description": "Boston, Massachusetts, United States. Listener-supported AAA and eclectic music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "cc86fe918d33ec4bc39589506cb79791",
+      "name": "WFMU 91.1 East Orange, NJ",
+      "url": "http://stream2.wfmu.org/freeform-128k",
+      "group": "Public Radio",
+      "country": "United States",
+      "subgroup": "AAA & Eclectic",
+      "description": "East Orange, New Jersey, United States. Listener-supported AAA and eclectic music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "5aa7e09ad63d583fe05d2894d1d84e7b",
+      "name": "WFPK 91.9 Independent Louisville, KY",
+      "url": "http://lpm.streamguys1.com/wfpk-web",
+      "group": "Public Radio",
+      "country": "United States",
+      "subgroup": "AAA & Eclectic",
+      "description": "Louisville, Kentucky, United States. Listener-supported AAA and eclectic music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "e6df2dd1c671c2fe238ce40adaa1278d",
+      "name": "WPRB 103.3 FM - Princeton, NJ",
+      "url": "http://wprb.streamguys1.com/live",
+      "group": "Public Radio",
+      "country": "United States",
+      "subgroup": "AAA & Eclectic",
+      "description": "Princeton, New Jersey, United States. Listener-supported AAA and eclectic music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "0530a9cf90059acc298c3013eee868d3",
+      "name": "WXPN 88.5 Philadelphia, PA",
+      "url": "https://wxpnhi.xpn.org/xpnhi",
+      "group": "Public Radio",
+      "country": "United States",
+      "subgroup": "AAA & Eclectic",
+      "description": "Philadelphia, Pennsylvania, United States. Listener-supported AAA and eclectic music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "5cd61174222a6f162853f6778883f3ad",
+      "name": "WXPN HD2 - XPoNential",
+      "url": "https://wxpn.xpn.org/xpn2mp3hi",
+      "group": "Public Radio",
+      "country": "United States",
+      "subgroup": "AAA & Eclectic",
+      "description": "Philadelphia, Pennsylvania, United States. Listener-supported AAA and eclectic music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "4265e20147e012ff390e8f8e46137a9c",
+      "name": "Ambient Modern",
+      "url": "http://radio.stereoscenic.com/mod-h",
+      "group": "Ambient & Chill",
+      "country": "United States",
+      "subgroup": "Ambient",
+      "description": "United States. Ambient music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "c8f282ad1b0dd19ca6d2c8ecf76b8000",
+      "name": "Brokenbeats",
+      "url": "https://stream.brokenbeats.net/tune",
+      "group": "Ambient & Chill",
+      "country": "Ukraine",
+      "subgroup": "Ambient",
+      "description": "Ukraine. Ambient music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "8f59dbaea7235d069301c34be9e94d11",
+      "name": "Chillout Ibiza FM",
+      "url": "https://edge3.peta.live365.net/b05055_128mp3",
+      "group": "Ambient & Chill",
+      "country": "United Kingdom",
+      "subgroup": "Chillout",
+      "description": "United Kingdom. Chillout music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "cad075d82995aeab2c8ad752663acacb",
+      "name": "Smooth Chill",
+      "url": "https://media-ssl.musicradio.com/ChillMP3",
+      "group": "Ambient & Chill",
+      "country": "United Kingdom",
+      "subgroup": "Chillout",
+      "description": "United Kingdom. Chillout music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "529a13fb670076815fc833c029729525",
+      "name": "SomaFM Deep Space One",
+      "url": "https://ice2.somafm.com/deepspaceone-128-mp3",
+      "group": "Ambient & Chill",
+      "country": "United States",
+      "subgroup": "Space Music",
+      "description": "United States. Ambient space music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "6dec5195df070273470f00de13488b76",
+      "name": "0N Classic Rock",
+      "url": "https://0n-classicrock.radionetz.de/0n-classicrock.mp3",
+      "group": "Rock",
+      "country": "Germany",
+      "subgroup": "Classic Rock",
+      "description": "Germany. Classic rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "91e370bbb726ad146e99a5016da8b9bb",
+      "name": "1.FM - Classic Rock Replay Radio",
+      "url": "http://strm112.1.fm/crock_mobile_mp3",
+      "group": "Rock",
+      "country": "Switzerland",
+      "subgroup": "Classic Rock",
+      "description": "Switzerland. Classic rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "90b9f7cb8d4595e8bb91a6220e7cb167",
+      "name": "1.FM - Rock Classics Radio",
+      "url": "http://strm112.1.fm/rockclassics_mobile_mp3",
+      "group": "Rock",
+      "country": "Switzerland",
+      "subgroup": "Classic Rock",
+      "description": "Switzerland. Classic rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "269c87d4312b1a271c05723ac309a4cc",
+      "name": "70 80 90 Vibrazioni Rock Radio",
+      "url": "https://maggie.torontocast.com:2020/stream/vibrazionirockradio",
+      "group": "Decades",
+      "country": "Canada",
+      "subgroup": "Mixed Decades",
+      "description": "Canada. Music of the 1970s.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "8eb530778378832f72ea1952ce5c5247",
+      "name": "Antyradio Classic Rock",
+      "url": "https://an01.cdn.eurozet.pl/ANTCLA.mp3?redirected=01",
+      "group": "Rock",
+      "country": "Poland",
+      "subgroup": "Classic Rock",
+      "description": "Poland. Classic rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "0aab93ebe096690cd0e3479b5dbe42b8",
+      "name": "Arrow Classic Rock",
+      "url": "https://stream.player.arrow.nl/arrowcr",
+      "group": "Rock",
+      "country": "Netherlands",
+      "subgroup": "Classic Rock",
+      "description": "Netherlands. Classic rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "042cde9b53aab18d68ea37bf735c98fd",
+      "name": "AZ Rock",
+      "url": "http://cassini.shoutca.st:9300/stream",
+      "group": "Rock",
+      "country": "Puerto Rico",
+      "subgroup": "General Rock",
+      "description": "Puerto Rico. Rock music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "d2561b24b912356256311dcb57e698bd",
+      "name": "Choice Classic Rock",
+      "url": "https://streamer.radio.co/s66f2626b4/listen",
+      "group": "Rock",
+      "country": "Canada",
+      "subgroup": "Classic Rock",
+      "description": "Canada. Classic rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "9422dba6049bc98bb27cce5aad962f54",
+      "name": "Classic Rock 109",
+      "url": "http://listen.classicrock109.com:10042/;",
+      "group": "Rock",
+      "country": "Canada",
+      "subgroup": "Classic Rock",
+      "description": "Canada. Classic rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "2beb7ec7b4e67d1b668fe548664f4f98",
+      "name": "Classic Vinyl HD",
+      "url": "https://icecast.walmradio.com:8443/classic",
+      "group": "Rock",
+      "country": "United States",
+      "subgroup": "Classic Rock",
+      "description": "United States. Classic rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "d43ace50d1c3ba0cae63381445614906",
+      "name": "HD Radio Classic Rock",
+      "url": "http://hdradioclassicrock-rfritschka.radioca.st/;",
+      "group": "Rock",
+      "country": "United States",
+      "subgroup": "Classic Rock",
+      "description": "United States. Classic rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "36ccde615f187f32922e4efcd8cded86",
+      "name": "Megarock Radio",
+      "url": "https://stream3.megarockradio.net:80/",
+      "group": "Rock",
+      "country": "United States",
+      "subgroup": "General Rock",
+      "description": "United States. Rock music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "3ebb2a9ce4c9ac33470fcf2465b099a1",
+      "name": "Outpost Radio - Feel Good Rock",
+      "url": "http://feelgoodrock.com/pvt102",
+      "group": "Rock",
+      "country": "United States",
+      "subgroup": "General Rock",
+      "description": "United States. Rock music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "ae5778fbe8c775c536afea7441d54e66",
+      "name": "Panamericana Retro Rock",
+      "url": "https://mdstrm.com/audio/6598b728d982060896866b8a/icecast.audio",
+      "group": "Folk & Americana",
+      "country": "Peru",
+      "subgroup": "Americana",
+      "description": "Peru. Americana and roots music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "a60cfd423658c6a0aa2d3c6d70b696b4",
+      "name": "Planet Rock",
+      "url": "https://stream-mz.hellorayo.co.uk/planetrock.aac?direct=true&aw_0_1st.playerid=BMUK_Airable&aw_0_1st.skey=6778249992",
+      "group": "Rock",
+      "country": "United Kingdom",
+      "subgroup": "Classic Rock",
+      "description": "United Kingdom. Classic rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "aaedaa0e81d76c3a7b3750f59966fabf",
+      "name": "Radio Caroline 259 Gold",
+      "url": "https://happy.radiocaroline.nl/listen/classic_rock/radio128.mp3",
+      "group": "Rock",
+      "country": "Netherlands",
+      "subgroup": "Classic Rock",
+      "description": "Netherlands. Classic rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "d18621684ce3cbafbbbc2ab90c2f10dc",
+      "name": "Radio Rock On",
+      "url": "https://streaming.radiostreamlive.com/radiorockon_devices",
+      "group": "Rock",
+      "country": "United States",
+      "subgroup": "General Rock",
+      "description": "United States. Rock music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "8870cf70466529d613aa031f4b724ff7",
+      "name": "Radio ROCKS Kyiv 103.6FM HD",
+      "url": "https://online.radioroks.ua/RadioROKS_HD",
+      "group": "Rock",
+      "country": "Ukraine",
+      "subgroup": "General Rock",
+      "description": "Ukraine. Rock music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "fd72ae9a8b78109f1e0f367323b9b8c0",
+      "name": "Radio ROKS Ballads (Kyiv)",
+      "url": "http://online.radioroks.ua/RadioROKS_Ballads_HD",
+      "group": "Rock",
+      "country": "Ukraine",
+      "subgroup": "Rock Ballads",
+      "description": "Kyiv, Ukraine. Rock ballads.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "d5200eb67a87ccc5c80c0d80e784aeee",
+      "name": "Radio X Classic Rock",
+      "url": "https://media-ice.musicradio.com/RadioXClassicRockMP3",
+      "group": "Rock",
+      "country": "United Kingdom",
+      "subgroup": "Classic Rock",
+      "description": "United Kingdom. Classic rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "88754963c6566744e240c42a3dedee88",
+      "name": "REBEL 105.2 (Athens)",
+      "url": "http://netradio.live24.gr/rebel1052",
+      "group": "Rock",
+      "country": "Greece",
+      "subgroup": "Classic Rock",
+      "description": "Athens, Greece. Classic rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "d555491403504bfb32bdcf8c0edd3b8f",
+      "name": "Retro Album Rock",
+      "url": "http://ais-edge104-live365-dal02.cdnstream.com/a89824",
+      "group": "Rock",
+      "country": "United States",
+      "subgroup": "Classic Rock",
+      "description": "United States. Classic rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "2a306166ce4cb96538b3357f22f5254e",
+      "name": "Rock 95",
+      "url": "https://cob-ais.leanstream.co/CFJBFM-MP3?args=tunein_01",
+      "group": "Rock",
+      "country": "Canada",
+      "subgroup": "General Rock",
+      "description": "Canada. Rock music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "a4ed6918611ebad29e46224ed4b4c60d",
+      "name": "SomaFM Left Coast 70s",
+      "url": "https://ice2.somafm.com/seventies-320-mp3",
+      "group": "Decades",
+      "country": "United States",
+      "subgroup": "1970s",
+      "description": "United States. Music of the 1970s.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "6f8c811392f75d4f357f037b8cdda7cc",
+      "name": "St Louis Classic Rock",
+      "url": "http://74.208.89.18:8000/SLCR_highdef.mp3;",
+      "group": "Rock",
+      "country": "United States",
+      "subgroup": "Classic Rock",
+      "description": "United States. Classic rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "7c3e03ae2e046c4f9797b37f1951ebcf",
+      "name": "THE LYNX CLASSIC ROCK",
+      "url": "http://rock-lynxradio.radioca.st/stream",
+      "group": "Rock",
+      "country": "Canada",
+      "subgroup": "Classic Rock",
+      "description": "Canada. Classic rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "8ddda755285479f1d3f9b4518a6c240b",
+      "name": "Totally Radio - Rock",
+      "url": "http://playerservices.streamtheworld.com/api/livestream-redirect/T_RAD_ROCK_S01.mp3",
+      "group": "Rock",
+      "country": "Australia",
+      "subgroup": "General Rock",
+      "description": "Australia. Rock music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "1029da9661b4deba976d4dde97c9fb0d",
+      "name": "Virgin Radio Classic Rock",
+      "url": "http://icy.unitedradio.it/VirginRockClassics.mp3",
+      "group": "Rock",
+      "country": "Italy",
+      "subgroup": "Classic Rock",
+      "description": "Italy. Classic rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "8d854adc2131ff0cf338b0d04505e590",
+      "name": "Zenith Classic Rock",
+      "url": "http://91.189.64.188:3644/zenith128mp3",
+      "group": "Rock",
+      "country": "Ireland",
+      "subgroup": "Classic Rock",
+      "description": "Ireland. Classic rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "2fd7ec51fc7431f73356994dcb2e394a",
+      "name": "Ancient FM",
+      "url": "https://mediaserv73.live-streams.nl:18058/stream",
+      "group": "Classical",
+      "country": "Canada",
+      "subgroup": "Early Music",
+      "description": "Canada. Medieval, Renaissance, and early music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "2765477ab757853791f5467252d1be8e",
+      "name": "Classic FM UK",
+      "url": "http://ice-the.musicradio.com/ClassicFMMP3",
+      "group": "Classical",
+      "country": "United Kingdom",
+      "subgroup": "General Classical",
+      "description": "United Kingdom. Classical music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "79b769b70599d106508163f64e2dce2b",
+      "name": "Classical King FM - Evergreen Channel",
+      "url": "https://classicalking.streamguys1.com/evergreen-aac-128k",
+      "group": "Classical",
+      "country": "United States",
+      "subgroup": "General Classical",
+      "description": "United States. Classical music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "182b41d1be6f8e8e87fcd25a86290d5f",
+      "name": "France Musique | Classique Easy",
+      "url": "http://direct.francemusique.fr/live/francemusiqueeasyclassique-hifi.mp3",
+      "group": "Classical",
+      "country": "France",
+      "subgroup": "Relaxing Classical",
+      "description": "France. Relaxing classical selections.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "77cb1bb49b54af537e4233e5ade6c669",
+      "name": "France Musique La Baroque",
+      "url": "http://icecast.radiofrance.fr/francemusiquebaroque-hifi.aac",
+      "group": "Classical",
+      "country": "France",
+      "subgroup": "Baroque",
+      "description": "France. Baroque classical music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "021b53042f475eae70ff956dece4abf0",
+      "name": "Linn Classical",
+      "url": "http://radio.linn.co.uk:8004/autodj",
+      "group": "Classical",
+      "country": "United Kingdom",
+      "subgroup": "General Classical",
+      "description": "United Kingdom. Classical music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "c35f856a092d94a865a9a35561940783",
+      "name": "Your Classical - Relax",
+      "url": "http://relax.stream.publicradio.org/relax.mp3",
+      "group": "Classical",
+      "country": "United States",
+      "subgroup": "Relaxing Classical",
+      "description": "United States. Relaxing classical selections.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "a132c0b42f259dba0cb6c4c18994f6b2",
+      "name": ".977 Country",
+      "url": "http://26343.live.streamtheworld.com:3690/977_COUNTRY_SC",
+      "group": "Country",
+      "country": "United States",
+      "subgroup": "Contemporary Country",
+      "description": "United States. Contemporary country.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "0788ef2a8a7ff8ee91bcaf8610bc66a7",
+      "name": "181.FM - 90's Country",
+      "url": "http://listen.181fm.com/181-90scountry_128k.mp3",
+      "group": "Decades",
+      "country": "United States",
+      "subgroup": "1990s",
+      "description": "United States. Music of the 1990s.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "957652007ce679e7dec3f196e8a94cea",
+      "name": "America's Country",
+      "url": "https://ais-sa2.cdnstream1.com/1976_128.mp3",
+      "group": "Country",
+      "country": "United States",
+      "subgroup": "General Country",
+      "description": "United States. Country music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "6271ff6cf3c95405659fe0b3bed8f940",
+      "name": "Bluegrass Country",
+      "url": "https://ice24.securenetsystems.net/WAMU",
+      "group": "Country",
+      "country": "United States",
+      "subgroup": "Bluegrass",
+      "description": "United States. Bluegrass.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "6a17c583d063a535572e8a5291d4fe96",
+      "name": "Radio Country Live New York",
+      "url": "https://streaming.radiostreamlive.com/radiocountrylive_devices",
+      "group": "Country",
+      "country": "United States",
+      "subgroup": "General Country",
+      "description": "United States. Country music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "6fb1bfcf8705e673ade2dd378b446cb0",
+      "name": "SomaFM Boot Liquor",
+      "url": "https://ice2.somafm.com/bootliquor-320-mp3",
+      "group": "Country",
+      "country": "United States",
+      "subgroup": "General Country",
+      "description": "United States. Country music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "06430d51eabd40522624a0c14d5c2ab9",
+      "name": "Today's Hot Country",
+      "url": "http://ice.stream101.com:9016/stream",
+      "group": "Country",
+      "country": "United States",
+      "subgroup": "Contemporary Country",
+      "description": "United States. Contemporary country.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "b9566f0cc1ad44f3415c8d37f2bbf1c0",
+      "name": "Truckers Radio USA",
+      "url": "http://streamer.radio.co/s81d30349a/low",
+      "group": "Country",
+      "country": "United States",
+      "subgroup": "Trucking Country",
+      "description": "United States. Country music for the road.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "c328fbab0b53f837bb1eead6b4e37a8b",
+      "name": "1.FM - Deep House Radio",
+      "url": "http://strm112.1.fm/deephouse_mobile_mp3",
+      "group": "Electronic",
+      "country": "Switzerland",
+      "subgroup": "Deep House",
+      "description": "Switzerland. Deep house.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "09050674986aa35414234e5b9af8a3bd",
+      "name": "Dance Wave!",
+      "url": "https://dancewave.online/dance.mp3",
+      "group": "Electronic",
+      "country": "Hungary",
+      "subgroup": "General Electronic",
+      "description": "Hungary. Electronic music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "0d2464a19c5fd910359889278847b0b1",
+      "name": "EuroDance 90 radio",
+      "url": "https://stream-eurodance90.fr/radio/8000/128.mp3?1627933323",
+      "group": "Electronic",
+      "country": "France",
+      "subgroup": "Eurodance",
+      "description": "France. Eurodance.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "d8a74cb613d70a3954843155a2a6207b",
+      "name": "Frisky",
+      "url": "http://stream2.friskyradio.com/frisky_mp3_hi",
+      "group": "Electronic",
+      "country": "United States",
+      "subgroup": "General Electronic",
+      "description": "United States. Electronic music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "42897193cdcce324ec5c807feb6de0ed",
+      "name": "Intense Radio",
+      "url": "https://secure.live-streams.nl/main",
+      "group": "Electronic",
+      "country": "Netherlands",
+      "subgroup": "General Electronic",
+      "description": "Netherlands. Electronic music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "3680d74c2109fc98c7430489fbb8c765",
+      "name": "Technolovers EDM",
+      "url": "https://stream.technolovers.fm/edm?ref=radiobrowser",
+      "group": "Electronic",
+      "country": "Germany",
+      "subgroup": "Techno",
+      "description": "Germany. Techno.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "fe345f38b878eba8330f475cb3a9f999",
+      "name": "Trance Athena",
+      "url": "http://cast.streams.ovh:8008/stream",
+      "group": "Electronic",
+      "country": "Greece",
+      "subgroup": "Trance",
+      "description": "Greece. Trance.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "41259aed291ed9a128a439d8a11cd4ed",
+      "name": "2GB (Sydney)",
+      "url": "http://playerservices.streamtheworld.com/api/livestream-redirect/2GB.mp3",
+      "group": "News & Talk",
+      "country": "Australia",
+      "subgroup": "News & Talk",
+      "description": "Sydney, Australia. English-language news and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "3bddeb8d6d7d99520d7955a9f05b1e52",
+      "name": "2SM (Sydney)",
+      "url": "https://cast4.asurahosting.com/proxy/2sm1269/stream",
+      "group": "News & Talk",
+      "country": "Australia",
+      "subgroup": "News & Talk",
+      "description": "Sydney, Australia. English-language news and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "b93866ab0fc5b0d023e5ca0f923d8c61",
+      "name": "3AW (Melbourne)",
+      "url": "http://playerservices.streamtheworld.com/api/livestream-redirect/3AW.mp3",
+      "group": "News & Talk",
+      "country": "Australia",
+      "subgroup": "News & Talk",
+      "description": "Melbourne, Australia. English-language news and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "41a87170021a0e93e8888ee99193a2fc",
+      "name": "4BC (Brisbane)",
+      "url": "http://playerservices.streamtheworld.com/api/livestream-redirect/4BC.mp3",
+      "group": "News & Talk",
+      "country": "Australia",
+      "subgroup": "News & Talk",
+      "description": "Brisbane, Australia. English-language news and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "ad2c9b84a38dea0a971c797b8fa61c2a",
+      "name": "531pi (NZ)",
+      "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/531PI_SC",
+      "group": "Public Radio",
+      "country": "New Zealand",
+      "subgroup": "Public News & Talk",
+      "description": "New Zealand. Public-radio news, culture, and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "38a6dfa2f83840ae105adcbca60d6398",
+      "name": "6PR (Perth)",
+      "url": "http://playerservices.streamtheworld.com/api/livestream-redirect/6PR.mp3",
+      "group": "News & Talk",
+      "country": "Australia",
+      "subgroup": "News & Talk",
+      "description": "Perth, Australia. English-language news and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "3681d91292314f4308752dd62b551f6f",
+      "name": "702 (Johannesburg)",
+      "url": "http://28993.live.streamtheworld.com:3690/FM702_SC",
+      "group": "News & Talk",
+      "country": "South Africa",
+      "subgroup": "News & Talk",
+      "description": "Johannesburg, South Africa. English-language news and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "955efcea9538831718b30ac718052469",
+      "name": "ABC News Radio (AU)",
+      "url": "http://abc.streamguys1.com/live/newsradio/icecast.audio",
+      "group": "News & Talk",
+      "country": "Australia",
+      "subgroup": "News",
+      "description": "Australia. English-language news.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "f32f943690d12b12c4bda573438c9f37",
+      "name": "ABC Radio Perth (Perth)",
+      "url": "http://abc.streamguys1.com/live/localperth/icecast.audio",
+      "group": "Public Radio",
+      "country": "Australia",
+      "subgroup": "Public News & Talk",
+      "description": "Perth, Australia. Public-radio news, culture, and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "4c3b12a02b540f5654c8883afb8d9e83",
+      "name": "ABS-CBN All Radio 101.9 (Manila)",
+      "url": "http://209.126.124.126:8872/stream",
+      "group": "News & Talk",
+      "country": "Philippines",
+      "subgroup": "News & Talk",
+      "description": "Manila, Philippines. English-language news and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "3cb91f0b64fd1295075be120a5f5217e",
+      "name": "Antigua Observer Radio (St. John's)",
+      "url": "http://s8.voscast.com:8176/;",
+      "group": "News & Talk",
+      "country": "Antigua and Barbuda",
+      "subgroup": "News & Talk",
+      "description": "St. John's, Antigua and Barbuda. English-language news and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "a6ed23d4dd84d3ffcac331da2225b14e",
+      "name": "Asaase Radio 99.5 (Accra)",
+      "url": "http://stream.radiojar.com/cyg76xcvp0hvv",
+      "group": "News & Talk",
+      "country": "Ghana",
+      "subgroup": "News & Talk",
+      "description": "Accra, Ghana. English-language news and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "2247c6e4e64bcfe90eb0d69d93b4a80b",
+      "name": "AXR (Singapore)",
+      "url": "http://singaporestream.axr.online/",
+      "group": "News & Talk",
+      "country": "Singapore",
+      "subgroup": "News & Talk",
+      "description": "Singapore. English-language news and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "3b44e70e01b32bd48448a7009b3d2242",
+      "name": "BFBS UK (UK)",
+      "url": "http://tx.sharp-stream.com/icecast.php?i=ssvcbfbs1.mp3",
+      "group": "News & Talk",
+      "country": "United Kingdom",
+      "subgroup": "News & Talk",
+      "description": "United Kingdom. English-language news and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "baf4789b57ccbe1e5be6e5c713b2d95c",
+      "name": "BFM 89.9 (Kuala Lumpur)",
+      "url": "https://stream.rcs.revma.com/s91qy9p0zs3vv",
+      "group": "News & Talk",
+      "country": "Malaysia",
+      "subgroup": "News & Talk",
+      "description": "Kuala Lumpur, Malaysia. English-language news and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "094b9ca847c8bd8cc67943a41db827eb",
+      "name": "Cape Talk (Cape Town)",
+      "url": "http://23613.live.streamtheworld.com:3690/CAPE_TALK_SC",
+      "group": "News & Talk",
+      "country": "South Africa",
+      "subgroup": "News & Talk",
+      "description": "Cape Town, South Africa. English-language news and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "eb9257ede73a6e69cd97ef8736bbd007",
+      "name": "Capital FM 91.3 (Kampala)",
+      "url": "http://5229.cloudrad.io:8316/;",
+      "group": "Pop",
+      "country": "Uganda",
+      "subgroup": "Top 40",
+      "description": "Kampala, Uganda. Contemporary hits and Top 40 pop.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "454904fc39ad17562020f86ddbcd711d",
+      "name": "CBC Radio One (Halifax)",
+      "url": "https://17813.live.streamtheworld.com/CBHA_CBC_SC",
+      "group": "Public Radio",
+      "country": "Canada",
+      "subgroup": "Public News & Talk",
+      "description": "Halifax, Nova Scotia, Canada. Public-radio news, culture, and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "cbae937adbdde256a909b7783b06aac5",
+      "name": "CBC Radio One (Inuvik)",
+      "url": "https://22983.live.streamtheworld.com/CHAK_CBC_SC",
+      "group": "Public Radio",
+      "country": "Canada",
+      "subgroup": "Public News & Talk",
+      "description": "Inuvik, Northwest Territories, Canada. Public-radio news, culture, and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "d980f5b6dfb9c8fd846566aebbdaaf34",
+      "name": "CBC Radio One (Montreal)",
+      "url": "https://26373.live.streamtheworld.com/CBMEFM_CBC_SC",
+      "group": "Public Radio",
+      "country": "Canada",
+      "subgroup": "Public News & Talk",
+      "description": "Montreal, Quebec, Canada. Public-radio news, culture, and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "ba8a6cc4e3f0496587f5131b97b96776",
+      "name": "CBC Radio One (Ottawa)",
+      "url": "https://26733.live.streamtheworld.com/CBOFM_CBC_SC",
+      "group": "Public Radio",
+      "country": "Canada",
+      "subgroup": "Public News & Talk",
+      "description": "Ottawa, Ontario, Canada. Public-radio news, culture, and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "40a5854f13c1f55c2c46bae9c8ae62ef",
+      "name": "CBC Radio One (Toronto)",
+      "url": "https://17813.live.streamtheworld.com/CBLAFM_CBC_SC",
+      "group": "Public Radio",
+      "country": "Canada",
+      "subgroup": "Public News & Talk",
+      "description": "Toronto, Ontario, Canada. Public-radio news, culture, and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "307644c4aff8255c499a936650be0dec",
+      "name": "CBC Radio One (Vancouver)",
+      "url": "https://22983.live.streamtheworld.com/CBU2FM_CBC_SC",
+      "group": "Public Radio",
+      "country": "Canada",
+      "subgroup": "Public News & Talk",
+      "description": "Vancouver, British Columbia, Canada. Public-radio news, culture, and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "5f872946b207773b4d4db7e7e02509ef",
+      "name": "CBC Radio One (Winnipeg)",
+      "url": "https://22983.live.streamtheworld.com/CBWAM_CBC_SC",
+      "group": "Public Radio",
+      "country": "Canada",
+      "subgroup": "Public News & Talk",
+      "description": "Winnipeg, Manitoba, Canada. Public-radio news, culture, and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "43837296660e5400d16c409136fc2e82",
+      "name": "CFAX 1070 (Victoria)",
+      "url": "http://18243.live.streamtheworld.com:3690/CFAXAMAAC_SC",
+      "group": "News & Talk",
+      "country": "Canada",
+      "subgroup": "News & Talk",
+      "description": "Victoria, British Columbia, Canada. English-language news and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "e220021b65c4f3738f26884596edde33",
+      "name": "CFRB NewsTalk 1010 (Toronto)",
+      "url": "http://18183.live.streamtheworld.com/CFRBAMAAC_SC",
+      "group": "News & Talk",
+      "country": "Canada",
+      "subgroup": "News",
+      "description": "Toronto, Ontario, Canada. English-language news.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "65036a3fdde6702ce82bb84b1b3f9083",
+      "name": "CHED 630 (Edmonton)",
+      "url": "http://live.leanstream.co/CHEDAM",
+      "group": "News & Talk",
+      "country": "Canada",
+      "subgroup": "News",
+      "description": "Edmonton, Alberta, Canada. English-language news.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "5a204dc494981d8dc9227f9a0b42192d",
+      "name": "Chennai Live (IN)",
+      "url": "http://c2.radioboss.fm:8332/stream",
+      "group": "News & Talk",
+      "country": "India",
+      "subgroup": "News & Talk",
+      "description": "Chennai, India. English-language news and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "45b2bace0485995f9db3056bb053395d",
+      "name": "CHQR 770 (Calgary)",
+      "url": "https://live.leanstream.co/CHQRAM-MP3",
+      "group": "News & Talk",
+      "country": "Canada",
+      "subgroup": "News",
+      "description": "Calgary, Alberta, Canada. English-language news.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "b06592f3a940e7cddc4df423b06bda12",
+      "name": "Citi FM (Accra)",
+      "url": "https://citi973fm.radioca.st/index.html:80/;stream.mp3",
+      "group": "News & Talk",
+      "country": "Ghana",
+      "subgroup": "News & Talk",
+      "description": "Accra, Ghana. English-language news and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "379d1a5dd5a08dd56e76cabe1b4d7891",
+      "name": "Clonmellon Community Radio (IE)",
+      "url": "https://eu8.fastcast4u.com/proxy/ccr?mp=/1",
+      "group": "Public Radio",
+      "country": "Ireland",
+      "subgroup": "Community Radio",
+      "description": "Clonmellon, Ireland. Community radio programming.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "fa43b1f5e27b72830c037006a43ac7b0",
+      "name": "CNA 938 (Singapore)",
+      "url": "http://28313.live.streamtheworld.com/938NOW_PREM_SC",
+      "group": "News & Talk",
+      "country": "Singapore",
+      "subgroup": "News & Talk",
+      "description": "Singapore. English-language news and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "2a4de434a638dc4daaad40b74e9bec8e",
+      "name": "Compass FM (NZ)",
+      "url": "http://stream.compassfm.org.nz:8000/Compass_FM_104.9",
+      "group": "Public Radio",
+      "country": "New Zealand",
+      "subgroup": "Public News & Talk",
+      "description": "New Zealand. Public-radio news, culture, and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "0e7a0c8c807f8bcb611970a754834c6b",
+      "name": "Crest 91.1 FM (Ibadan)",
+      "url": "https://stream.zeno.fm/qvudrrg5tasvv",
+      "group": "News & Talk",
+      "country": "Nigeria",
+      "subgroup": "News & Talk",
+      "description": "Ibadan, Nigeria. English-language news and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "c5f74903548d4e87e798e7bc3d5bb01c",
+      "name": "CTV News Audio Channel (CA)",
+      "url": "http://18183.live.streamtheworld.com:3690/TV_CTV_NEWSAAC_SC",
+      "group": "News & Talk",
+      "country": "Canada",
+      "subgroup": "News",
+      "description": "Canada. English-language news.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "02dbc826ce8a2e0984c15183f1e8a6e0",
+      "name": "DZMV AllTV News Radio 1422 (Manila)",
+      "url": "http://209.126.124.126:8852/stream",
+      "group": "News & Talk",
+      "country": "Philippines",
+      "subgroup": "News",
+      "description": "Manila, Philippines. English-language news.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "10dcedb05cff4758683cebd3883a44d4",
+      "name": "ECR - East Coast Radio KwaZulu-Natal (ZA)",
+      "url": "https://edge.iono.fm/xice/ecr_live_medium.aac",
+      "group": "Pop",
+      "country": "South Africa",
+      "subgroup": "Adult Contemporary",
+      "description": "Durban, KwaZulu-Natal, South Africa. Adult contemporary pop.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "63529e4115d21afb33a42a522fe98056",
+      "name": "Falklands Radio 530 (Stanley)",
+      "url": "https://streaming.broadcastradio.com:8332/flklnd",
+      "group": "News & Talk",
+      "country": "Falkland Islands",
+      "subgroup": "News & Talk",
+      "description": "Stanley, Falkland Islands. English-language news and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "d51e270e0feaf2a81d51f011b941bed1",
+      "name": "Fresh 105.9 FM (Ibadan)",
+      "url": "https://stream.zenolive.com/e9x2n97b9uduv",
+      "group": "Pop",
+      "country": "Nigeria",
+      "subgroup": "Top 40",
+      "description": "Ibadan, Nigeria. Contemporary hits and Top 40 pop.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "3b1d13f9077c72d9af9073d9ded5349f",
+      "name": "GBC Uniiq 95.7 (Accra)",
+      "url": "https://mediagh.us:2000/stream/uniiqfm",
+      "group": "Hip-Hop & R&B",
+      "country": "Ghana",
+      "subgroup": "General Urban",
+      "description": "Accra, Ghana.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "dc5cf8c2e15b1c6cf330e1c27a5e0d1b",
+      "name": "Kaya FM (ZA)",
+      "url": "https://edge.iono.fm/xice/82_medium.aac",
+      "group": "Hip-Hop & R&B",
+      "country": "South Africa",
+      "subgroup": "Soul",
+      "description": "Johannesburg, South Africa. Soul.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "42a0cee5af181b2281b66b9f5bcb2598",
+      "name": "KFM 93.3 (Kampala)",
+      "url": "http://radio.kfm.co.ug:8000/stream",
+      "group": "Pop",
+      "country": "Uganda",
+      "subgroup": "Top 40",
+      "description": "Kampala, Uganda. Contemporary hits and Top 40 pop.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "5db9fe4989e094d2385e8facee743907",
+      "name": "LBC News (London)",
+      "url": "https://media-ssl.musicradio.com/LBCNewsUK",
+      "group": "News & Talk",
+      "country": "United Kingdom",
+      "subgroup": "News",
+      "description": "London, United Kingdom. English-language news.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "54a2bc3b3335e5593ecf898a01f528a8",
+      "name": "LBC Radio (London)",
+      "url": "http://media-sov.musicradio.com/LBC973MP3Low",
+      "group": "News & Talk",
+      "country": "United Kingdom",
+      "subgroup": "News & Talk",
+      "description": "London, United Kingdom. English-language news and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "d021ebc56dba6c2c46903c8fe289cbd7",
+      "name": "Live 95 (Limerick)",
+      "url": "https://wg.cdn.tibus.net/Live95fm",
+      "group": "Pop",
+      "country": "Ireland",
+      "subgroup": "Adult Contemporary",
+      "description": "Limerick, Ireland. Adult contemporary pop.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "d914b3fe3e1826d2e01a727ebba19b64",
+      "name": "Metro Plus 1044 (Hong Kong)",
+      "url": "http://162.220.162.10:8011/stream",
+      "group": "Pop",
+      "country": "Hong Kong",
+      "subgroup": "Adult Contemporary",
+      "description": "Hong Kong. Adult contemporary pop.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "06cd4f608919ac6a2cbb67596057af5c",
+      "name": "MIRA Business FM (UAE)",
+      "url": "https://radio.mirabusiness.fm:9443/MiraBusinessFM",
+      "group": "News & Talk",
+      "country": "United Arab Emirates",
+      "subgroup": "Business",
+      "description": "United Arab Emirates. Business news and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "5e198a5935f84c146bbd8a4ce76931b6",
+      "name": "Monocle Radio (London)",
+      "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/MONOCLE_24.mp3",
+      "group": "News & Talk",
+      "country": "United Kingdom",
+      "subgroup": "News & Talk",
+      "description": "London, United Kingdom. English-language news and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "594cad911c09616e7807b8e002339648",
+      "name": "Nationwide 90FM (Kingston)",
+      "url": "http://stream.zenolive.com/a3wmsfazfv5tv",
+      "group": "News & Talk",
+      "country": "Jamaica",
+      "subgroup": "News & Talk",
+      "description": "Kingston, Jamaica. English-language news and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "fce47ebefba43b763e66536dd8fd7898",
+      "name": "Power 98.7 (Johannesburg)",
+      "url": "https://edge.iono.fm/xice/65_medium.aac",
+      "group": "News & Talk",
+      "country": "South Africa",
+      "subgroup": "News & Talk",
+      "description": "Johannesburg, South Africa. English-language news and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "4a99ffa0bf75ae2283607cb05923a6a8",
+      "name": "Radio Jamaica 94FM (Kingston)",
+      "url": "https://stream.zeno.fm/cub84trbgy5tv",
+      "group": "News & Talk",
+      "country": "Jamaica",
+      "subgroup": "News & Talk",
+      "description": "Kingston, Jamaica. English-language news and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "e663c0805f31c795bee2c52a34461e32",
+      "name": "Radio Kaya (KE)",
+      "url": "http://usa9-vn.mixstream.net:8084/;",
+      "group": "News & Talk",
+      "country": "Kenya",
+      "subgroup": "News & Talk",
+      "description": "Kenya. English-language news and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "d5a585a54237108c116a63cadbcce460",
+      "name": "Radio Plus Mauritius (MU)",
+      "url": "https://stream.radioplus.mu:8000/radio.mp3",
+      "group": "News & Talk",
+      "country": "Mauritius",
+      "subgroup": "News & Talk",
+      "description": "Mauritius. English-language news and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "f55acf1947dfffea2bd8ec72a55b7b15",
+      "name": "Sky News Australia Radio (Sydney)",
+      "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/NOVA_SKYNEWSAAC.aac",
+      "group": "News & Talk",
+      "country": "Australia",
+      "subgroup": "News",
+      "description": "Sydney, Australia. English-language news.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "5cf267d13dc134f11ed5a0d5f2776907",
+      "name": "South East Radio (Wexford)",
+      "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SOUTH_EAST_RADIO.mp3",
+      "group": "News & Talk",
+      "country": "Ireland",
+      "subgroup": "News & Talk",
+      "description": "Wexford, Ireland. English-language news and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "98d5ec995d757233481bf8b50813e0fa",
+      "name": "Times Radio (London)",
+      "url": "https://timesradio.wireless.radio/stream",
+      "group": "News & Talk",
+      "country": "United Kingdom",
+      "subgroup": "News & Talk",
+      "description": "London, United Kingdom. English-language news and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "a5a1727e4abdf522d5f5b47aed1a038a",
+      "name": "Vicinity 95.3 FM (NG)",
+      "url": "https://radio.fmmaria.com:8020/radio.mp3",
+      "group": "Public Radio",
+      "country": "Nigeria",
+      "subgroup": "Community Radio",
+      "description": "Nigeria. Community radio programming.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "8230e3d7f1b21d15b1943a0e242753c0",
+      "name": "VOB 92.9 FM (Bridgetown)",
+      "url": "https://ice66.securenetsystems.net:80/VOB929",
+      "group": "News & Talk",
+      "country": "Barbados",
+      "subgroup": "News & Talk",
+      "description": "Bridgetown, Barbados. English-language news and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "3cdf286f70ab0de952ae65d3c6793b02",
+      "name": "101 SMOOTH JAZZ",
+      "url": "http://jking.cdnstream1.com/b22139_128mp3",
+      "group": "Jazz",
+      "country": "United States",
+      "subgroup": "Smooth Jazz",
+      "description": "United States. Smooth jazz.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "1c4b8fceba1b8ed80ffbf1a02e5cf128",
+      "name": "Adroit Jazz Underground",
+      "url": "https://icecast.walmradio.com:8443/jazz",
+      "group": "Jazz",
+      "country": "United States",
+      "subgroup": "Traditional Jazz",
+      "description": "United States. Traditional and classic jazz.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "8472bd686f1a6c4c868419a5d44e3290",
+      "name": "Jazz Lounge",
+      "url": "http://eu8.fastcast4u.com:5068/;",
+      "group": "Jazz",
+      "country": "Malaysia",
+      "subgroup": "Smooth Jazz",
+      "description": "Malaysia. Smooth jazz.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "4151fb8458dc01c24a814877ba857191",
+      "name": "Jazz24",
+      "url": "https://knkx-live-a.edge.audiocdn.com/6285_64k",
+      "group": "Jazz",
+      "country": "United States",
+      "subgroup": "General Jazz",
+      "description": "United States. Jazz music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "aaa10c83514fed0bef25fbb4cfcecc55",
+      "name": "Smooth Jazz Lounge",
+      "url": "https://radio4.vip-radios.fm:18060/stream-128kmp3-SmoothJazzLounge",
+      "group": "Jazz",
+      "country": "Brazil",
+      "subgroup": "Smooth Jazz",
+      "description": "Brazil. Smooth jazz.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "4f26af21bb80c79c0d02899a7d08c84e",
+      "name": "The Jazz Groove - East",
+      "url": "http://east-mp3-128.streamthejazzgroove.com/stream",
+      "group": "Jazz",
+      "country": "United States",
+      "subgroup": "Smooth Jazz",
+      "description": "United States. Smooth jazz.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "a9e91d4064d4b06eb03add5b2539b504",
+      "name": "WWOZ 90.7 New Orleans, LA",
+      "url": "http://wwoz-sc.streamguys.com/wwoz-hi.mp3",
+      "group": "Jazz",
+      "country": "United States",
+      "subgroup": "General Jazz",
+      "description": "New Orleans, Louisiana, United States. Jazz music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "ca8739709a5b0e690eff965516ab2f20",
+      "name": ".977 Oldies",
+      "url": "http://17633.live.streamtheworld.com:3690/977_OLDIES_SC",
+      "group": "Decades",
+      "country": "United States",
+      "subgroup": "Mixed Decades",
+      "description": "United States. Classic hits spanning multiple decades.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "962ab3281e93b915e95a21993839ebdd",
+      "name": "Flower Power Radio",
+      "url": "https://nl1.streamingpulse.com/ssl/flowerpowerradio",
+      "group": "Decades",
+      "country": "Germany",
+      "subgroup": "1960s",
+      "description": "Germany. Music of the 1960s.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "1a1d662f8d444b4ea4a7f041035bfb99",
+      "name": "Funky Corner Radio (USA)",
+      "url": "https://ais-sa2.cdnstream1.com/2447_192.mp3",
+      "group": "Decades",
+      "country": "United States",
+      "subgroup": "Mixed Decades",
+      "description": "United States. Classic hits spanning multiple decades.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "573ee7d354cefec061ff96376d00d901",
+      "name": "FUNKY RADIO - Only Funk Music (60's 70's)",
+      "url": "https://funkyradio.streamingmedia.it/play.mp3",
+      "group": "Hip-Hop & R&B",
+      "country": "United States",
+      "subgroup": "Funk",
+      "description": "United States. Funk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "a1f74a9245a798de1988c3ed0c810833",
+      "name": "Gold",
+      "url": "https://media-ssl.musicradio.com/GoldMP3",
+      "group": "Decades",
+      "country": "United Kingdom",
+      "subgroup": "Mixed Decades",
+      "description": "United Kingdom. Classic hits spanning multiple decades.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "98cda68ffb492b4342407223902067cf",
+      "name": "Radio Free Americana",
+      "url": "http://janus.cdnstream.com:5140/live",
+      "group": "Folk & Americana",
+      "country": "United States",
+      "subgroup": "Americana",
+      "description": "United States. Americana and roots music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "fb4e924bd4324b65532c7fb50ccffcb3",
+      "name": "Radio Motown",
+      "url": "https://broadcast.miami/proxy/motown?mp=/stream/;",
+      "group": "Hip-Hop & R&B",
+      "country": "United States",
+      "subgroup": "Motown",
+      "description": "United States. Motown and classic soul.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "e4cb49961ebd9ad634444832802f03b8",
+      "name": "Radyo Şiran",
+      "url": "https://live.radyositesihazir.com/8078/stream",
+      "group": "Folk & Americana",
+      "country": "Turkey",
+      "subgroup": "Folk",
+      "description": "Turkey. Folk music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "afe52568218d2078f14a5da6ea8b257c",
+      "name": "SomaFM Fluid",
+      "url": "https://ice6.somafm.com/fluid-128-mp3",
+      "group": "Hip-Hop & R&B",
+      "country": "United States",
+      "subgroup": "Funk",
+      "description": "United States. Funk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "6e113c3a38c785081e22f48a74b6b50d",
+      "name": "Yumi Co. Radio",
+      "url": "https://yumicoradio.net/stream",
+      "group": "Electronic",
+      "country": "France",
+      "subgroup": "General Electronic",
+      "description": "Corte, France. Electronic music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "6cfeed8b96442a6af7c0df8e6c01c905",
+      "name": "24-7 Reggae",
+      "url": "http://antares.dribbcast.com:4346/stream",
+      "group": "Reggae & Ska",
+      "country": "United Kingdom",
+      "subgroup": "Reggae",
+      "description": "United Kingdom. Reggae.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "0e49aa650b3ed3ac5b0d7a56ab4e55c7",
+      "name": "Alpha Boys School Radio",
+      "url": "http://alphaboys-live.streamguys1.com/alphaboys.mp3",
+      "group": "Reggae & Ska",
+      "country": "Jamaica",
+      "subgroup": "Ska & Rocksteady",
+      "description": "Jamaica. Ska and rocksteady.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "20290bd490033a020bfbd8d5802fc88a",
+      "name": "Bob's Ska Radio",
+      "url": "http://51.255.235.165:5528/stream",
+      "group": "Reggae & Ska",
+      "country": "United States",
+      "subgroup": "Ska & Rocksteady",
+      "description": "United States. Ska and rocksteady.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "eb287dab4766e59d805c361bcafc7acb",
+      "name": "King Dub Radio",
+      "url": "http://london-dedicated.myautodj.com:8862/stream",
+      "group": "Reggae & Ska",
+      "country": "France",
+      "subgroup": "Dub",
+      "description": "France. Dub reggae.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "690a8d689a75e1a5e3920a00e667fe23",
+      "name": "Reggae Chill Cafe",
+      "url": "https://maggie.torontocast.com:2020/stream/reggaechillcafe",
+      "group": "Reggae & Ska",
+      "country": "Canada",
+      "subgroup": "Reggae",
+      "description": "Canada. Reggae.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "69ba631c76f2de5dc64f134ed9b2da6e",
+      "name": "Reggae Radio Rastamusic.com",
+      "url": "http://origin-rastamusic.streamguys1.com/rastamusic.mp3",
+      "group": "Reggae & Ska",
+      "country": "Germany",
+      "subgroup": "Reggae",
+      "description": "Germany. Reggae.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "c31592bfb4f638064461adf1a34f7c78",
+      "name": "1.FM - Blues Radio",
+      "url": "http://strm112.1.fm/blues_mobile_mp3",
+      "group": "Blues",
+      "country": "Switzerland",
+      "subgroup": "General Blues",
+      "description": "Switzerland. Blues music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "07d5ee170349dd51aaacd481d5890cca",
+      "name": "181.FM - The Rock! (HardRock)",
+      "url": "http://listen.181fm.com/181-hardrock_128k.mp3",
+      "group": "Rock",
+      "country": "United States",
+      "subgroup": "Hard Rock",
+      "description": "United States. Hard rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "739b1627c18e05cb163419c5aa0940bc",
+      "name": "181.FM - True Blues",
+      "url": "http://listen.181fm.com/181-blues_128k.mp3",
+      "group": "Blues",
+      "country": "United States",
+      "subgroup": "Traditional Blues",
+      "description": "United States. Traditional blues.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "134d4c837ee4ff9c0a75cb6d1b53a30f",
+      "name": "1LIVE",
+      "url": "http://wdr-1live-live.icecast.wdr.de/wdr/1live/live/mp3/128/stream.mp3",
+      "group": "Rock",
+      "country": "Germany",
+      "subgroup": "General Rock",
+      "description": "Germany. Rock music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "39ea0b7bc74e1805747de27e724c1c78",
+      "name": "A Mississippi Blues",
+      "url": "https://cast1.torontocast.com:4450/;?type=http&nocache=1745625391",
+      "group": "Blues",
+      "country": "Canada",
+      "subgroup": "Traditional Blues",
+      "description": "Canada. Traditional blues.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "3c7056fc4be51b7161123dbb24143c62",
+      "name": "ARfm",
+      "url": "http://108.163.245.230:9016/stream",
+      "group": "Rock",
+      "country": "United Kingdom",
+      "subgroup": "General Rock",
+      "description": "United Kingdom. Rock music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "a6c91c7f371db9f34799ed33bd7ec361",
+      "name": "Big R Radio - 80s Metal FM",
+      "url": "http://bigrradio.cdnstream1.com/5186_128",
+      "group": "Decades",
+      "country": "United States",
+      "subgroup": "1980s",
+      "description": "United States. Music of the 1980s.",
+      "hasPreRoll": true
+    },
+    {
+      "id": "be73dc28776caf3792b4dcc6d3a9179e",
+      "name": "Blues & Rock Radio",
+      "url": "http://stream.laut.fm/bluesrock",
+      "group": "Blues",
+      "country": "Ukraine",
+      "subgroup": "Blues Rock",
+      "description": "Ukraine. Blues rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "a40cfdf85a6499fcd0482bc301e1c170",
+      "name": "BOLLOCKS Rock & Metal Radio",
+      "url": "https://s44.myradiostream.com/6588/;?type=http&nocache=1571393528?0.9592127816686777",
+      "group": "Rock",
+      "country": "Mexico",
+      "subgroup": "Metal",
+      "description": "Mexico. Heavy metal.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "827098d417e55f226d4fee37e1fc0e66",
+      "name": "Christian Rock Dot Net",
+      "url": "https://listen.christianrock.net/stream/11/",
+      "group": "Christian",
+      "country": "United States",
+      "subgroup": "Christian Rock",
+      "description": "United States. Christian rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "5f93bc043b61cbf0a359a19f237dbc0a",
+      "name": "ChroniX Radio Metalcore",
+      "url": "http://usa17.fastcast4u.com:5508/stream",
+      "group": "Rock",
+      "country": "Canada",
+      "subgroup": "Metal",
+      "description": "Canada. Heavy metal.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "9bfcd907bbd626216ddfa7ef859a667a",
+      "name": "Crucial Velocity Radio",
+      "url": "http://ais-sa2.cdnstream1.com/1369_128",
+      "group": "Rock",
+      "country": "Canada",
+      "subgroup": "Hard Rock",
+      "description": "Canada. Hard rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "2db47b60ee190344101a5662b2f9ac8e",
+      "name": "Gritty Rock Radio",
+      "url": "https://listen.radioking.com/radio/10713/stream/224413",
+      "group": "Rock",
+      "country": "Canada",
+      "subgroup": "General Rock",
+      "description": "Canada. Rock music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "31448a2401ae35142bc5e2c306aa3c03",
+      "name": "Hard Rock Heaven",
+      "url": "http://hydra.cdnstream.com/1521_128",
+      "group": "Rock",
+      "country": "United States",
+      "subgroup": "Hard Rock",
+      "description": "United States. Hard rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "6d0837eea014dd95f5917206b21f325f",
+      "name": "Hard Rock Hell",
+      "url": "http://andromeda.shoutca.st:9254/stream",
+      "group": "Rock",
+      "country": "United Kingdom",
+      "subgroup": "Hard Rock",
+      "description": "United Kingdom. Hard rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "218cdef95a93b21d5c743e9137ca225b",
+      "name": "Hit FM Ukraine",
+      "url": "http://195.95.206.17/HitFM",
+      "group": "Rock",
+      "country": "Ukraine",
+      "subgroup": "General Rock",
+      "description": "Ukraine. Rock music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "623138e0c313110501dbe1f5c8985922",
+      "name": "Metal Express Radio",
+      "url": "http://s39.myradiostream.com:11590/;",
+      "group": "Rock",
+      "country": "Norway",
+      "subgroup": "Metal",
+      "description": "Norway. Heavy metal.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "0811b56e1066c692acad51be3c3c3659",
+      "name": "Metal Rock Radio",
+      "url": "https://kathy.torontocast.com:2800/;",
+      "group": "Rock",
+      "country": "United States",
+      "subgroup": "Metal",
+      "description": "United States. Heavy metal.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "db030801217721364293114284791e57",
+      "name": "Morow Prog Rock Radio",
+      "url": "http://stream.fr.morow.com:8080/morow_hi.aacp",
+      "group": "Rock",
+      "country": "France",
+      "subgroup": "Progressive Rock",
+      "description": "France. Progressive rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "6f63324c2d3d4683cbf19628da475451",
+      "name": "Radio Caroline",
+      "url": "http://78.129.202.200:8040/;",
+      "group": "Rock",
+      "country": "United Kingdom",
+      "subgroup": "General Rock",
+      "description": "United Kingdom. Rock music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "889715fa70d506905582ad3fd6546a2f",
+      "name": "Rock Antenne",
+      "url": "http://mp3channels.webradio.rockantenne.de/rockantenne",
+      "group": "Rock",
+      "country": "Germany",
+      "subgroup": "General Rock",
+      "description": "Germany. Rock music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "4960510072f6fff36ae51f84deaee901",
+      "name": "Rock Antenne - Heavy Metal",
+      "url": "http://mp3channels.webradio.rockantenne.de/heavy-metal",
+      "group": "Rock",
+      "country": "Germany",
+      "subgroup": "Metal",
+      "description": "Germany. Heavy metal.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "38d2272130efef201def8b5a3e8ca78e",
+      "name": "Rock FM 96.9",
+      "url": "https://az10.yesstreaming.net:8060/radio.mp3",
+      "group": "Rock",
+      "country": "Greece",
+      "subgroup": "General Rock",
+      "description": "Greece. Rock music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "e7f46ea5105a79731125f3955f3cedd5",
+      "name": "Rockabilly-radio.net",
+      "url": "http://lin3.ash.fast-serv.com:6026/stream_96",
+      "group": "Rock",
+      "country": "United States",
+      "subgroup": "Rockabilly",
+      "description": "United States. Rockabilly.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "514715d381db8bf06a6a627df5cd75e9",
+      "name": "SomaFM Metal Detector",
+      "url": "https://ice2.somafm.com/metal-128-aac",
+      "group": "Rock",
+      "country": "United States",
+      "subgroup": "Metal",
+      "description": "United States. Heavy metal.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "d441826a0520a18837f9e71ac5193922",
+      "name": "Celtcast",
+      "url": "https://caster04.streampakket.com/proxy/8982/CeltCast",
+      "group": "World",
+      "country": "Netherlands",
+      "subgroup": "Global Mix",
+      "description": "Netherlands. World music and global sounds.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "c72cd215d411fa99693c36a30b80d551",
+      "name": "Chocolate FM",
+      "url": "http://streaming5.elitecomunicacion.es:8082/live.mp3",
+      "group": "World",
+      "country": "Spain",
+      "subgroup": "Latin",
+      "description": "Spain. Latin music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "fd326c11a8ebd38b03f77273c9dc3dfb",
+      "name": "FIP Musiques du monde",
+      "url": "http://icecast.radiofrance.fr/fipworld-hifi.aac",
+      "group": "World",
+      "country": "France",
+      "subgroup": "Global Mix",
+      "description": "France. World music and global sounds.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "662c8b3eb307b04036f8e9abb9e0c545",
+      "name": "Hi On Line World Radio",
+      "url": "http://mediaserv38.live-streams.nl:8027/live",
+      "group": "World",
+      "country": "Netherlands",
+      "subgroup": "Global Mix",
+      "description": "Netherlands. World music and global sounds.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "7c09d207e3cd67f7856c7face9d62cfb",
+      "name": "Hot FM 87.7",
+      "url": "http://s2.yesstreaming.net:7091/stream?type=.mp3%2F%3Bstream.mp3&_=1",
+      "group": "World",
+      "country": "Zambia",
+      "subgroup": "African",
+      "description": "Zambia. African music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "7dcb991eb622b669dffbbf4a68706b20",
+      "name": "Irish Pub Radio",
+      "url": "http://solid24.streamupsolutions.com:8026/stream",
+      "group": "Folk & Americana",
+      "country": "Ireland",
+      "subgroup": "Celtic",
+      "description": "Ireland. Celtic music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "996817f6c0e7ca6a77d89e51c747876f",
+      "name": "open broadcast radio",
+      "url": "http://stream.openbroadcast.ch/320.mp3",
+      "group": "World",
+      "country": "Switzerland",
+      "subgroup": "Global Mix",
+      "description": "Switzerland. World music and global sounds.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "47f4c6efb1c2f4f2419f2069030eac01",
+      "name": "Radio Nova",
+      "url": "http://novazz.ice.infomaniak.ch/novazz-128.mp3",
+      "group": "World",
+      "country": "France",
+      "subgroup": "Global Mix",
+      "description": "France. World music and global sounds.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "1bde9bb515bc8369d1c753d5373fa848",
+      "name": "WDR COSMO",
+      "url": "https://wdr-cosmo-live.icecastssl.wdr.de/wdr/cosmo/live/mp3/128/stream.mp3",
+      "group": "World",
+      "country": "Germany",
+      "subgroup": "Global Mix",
+      "description": "Germany. World music and global sounds.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "a3a8d45ba8cd24cf0f4c0273c9cf190e",
+      "name": "Yabiladi Chaabi Maroc",
+      "url": "https://radio.yabiladi.com:8102/;stream.mp3",
+      "group": "World",
+      "country": "Morocco",
+      "subgroup": "Middle Eastern",
+      "description": "Morocco. Middle Eastern and North African music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "st_mtlgkp88_mm76ayir",
+      "name": "KINK 80's",
+      "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/KINK_DNA.mp3",
+      "group": "Decades",
+      "country": "Hilversum, Netherlands",
+      "subgroup": "1980s",
+      "description": "Alternative & New Wave from the '80s",
+      "hasPreRoll": false
+    },
+    {
+      "id": "st_mtlguw0e_exmfjeic",
+      "name": "KINK 90's",
+      "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/KINK_90S.mp3",
+      "group": "Decades",
+      "country": "Hilversum, Netherlands",
+      "subgroup": "1990s",
+      "description": "Alternative music from the '90s",
+      "hasPreRoll": false
+    },
+    {
+      "id": "st_mtlgxcpq_je0xtt8h",
+      "name": "KINK Distortion",
+      "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/KINK_DISTORTION.mp3",
+      "group": "Rock",
+      "country": "Hilversum, Netherlands",
+      "subgroup": "Metal",
+      "description": "Metal, hard rock, hardcore, metalcore",
+      "hasPreRoll": false
+    },
+    {
+      "id": "8699df7059194765ac1a7a26c6443ce5",
+      "name": "KBOI",
+      "url": "https://17803.live.streamtheworld.com/KBOIFMAAC.aac",
+      "group": "News & Talk",
+      "country": "United States",
+      "subgroup": "News & Talk",
+      "description": "Boise, Idaho, United States. News and talk programming.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "9de7cd055b383043597e539e4ff4c9f4",
+      "name": "K-FAT",
+      "url": "http://stream.radioparadise.com/kfat-128",
+      "group": "Country",
+      "country": "United States",
+      "subgroup": "General Country",
+      "description": "Gilroy, California, United States. Country music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "f0a19cc6a8c510202e615a503cfddaf0",
+      "name": "WAIL 99.5",
+      "url": "https://ice42.securenetsystems.net/WAIL?apv=a2&dist=Audacy&source=webA2&gpp=DBABrGA~BVQVAAAABWA.QA~BUUAAAFY.QA~BVUAABY~BVUAAFg.QA~BVFAAAWA~BVUAAAFg.QA&a2_app_version=2025.9.2&a2_session_id=8ac7cede-4c2a-cdaf-9011-92de0f1f47da",
+      "group": "Rock",
+      "country": "United States",
+      "subgroup": "General Rock",
+      "description": "Key West, Florida, United States. Rock music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "8ba3eb29500cfc7be30f95da651638bd",
+      "name": "KROQ 106.7",
+      "url": "https://prod-54-234-222-120.amperwave.net/audacy-kroqfmaac-hlsc.m3u8/?apv=a2&dist=Audacy&source=webA2&gpp=DBABrGA%7EBVQVAAAABWA.QA%7EBUUAAAFY.QA%7EBVUAABY%7EBVUAAFg.QA%7EBVFAAAWA%7EBVUAAAFg.QA&a2_app_version=2025.9.2&a2_session_id=8ac7cede-4c2a-cdaf-9011-332593026b66&deviceid=app%3Af8k%3Ab9a3e67bf3b230efc5b46fb2c8767eae&c_user_id=f8k%3Ab9a3e67bf3b230efc5b46fb2c8767eae&sc=0&z=50de07bba9784ecaa93ead0b5fbcdec8&p=1",
+      "group": "Rock",
+      "country": "United States",
+      "subgroup": "Alternative",
+      "description": "Los Angeles, California, United States. Alternative rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "33774156a9ca7b8346a356f10aacdb29",
+      "name": "KROQ Roq of the 80's",
+      "url": "https://live.amperwave.net/manifest/audacy-kroqhd2aac-hlsc.m3u8?apv=a2&dist=Audacy&source=webA2&gpp=DBABrGA~BVQVAAAABWA.QA~BUUAAAFY.QA~BVUAABY~BVUAAFg.QA~BVFAAAWA~BVUAAAFg.QA&a2_app_version=2025.9.2&a2_session_id=8ac7cede-4c2a-cdaf-9011-8134b91e6e8b&deviceid=app%3Af8k%3Ab9a3e67bf3b230efc5b46fb2c8767eae&c_user_id=f8k%3Ab9a3e67bf3b230efc5b46fb2c8767eae&sc=0",
+      "group": "Decades",
+      "country": "United States",
+      "subgroup": "1980s",
+      "description": "Los Angeles, California, United States. Rock and alternative music of the 1980s.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "44403240bf396b59cceb6b2a98ed8f8c",
+      "name": "Z-92 (Omaha)",
+      "url": "https://n09.rcs.revma.com/swxm742xu7uvv?rj-ttl=5&rj-tok=AAABnO2ioCIANsMaIbGN5NBUbw",
+      "group": "Rock",
+      "country": "United States",
+      "subgroup": "Classic Rock",
+      "description": "Omaha, Nebraska, United States. Classic rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "0759909bd68b3a9306b0b16a5c0b1813",
+      "name": ".977 Smooth Jazz",
+      "url": "http://14543.live.streamtheworld.com/977_SMOOJAZZ_SC",
+      "group": "Jazz",
+      "country": "United States",
+      "subgroup": "Smooth Jazz",
+      "description": "Orlando, Florida, United States. Smooth jazz.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "1cb33adc00933536de388e2d00587700",
+      "name": "Virgin Radio Rock '80",
+      "url": "http://icy.unitedradio.it/VirginRock80.mp3",
+      "group": "Decades",
+      "country": "Italy",
+      "subgroup": "1980s",
+      "description": "Italy. Rock music of the 1980s.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "d3c49f27051ef7198e8d63d29b1ce1f6",
+      "name": "Virgin Radio Rock '70",
+      "url": "http://icy.unitedradio.it/VirginRock70.mp3",
+      "group": "Decades",
+      "country": "Italy",
+      "subgroup": "1970s",
+      "description": "Italy. Rock music of the 1970s.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "176d9db41fbe79dcb74a13838b51d1f0",
+      "name": "Virgin Radio: Pink Floyd",
+      "url": "http://icy.unitedradio.it/VirginRogerWaters.mp3",
+      "group": "Rock",
+      "country": "Italy",
+      "subgroup": "Progressive Rock",
+      "description": "Italy. Pink Floyd and related progressive rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "8c83293f6e95738f2a796fe5f103cd6c",
+      "name": "BBC World Service for East Asia",
+      "url": "https://stream.live.vc.bbcmedia.co.uk/bbc_world_service_east_asia",
+      "group": "News & Talk",
+      "country": "United Kingdom",
+      "subgroup": "News",
+      "description": "United Kingdom. BBC World Service news and programming for East Asia.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "589f3c69dcc2b63717e6c2ef29ef562e",
+      "name": "Virgin Radio Hard Rock",
+      "url": "http://icy.unitedradio.it/VirginHardRock.mp3",
+      "group": "Rock",
+      "country": "Italy",
+      "subgroup": "Hard Rock",
+      "description": "Italy. Hard rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "a2270e094a8ed49064cc07a97d53450a",
+      "name": "Yacht Rock Radio",
+      "url": "https://stream.revma.ihrhls.com/zc8681/hls.m3u8",
+      "group": "Rock",
+      "country": "United States",
+      "subgroup": "Soft Rock",
+      "description": "United States. Yacht rock and soft rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "5e9d5a3e8c50d8933a4d731bb472906f",
+      "name": "Virgin Radio: Aerosmith",
+      "url": "http://icy.unitedradio.it/um1028.mp3",
+      "group": "Rock",
+      "country": "Italy",
+      "subgroup": "Hard Rock",
+      "description": "Italy. Aerosmith and related hard rock.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "4df8478548c847071a6a207780651372",
+      "name": "KSLO 105.3 The Home Of Zydeco",
+      "url": "https://ice6.securenetsystems.net/KSLO",
+      "group": "Folk & Americana",
+      "country": "United States",
+      "subgroup": "Americana",
+      "description": "Simmesport, Louisiana, United States. Zydeco and Louisiana roots music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "e12d81501445b62936b559515b40aa5e",
+      "name": "Russia Today (German)",
+      "url": "https://rt-ger.rttv.com/dvr/rtdeutsch/playlist.m3u8",
+      "group": "News & Talk",
+      "country": "Russia",
+      "subgroup": "News",
+      "description": "Russia. German-language news programming.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "4ff5dae130147d82f140335ed53da84d",
+      "name": "Red State Talk",
+      "url": "https://s2.radio.co/s572ad25f7/listen",
+      "group": "News & Talk",
+      "country": "United States",
+      "subgroup": "Conservative Talk",
+      "description": "United States. Conservative news and talk.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "890e63291c4f1a4ad012031f89494746",
+      "name": "French Cafe Lounge",
+      "url": "https://0nlineradio.stream42.radiohost.de/lounge-french-cafe-lounge?ref=radiobrowser&upd-meta&upd-scheme=https&_art=dD0xNzY4NDQ1MTE3JmQ9ODA5N2Q3ZjM4NTY5ZGM3NzdlNTM",
+      "group": "Ambient & Chill",
+      "country": "Germany",
+      "subgroup": "Chillout",
+      "description": "Germany. French café lounge and chillout music.",
+      "hasPreRoll": false
+    },
+    {
+      "id": "3da4205d25257b4ee87b20d07a64c5cb",
+      "name": "Antyradio Made In Poland",
+      "url": "https://an04.cdn.eurozet.pl/ANTPOL.mp3?t=1668748669557?redirected=04",
+      "group": "Rock",
+      "country": "Poland",
+      "subgroup": "General Rock",
+      "description": "Poland. Polish rock music.",
+      "hasPreRoll": false
     }
   ]
 }

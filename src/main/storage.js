@@ -6,6 +6,15 @@ const PREFERENCES_FILE = "preferences.json";
 const LEGACY_FILES = ["stations.json", "groups.json", "subgroups.json"];
 const NOTEPAD_FILE = "notepad.txt";
 const LISTENING_HISTORY_FILE = "listening-history.json";
+const STARTER_PRESET_NAMES = Object.freeze([
+  "Virgin Radio Classic Rock",
+  "Swiss Pop",
+  "I Love Hip-Hop",
+  "Today's Hot Country",
+  "Radio Motown",
+  "Adroit Jazz Underground",
+  "Groove Salad"
+]);
 
 function validateListeningHistory(value) {
   const source = value && typeof value === "object" && !Array.isArray(value) ? value.stations : null;
@@ -215,6 +224,21 @@ function preferencesFromStations(stations) {
       presetOrder: station.preset ? cleanPresetOrder(station.presetOrder) : null
     };
   }
+  return preferences;
+}
+
+function starterPreferences(stations) {
+  const byName = new Map(stations.map((station) => [lowerKey(station.name), station]));
+  const preferences = { version: 1, stations: {} };
+  STARTER_PRESET_NAMES.forEach((name, presetOrder) => {
+    const station = byName.get(lowerKey(name));
+    if (!station) return;
+    preferences.stations[station.id] = {
+      favorite: false,
+      preset: true,
+      presetOrder
+    };
+  });
   return preferences;
 }
 
@@ -474,6 +498,7 @@ class PortableStorage {
     const defaultLibrary = fs.existsSync(bundled)
       ? validateLibrary(JSON.parse(fs.readFileSync(bundled, "utf8")))
       : validateLibrary({ version: 1, stations: [], groups: ["Other"], subgroups: null });
+    let seedStarterPresets = false;
     if (!fs.existsSync(this.getLibraryPath())) {
       const legacyStationsPath = path.join(this.dataDir, LEGACY_FILES[0]);
       if (fs.existsSync(legacyStationsPath)) {
@@ -499,10 +524,14 @@ class PortableStorage {
         this.#archiveLegacyFiles();
       } else {
         this.#atomicWrite(LIBRARY_FILE, defaultLibrary, { createBackup: false });
+        seedStarterPresets = true;
       }
     }
     if (!fs.existsSync(this.getPreferencesPath())) {
-      this.#atomicWrite(PREFERENCES_FILE, validatePreferences(null), { createBackup: false });
+      const initialPreferences = seedStarterPresets
+        ? starterPreferences(defaultLibrary.stations)
+        : validatePreferences(null);
+      this.#atomicWrite(PREFERENCES_FILE, initialPreferences, { createBackup: false });
     }
   }
 
@@ -591,6 +620,7 @@ class PortableStorage {
 }
 
 module.exports = {
+  STARTER_PRESET_NAMES,
   PortableStorage,
   cleanStation,
   ensureOtherLast,

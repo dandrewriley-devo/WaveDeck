@@ -46,4 +46,9 @@ function resolveLegacyDataDirs({ platform, isPackaged, appImagePath, homeDir }) 
   return [];
 }
 
-module.exports = { resolveDataDir, resolveLegacyDataDirs, resolvePortableState };
+function resolveRuntimeDir({ platform, appDataDir }) {
+  const pathApi = platform === "win32" ? path.win32 : path;
+  return pathApi.join(pathApi.resolve(appDataDir), "wavedeck-runtime", platform);
+}
+
+module.exports = { resolveDataDir, resolveLegacyDataDirs, resolvePortableState, resolveRuntimeDir };

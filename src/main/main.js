@@ -13,7 +13,12 @@ const {
   installLauncher,
   removeLauncher
 } = require("./desktop-launcher");
-const { resolveDataDir, resolveLegacyDataDirs, resolvePortableState } = require("./portable-paths");
+const {
+  resolveDataDir,
+  resolveLegacyDataDirs,
+  resolvePortableState,
+  resolveRuntimeDir
+} = require("./portable-paths");
 const { PortableStorage } = require("./storage");
 const { probeStream } = require("./stream-probe");
 const {
@@ -103,7 +108,10 @@ function configurePortableRuntimePaths() {
     }
   }
   if (!isPortableBuild()) return;
-  const runtimeDir = path.join(getDataDir(), "runtime", process.platform);
+  const runtimeDir = resolveRuntimeDir({
+    platform: process.platform,
+    appDataDir: app.getPath("appData")
+  });
   fs.mkdirSync(runtimeDir, { recursive: true });
   app.setPath("userData", runtimeDir);
   app.setPath("sessionData", runtimeDir);
