@@ -45,6 +45,14 @@
 
     <footer class="footer">
       <span id="appVersion" class="footer-version" aria-label="WaveDeck version"></span>
+      <button id="searchSectionToggleBtn" type="button" aria-label="Show Search"
+              aria-pressed="false" title="Search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+          <path d="m15.5 15.5 4.5 4.5" fill="none" stroke="currentColor"
+                stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </button>
       <button id="presetSectionToggleBtn" class="active" type="button" aria-label="Hide Presets"
               aria-pressed="true" title="Presets">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
@@ -80,6 +88,7 @@
     </footer>
   </div>
 
+  <script src="./search.js"></script>
   <script src="./renderer.js"></script>
 </body>
 </html>

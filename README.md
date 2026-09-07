@@ -15,6 +15,7 @@ WaveDeck is a lightweight, portable internet-radio player for 64-bit Windows and
 - Independent Favorites and pre-roll markers
 - Native media-key controls with periodic registration checks
 - Toggleable ten-station Most Played listening statistics
+- Toggleable station search across names, groups, subgroups, countries, descriptions, and URLs
 - Groups and optional subgroups
 - Shift-click station editing and Ctrl+Shift-click pre-roll marking
 - Country, description, and best-effort bitrate information

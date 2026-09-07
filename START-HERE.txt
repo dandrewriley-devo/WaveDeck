@@ -1,5 +1,5 @@
 WAVEDECK PORTABLE FOR LINUX AND WINDOWS
-Version 0.4.2 (64-bit Intel/AMD)
+Version 0.4.3 (64-bit Intel/AMD)
 
 QUICK START
 
@@ -43,7 +43,7 @@ AppImage:
 2. Launch WaveDeck.AppImage directly.
 3. Open Settings, select Panel Shortcut, and click "Update WaveDeck
    Applications Menu Entry."
-4. Confirm your panel shortcut opens version 0.4.2. You may then delete the
+4. Confirm your panel shortcut opens version 0.4.3. You may then delete the
    older version-numbered AppImage.
 
 Starting with version 0.1.11, the executable is always named WaveDeck.AppImage.
@@ -156,6 +156,14 @@ available in normal and Sidebar Mode. The startup status now says "Warming up
 the airwaves..." without displaying harmless media-key availability warnings.
 Listening-history refreshes no longer interrupt typing in Settings, and
 WaveDeck reclaims Cinnamon media-key control every 15 seconds while it runs.
+
+STATION SEARCH
+
+The magnifying-glass button in the bottom bar shows or hides Search. Search
+starts hidden and appears at the top of the list stack when opened. It matches
+station names, groups, subgroups, countries, descriptions, and stream URLs.
+Matching groups open automatically; clearing or hiding Search restores the
+normal collapsed or expanded group layout.
 
 PRESETS, FAVORITES, AND PRE-ROLL MARKERS
 

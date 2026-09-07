@@ -1,0 +1,96 @@
+name: Build portable release
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run dist:linux
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wavedeck-linux
+          path: dist/WaveDeck.AppImage
+          if-no-files-found: error
+          compression-level: 0
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Download pinned Windows mpv
+        shell: pwsh
+        run: |
+          $archive = Join-Path $env:RUNNER_TEMP "mpv.7z"
+          Invoke-WebRequest "https://github.com/shinchiro/mpv-winbuild-cmake/releases/download/20260903/mpv-x86_64-20260903-git-69e63f425a.7z" -OutFile $archive
+          $archiveHash = (Get-FileHash $archive -Algorithm SHA256).Hash.ToLower()
+          if ($archiveHash -ne "418dbfb5feb851cbed33d6c05d8481ba71802621bfd6efe8974522b28d42ac97") {
+            throw "The downloaded mpv archive did not match the pinned SHA-256."
+          }
+          New-Item -ItemType Directory -Force playback/win32 | Out-Null
+          & 7z e $archive -oplayback/win32 mpv.exe -r -y
+          $mpvHash = (Get-FileHash playback/win32/mpv.exe -Algorithm SHA256).Hash.ToLower()
+          if ($mpvHash -ne "4a0bc712bc98e6f80cd980930b74b6ac202b8ccf2041e887adab69906f82731c") {
+            throw "The extracted mpv.exe did not match the pinned SHA-256."
+          }
+      - run: npm ci
+      - run: npm run dist:windows
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wavedeck-windows
+          path: dist/windows/WaveDeck.exe
+          if-no-files-found: error
+          compression-level: 0
+
+  bundle:
+    needs: [linux, windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: wavedeck-linux
+          path: build-artifacts/linux
+      - uses: actions/download-artifact@v4
+        with:
+          name: wavedeck-windows
+          path: build-artifacts/windows
+      - name: Assemble shared portable folder
+        run: |
+          mkdir -p "release/WaveDeck Portable"
+          install -m 755 build-artifacts/linux/WaveDeck.AppImage "release/WaveDeck Portable/WaveDeck.AppImage"
+          install -m 644 build-artifacts/windows/WaveDeck.exe "release/WaveDeck Portable/WaveDeck.exe"
+          install -m 644 defaults/library.json "release/WaveDeck Portable/WaveDeck-Default-Library.json"
+          install -m 644 START-HERE.txt "release/WaveDeck Portable/START-HERE.txt"
+          install -m 644 START-HERE-WINDOWS.txt "release/WaveDeck Portable/START-HERE-WINDOWS.txt"
+          install -m 644 README-SOURCE.txt "release/WaveDeck Portable/README-SOURCE.txt"
+          install -m 644 LICENSE "release/WaveDeck Portable/LICENSE"
+          install -m 644 THIRD-PARTY-NOTICES.txt "release/WaveDeck Portable/THIRD-PARTY-NOTICES.txt"
+          install -m 644 licenses/mpv-GPL-2.0.txt "release/WaveDeck Portable/mpv-GPL-2.0.txt"
+          cd release
+          zip -q -r -9 WaveDeck-0.4.3-Portable-Windows-Linux.zip "WaveDeck Portable"
+          unzip -t WaveDeck-0.4.3-Portable-Windows-Linux.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WaveDeck-0.4.3-Portable-Windows-Linux
+          path: release/WaveDeck-0.4.3-Portable-Windows-Linux.zip
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7

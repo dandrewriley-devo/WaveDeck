@@ -332,6 +332,11 @@ html, body{
   color:#b8b8b8;
 }
 
+.section-action:disabled{
+  color:#666;
+  cursor:default;
+}
+
 .section-sub{
   margin-top: 4px;
   font-size: 11px;
@@ -341,6 +346,66 @@ html, body{
 
 .section-block{
   margin-bottom: 14px;
+}
+
+.station-search-block{
+  margin:10px 10px 12px;
+}
+
+.station-search-field{
+  align-items:center;
+  display:flex;
+  position:relative;
+}
+
+.station-search-input{
+  background:#101010;
+  border:1px solid rgba(255,255,255,0.14);
+  border-radius:5px;
+  color:var(--text);
+  font:13px/1.2 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Noto Sans", sans-serif;
+  height:32px;
+  outline:none;
+  padding:6px 30px 6px 9px;
+  width:100%;
+}
+
+.station-search-input::placeholder{
+  color:#6f6f6f;
+}
+
+.station-search-input:focus{
+  border-color:rgba(143,234,179,0.6);
+}
+
+.station-search-input::-webkit-search-cancel-button{
+  display:none;
+}
+
+.station-search-clear{
+  align-items:center;
+  background:transparent;
+  border:0;
+  color:#777;
+  cursor:pointer;
+  display:flex;
+  font-size:20px;
+  height:28px;
+  justify-content:center;
+  padding:0;
+  position:absolute;
+  right:2px;
+  top:2px;
+  width:28px;
+}
+
+.station-search-clear:hover,
+.station-search-clear:focus-visible{
+  color:#ddd;
+}
+
+.station-search-clear[hidden]{
+  display:none;
 }
 
 .most-listened-block{

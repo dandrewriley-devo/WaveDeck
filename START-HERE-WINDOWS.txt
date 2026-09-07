@@ -1,5 +1,5 @@
 WAVEDECK PORTABLE FOR WINDOWS
-Version 0.4.2 (64-bit Intel/AMD)
+Version 0.4.3 (64-bit Intel/AMD)
 
 QUICK START
 
@@ -54,11 +54,13 @@ their order, and station assignments. It never includes Favorites or Presets.
 Import can add only new listings or replace the entire library after a strong
 confirmation; either choice preserves the user's personal preferences.
 
-PRESETS AND MOST PLAYED
+SEARCH, PRESETS, AND MOST PLAYED
 
-The star button in the bottom bar shows or hides Presets. Presets is visible on
-each fresh launch. The clock-and-list button shows or hides the ten-station Most
-Played section, which begins hidden on each fresh launch.
+The magnifying-glass button shows or hides station search, which begins hidden
+on each fresh launch. Search matches station names, groups, subgroups, countries,
+descriptions, and stream URLs. The star button shows or hides Presets; Presets is
+visible on each fresh launch. The clock-and-list button shows or hides the
+ten-station Most Played section, which begins hidden on each fresh launch.
 
 STATION SHORTCUTS
 

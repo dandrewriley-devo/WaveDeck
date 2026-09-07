@@ -44,6 +44,11 @@ const {
 } = require("../src/main/cinnamon-media-keys");
 const { MEDIA_KEY_BINDINGS, WindowsMediaKeys } = require("../src/main/windows-media-keys");
 const {
+  SEARCH_FIELDS,
+  normalizeSearchText,
+  stationMatchesQuery
+} = require("../src/renderer/search");
+const {
   PortableStorage,
   STARTER_PRESET_NAMES,
   validateGroups,
@@ -103,7 +108,7 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.4.2");
+assert.strictEqual(packageJson.version, "0.4.3");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -121,6 +126,22 @@ assert.ok(defaultLibrary.stations.every((station) => (
   !Object.hasOwn(station, "presetOrder")
 )));
 assert.ok(!fs.existsSync(path.join(defaultsDir, "preferences.json")));
+assert.deepStrictEqual(SEARCH_FIELDS, ["name", "group", "subgroup", "country", "description", "url"]);
+assert.strictEqual(normalizeSearchText("  RÁDIO Zürich  "), "radio zurich");
+const searchableStation = {
+  name: "Radio Zürich",
+  group: "Rock",
+  subgroup: "Classic Rock",
+  country: "Switzerland",
+  description: "Alpine guitars and deep cuts.",
+  url: "https://example.com/alpine"
+};
+assert.strictEqual(stationMatchesQuery(searchableStation, "zurich"), true);
+assert.strictEqual(stationMatchesQuery(searchableStation, "classic rock"), true);
+assert.strictEqual(stationMatchesQuery(searchableStation, "switzerland"), true);
+assert.strictEqual(stationMatchesQuery(searchableStation, "deep cuts"), true);
+assert.strictEqual(stationMatchesQuery(searchableStation, "example.com"), true);
+assert.strictEqual(stationMatchesQuery(searchableStation, "jazz"), false);
 
 assert.strictEqual(resolvePortableState({
   platform: "linux",
@@ -723,6 +744,7 @@ assert.ok(cinnamonCalls.some((call) => (
 )));
 
 const indexHtml = fs.readFileSync(path.join(root, "src", "renderer", "index.html"), "utf8");
+assert.ok(indexHtml.includes('id="searchSectionToggleBtn"'));
 assert.ok(indexHtml.includes('id="presetSectionToggleBtn"'));
 assert.ok(indexHtml.includes('id="mostPlayedSectionToggleBtn"'));
 assert.ok(indexHtml.includes('id="sidebarModeBtn"'));
@@ -731,6 +753,7 @@ assert.ok(indexHtml.includes('id="notepadPanel"'));
 assert.ok(indexHtml.includes('id="notepadText"'));
 assert.ok(indexHtml.includes('id="appVersion"'));
 assert.ok(indexHtml.includes("Warming up the airwaves..."));
+assert.ok(indexHtml.indexOf('id="searchSectionToggleBtn"') < indexHtml.indexOf('id="presetSectionToggleBtn"'));
 assert.ok(indexHtml.indexOf('id="presetSectionToggleBtn"') < indexHtml.indexOf('id="sidebarModeBtn"'));
 assert.ok(indexHtml.indexOf('id="mostPlayedSectionToggleBtn"') < indexHtml.indexOf('id="sidebarModeBtn"'));
 assert.ok(indexHtml.indexOf('id="sidebarModeBtn"') < indexHtml.indexOf('id="openSettingsBtn"'));
@@ -744,6 +767,8 @@ assert.ok(stylesSource.includes(".favBtn.preset"));
 assert.ok(stylesSource.includes(".favBtn.has-preroll"));
 assert.ok(stylesSource.includes("#e65324"));
 assert.ok(stylesSource.includes(".section-action"));
+assert.ok(stylesSource.includes(".station-search-input"));
+assert.ok(stylesSource.includes(".station-search-clear"));
 assert.ok(stylesSource.includes(".station-info"));
 assert.ok(stylesSource.includes("column-gap:10px"));
 assert.ok(stylesSource.includes("row-gap:0"));
@@ -838,7 +863,7 @@ assert.ok(mainSource.includes('ipcMain.handle("launcher:install"'));
 assert.ok(mainSource.includes('ipcMain.handle("launcher:remove"'));
 assert.ok(mainSource.includes('ipcMain.handle("listening:get"'));
 assert.ok(mainSource.includes('ipcMain.handle("listening:reset"'));
-assert.ok(mainSource.includes('let sectionVisibility = { presets: true, mostPlayed: false }'));
+assert.ok(mainSource.includes('let sectionVisibility = { search: false, presets: true, mostPlayed: false }'));
 assert.ok(mainSource.includes('ipcMain.handle("sections:get-state"'));
 assert.ok(mainSource.includes('ipcMain.handle("sections:set-state"'));
 assert.ok(mainSource.includes('sendToAll("sections:state-changed"'));
@@ -863,6 +888,11 @@ assert.ok(rendererSource.includes('"Most Played",\n      mostListened.length'));
 assert.ok(rendererSource.includes("const MOST_LISTENED_MINIMUM_SECONDS = 5 * 60"));
 assert.ok(rendererSource.includes("mostPlayedSectionVisible"));
 assert.ok(rendererSource.includes("presetSectionVisible"));
+assert.ok(rendererSource.includes("searchSectionVisible"));
+assert.ok(rendererSource.includes("stationSearchQuery"));
+assert.ok(rendererSource.includes("window.WaveDeckSearch.stationMatchesQuery"));
+assert.ok(rendererSource.includes('setAttribute("aria-label", search ? "Hide Search" : "Show Search")'));
+assert.ok(rendererSource.includes("const allGroups = buildGroupsInOrder(stations, groupOrder)"));
 assert.ok(rendererSource.includes(".slice(0, 10)"));
 assert.ok(rendererSource.includes('setAttribute("aria-label", presets ? "Hide Presets" : "Show Presets")'));
 assert.ok(rendererSource.includes('setAttribute("aria-label", mostPlayed ? "Hide Most Played" : "Show Most Played")'));
@@ -877,6 +907,14 @@ assert.ok(rendererSource.includes("event.ctrlKey"));
 assert.ok(rendererSource.includes("event.ctrlKey && event.shiftKey"));
 assert.ok(rendererSource.includes('row.addEventListener("pointerdown"'));
 assert.ok(!rendererSource.includes("event.altKey"));
+const searchStackIndex = rendererSource.indexOf('if (searchSectionVisible) listEl.append(createSearchBlock());');
+const presetStackIndex = rendererSource.indexOf('if (presetSectionVisible) {', searchStackIndex);
+const mostPlayedStackIndex = rendererSource.indexOf('if (mostPlayedSectionVisible) {', presetStackIndex);
+const stationsStackIndex = rendererSource.indexOf('listEl.append(createSectionTitle("stations"', mostPlayedStackIndex);
+assert.ok(searchStackIndex >= 0);
+assert.ok(searchStackIndex < presetStackIndex);
+assert.ok(presetStackIndex < mostPlayedStackIndex);
+assert.ok(mostPlayedStackIndex < stationsStackIndex);
 assert.ok(
   rendererSource.indexOf("event.ctrlKey && event.shiftKey") <
   rendererSource.indexOf("if (event.ctrlKey)"),
@@ -926,6 +964,7 @@ for (const file of [
   "src/main/mpris.js",
   "src/main/window-layout.js",
   "src/preload.js",
+  "src/renderer/search.js",
   "src/renderer/renderer.js",
   "src/renderer/settings.js"
 ]) {
@@ -1209,7 +1248,7 @@ async function validateMediaControls() {
 }
 
 validateMediaControls().then(() => {
-console.log("WaveDeck validation passed: v0.4.2 USB-safe Linux playback socket, 360-station default library, starter Presets, shared portable data, native media keys, and packaging verified.");
+console.log("WaveDeck validation passed: v0.4.3 toggleable station search, reordered list stack, USB-safe Linux playback, shared portable data, and packaging verified.");
 }).catch((error) => {
   console.error(error);
   process.exitCode = 1;

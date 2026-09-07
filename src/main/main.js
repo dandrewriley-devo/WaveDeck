@@ -63,7 +63,7 @@ let mediaKeyReclaimPaused = false;
 let sidebarApplied = false;
 let sidebarTransitioning = false;
 let floatingBounds = null;
-let sectionVisibility = { presets: true, mostPlayed: false };
+let sectionVisibility = { search: false, presets: true, mostPlayed: false };
 const startupWarnings = [];
 
 function getDataDir() {
@@ -505,6 +505,7 @@ function installIpcHandlers() {
   ipcMain.handle("sections:get-state", () => ({ ...sectionVisibility }));
   ipcMain.handle("sections:set-state", (_event, state = {}) => {
     sectionVisibility = {
+      search: typeof state.search === "boolean" ? state.search : sectionVisibility.search,
       presets: typeof state.presets === "boolean" ? state.presets : sectionVisibility.presets,
       mostPlayed: typeof state.mostPlayed === "boolean" ? state.mostPlayed : sectionVisibility.mostPlayed
     };

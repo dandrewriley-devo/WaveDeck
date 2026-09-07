@@ -5,6 +5,7 @@ const muteIcon = document.getElementById("muteIcon");
 const stopBtn = document.getElementById("stopBtn");
 const volumeSlider = document.getElementById("volSlider");
 const openSettingsBtn = document.getElementById("openSettingsBtn");
+const searchSectionToggleBtn = document.getElementById("searchSectionToggleBtn");
 const presetSectionToggleBtn = document.getElementById("presetSectionToggleBtn");
 const mostPlayedSectionToggleBtn = document.getElementById("mostPlayedSectionToggleBtn");
 const sidebarModeBtn = document.getElementById("sidebarModeBtn");
@@ -25,8 +26,12 @@ let notepadSaveTimer = null;
 let notepadDirty = false;
 let notepadOpen = false;
 let sidebarModeEnabled = false;
+let searchSectionVisible = false;
 let presetSectionVisible = true;
 let mostPlayedSectionVisible = false;
+let stationSearchQuery = "";
+let searchRenderTimer = null;
+let focusSearchAfterRender = false;
 let draggedPresetId = null;
 let listeningHistory = { version: 1, stations: {} };
 let currentPlayerStatus = null;
@@ -129,12 +134,23 @@ function setSidebarUi(state) {
 }
 
 function setSectionVisibilityUi(state = {}) {
+  const search = state.search === true;
   const presets = state.presets !== false;
   const mostPlayed = state.mostPlayed === true;
-  const changed = presetSectionVisible !== presets || mostPlayedSectionVisible !== mostPlayed;
+  const changed = searchSectionVisible !== search || presetSectionVisible !== presets || mostPlayedSectionVisible !== mostPlayed;
+  searchSectionVisible = search;
   presetSectionVisible = presets;
   mostPlayedSectionVisible = mostPlayed;
 
+  if (!search) {
+    stationSearchQuery = "";
+    clearTimeout(searchRenderTimer);
+    searchRenderTimer = null;
+  }
+
+  searchSectionToggleBtn.classList.toggle("active", search);
+  searchSectionToggleBtn.setAttribute("aria-pressed", String(search));
+  searchSectionToggleBtn.setAttribute("aria-label", search ? "Hide Search" : "Show Search");
   presetSectionToggleBtn.classList.toggle("active", presets);
   presetSectionToggleBtn.setAttribute("aria-pressed", String(presets));
   presetSectionToggleBtn.setAttribute("aria-label", presets ? "Hide Presets" : "Show Presets");
@@ -229,11 +245,34 @@ function createSectionTitle(title, subtitle = "", action = null) {
     const button = element("button", "section-action", action.label);
     button.type = "button";
     button.id = action.id;
+    button.disabled = action.disabled === true;
     titleRow.append(button);
   }
   section.append(titleRow);
   if (subtitle) section.append(element("div", "section-sub", subtitle));
   return section;
+}
+
+function createSearchBlock() {
+  const block = element("section", "station-search-block");
+  const field = element("div", "station-search-field");
+  const input = element("input", "station-search-input");
+  input.id = "stationSearchInput";
+  input.type = "search";
+  input.value = stationSearchQuery;
+  input.placeholder = "Search stations…";
+  input.autocomplete = "off";
+  input.spellcheck = false;
+  input.setAttribute("aria-label", "Search stations");
+  const clear = element("button", "station-search-clear", "×");
+  clear.id = "clearStationSearchBtn";
+  clear.type = "button";
+  clear.hidden = !stationSearchQuery;
+  clear.title = "Clear search";
+  clear.setAttribute("aria-label", "Clear station search");
+  field.append(input, clear);
+  block.append(field);
+  return block;
 }
 
 function subgroupKey(groupName, subgroupName) {
@@ -323,6 +362,7 @@ function buildGroupsInOrder(stations, groupOrder) {
 }
 
 async function renderAll() {
+  const searchInputHadFocus = document.activeElement?.id === "stationSearchInput";
   const [stations, groupOrder, subgroupConfig, history] = await Promise.all([
     window.wavedeck.getStations(),
     window.wavedeck.getGroups(),
@@ -332,6 +372,10 @@ async function renderAll() {
   listeningHistory = history || { version: 1, stations: {} };
 
   const presets = stations.filter((station) => station.preset).sort(sortPresets);
+  const searchActive = searchSectionVisible && Boolean(window.WaveDeckSearch.normalizeSearchText(stationSearchQuery));
+  const filteredStations = searchActive
+    ? stations.filter((station) => window.WaveDeckSearch.stationMatchesQuery(station, stationSearchQuery))
+    : stations;
   const stationStats = listeningHistory.stations || {};
   const mostListened = mostPlayedSectionVisible
     ? stations
@@ -340,9 +384,10 @@ async function renderAll() {
       .sort((a, b) => b.seconds - a.seconds || sortByName(a.station, b.station))
       .slice(0, 10)
     : [];
-  const groups = buildGroupsInOrder(stations, groupOrder);
-  renderedGroupNames = groups.map((group) => group.name);
-  renderedSubgroupKeys = groups.flatMap((group) => (
+  const allGroups = buildGroupsInOrder(stations, groupOrder);
+  const groups = buildGroupsInOrder(filteredStations, groupOrder);
+  renderedGroupNames = allGroups.map((group) => group.name);
+  renderedSubgroupKeys = allGroups.flatMap((group) => (
     [...new Set(group.items.map((station) => String(station.subgroup || "").trim()).filter(Boolean))]
       .map((subgroup) => subgroupKey(group.name, subgroup))
   ));
@@ -361,6 +406,17 @@ async function renderAll() {
   }
 
   listEl.replaceChildren();
+  if (searchSectionVisible) listEl.append(createSearchBlock());
+  if (presetSectionVisible) {
+    listEl.append(createSectionTitle("Presets", presets.length ? "" : "None yet — Ctrl-click a station to add."));
+    if (presets.length) {
+      const block = element("div", "section-block");
+      block.append(...presets.map((station) => createStationRow(station, { presetSection: true })));
+      listEl.append(block);
+    } else {
+      listEl.append(element("div", "placeholder", "No presets yet."));
+    }
+  }
   if (mostPlayedSectionVisible) {
     listEl.append(createSectionTitle(
       "Most Played",
@@ -374,36 +430,45 @@ async function renderAll() {
       listEl.append(mostListenedBlock);
     }
   }
-  if (presetSectionVisible) {
-    listEl.append(createSectionTitle("Presets", presets.length ? "" : "None yet — Ctrl-click a station to add."));
-    if (presets.length) {
-      const block = element("div", "section-block");
-      block.append(...presets.map((station) => createStationRow(station, { presetSection: true })));
-      listEl.append(block);
-    } else {
-      listEl.append(element("div", "placeholder", "No presets yet."));
-    }
-  }
 
   const allExpanded = collapsedGroups.size === 0 && collapsedSubgroups.size === 0;
-  listEl.append(createSectionTitle("stations", "", {
+  listEl.append(createSectionTitle("stations", "", searchActive ? {
+    id: "searchMatchCount",
+    label: `${filteredStations.length} ${filteredStations.length === 1 ? "Match" : "Matches"}`,
+    disabled: true
+  } : {
     id: "toggleAllGroupsBtn",
     label: allExpanded ? "Collapse All" : "Expand All"
   }));
-  if (!stations.length) {
-    listEl.append(element("div", "placeholder", "No stations yet."));
+  if (!filteredStations.length) {
+    listEl.append(element("div", "placeholder", searchActive ? "No stations match your search." : "No stations yet."));
   } else {
     const groupsEl = element("div", "groups");
     groupsEl.append(...groups.map((group) => {
       const configured = subgroupConfig?.groups?.find((entry) => (
         normalizeGroupName(entry.group).toLowerCase() === group.name.toLowerCase()
       ));
-      return createGroupBlock(group.name, group.items, configured?.subgroups || []);
+      const block = createGroupBlock(group.name, group.items, configured?.subgroups || []);
+      if (searchActive) {
+        const body = block.querySelector(".group-body");
+        const caret = block.querySelector(".caret");
+        if (body) body.hidden = false;
+        if (caret) caret.textContent = "▾";
+        block.querySelectorAll(".subgroup-body").forEach((subgroupBody) => { subgroupBody.hidden = false; });
+        block.querySelectorAll(".subgroup-caret").forEach((caretNode) => { caretNode.textContent = "▾"; });
+      }
+      return block;
     }));
     listEl.append(groupsEl);
   }
 
   bindHandlers();
+  if (searchSectionVisible && (searchInputHadFocus || focusSearchAfterRender)) {
+    const searchInput = document.getElementById("stationSearchInput");
+    searchInput?.focus({ preventScroll: true });
+    searchInput?.setSelectionRange(stationSearchQuery.length, stationSearchQuery.length);
+  }
+  focusSearchAfterRender = false;
   if (expandedStationId) {
     const row = [...listEl.querySelectorAll(".station")]
       .find((candidate) => candidate.dataset.id === expandedStationId);
@@ -481,6 +546,34 @@ async function savePresetOrder(orderedIds) {
 }
 
 function bindHandlers() {
+  const searchInput = document.getElementById("stationSearchInput");
+  searchInput?.addEventListener("input", () => {
+    stationSearchQuery = searchInput.value;
+    const clearButton = document.getElementById("clearStationSearchBtn");
+    if (clearButton) clearButton.hidden = !stationSearchQuery;
+    clearTimeout(searchRenderTimer);
+    searchRenderTimer = setTimeout(() => {
+      focusSearchAfterRender = true;
+      queueRender();
+    }, 75);
+  });
+  searchInput?.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape" || !stationSearchQuery) return;
+    event.preventDefault();
+    clearTimeout(searchRenderTimer);
+    searchRenderTimer = null;
+    stationSearchQuery = "";
+    focusSearchAfterRender = true;
+    queueRender();
+  });
+  document.getElementById("clearStationSearchBtn")?.addEventListener("click", () => {
+    clearTimeout(searchRenderTimer);
+    searchRenderTimer = null;
+    stationSearchQuery = "";
+    focusSearchAfterRender = true;
+    queueRender();
+  });
+
   listEl.querySelectorAll(".station").forEach((row) => {
     row.querySelector(".favBtn").addEventListener("click", async (event) => {
       event.preventDefault();
@@ -608,6 +701,7 @@ function bindHandlers() {
 
   listEl.querySelectorAll(".group-header").forEach((button) => {
     button.addEventListener("click", () => {
+      if (window.WaveDeckSearch.normalizeSearchText(stationSearchQuery)) return;
       const groupName = button.dataset.group || "Other";
       if (collapsedGroups.has(groupName)) collapsedGroups.delete(groupName);
       else collapsedGroups.add(groupName);
@@ -622,6 +716,7 @@ function bindHandlers() {
 
   listEl.querySelectorAll(".subgroup-header").forEach((button) => {
     button.addEventListener("click", () => {
+      if (window.WaveDeckSearch.normalizeSearchText(stationSearchQuery)) return;
       const key = subgroupKey(button.dataset.group || "Other", button.dataset.subgroup || "");
       if (collapsedSubgroups.has(key)) collapsedSubgroups.delete(key);
       else collapsedSubgroups.add(key);
@@ -684,6 +779,22 @@ openSettingsBtn.addEventListener("click", async () => {
     await window.wavedeck.openSettings();
   } catch (error) {
     nowPlaying.textContent = `Could not open settings: ${error.message}`;
+  }
+});
+
+searchSectionToggleBtn.addEventListener("click", async () => {
+  searchSectionToggleBtn.disabled = true;
+  const showSearch = !searchSectionVisible;
+  if (showSearch) focusSearchAfterRender = true;
+  try {
+    setSectionVisibilityUi(await window.wavedeck.setSectionVisibility({
+      search: showSearch
+    }));
+  } catch (error) {
+    focusSearchAfterRender = false;
+    nowPlaying.textContent = `Could not toggle Search: ${error.message}`;
+  } finally {
+    searchSectionToggleBtn.disabled = false;
   }
 });
 
