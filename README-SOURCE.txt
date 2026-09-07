@@ -1,5 +1,5 @@
 WaveDeck portable Windows and Linux source package
-Version 0.3.0
+Version 0.4.0
 
 WaveDeck is a portable Linux Mint internet-radio player. The sidebar toggle asks
 Cinnamon to identify the Meta.Window's current monitor, read its work area,
@@ -75,7 +75,7 @@ Version 0.1.15 makes the station editor open inline directly beneath the
 selected station. Right-clicking a station in the player now offers Edit
 Station and opens the centered Settings window at that exact row. WaveDeck
 also records qualified listening sessions by stable station ID in the portable
-WaveDeck-Data folder. After 30 seconds of continuous successful playback the
+Data folder. After 30 seconds of continuous successful playback the
 session is counted; Sidebar Mode shows the five most-listened stations above
 Favorites once they reach five minutes. Settings displays every station's
 total and includes a Reset Listening History command.
@@ -114,7 +114,7 @@ Version 0.2.4 restores the intact WaveDeck header artwork, prevents browser-styl
 text selection during modified station clicks, and replaces Cinnamon-conflicted
 Alt-click pre-roll marking with Ctrl+Shift-click. Portable ZIP releases again
 extract into the stable WaveDeck Portable Linux folder so an update merges into
-the existing location while leaving WaveDeck-Data in place.
+the existing location while leaving Data in place.
 
 Version 0.2.5 adds independent footer toggles for Presets and Most Played.
 Presets is visible and Most Played is hidden on each fresh launch; both choices
@@ -136,6 +136,17 @@ EXE bundles a generic x86-64 mpv playback engine and keeps its Data directory
 beside the outer portable executable rather than electron-builder's temporary
 unpack directory.
 
+Version 0.4.0 standardizes portable storage as Data on Linux and Windows so the
+two executables can share one USB-based collection. library.json now combines
+stations, groups, subgroups, ordering, and assignments. Personal Favorites and
+Presets live in a separately generated preferences.json that exports and library
+imports never overwrite. Import offers Add New and confirmed Replace modes.
+Settings keeps its header and station column headings visible while scrolling,
+and the Add Station form opens directly below the station toolbar. Linux media
+key registration is now single-flight and pauses during Sidebar Mode window
+replacement, preventing the D-Bus write-after-end race seen when leaving the
+sidebar. Platform runtime data is isolated below Data/runtime/<platform>.
+
 Build requirements:
 - 64-bit Windows or Linux
 - Node.js and npm
@@ -154,8 +165,9 @@ Before building Windows, place the pinned generic 64-bit mpv.exe described in
 playback/win32/README.txt at playback/win32/mpv.exe. The portable executable is
 written to dist/windows/WaveDeck.exe.
 
-The Linux AppImage stores portable data in a WaveDeck-Data folder beside the
-AppImage. When run from source, WaveDeck uses ~/.config/wavedeck instead.
+The Linux AppImage and Windows portable executable both use a Data folder beside
+the executable. They can share that folder; platform runtime state is isolated
+under Data/runtime. When run from source, Linux uses ~/.config/wavedeck instead.
 
 Playback uses the mpv executable available on the Linux system. Sidebar Mode is
 intended for Linux Mint Cinnamon on X11 and uses the pure-JavaScript x11 package.

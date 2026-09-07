@@ -40,6 +40,7 @@ const { MEDIA_KEY_BINDINGS, WindowsMediaKeys } = require("../src/main/windows-me
 const {
   PortableStorage,
   validateGroups,
+  validateLibrary,
   validateStations,
   validateSubgroups
 } = require("../src/main/storage");
@@ -48,8 +49,9 @@ const { calculateBottomRightBounds, calculateCenteredBounds } = require("../src/
 const root = path.resolve(__dirname, "..");
 const defaultsDir = path.join(root, "defaults");
 const packageJson = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
-const stations = validateStations(JSON.parse(fs.readFileSync(path.join(defaultsDir, "stations.json"), "utf8")));
-const groups = validateGroups(JSON.parse(fs.readFileSync(path.join(defaultsDir, "groups.json"), "utf8")));
+const defaultLibrary = validateLibrary(JSON.parse(fs.readFileSync(path.join(defaultsDir, "library.json"), "utf8")));
+const stations = defaultLibrary.stations;
+const groups = defaultLibrary.groups;
 
 function assertValidHeaderPng(filePath) {
   const png = fs.readFileSync(filePath);
@@ -94,7 +96,7 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.3.0");
+assert.strictEqual(packageJson.version, "0.4.0");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -105,6 +107,7 @@ assert.ok(packageJson.scripts["dist:windows"].includes("electron-builder.windows
 assert.strictEqual(stations.length, 110);
 assert.strictEqual(groups.length, 23);
 assert.strictEqual(new Set(stations.map((station) => station.id)).size, 110);
+assert.ok(!fs.existsSync(path.join(defaultsDir, "preferences.json")));
 
 assert.strictEqual(resolvePortableState({
   platform: "linux",
@@ -124,7 +127,7 @@ assert.strictEqual(resolveDataDir({
   execPath: "/tmp/mount/wavedeck",
   projectRoot: "/source",
   homeDir: "/home/tester"
-}), path.normalize("/media/USB/WaveDeck-Data"));
+}), path.normalize("/media/USB/Data"));
 
 assert.deepStrictEqual(resolveLegacyDataDirs({
   platform: "linux",
@@ -132,6 +135,7 @@ assert.deepStrictEqual(resolveLegacyDataDirs({
   appImagePath: "/media/USB/WaveDeck Portable Linux/WaveDeck.AppImage",
   homeDir: "/home/tester"
 }), [
+  path.normalize("/media/USB/WaveDeck Portable Linux/WaveDeck-Data"),
   path.normalize("/media/USB/WaveDeck Portable Linux/WaveDeckSB-Data"),
   path.normalize("/media/USB/WaveDeckSB Portable Linux/WaveDeckSB-Data")
 ]);
@@ -155,7 +159,7 @@ assert.strictEqual(resolveDataDir({
 
 const testRoot = fs.mkdtempSync(path.join(os.tmpdir(), "wavedeck-validate-"));
 try {
-  const dataDir = path.join(testRoot, "WaveDeck-Data");
+  const dataDir = path.join(testRoot, "Data");
   const storage = new PortableStorage({ dataDir, defaultsDir });
   storage.initialize();
   storage.assertWritable();
@@ -180,7 +184,11 @@ try {
   unorderedPreset[0].presetOrder = null;
   storage.writeStations(unorderedPreset);
   assert.strictEqual(storage.readStations()[0].presetOrder, null);
-  assert.ok(fs.existsSync(path.join(dataDir, "backups", "stations.json.bak")));
+  assert.ok(fs.existsSync(path.join(dataDir, "backups", "library.json.bak")));
+  assert.ok(fs.existsSync(path.join(dataDir, "preferences.json")));
+  const exportedLibrary = storage.exportLibrary();
+  assert.strictEqual(exportedLibrary.stations[0].favorite, undefined);
+  assert.strictEqual(exportedLibrary.stations[0].preset, undefined);
   assert.strictEqual(storage.readNotepad(), "");
   storage.writeNotepad("Call Ben\nOrder filters");
   assert.strictEqual(storage.readNotepad(), "Call Ben\nOrder filters");
@@ -212,6 +220,43 @@ try {
   assert.strictEqual(reloadedStorage.removeSubgroup(subgroupGroup, "PNW").ok, true);
   assert.strictEqual(reloadedStorage.readStations()[0].subgroup, "");
 
+  const personalStation = reloadedStorage.readStations()[0];
+  personalStation.favorite = true;
+  personalStation.preset = true;
+  personalStation.presetOrder = 3;
+  reloadedStorage.writeStations(reloadedStorage.readStations().map((station) => (
+    station.id === personalStation.id ? personalStation : station
+  )));
+  const personalPreferences = JSON.stringify(reloadedStorage.readPreferences());
+  const shareableLibrary = reloadedStorage.exportLibrary();
+  assert.ok(!Object.hasOwn(shareableLibrary.stations[0], "favorite"));
+  assert.ok(!Object.hasOwn(shareableLibrary.stations[0], "preset"));
+  const addResult = reloadedStorage.importLibrary({
+    version: 1,
+    groups: ["Imported Group", "Other"],
+    subgroups: { version: 1, groups: [{ group: "Imported Group", subgroups: ["Imported Subgroup"] }] },
+    stations: [
+      shareableLibrary.stations[0],
+      { id: "imported-new", name: "Imported New", url: "https://example.com/new", group: "Imported Group", subgroup: "Imported Subgroup" }
+    ]
+  }, { mode: "add" });
+  assert.strictEqual(addResult.addedStations, 1);
+  assert.strictEqual(addResult.addedGroups, 1);
+  assert.strictEqual(addResult.addedSubgroups, 1);
+  assert.strictEqual(JSON.stringify(reloadedStorage.readPreferences()), personalPreferences);
+  const replaceResult = reloadedStorage.importLibrary({
+    version: 1,
+    groups: ["Replacement", "Other"],
+    subgroups: { version: 1, groups: [] },
+    stations: [{ ...shareableLibrary.stations[0], name: "Replacement Name", group: "Replacement" }]
+  }, { mode: "replace" });
+  assert.strictEqual(replaceResult.stationCount, 1);
+  assert.strictEqual(reloadedStorage.readStations()[0].favorite, true);
+  assert.strictEqual(reloadedStorage.readStations()[0].preset, true);
+  assert.strictEqual(reloadedStorage.readStations()[0].name, "Replacement Name");
+  assert.ok(fs.existsSync(path.join(dataDir, "backups", "library.json.bak")));
+  assert.doesNotThrow(() => validateLibrary([{ name: "Old Export", url: "https://example.com/old", favorite: true }]));
+
   const legacySchemaDir = path.join(testRoot, "Legacy-Schema-Data");
   fs.mkdirSync(legacySchemaDir, { recursive: true });
   fs.writeFileSync(path.join(legacySchemaDir, "stations.json"), JSON.stringify([{
@@ -230,11 +275,13 @@ try {
   assert.strictEqual(migratedStation.presetOrder, 4);
   assert.strictEqual(migratedStation.favorite, false);
   assert.strictEqual(migratedStation.hasPreRoll, false);
-  const migratedRaw = JSON.parse(fs.readFileSync(path.join(legacySchemaDir, "stations.json"), "utf8"))[0];
-  assert.ok(Object.hasOwn(migratedRaw, "preset"));
+  const migratedRaw = JSON.parse(fs.readFileSync(path.join(legacySchemaDir, "library.json"), "utf8")).stations[0];
+  assert.ok(!Object.hasOwn(migratedRaw, "preset"));
+  assert.ok(!Object.hasOwn(migratedRaw, "favorite"));
   assert.ok(!Object.hasOwn(migratedRaw, "favoriteOrder"));
   assert.ok(!Object.hasOwn(migratedRaw, "noPreRoll"));
-  assert.ok(fs.existsSync(path.join(legacySchemaDir, "backups", "stations.json.bak")));
+  assert.ok(fs.existsSync(path.join(legacySchemaDir, "preferences.json")));
+  assert.ok(fs.existsSync(path.join(legacySchemaDir, "backups", "pre-v0.4-stations.json")));
 
   const legacyDir = path.join(testRoot, "WaveDeckSB-Data");
   const legacyStorage = new PortableStorage({ dataDir: legacyDir, defaultsDir });
@@ -672,6 +719,8 @@ assert.ok(preloadSource.includes('subscribe("sections:state-changed"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("settings:open", stationId)'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("subgroups:get"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("subgroups:rename"'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("library:export"'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("library:import", mode)'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("player:play-station", stationId)'));
 assert.ok(preloadSource.includes("platform: process.platform"));
 assert.ok(!preloadSource.includes("showStationContextMenu"));
@@ -681,6 +730,11 @@ assert.ok(settingsHtml.includes('id="tab-launcher"'));
 assert.ok(settingsHtml.includes('id="installLauncherBtn"'));
 assert.ok(settingsHtml.includes('id="removeLauncherBtn"'));
 assert.ok(settingsHtml.includes('id="stationEditor"'));
+assert.ok(settingsHtml.includes('id="stationEditorHome"'));
+assert.ok(settingsHtml.includes('id="exportLibraryBtn"'));
+assert.ok(settingsHtml.includes('id="importLibraryAddBtn"'));
+assert.ok(settingsHtml.includes('id="importLibraryReplaceBtn"'));
+assert.ok(settingsHtml.indexOf('id="stationEditorHome"') < settingsHtml.indexOf('class="listening-history-bar"'));
 assert.ok(settingsHtml.includes('id="resetListeningBtn"'));
 assert.ok(settingsHtml.includes("Listened"));
 assert.ok(settingsHtml.includes('id="st_subgroup"'));
@@ -688,6 +742,9 @@ assert.ok(settingsHtml.includes('id="st_description"'));
 assert.ok(settingsHtml.includes('id="st_favorite"'));
 assert.ok(settingsHtml.includes('id="st_preset"'));
 assert.ok(settingsHtml.includes('id="st_has_preroll"'));
+const settingsStyles = fs.readFileSync(path.join(root, "src", "renderer", "settings.css"), "utf8");
+assert.ok(settingsStyles.includes("position: sticky"));
+assert.ok(settingsStyles.includes("overflow: auto"));
 const mainSource = fs.readFileSync(path.join(root, "src", "main", "main.js"), "utf8");
 assert.ok(!mainSource.includes("loadSidebarState"));
 assert.ok(!mainSource.includes("saveSidebarState"));
@@ -719,6 +776,8 @@ assert.ok(mainSource.includes("await platformMediaKeys?.start()"));
 assert.ok(mainSource.includes("MEDIA_KEY_RECLAIM_INTERVAL_MS = 15_000"));
 assert.ok(mainSource.includes("setInterval(reclaimMediaKeys, MEDIA_KEY_RECLAIM_INTERVAL_MS)"));
 assert.ok(mainSource.includes("claim({ reconnect: true })"));
+assert.ok(mainSource.includes("mediaKeyReclaimPaused = true"));
+assert.ok(mainSource.includes('path.join(getDataDir(), "runtime", process.platform)'));
 assert.ok(mainSource.includes("clearInterval(mediaKeyReclaimTimer)"));
 assert.ok(mainSource.includes("PLAYBACK_HEARTBEAT_MS = 10_000"));
 assert.ok(mainSource.includes("player.refreshPlaybackState()"));
@@ -735,6 +794,8 @@ assert.ok(mainSource.includes('ipcMain.handle("sections:set-state"'));
 assert.ok(mainSource.includes('sendToAll("sections:state-changed"'));
 assert.ok(mainSource.includes('ipcMain.handle("subgroups:get"'));
 assert.ok(mainSource.includes('ipcMain.handle("subgroups:rename"'));
+assert.ok(mainSource.includes('ipcMain.handle("library:export"'));
+assert.ok(mainSource.includes('ipcMain.handle("library:import"'));
 assert.ok(mainSource.includes('ipcMain.handle("player:play-station"'));
 assert.ok(!mainSource.includes('ipcMain.on("stations:show-context-menu"'));
 const desktopLauncherSource = fs.readFileSync(path.join(root, "src", "main", "desktop-launcher.js"), "utf8");
@@ -1001,6 +1062,36 @@ async function validateMediaControls() {
   await mpris.PlayPause();
   assert.strictEqual(controller.getMediaState(), "paused");
 
+  class SlowMediaKeysInterface extends EventEmitter {
+    async GrabMediaPlayerKeys() {}
+    async ReleaseMediaPlayerKeys() {}
+  }
+  const slowInterface = new SlowMediaKeysInterface();
+  let resolveSlowProxy;
+  let slowProxyRequests = 0;
+  let slowDisconnects = 0;
+  const slowBus = {
+    getProxyObject() {
+      slowProxyRequests += 1;
+      return new Promise((resolve) => { resolveSlowProxy = resolve; });
+    },
+    disconnect() { slowDisconnects += 1; }
+  };
+  const singleFlightMediaKeys = new CinnamonMediaKeys({
+    platform: "linux",
+    busFactory: () => slowBus,
+    controller
+  });
+  const firstStart = singleFlightMediaKeys.start();
+  const concurrentClaim = singleFlightMediaKeys.claim({ reconnect: true });
+  const secondStart = singleFlightMediaKeys.start();
+  assert.strictEqual(slowProxyRequests, 1);
+  resolveSlowProxy({ getInterface: () => slowInterface });
+  assert.deepStrictEqual(await Promise.all([firstStart, concurrentClaim, secondStart]), [true, true, true]);
+  singleFlightMediaKeys.close();
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.strictEqual(slowDisconnects, 1);
+
   class MockMediaKeysInterface extends EventEmitter {
     constructor() {
       super();
@@ -1068,7 +1159,7 @@ async function validateMediaControls() {
 }
 
 validateMediaControls().then(() => {
-console.log("WaveDeck validation passed: v0.3.0 Windows portability, native media keys, portable data, platform-aware controls, shared station features, Linux Sidebar Mode, and packaging configuration verified.");
+console.log("WaveDeck validation passed: v0.4.0 shared portable data, isolated preferences, library import/export, Settings layout, native media keys, Linux Sidebar Mode, and packaging verified.");
 }).catch((error) => {
   console.error(error);
   process.exitCode = 1;

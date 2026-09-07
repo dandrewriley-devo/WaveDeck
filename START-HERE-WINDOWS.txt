@@ -1,5 +1,5 @@
 WAVEDECK PORTABLE FOR WINDOWS
-Version 0.3.0 (64-bit Intel/AMD)
+Version 0.4.0 (64-bit Intel/AMD)
 
 QUICK START
 
@@ -12,9 +12,14 @@ WaveDeck is portable. It does not install itself or write an uninstaller.
 
 PORTABLE DATA
 
-WaveDeck creates a folder named Data beside WaveDeck.exe on first launch. Your
-stations, groups, presets, favorites, listening history, backups, and runtime
-files remain there. Keep WaveDeck.exe and Data together when moving the app.
+WaveDeck creates a folder named Data beside WaveDeck.exe on first launch. The
+shareable station library is stored in library.json; personal Favorites and
+Presets are stored separately in preferences.json. Listening history, backups,
+and platform-specific runtime files also remain under Data.
+
+The Linux AppImage and Windows EXE can sit beside the same Data folder on a USB
+stick. Whichever version you launch will use the same library and preferences,
+while each operating system keeps its runtime files in a separate subfolder.
 
 To update later, close WaveDeck and replace only WaveDeck.exe. Leave Data
 untouched.
@@ -32,6 +37,13 @@ WaveDeck retries any unavailable media-key registrations every 15 seconds and
 whenever its window receives focus. Windows grants a global key to one app at a
 time, so another program that already owns a key can temporarily prevent
 WaveDeck from registering it.
+
+LIBRARY IMPORT AND EXPORT
+
+Export Library creates one JSON file containing stations, groups, subgroups,
+their order, and station assignments. It never includes Favorites or Presets.
+Import can add only new listings or replace the entire library after a strong
+confirmation; either choice preserves the user's personal preferences.
 
 PRESETS AND MOST PLAYED
 

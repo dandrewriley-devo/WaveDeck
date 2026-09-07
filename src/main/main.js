@@ -14,7 +14,7 @@ const {
   removeLauncher
 } = require("./desktop-launcher");
 const { resolveDataDir, resolveLegacyDataDirs, resolvePortableState } = require("./portable-paths");
-const { PortableStorage, validateStations } = require("./storage");
+const { PortableStorage } = require("./storage");
 const { probeStream } = require("./stream-probe");
 const {
   clearCinnamonReservedSpace,
@@ -54,6 +54,7 @@ let listeningHistory = null;
 let playbackHeartbeat = null;
 let mediaKeyReclaimTimer = null;
 let mediaKeyReclaimEnabled = false;
+let mediaKeyReclaimPaused = false;
 let sidebarApplied = false;
 let sidebarTransitioning = false;
 let floatingBounds = null;
@@ -95,14 +96,14 @@ function configurePortableRuntimePaths() {
     try {
       const migration = copyLegacyData({ legacyDirs: getLegacyDataDirs(), targetDir: getDataDir() });
       if (migration.copied.length) {
-        startupWarnings.push("Your existing WaveDeckSB stations and presets were copied into WaveDeck-Data. The original folder was left untouched as a backup.");
+        startupWarnings.push("Your existing WaveDeck data was copied into the new Data folder. The original folder was left untouched as a backup.");
       }
     } catch (error) {
       startupWarnings.push(`WaveDeck could not copy the previous WaveDeckSB data automatically: ${error.message}`);
     }
   }
   if (!isPortableBuild()) return;
-  const runtimeDir = path.join(getDataDir(), "runtime");
+  const runtimeDir = path.join(getDataDir(), "runtime", process.platform);
   fs.mkdirSync(runtimeDir, { recursive: true });
   app.setPath("userData", runtimeDir);
   app.setPath("sessionData", runtimeDir);
@@ -158,7 +159,7 @@ function broadcastStationChanged(station) {
 }
 
 function reclaimMediaKeys() {
-  if (!mediaKeyReclaimEnabled) return;
+  if (!mediaKeyReclaimEnabled || mediaKeyReclaimPaused) return;
   void platformMediaKeys?.claim({ reconnect: true }).catch((error) => {
     console.warn(`Could not reclaim media keys: ${error.message}`);
   });
@@ -301,6 +302,7 @@ async function setSidebarMode(enabled) {
   if (!mainWindow || mainWindow.isDestroyed()) throw new Error("The WaveDeck window is unavailable.");
   if (sidebarTransitioning) return getSidebarState();
   sidebarTransitioning = true;
+  mediaKeyReclaimPaused = true;
 
   try {
     if (enabled) {
@@ -381,6 +383,8 @@ async function setSidebarMode(enabled) {
     return state;
   } finally {
     sidebarTransitioning = false;
+    mediaKeyReclaimPaused = false;
+    reclaimMediaKeys();
   }
 }
 
@@ -437,22 +441,23 @@ function installIpcHandlers() {
     return result;
   });
 
-  ipcMain.handle("stations:export", async () => {
-    const stations = storage.readStations();
+  ipcMain.handle("library:export", async () => {
+    const library = storage.exportLibrary();
     const result = await dialog.showSaveDialog(settingsWindow || mainWindow, {
-      title: "Export WaveDeck stations",
-      defaultPath: path.join(app.getPath("documents"), "wavedeck-stations.json"),
+      title: "Export WaveDeck library",
+      defaultPath: path.join(app.getPath("documents"), "wavedeck-library.json"),
       filters: [{ name: "JSON files", extensions: ["json"] }]
     });
 
     if (result.canceled || !result.filePath) return { canceled: true };
-    fs.writeFileSync(result.filePath, `${JSON.stringify(stations, null, 2)}\n`, "utf8");
-    return { canceled: false, filePath: result.filePath, count: stations.length };
+    fs.writeFileSync(result.filePath, `${JSON.stringify(library, null, 2)}\n`, "utf8");
+    return { canceled: false, filePath: result.filePath, count: library.stations.length };
   });
 
-  ipcMain.handle("stations:import-replace", async () => {
+  ipcMain.handle("library:import", async (_event, mode) => {
+    if (mode !== "add" && mode !== "replace") throw new Error("Unknown library import mode.");
     const result = await dialog.showOpenDialog(settingsWindow || mainWindow, {
-      title: "Import WaveDeck stations",
+      title: mode === "replace" ? "Replace WaveDeck library" : "Add new items to WaveDeck library",
       properties: ["openFile"],
       filters: [{ name: "JSON files", extensions: ["json"] }]
     });
@@ -467,15 +472,12 @@ function installIpcHandlers() {
       throw new Error("The selected file is not valid JSON.");
     }
 
-    const stations = validateStations(parsed);
-    storage.writeStations(stations);
-    storage.syncGroupsWithStations(stations);
-    storage.syncSubgroupsWithStations(stations);
+    const imported = storage.importLibrary(parsed, { mode });
     sendToAll("stations:changed");
     sendToAll("groups:changed");
     sendToAll("subgroups:changed");
     mprisService?.update();
-    return { canceled: false, filePath: importPath, count: stations.length };
+    return { canceled: false, filePath: importPath, ...imported };
   });
 
   ipcMain.handle("stream:test", (_event, url) => probeStream(url));

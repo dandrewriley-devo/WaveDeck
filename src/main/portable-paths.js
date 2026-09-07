@@ -25,7 +25,7 @@ function resolveDataDir({
   }
 
   if (platform === "linux" && isPackaged && appImagePath) {
-    return pathApi.join(pathApi.dirname(pathApi.resolve(appImagePath)), "WaveDeck-Data");
+    return pathApi.join(pathApi.dirname(pathApi.resolve(appImagePath)), "Data");
   }
 
   if (platform === "win32") return pathApi.join(projectRoot, "Data");
@@ -37,6 +37,7 @@ function resolveLegacyDataDirs({ platform, isPackaged, appImagePath, homeDir }) 
   if (platform === "linux" && isPackaged && appImagePath) {
     const appDirectory = pathApi.dirname(pathApi.resolve(appImagePath));
     return [
+      pathApi.join(appDirectory, "WaveDeck-Data"),
       pathApi.join(appDirectory, "WaveDeckSB-Data"),
       pathApi.join(pathApi.dirname(appDirectory), "WaveDeckSB Portable Linux", "WaveDeckSB-Data")
     ];

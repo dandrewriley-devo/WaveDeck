@@ -6,7 +6,9 @@ WaveDeck is a lightweight, portable internet-radio player for 64-bit Windows and
 
 ## Features
 
-- Portable Windows EXE or Linux AppImage with station data stored beside the application
+- Portable Windows EXE or Linux AppImage sharing the same adjacent `Data` folder
+- Single-file station-library import/export with Add New and confirmed Replace modes
+- Personal Favorites and Presets stored separately from the shareable station library
 - Linux Mint Cinnamon Sidebar Mode (Linux only)
 - Toggleable Presets with drag-and-drop ordering and media-key navigation
 - Independent Favorites and pre-roll markers
@@ -57,7 +59,7 @@ npm run dist:linux
 
 The AppImage is written to `dist/`. Release builds use the stable filename `WaveDeck.AppImage`. Keep future replacements at the same path so an Applications-menu or panel shortcut continues to work.
 
-For a portable release, WaveDeck stores user data in a `WaveDeck-Data` folder beside the AppImage. That runtime folder is intentionally excluded from this repository because it can contain personal stations, listening history, and notes.
+For a portable release, WaveDeck stores user data in a `Data` folder beside the executable. A Windows EXE and Linux AppImage placed beside the same folder share `library.json` and `preferences.json`; OS-specific cache and runtime state stay separated under `Data/runtime`. The folder is intentionally excluded from this repository because it can contain personal preferences, listening history, and notes.
 
 ## Platform notes
 

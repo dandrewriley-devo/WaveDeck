@@ -29,74 +29,108 @@ class CinnamonMediaKeys {
     this.bus = null;
     this.interface = null;
     this.claimPromise = null;
+    this.startPromise = null;
     this.signalHandler = null;
+    this.closed = false;
+    this.generation = 0;
   }
 
-  async start() {
-    if (this.platform !== "linux") return false;
+  start() {
+    if (this.platform !== "linux" || this.closed) return Promise.resolve(false);
+    if (this.interface) return this.claim();
+    if (this.startPromise) return this.startPromise;
 
-    try {
-      this.bus = this.busFactory();
-      const object = await this.bus.getProxyObject(SERVICE_NAME, OBJECT_PATH);
-      this.interface = object.getInterface(INTERFACE_NAME);
-      this.signalHandler = (_application, key) => {
-        const method = KEY_COMMANDS[String(key)];
-        if (!method || typeof this.controller?.[method] !== "function") return;
-        void Promise.resolve().then(() => this.controller[method]()).catch((error) => {
-          this.onWarning(`Cinnamon media key failed: ${error.message}`);
-        });
-      };
-      this.interface.on("MediaPlayerKeyPressed", this.signalHandler);
-      await this.claim();
-      return true;
-    } catch (error) {
-      this.#disconnect();
-      this.onWarning(`Cinnamon media-key integration is unavailable: ${error.message}`);
-      return false;
-    }
+    const generation = ++this.generation;
+    const bus = this.busFactory();
+    let adopted = false;
+    const operation = (async () => {
+      try {
+        const object = await bus.getProxyObject(SERVICE_NAME, OBJECT_PATH);
+        if (this.closed || generation !== this.generation) {
+          this.#disconnectBus(bus);
+          return false;
+        }
+        const mediaKeys = object.getInterface(INTERFACE_NAME);
+        const signalHandler = (_application, key) => {
+          const method = KEY_COMMANDS[String(key)];
+          if (!method || typeof this.controller?.[method] !== "function") return;
+          void Promise.resolve().then(() => this.controller[method]()).catch((error) => {
+            this.onWarning(`Cinnamon media key failed: ${error.message}`);
+          });
+        };
+        mediaKeys.on("MediaPlayerKeyPressed", signalHandler);
+        this.bus = bus;
+        this.interface = mediaKeys;
+        this.signalHandler = signalHandler;
+        adopted = true;
+        return await this.claim();
+      } catch (error) {
+        if (!adopted || this.bus === bus) this.#disconnectConnection(bus);
+        if (!this.closed) this.onWarning(`Cinnamon media-key integration is unavailable: ${error.message}`);
+        return false;
+      }
+    })();
+    const wrapped = operation.finally(() => {
+      if (this.startPromise === wrapped) this.startPromise = null;
+    });
+    this.startPromise = wrapped;
+    return wrapped;
   }
 
   async claim({ reconnect = false } = {}) {
+    if (this.closed || this.platform !== "linux") return false;
     if (!this.interface) return reconnect ? this.start() : false;
     if (this.claimPromise) return this.claimPromise;
 
-    this.claimPromise = Promise.resolve(
-      this.interface.GrabMediaPlayerKeys(this.applicationName, 0)
+    const mediaKeys = this.interface;
+    const bus = this.bus;
+    const operation = Promise.resolve(
+      mediaKeys.GrabMediaPlayerKeys(this.applicationName, 0)
     ).then(() => true).catch((error) => {
-      this.#disconnect();
+      this.#disconnectConnection(bus, mediaKeys);
       throw error;
-    }).finally(() => {
-      this.claimPromise = null;
     });
-    return this.claimPromise;
+    const wrapped = operation.finally(() => {
+      if (this.claimPromise === wrapped) this.claimPromise = null;
+    });
+    this.claimPromise = wrapped;
+    return wrapped;
   }
 
   close() {
+    if (this.closed) return;
+    this.closed = true;
+    this.generation += 1;
     const mediaKeys = this.interface;
+    const bus = this.bus;
+    this.#detach(mediaKeys);
+    if (!mediaKeys) {
+      this.#disconnectConnection(bus);
+      return;
+    }
+    void Promise.resolve(mediaKeys.ReleaseMediaPlayerKeys(this.applicationName))
+      .catch(() => {})
+      .finally(() => this.#disconnectConnection(bus, mediaKeys));
+  }
+
+  #detach(mediaKeys = this.interface) {
     if (mediaKeys && this.signalHandler) {
       try { mediaKeys.off("MediaPlayerKeyPressed", this.signalHandler); } catch {}
     }
-    this.interface = null;
-    this.signalHandler = null;
-
-    if (!mediaKeys) {
-      this.#disconnect();
-      return;
+    if (!mediaKeys || this.interface === mediaKeys) {
+      this.interface = null;
+      this.signalHandler = null;
     }
-
-    void Promise.resolve(mediaKeys.ReleaseMediaPlayerKeys(this.applicationName))
-      .catch(() => {})
-      .finally(() => this.#disconnect());
   }
 
-  #disconnect() {
-    if (this.interface && this.signalHandler) {
-      try { this.interface.off("MediaPlayerKeyPressed", this.signalHandler); } catch {}
-    }
-    this.interface = null;
-    this.signalHandler = null;
-    try { this.bus?.disconnect(); } catch {}
-    this.bus = null;
+  #disconnectConnection(bus, mediaKeys = null) {
+    this.#detach(mediaKeys || (this.bus === bus ? this.interface : null));
+    if (this.bus === bus) this.bus = null;
+    this.#disconnectBus(bus);
+  }
+
+  #disconnectBus(bus) {
+    try { bus?.disconnect(); } catch {}
   }
 }
 

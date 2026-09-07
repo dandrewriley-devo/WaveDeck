@@ -2,6 +2,8 @@ const fs = require("fs");
 const path = require("path");
 
 const PORTABLE_USER_FILES = [
+  "library.json",
+  "preferences.json",
   "stations.json",
   "groups.json",
   "subgroups.json",

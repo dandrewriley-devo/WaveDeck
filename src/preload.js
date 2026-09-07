@@ -42,8 +42,8 @@ contextBridge.exposeInMainWorld("wavedeck", {
   installLauncher: () => ipcRenderer.invoke("launcher:install"),
   removeLauncher: () => ipcRenderer.invoke("launcher:remove"),
 
-  exportStations: () => ipcRenderer.invoke("stations:export"),
-  importStationsReplace: () => ipcRenderer.invoke("stations:import-replace"),
+  exportLibrary: () => ipcRenderer.invoke("library:export"),
+  importLibrary: (mode) => ipcRenderer.invoke("library:import", mode),
   testStreamUrl: (url) => ipcRenderer.invoke("stream:test", url),
 
   playStation: (stationId) => ipcRenderer.invoke("player:play-station", stationId),

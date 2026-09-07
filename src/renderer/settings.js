@@ -15,6 +15,7 @@ const stationGroupFilter = document.getElementById("stationGroupFilter");
 const newStationBtn = document.getElementById("newStationBtn");
 const stationsTbody = document.getElementById("stationsTbody");
 const stationEditor = document.getElementById("stationEditor");
+const stationEditorHome = document.getElementById("stationEditorHome");
 const stationFormTitle = document.getElementById("stationFormTitle");
 const stationForm = document.getElementById("stationForm");
 const stationName = document.getElementById("st_name");
@@ -32,8 +33,9 @@ const testUrlStatus = document.getElementById("testUrlStatus");
 const newGroupInput = document.getElementById("newGroupInput");
 const addGroupBtn = document.getElementById("addGroupBtn");
 const groupsList = document.getElementById("groupsList");
-const exportStationsBtn = document.getElementById("exportStationsBtn");
-const importStationsBtn = document.getElementById("importStationsBtn");
+const exportLibraryBtn = document.getElementById("exportLibraryBtn");
+const importLibraryAddBtn = document.getElementById("importLibraryAddBtn");
+const importLibraryReplaceBtn = document.getElementById("importLibraryReplaceBtn");
 const launcherState = document.getElementById("launcherState");
 const statusLauncher = document.getElementById("statusLauncher");
 const installLauncherBtn = document.getElementById("installLauncherBtn");
@@ -264,6 +266,10 @@ function appendEditorRow(afterRow = null) {
 
 function renderStationsTable() {
   stationsTbody.replaceChildren();
+  if (editorVisible && !editingId) {
+    stationEditorHome.append(stationEditor);
+    stationEditor.hidden = false;
+  }
   const filtered = getFilteredStations();
 
   if (!filtered.length) {
@@ -272,11 +278,8 @@ function renderStationsTable() {
     cell.colSpan = 6;
     row.append(cell);
     stationsTbody.append(row);
-    if (editorVisible && !editingId) appendEditorRow();
     return;
   }
-
-  if (editorVisible && !editingId) appendEditorRow();
 
   for (const station of filtered) {
     const row = element("tr");
@@ -375,6 +378,7 @@ function clearForm() {
   editingId = null;
   editorVisible = false;
   stationEditor.hidden = true;
+  stationEditorHome.append(stationEditor);
   stationFormTitle.textContent = "Add Station";
   stationName.value = "";
   stationUrl.value = "";
@@ -672,10 +676,10 @@ newGroupInput.addEventListener("keydown", (event) => {
   addGroupBtn.click();
 });
 
-exportStationsBtn.addEventListener("click", async () => {
+exportLibraryBtn.addEventListener("click", async () => {
   setStatus(statusImportExport);
   try {
-    const result = await window.wavedeck.exportStations();
+    const result = await window.wavedeck.exportLibrary();
     if (result?.canceled) return setStatus(statusImportExport, "Export canceled.");
     setStatus(statusImportExport, `Export complete (${result.count} stations).`);
   } catch (error) {
@@ -683,19 +687,29 @@ exportStationsBtn.addEventListener("click", async () => {
   }
 });
 
-importStationsBtn.addEventListener("click", async () => {
+async function importLibrary(mode) {
   setStatus(statusImportExport);
-  if (!confirm("Import will replace your current station library.\nA backup will be made.\n\nContinue?")) return;
+  if (mode === "replace" && !confirm(
+    "Replace your entire station library, groups, and subgroups?\n\n" +
+    "Your personal Favorites and Presets will be kept. A backup will be created.\n\n" +
+    "This cannot be undone from inside WaveDeck. Continue?"
+  )) return;
   try {
-    const result = await window.wavedeck.importStationsReplace();
+    const result = await window.wavedeck.importLibrary(mode);
     if (result?.canceled) return setStatus(statusImportExport, "Import canceled.");
     await reloadEverything();
     clearForm();
-    setStatus(statusImportExport, `Import complete (${result.count} stations).`);
+    const detail = mode === "replace"
+      ? `${result.stationCount} stations loaded`
+      : `${result.addedStations} stations, ${result.addedGroups} groups, and ${result.addedSubgroups} subgroups added`;
+    setStatus(statusImportExport, `Import complete (${detail}).`);
   } catch (error) {
     setStatus(statusImportExport, `Import failed: ${error.message}`, false);
   }
-});
+}
+
+importLibraryAddBtn.addEventListener("click", () => importLibrary("add"));
+importLibraryReplaceBtn.addEventListener("click", () => importLibrary("replace"));
 
 installLauncherBtn.addEventListener("click", async () => {
   installLauncherBtn.disabled = true;

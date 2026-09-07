@@ -25,6 +25,11 @@ html, body{
   justify-content:space-between;
   gap: 12px;
   margin-bottom: 12px;
+  padding-bottom: 4px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--bg);
 }
 
 h1{
@@ -221,7 +226,8 @@ select:focus{
 
 .table-wrap{
   border: 1px solid var(--border);
-  overflow: hidden;
+  max-height: min(62vh, calc(100vh - 245px));
+  overflow: auto;
   background: var(--panel);
 }
 
@@ -238,6 +244,9 @@ select:focus{
   color: var(--muted);
   font-weight: 600;
   background: #252525;
+  position: sticky;
+  top: 0;
+  z-index: 5;
 }
 
 .table tbody td{
@@ -278,6 +287,12 @@ select:focus{
 .station-editor{
   border-left: 3px solid #dca52c;
   padding: 14px;
+}
+
+#stationEditorHome:not(:empty){
+  background:#1d1d1d;
+  border:1px solid var(--border);
+  margin:0 0 12px;
 }
 
 .station-editor[hidden]{

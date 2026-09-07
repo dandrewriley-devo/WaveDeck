@@ -1,5 +1,5 @@
 WAVEDECK PORTABLE FOR LINUX MINT
-Version 0.2.5 (64-bit Intel/AMD)
+Version 0.4.0 (64-bit Intel/AMD)
 
 QUICK START
 
@@ -20,7 +20,7 @@ If you already use the stable WaveDeck.AppImage filename:
 
 1. Close WaveDeck.
 2. Replace the existing WaveDeck.AppImage with the new one from this ZIP.
-3. Leave the adjacent WaveDeck-Data folder untouched.
+3. Leave the adjacent Data folder untouched.
 
 Your Applications-menu and panel shortcuts will continue working because the
 AppImage's full path has not changed.
@@ -28,12 +28,12 @@ AppImage's full path has not changed.
 If you are updating directly from version 0.1.10 or an older version-numbered
 AppImage:
 
-1. Place WaveDeck.AppImage in the same folder as your existing WaveDeck-Data
-   folder. Do not delete or replace WaveDeck-Data.
+1. Place WaveDeck.AppImage in the same folder as your existing Data
+   folder. Do not delete or replace Data.
 2. Launch WaveDeck.AppImage directly.
 3. Open Settings, select Panel Shortcut, and click "Update WaveDeck
    Applications Menu Entry."
-4. Confirm your panel shortcut opens version 0.2.5. You may then delete the
+4. Confirm your panel shortcut opens version 0.4.0. You may then delete the
    older version-numbered AppImage.
 
 Starting with version 0.1.11, the executable is always named WaveDeck.AppImage.
@@ -82,7 +82,7 @@ SIDEBAR NOTEPAD
 The notepad button appears in the bottom bar while Sidebar Mode is active.
 Click it to open or collapse a plain-text notepad at the bottom of the sidebar.
 When open, it uses about 20 percent of the screen height and the station list
-shrinks to make room. Notes save automatically in WaveDeck-Data and remain
+shrinks to make room. Notes save automatically in Data and remain
 available after a restart. The notepad always starts collapsed.
 
 MEDIA KEYS
@@ -117,7 +117,7 @@ can appear in the ten-item Most Played section. Use the footer's clock-and-list
 button to show it and the star button to show or hide Presets. Each fresh launch
 starts with Presets visible and Most Played hidden. Settings shows each station's
 total and provides a Reset Listening History button. History is saved as
-listening-history.json in WaveDeck-Data.
+listening-history.json in Data.
 
 Version 0.2.1 attributes playback and listening time by each station's unique
 ID rather than its stream URL. Stations that share a stream URL therefore keep
@@ -168,13 +168,13 @@ SUBGROUPS
 Settings > Groups lets you add, rename, reorder, and delete optional subgroups
 inside any main group. Assign a station to one of its group's subgroups in the
 station editor. The player displays those stations under compact nested headers.
-Subgroups and their order are saved in subgroups.json in WaveDeck-Data.
+Subgroups and their order are saved with the stations in library.json in Data.
 
 CUSTOM PRESET ORDER
 
 Presets have a small drag handle at the left edge of each row. Drag that
 handle up or down to arrange the Presets section in any order. WaveDeck saves
-the order automatically in stations.json inside WaveDeck-Data.
+the order automatically in the separate preferences.json file inside Data.
 
 Previous and Next media keys follow this custom order and wrap at either end.
 New presets are added at the bottom. Regular station groups remain alphabetical.
@@ -195,14 +195,26 @@ portable data.
 
 PORTABLE DATA
 
-WaveDeck creates a folder named WaveDeck-Data beside the AppImage. Your
-station list, groups, subgroups, presets, favorites, listening history, notes, backups,
-and small runtime files stay there.
-Keep the AppImage and WaveDeck-Data folder together when moving WaveDeck.
+WaveDeck creates a folder named Data beside the AppImage. The shareable station
+library is stored in library.json, while personal Favorites and Presets live in
+preferences.json. Listening history, notes, backups, and platform-specific
+runtime files also stay under Data.
+Keep the AppImage and Data folder together when moving WaveDeck.
+
+You can place WaveDeck.AppImage and the portable Windows WaveDeck.exe beside the
+same Data folder on a USB stick. Both versions use the same stations, groups,
+Favorites, and Presets, while keeping Linux and Windows runtime files separate.
+
+LIBRARY IMPORT AND EXPORT
+
+Settings > Import / Export creates one shareable JSON file containing stations,
+groups, subgroups, their order, and station assignments. Personal Favorites and
+Presets are never included. Import can add only new listings or completely
+replace the library after confirmation; both modes preserve preferences.
 
 On first launch, WaveDeck looks for data from the previous WaveDeckSB release.
 If found beside the old AppImage or in the original extracted package folder,
-it copies the stations, groups, presets, and backups into WaveDeck-Data. The
+it copies the stations, groups, presets, and backups into Data. The
 old WaveDeckSB-Data folder is left untouched as a backup.
 
 PLAYBACK REQUIREMENT
@@ -220,4 +232,4 @@ NOTES
 - This build is for normal 64-bit Intel/AMD Linux Mint computers.
 - It does not install WaveDeck or require an installer.
 - On a thumb drive, the first launch can be a little slower than a local drive.
-- To remove it, delete the AppImage and its WaveDeck-Data folder.
+- To remove it, delete the AppImage and its Data folder.

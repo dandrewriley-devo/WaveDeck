@@ -10,3 +10,4 @@ WaveDeckSB-Data/
 *.log
 npm-debug.log*
 playback/win32/mpv.exe
+Data/

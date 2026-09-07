@@ -41,6 +41,8 @@
           <button id="newStationBtn" class="btn">Add Station</button>
         </div>
 
+        <div id="stationEditorHome"></div>
+
         <div class="listening-history-bar">
           <span>Listening time is counted after 30 seconds of continuous playback.</span>
           <button id="resetListeningBtn" class="btn danger" type="button">Reset Listening History</button>
@@ -146,23 +148,33 @@
         <div class="row">
           <div class="label">Import / Export</div>
           <div class="hint">
-            Import replaces <b>stations.json</b> (with a backup). Export writes your current stations to a file you choose.
+            A WaveDeck library file contains stations, groups, subgroups, ordering, and assignments.
+            Your personal Favorites and Presets are kept separately and are never imported or exported.
           </div>
         </div>
 
         <div class="io-box">
-          <button id="exportStationsBtn" class="btn">Export stations.json…</button>
+          <button id="exportLibraryBtn" class="btn">Export Library…</button>
           <div class="muted mt-6">
-            Exports your current stations list to a JSON file.
+            Creates one shareable JSON file containing the complete station library.
           </div>
         </div>
 
         <div class="divider"></div>
 
         <div class="io-box">
-          <button id="importStationsBtn" class="btn danger">Import stations.json… (Replace)</button>
+          <button id="importLibraryAddBtn" class="btn">Add New from Library…</button>
           <div class="muted mt-6">
-            Replace mode only. Before importing, the app will create a backup of your existing file.
+            Adds only new stations, groups, and subgroups. Existing listings are left untouched.
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="io-box">
+          <button id="importLibraryReplaceBtn" class="btn danger">Replace Library…</button>
+          <div class="muted mt-6">
+            Completely replaces the station library after confirmation. Favorites and Presets are preserved.
           </div>
         </div>
 
@@ -203,7 +215,7 @@
 
       <!-- ABOUT -->
       <section id="tab-about" class="panel hidden">
-        <p class="muted"><b>WaveDeck version <span id="aboutVersion">0.3.0</span></b><br>
+        <p class="muted"><b>WaveDeck version <span id="aboutVersion">0.4.0</span></b><br>
           Station library: <span id="aboutDataDir">Data</span></p>
         <p class="muted">WaveDeck is a lightweight, desktop-focused streaming controller designed for fast access to internet radio stations without clutter or distraction. It organizes stations into customizable groups, keeps a reorderable Presets section for quick access, lets you earmark Favorites independently, and provides subtle transport controls with real-time metadata display. On Linux Mint, optional Sidebar Mode reserves the right edge of the desktop so the player stays available beside maximized windows.</p>
         <p class="muted">Under the ample hood, the ghost of Wolfgang Amadeus Mozart manages streams with the unholy stability of Quincy Jones' broadcast console and the responsiveness of a studio-grade monitor rig. Its architecture is so efficient, it actually has negative overhead, adding extra processing power to your computer while maintaining flawless playback and gently massaging your shoulders as you listen. Advanced internal signal routing keeps everything smooth, balanced, and ready at a moment’s notice.</p>
