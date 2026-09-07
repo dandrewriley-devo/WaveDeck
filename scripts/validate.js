@@ -33,6 +33,7 @@ const {
   bitrateFromMetadata,
   bitrateFromTrackList,
   getIpcPath,
+  getMpvExecutable,
   normalizeBitrateKbps
 } = require("../src/main/player");
 const { MprisPlayerInterface, metadataForStation, stationTrackPath } = require("../src/main/mpris");
@@ -153,6 +154,11 @@ assert.strictEqual(resolvePortableState({
   isPackaged: false,
   appImagePath: undefined
 }), false);
+assert.strictEqual(resolvePortableState({
+  platform: "darwin",
+  isPackaged: true,
+  appImagePath: undefined
+}), true);
 
 assert.strictEqual(resolveDataDir({
   platform: "linux",
@@ -191,6 +197,14 @@ assert.strictEqual(resolveDataDir({
   homeDir: "C:\\Users\\tester"
 }), path.win32.normalize("C:\\WaveDeck\\Data"));
 
+assert.strictEqual(resolveDataDir({
+  platform: "darwin",
+  isPackaged: true,
+  execPath: "/Volumes/RADIO/WaveDeck Portable/WaveDeck.app/Contents/MacOS/WaveDeck",
+  projectRoot: "/source",
+  homeDir: "/Users/tester"
+}), path.normalize("/Volumes/RADIO/WaveDeck Portable/Data"));
+
 assert.strictEqual(resolveRuntimeDir({
   platform: "linux",
   appDataDir: "/home/tester/.config"
@@ -199,11 +213,33 @@ assert.strictEqual(resolveRuntimeDir({
   platform: "win32",
   appDataDir: "C:\\Users\\tester\\AppData\\Roaming"
 }), path.win32.normalize("C:\\Users\\tester\\AppData\\Roaming\\wavedeck-runtime\\win32"));
+assert.strictEqual(resolveRuntimeDir({
+  platform: "darwin",
+  appDataDir: "/Users/tester/Library/Application Support"
+}), path.normalize("/Users/tester/Library/Application Support/wavedeck-runtime/darwin"));
 assert.strictEqual(
   getIpcPath("linux", "/home/tester/.config/wavedeck-runtime/linux", 4242),
   path.normalize("/home/tester/.config/wavedeck-runtime/linux/mpv-4242.sock")
 );
 assert.strictEqual(getIpcPath("win32", "D:\\WaveDeck Portable\\Data", 4242), "\\\\.\\pipe\\wavedeck-4242");
+assert.strictEqual(
+  getIpcPath("darwin", "/Users/tester/Library/Application Support/wavedeck-runtime/darwin", 4242),
+  path.normalize("/Users/tester/Library/Application Support/wavedeck-runtime/darwin/mpv-4242.sock")
+);
+assert.strictEqual(getMpvExecutable({
+  platform: "darwin",
+  packaged: true,
+  architecture: "arm64",
+  resourcesPath: "/Applications/WaveDeck.app/Contents/Resources",
+  projectRoot: "/source"
+}), path.normalize("/Applications/WaveDeck.app/Contents/Resources/playback/darwin/arm64/mpv.app/Contents/MacOS/mpv"));
+assert.strictEqual(getMpvExecutable({
+  platform: "darwin",
+  packaged: true,
+  architecture: "x64",
+  resourcesPath: "/Applications/WaveDeck.app/Contents/Resources",
+  projectRoot: "/source"
+}), path.normalize("/Applications/WaveDeck.app/Contents/Resources/playback/darwin/x64/mpv.app/Contents/MacOS/mpv"));
 
 const testRoot = fs.mkdtempSync(path.join(os.tmpdir(), "wavedeck-validate-"));
 try {
@@ -838,6 +874,7 @@ assert.ok(!mainSource.includes("mainWindow.setResizable(false)"));
 assert.ok(mainSource.includes("new MediaController"));
 assert.ok(mainSource.includes('process.platform === "linux"'));
 assert.ok(mainSource.includes('process.platform === "win32"'));
+assert.ok(mainSource.includes('process.platform === "darwin"'));
 assert.ok(mainSource.includes('CinnamonMediaKeys: PlatformMediaKeys'));
 assert.ok(mainSource.includes('WindowsMediaKeys: PlatformMediaKeys'));
 assert.ok(mainSource.includes("new MprisService"));
@@ -946,6 +983,13 @@ assert.strictEqual(windowsBuild.extraResources[1].to, "licenses/mpv-GPL-2.0.txt"
 assert.ok(fs.existsSync(path.join(root, "licenses", "mpv-GPL-2.0.txt")));
 const windowsIcon = fs.readFileSync(path.join(root, "build", "icon.ico"));
 assert.deepStrictEqual([...windowsIcon.subarray(0, 4)], [0, 0, 1, 0]);
+
+const macosBuild = JSON.parse(fs.readFileSync(path.join(root, "electron-builder.macos.json"), "utf8"));
+assert.strictEqual(macosBuild.mac.target[0].target, "dir");
+assert.deepStrictEqual(macosBuild.mac.target[0].arch, ["universal"]);
+assert.strictEqual(macosBuild.mac.minimumSystemVersion, "14.0");
+assert.strictEqual(macosBuild.extraResources[0].to, "playback/darwin");
+assert.ok(fs.existsSync(path.join(root, "START-HERE-MACOS.txt")));
 
 for (const file of [
   "src/main/main.js",
@@ -1128,6 +1172,23 @@ async function validateMediaControls() {
   assert.strictEqual(windowsCallbacks.size, 0);
   assert.deepStrictEqual(windowsWarnings, []);
 
+  const macMediaKeys = new WindowsMediaKeys({
+    platform: "darwin",
+    globalShortcut: mockGlobalShortcut,
+    controller: {
+      togglePlayPause: () => {},
+      nextPreset: () => {},
+      previousPreset: () => {},
+      stop: () => {}
+    },
+    onWarning: (warning) => windowsWarnings.push(warning)
+  });
+  assert.strictEqual(await macMediaKeys.start(), true);
+  assert.deepStrictEqual([...windowsCallbacks.keys()], MEDIA_KEY_BINDINGS.map(([accelerator]) => accelerator));
+  macMediaKeys.close();
+  assert.strictEqual(windowsCallbacks.size, 0);
+  assert.deepStrictEqual(windowsWarnings, []);
+
   assert.strictEqual(stationTrackPath({ id: "alpha-one" }), "/com/a17press/wavedeck/station/alpha_one");
   const metadata = metadataForStation(controller.getCurrentStation());
   assert.strictEqual(metadata["xesam:title"].value, "Alpha");
@@ -1248,7 +1309,7 @@ async function validateMediaControls() {
 }
 
 validateMediaControls().then(() => {
-console.log("WaveDeck validation passed: v0.4.3 toggleable station search, reordered list stack, USB-safe Linux playback, shared portable data, and packaging verified.");
+console.log("WaveDeck validation passed: v0.4.3 universal macOS support, toggleable station search, USB-safe playback, shared portable data, and packaging verified.");
 }).catch((error) => {
   console.error(error);
   process.exitCode = 1;

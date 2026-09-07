@@ -2,7 +2,7 @@ const path = require("path");
 
 function resolvePortableState({ platform, isPackaged, appImagePath }) {
   if (!isPackaged) return false;
-  if (platform === "win32") return true;
+  if (platform === "win32" || platform === "darwin") return true;
   return platform === "linux" && Boolean(appImagePath);
 }
 
@@ -26,6 +26,11 @@ function resolveDataDir({
 
   if (platform === "linux" && isPackaged && appImagePath) {
     return pathApi.join(pathApi.dirname(pathApi.resolve(appImagePath)), "Data");
+  }
+
+  if (platform === "darwin" && isPackaged) {
+    const appBundleDir = pathApi.dirname(pathApi.dirname(pathApi.dirname(pathApi.resolve(execPath))));
+    return pathApi.join(pathApi.dirname(appBundleDir), "Data");
   }
 
   if (platform === "win32") return pathApi.join(projectRoot, "Data");

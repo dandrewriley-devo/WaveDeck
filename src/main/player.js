@@ -10,12 +10,18 @@ function getIpcPath(platform, runtimeDir, processId = process.pid) {
   return path.join(runtimeDir, `mpv-${processId}.sock`);
 }
 
-function getMpvExecutable({ platform, packaged, resourcesPath, projectRoot }) {
+function getMpvExecutable({ platform, packaged, resourcesPath, projectRoot, architecture = process.arch }) {
   if (process.env.WAVEDECK_MPV_PATH) return process.env.WAVEDECK_MPV_PATH;
   if (platform === "win32") {
     return packaged
       ? path.join(resourcesPath, "playback", "mpv.exe")
       : path.join(projectRoot, "playback", "win32", "mpv.exe");
+  }
+  if (platform === "darwin") {
+    const bundledArchitecture = architecture === "arm64" ? "arm64" : "x64";
+    return packaged
+      ? path.join(resourcesPath, "playback", "darwin", bundledArchitecture, "mpv.app", "Contents", "MacOS", "mpv")
+      : "mpv";
   }
   return "mpv";
 }
@@ -110,7 +116,8 @@ class MpvPlayer {
       try {
         if (fs.existsSync(this.ipcPath)) fs.unlinkSync(this.ipcPath);
       } catch {}
-    } else if (!fs.existsSync(this.executable)) {
+    }
+    if ((this.platform === "win32" || this.platform === "darwin") && !fs.existsSync(this.executable)) {
       return this.#failStart(`The bundled playback engine is missing: ${this.executable}`);
     }
 

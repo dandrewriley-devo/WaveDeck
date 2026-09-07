@@ -15,12 +15,12 @@ class WindowsMediaKeys {
   }
 
   async start() {
-    if (this.platform !== "win32" || !this.globalShortcut) return false;
+    if (!["win32", "darwin"].includes(this.platform) || !this.globalShortcut) return false;
     return this.claim();
   }
 
   async claim() {
-    if (this.platform !== "win32" || !this.globalShortcut) return false;
+    if (!["win32", "darwin"].includes(this.platform) || !this.globalShortcut) return false;
 
     for (const [accelerator, action] of MEDIA_KEY_BINDINGS) {
       if (this.globalShortcut.isRegistered(accelerator)) {
@@ -32,11 +32,11 @@ class WindowsMediaKeys {
       try {
         registered = this.globalShortcut.register(accelerator, () => {
           void Promise.resolve(this.controller?.[action]?.()).catch((error) => {
-            this.onWarning(`Windows media key ${accelerator} failed: ${error.message}`);
+            this.onWarning(`Media key ${accelerator} failed: ${error.message}`);
           });
         });
       } catch (error) {
-        this.onWarning(`Windows could not register ${accelerator}: ${error.message}`);
+        this.onWarning(`${this.platform === "darwin" ? "macOS" : "Windows"} could not register ${accelerator}: ${error.message}`);
       }
 
       if (registered) this.registered.add(accelerator);
