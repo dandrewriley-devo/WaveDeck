@@ -881,7 +881,7 @@ assert.ok(rendererSource.includes("savePresetOrder"));
 assert.ok(rendererSource.includes('handle.draggable = true'));
 assert.ok(rendererSource.includes("normalizePresetOrder"));
 assert.ok(rendererSource.includes('createSectionTitle("Presets"'));
-assert.ok(rendererSource.includes("const groups = buildGroupsInOrder(stations, groupOrder)"));
+assert.ok(rendererSource.includes("const groups = buildGroupsInOrder(filteredStations, groupOrder)"));
 assert.ok(rendererSource.includes('id: "toggleAllGroupsBtn"'));
 assert.ok(rendererSource.includes("renderedGroupNames.forEach"));
 assert.ok(rendererSource.includes('"Most Played",\n      mostListened.length'));
