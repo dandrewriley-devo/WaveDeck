@@ -39,6 +39,7 @@
     "icon": "build/icon-macos.png",
     "category": "public.app-category.music",
     "minimumSystemVersion": "14.0",
+    "x64ArchFiles": "Contents/Resources/playback/darwin/**",
     "identity": null
   }
 }

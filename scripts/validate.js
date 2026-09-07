@@ -988,6 +988,7 @@ const macosBuild = JSON.parse(fs.readFileSync(path.join(root, "electron-builder.
 assert.strictEqual(macosBuild.mac.target[0].target, "dir");
 assert.deepStrictEqual(macosBuild.mac.target[0].arch, ["universal"]);
 assert.strictEqual(macosBuild.mac.minimumSystemVersion, "14.0");
+assert.strictEqual(macosBuild.mac.x64ArchFiles, "Contents/Resources/playback/darwin/**");
 assert.strictEqual(macosBuild.extraResources[0].to, "playback/darwin");
 assert.ok(fs.existsSync(path.join(root, "START-HERE-MACOS.txt")));
 const macosIcon = fs.readFileSync(path.join(root, "build", "icon-macos.png"));
