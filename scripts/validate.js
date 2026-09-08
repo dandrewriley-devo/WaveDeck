@@ -32,7 +32,8 @@ const {
   LIBRARY_UPDATE_URL,
   cacheBustedUrl,
   createLibraryUpdater,
-  downloadLibrary
+  downloadLibrary,
+  nodeHttpsFetch
 } = require("../src/main/library-updater");
 const {
   MpvPlayer,
@@ -114,7 +115,7 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.5.0");
+assert.strictEqual(packageJson.version, "0.5.1");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -1127,6 +1128,26 @@ async function validateMediaControls() {
   assert.strictEqual(requestedLibraryOptions.headers["cache-control"], "no-cache");
   assert.strictEqual(downloadedLibrary.updatedAt, "2026-09-08T16:00:00.000Z");
 
+  let fallbackAttempts = 0;
+  const fallbackLibrary = await downloadLibrary({
+    now: () => 6789,
+    fetchImpl: async () => { throw new Error("Electron network failure"); },
+    fallbackFetchImpl: async (url, options) => {
+      fallbackAttempts += 1;
+      assert.strictEqual(url, `${LIBRARY_UPDATE_URL}?wavedeck=6789`);
+      assert.strictEqual(options.headers.accept, "application/json");
+      return {
+        ok: true,
+        status: 200,
+        headers: { get: () => null },
+        text: async () => JSON.stringify({ updatedAt: "2026-09-08T16:00:30.000Z" })
+      };
+    }
+  });
+  assert.strictEqual(fallbackAttempts, 1);
+  assert.strictEqual(fallbackLibrary.updatedAt, "2026-09-08T16:00:30.000Z");
+  assert.strictEqual(typeof nodeHttpsFetch, "function");
+
   let appliedUpdate = null;
   const updater = createLibraryUpdater({
     storage: {
@@ -1435,7 +1456,7 @@ async function validateMediaControls() {
 }
 
 validateMediaControls().then(() => {
-console.log("WaveDeck validation passed: v0.5.0 silent station-library updates, portable exports, USB-safe playback, and packaging verified.");
+console.log("WaveDeck validation passed: v0.5.1 resilient station-library updates, portable exports, USB-safe playback, and packaging verified.");
 }).catch((error) => {
   console.error(error);
   process.exitCode = 1;

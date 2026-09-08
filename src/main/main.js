@@ -7,7 +7,7 @@ const path = require("path");
 const { MpvPlayer, getIpcPath, getMpvExecutable } = require("./player");
 const { MediaController } = require("./media-controller");
 const { ListeningHistory } = require("./listening-history");
-const { createLibraryUpdater } = require("./library-updater");
+const { createLibraryUpdater, nodeHttpsFetch } = require("./library-updater");
 const { copyLegacyData } = require("./data-migration");
 const {
   getLauncherStatus,
@@ -621,6 +621,7 @@ if (!hasSingleInstanceLock) {
     libraryUpdater = createLibraryUpdater({
       storage,
       fetchImpl: (...args) => net.fetch(...args),
+      fallbackFetchImpl: nodeHttpsFetch,
       isPaused: () => Boolean(settingsWindow && !settingsWindow.isDestroyed()),
       onApplied: (result) => {
         if (result.addedStations || result.updatedStations) sendToMain("stations:changed");

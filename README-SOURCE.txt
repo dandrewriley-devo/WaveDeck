@@ -1,5 +1,5 @@
 WaveDeck portable Windows and Linux source package
-Version 0.5.0
+Version 0.5.1
 
 WaveDeck is a portable Linux Mint internet-radio player. The sidebar toggle asks
 Cinnamon to identify the Meta.Window's current monitor, read its work area,
@@ -177,6 +177,11 @@ stations, restores a station the user explicitly deleted, or alters personal
 Favorites and Presets. Export Library now creates WaveDeck_Library.json with the
 required UTC update timestamp automatically, making the same export suitable
 for sharing or publishing as the master file.
+
+Version 0.5.1 adds an independent HTTPS fallback for the master-library check.
+This fixes Linux systems where Electron's network service cannot retrieve the
+update even though the same URL is reachable normally. The check remains silent
+when both network methods fail.
 
 Build requirements:
 - 64-bit Windows or Linux
