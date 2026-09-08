@@ -1,5 +1,5 @@
-WaveDeck portable Linux, Windows, and macOS source package
-Version 0.4.3
+WaveDeck portable Windows and Linux source package
+Version 0.5.0
 
 WaveDeck is a portable Linux Mint internet-radio player. The sidebar toggle asks
 Cinnamon to identify the Meta.Window's current monitor, read its work area,
@@ -168,15 +168,18 @@ subgroups, countries, descriptions, and stream URLs. Matching station groups
 open automatically without changing the user's normal collapsed-group layout.
 The visible list order is now Search, Presets, Most Played, then Stations.
 
-The version 0.4.3 macOS port adds an ad-hoc-signed universal application for
-Intel and Apple Silicon Macs running macOS 14 or newer. It bundles separate
-architecture-matched mpv engines, uses the shared Data folder beside
-WaveDeck.app, and stores temporary runtime files locally on the Mac. The normal
-player and Settings features are shared with the other platforms; Sidebar Mode
-and its notepad remain intentionally Linux-only.
+Version 0.5.0 adds optional, silent master-library updates from
+https://fabulon.cloud/downloads/library_update.json. The startup check is on by
+default and can be disabled with Download new stations on the Settings Stations
+tab. A newer timestamp adds stations, groups, and subgroups and can correct an
+existing station's URL, country, and description. It never removes local
+stations, restores a station the user explicitly deleted, or alters personal
+Favorites and Presets. Export Library now creates WaveDeck_Library.json with the
+required UTC update timestamp automatically, making the same export suitable
+for sharing or publishing as the master file.
 
 Build requirements:
-- 64-bit Windows or Linux, or macOS 14+ on Intel or Apple Silicon
+- 64-bit Windows or Linux
 - Node.js and npm
 
 Build command:
@@ -193,19 +196,10 @@ Before building Windows, place the pinned generic 64-bit mpv.exe described in
 playback/win32/README.txt at playback/win32/mpv.exe. The portable executable is
 written to dist/windows/WaveDeck.exe.
 
-macOS build command:
-  npm install
-  npm run dist:macos
-
-Before building macOS, place the pinned standalone Intel and Apple Silicon mpv
-application bundles under playback/darwin/x64 and playback/darwin/arm64. The
-universal application is written to dist/macos/mac-universal/WaveDeck.app.
-
-The Linux AppImage, Windows portable executable, and macOS application use a
-Data folder beside the executable or app bundle. They can share that folder;
-temporary platform runtime state is stored in the computer's local
-application-data directory. When run from source, Linux and macOS use
-~/.config/wavedeck for WaveDeck's data instead.
+The Linux AppImage and Windows portable executable both use a Data folder beside
+the executable. They can share that folder; temporary platform runtime state is
+stored in the computer's local application-data directory. When run from source,
+Linux uses ~/.config/wavedeck for WaveDeck's data instead.
 
 Playback uses the mpv executable available on the Linux system. Sidebar Mode is
 intended for Linux Mint Cinnamon on X11 and uses the pure-JavaScript x11 package.
@@ -215,7 +209,3 @@ interface through dbus-next.
 The Windows portable executable stores its data in Data beside WaveDeck.exe.
 It uses the bundled mpv.exe and Electron global shortcuts for Windows media
 keys. Sidebar Mode remains Linux-only.
-
-The macOS universal application stores its data in Data beside WaveDeck.app.
-It selects its bundled Intel or Apple Silicon mpv engine at runtime and uses
-Electron global shortcuts for macOS media keys. Sidebar Mode remains Linux-only.

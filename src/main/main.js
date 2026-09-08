@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog, globalShortcut, ipcMain, Menu, screen } = require("electron");
+const { app, BrowserWindow, dialog, globalShortcut, ipcMain, Menu, net, screen } = require("electron");
 const { execFile } = require("child_process");
 const fs = require("fs");
 const os = require("os");
@@ -7,6 +7,7 @@ const path = require("path");
 const { MpvPlayer, getIpcPath, getMpvExecutable } = require("./player");
 const { MediaController } = require("./media-controller");
 const { ListeningHistory } = require("./listening-history");
+const { createLibraryUpdater } = require("./library-updater");
 const { copyLegacyData } = require("./data-migration");
 const {
   getLauncherStatus,
@@ -38,8 +39,6 @@ if (process.platform === "linux") {
   ({ CinnamonMediaKeys: PlatformMediaKeys } = require("./cinnamon-media-keys"));
 } else if (process.platform === "win32") {
   ({ WindowsMediaKeys: PlatformMediaKeys } = require("./windows-media-keys"));
-} else if (process.platform === "darwin") {
-  ({ WindowsMediaKeys: PlatformMediaKeys } = require("./windows-media-keys"));
 }
 
 const FIXED_WIDTH = SIDEBAR_WIDTH;
@@ -62,6 +61,8 @@ let playbackHeartbeat = null;
 let mediaKeyReclaimTimer = null;
 let mediaKeyReclaimEnabled = false;
 let mediaKeyReclaimPaused = false;
+let libraryUpdater = null;
+let libraryUpdateTimer = null;
 let sidebarApplied = false;
 let sidebarTransitioning = false;
 let floatingBounds = null;
@@ -190,6 +191,16 @@ function startPlaybackHeartbeat() {
   playbackHeartbeat.unref?.();
 }
 
+function scheduleLibraryUpdateCheck(delayMs = 1_500) {
+  if (!libraryUpdater) return;
+  if (libraryUpdateTimer) clearTimeout(libraryUpdateTimer);
+  libraryUpdateTimer = setTimeout(() => {
+    libraryUpdateTimer = null;
+    void libraryUpdater.check();
+  }, delayMs);
+  libraryUpdateTimer.unref?.();
+}
+
 function createSecureWindow(options, { showOnReady = true } = {}) {
   const window = new BrowserWindow({
     ...options,
@@ -288,6 +299,7 @@ function openSettingsWindow(stationId = "") {
 
   settingsWindow.on("closed", () => {
     settingsWindow = null;
+    scheduleLibraryUpdateCheck(0);
   });
 
   if (requestedStationId) {
@@ -410,6 +422,14 @@ function installIpcHandlers() {
     mprisService?.update();
     return saved;
   });
+  ipcMain.handle("stations:delete", (_event, stationId) => {
+    const result = storage.deleteStation(stationId);
+    if (result.ok) {
+      sendToAll("stations:changed");
+      mprisService?.update();
+    }
+    return result;
+  });
 
   ipcMain.handle("groups:get", () => storage.readGroups());
   ipcMain.handle("groups:save", (_event, groups) => {
@@ -455,7 +475,7 @@ function installIpcHandlers() {
     const library = storage.exportLibrary();
     const result = await dialog.showSaveDialog(settingsWindow || mainWindow, {
       title: "Export WaveDeck library",
-      defaultPath: path.join(app.getPath("documents"), "wavedeck-library.json"),
+      defaultPath: path.join(app.getPath("documents"), "WaveDeck_Library.json"),
       filters: [{ name: "JSON files", extensions: ["json"] }]
     });
 
@@ -488,6 +508,13 @@ function installIpcHandlers() {
     sendToAll("subgroups:changed");
     mprisService?.update();
     return { canceled: false, filePath: importPath, ...imported };
+  });
+
+  ipcMain.handle("library-update:get-state", () => storage.getLibraryUpdateState());
+  ipcMain.handle("library-update:set-enabled", (_event, enabled) => {
+    const state = storage.setLibraryUpdatesEnabled(enabled);
+    if (state.enabled) scheduleLibraryUpdateCheck(0);
+    return state;
   });
 
   ipcMain.handle("stream:test", (_event, url) => probeStream(url));
@@ -591,6 +618,18 @@ if (!hasSingleInstanceLock) {
       startupWarnings.push(`WaveDeck's Data folder is not writable. Changes may not be saved. ${error.message}`);
     }
 
+    libraryUpdater = createLibraryUpdater({
+      storage,
+      fetchImpl: (...args) => net.fetch(...args),
+      isPaused: () => Boolean(settingsWindow && !settingsWindow.isDestroyed()),
+      onApplied: (result) => {
+        if (result.addedStations || result.updatedStations) sendToMain("stations:changed");
+        if (result.addedGroups) sendToMain("groups:changed");
+        if (result.addedSubgroups) sendToMain("subgroups:changed");
+        if (result.addedStations || result.updatedStations) mprisService?.update();
+      }
+    });
+
     const ipcPath = getIpcPath(process.platform, app.getPath("userData"));
     const executable = getMpvExecutable({
       platform: process.platform,
@@ -645,6 +684,7 @@ if (!hasSingleInstanceLock) {
 
     installIpcHandlers();
     createMainWindow();
+    scheduleLibraryUpdateCheck();
 
     mainWindow.webContents.once("did-finish-load", () => {
       for (const warning of startupWarnings) sendToMain("app:warning", warning);
@@ -665,6 +705,8 @@ if (!hasSingleInstanceLock) {
 }
 
 app.on("before-quit", () => {
+  if (libraryUpdateTimer) clearTimeout(libraryUpdateTimer);
+  libraryUpdateTimer = null;
   if (playbackHeartbeat) clearInterval(playbackHeartbeat);
   playbackHeartbeat = null;
   if (mediaKeyReclaimTimer) clearInterval(mediaKeyReclaimTimer);

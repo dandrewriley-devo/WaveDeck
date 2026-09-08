@@ -11,6 +11,7 @@ contextBridge.exposeInMainWorld("wavedeck", {
   platform: process.platform,
   getStations: () => ipcRenderer.invoke("stations:get"),
   saveStations: (stations) => ipcRenderer.invoke("stations:save", stations),
+  deleteStation: (stationId) => ipcRenderer.invoke("stations:delete", stationId),
   onStationsChanged: (callback) => subscribe("stations:changed", callback),
   editStation: (stationId) => ipcRenderer.invoke("settings:open", stationId),
   onEditStationRequested: (callback) => subscribe("settings:edit-station", callback),
@@ -44,6 +45,8 @@ contextBridge.exposeInMainWorld("wavedeck", {
 
   exportLibrary: () => ipcRenderer.invoke("library:export"),
   importLibrary: (mode) => ipcRenderer.invoke("library:import", mode),
+  getLibraryUpdateState: () => ipcRenderer.invoke("library-update:get-state"),
+  setLibraryUpdatesEnabled: (enabled) => ipcRenderer.invoke("library-update:set-enabled", enabled),
   testStreamUrl: (url) => ipcRenderer.invoke("stream:test", url),
 
   playStation: (stationId) => ipcRenderer.invoke("player:play-station", stationId),

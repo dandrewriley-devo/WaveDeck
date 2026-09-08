@@ -211,11 +211,31 @@ function validatePreferences(value) {
       };
     }
   }
-  return { version: 1, stations };
+  const rawDeletedIds = value && typeof value === "object" && !Array.isArray(value)
+    ? value.deletedOfficialStationIds
+    : null;
+  const deletedOfficialStationIds = [];
+  const seenDeletedIds = new Set();
+  for (const rawId of Array.isArray(rawDeletedIds) ? rawDeletedIds : []) {
+    const id = String(rawId ?? "").trim();
+    if (!id || seenDeletedIds.has(id)) continue;
+    seenDeletedIds.add(id);
+    deletedOfficialStationIds.push(id);
+  }
+  const parsedUpdatedAt = Date.parse(String(value?.lastLibraryUpdate ?? ""));
+  return {
+    version: 1,
+    stations,
+    downloadNewStations: typeof value?.downloadNewStations === "boolean"
+      ? value.downloadNewStations
+      : true,
+    lastLibraryUpdate: Number.isFinite(parsedUpdatedAt) ? new Date(parsedUpdatedAt).toISOString() : "",
+    deletedOfficialStationIds
+  };
 }
 
 function preferencesFromStations(stations) {
-  const preferences = { version: 1, stations: {} };
+  const preferences = validatePreferences(null);
   for (const station of stations) {
     if (!station.favorite && !station.preset) continue;
     preferences.stations[station.id] = {
@@ -229,7 +249,7 @@ function preferencesFromStations(stations) {
 
 function starterPreferences(stations) {
   const byName = new Map(stations.map((station) => [lowerKey(station.name), station]));
-  const preferences = { version: 1, stations: {} };
+  const preferences = validatePreferences(null);
   STARTER_PRESET_NAMES.forEach((name, presetOrder) => {
     const station = byName.get(lowerKey(name));
     if (!station) return;
@@ -347,7 +367,137 @@ class PortableStorage {
     return history;
   }
 
-  exportLibrary() { return this.readLibrary(); }
+  exportLibrary(now = new Date()) {
+    const updatedAt = now instanceof Date ? now.toISOString() : String(now ?? "");
+    const parsedUpdatedAt = Date.parse(updatedAt);
+    if (!Number.isFinite(parsedUpdatedAt)) throw new Error("The library export timestamp is invalid.");
+    return {
+      ...this.readLibrary(),
+      updatedAt: new Date(parsedUpdatedAt).toISOString()
+    };
+  }
+
+  getLibraryUpdateState() {
+    const preferences = this.readPreferences();
+    return {
+      enabled: preferences.downloadNewStations,
+      lastLibraryUpdate: preferences.lastLibraryUpdate
+    };
+  }
+
+  setLibraryUpdatesEnabled(enabled) {
+    const preferences = this.readPreferences();
+    preferences.downloadNewStations = Boolean(enabled);
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getLibraryUpdateState();
+  }
+
+  deleteStation(stationId) {
+    const id = String(stationId ?? "").trim();
+    if (!id) return { ok: false, reason: "Select a station to delete." };
+    const library = this.readLibrary();
+    const station = library.stations.find((item) => item.id === id);
+    if (!station) return { ok: false, reason: "That station no longer exists." };
+
+    library.stations = library.stations.filter((item) => item.id !== id);
+    const preferences = this.readPreferences();
+    delete preferences.stations[id];
+    if (!preferences.deletedOfficialStationIds.includes(id)) {
+      preferences.deletedOfficialStationIds.push(id);
+    }
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    this.#atomicWrite(LIBRARY_FILE, validateLibrary(library));
+    return { ok: true, station };
+  }
+
+  applyLibraryUpdate(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      throw new Error("The downloaded library must be a JSON object.");
+    }
+    const parsedUpdatedAt = Date.parse(String(value.updatedAt ?? ""));
+    if (!Number.isFinite(parsedUpdatedAt)) {
+      throw new Error("The downloaded library does not have a valid updatedAt timestamp.");
+    }
+    if (!Array.isArray(value.stations) || value.stations.some((station) => (
+      !station || typeof station !== "object" || !String(station.id ?? "").trim()
+    ))) {
+      throw new Error("Every downloaded station must have a permanent station ID.");
+    }
+    const updatedAt = new Date(parsedUpdatedAt).toISOString();
+    const incoming = validateLibrary(value);
+    const preferences = this.readPreferences();
+    const previousUpdateTime = Date.parse(preferences.lastLibraryUpdate);
+    if (Number.isFinite(previousUpdateTime) && parsedUpdatedAt <= previousUpdateTime) {
+      return { applied: false, addedStations: 0, updatedStations: 0, addedGroups: 0, addedSubgroups: 0 };
+    }
+
+    const current = this.readLibrary();
+    const stationsById = new Map(current.stations.map((station) => [station.id, station]));
+    const deletedIds = new Set(preferences.deletedOfficialStationIds);
+    let addedStations = 0;
+    let updatedStations = 0;
+    for (const incomingStation of incoming.stations) {
+      const existing = stationsById.get(incomingStation.id);
+      if (existing) {
+        const nextUrl = incomingStation.url;
+        const nextCountry = incomingStation.country;
+        const nextDescription = incomingStation.description;
+        if (
+          existing.url !== nextUrl ||
+          existing.country !== nextCountry ||
+          existing.description !== nextDescription
+        ) {
+          existing.url = nextUrl;
+          existing.country = nextCountry;
+          existing.description = nextDescription;
+          updatedStations += 1;
+        }
+        continue;
+      }
+      if (deletedIds.has(incomingStation.id)) continue;
+      const addition = { ...incomingStation };
+      current.stations.push(addition);
+      stationsById.set(addition.id, addition);
+      addedStations += 1;
+    }
+
+    let addedGroups = 0;
+    for (const group of incoming.groups) {
+      if (
+        lowerKey(group) === "other" ||
+        current.groups.some((existing) => lowerKey(existing) === lowerKey(group))
+      ) continue;
+      current.groups.splice(Math.max(0, current.groups.length - 1), 0, group);
+      addedGroups += 1;
+    }
+
+    const subgroupEntries = current.subgroups.groups.map((entry) => ({
+      group: entry.group,
+      subgroups: [...entry.subgroups]
+    }));
+    let addedSubgroups = 0;
+    for (const incomingEntry of incoming.subgroups.groups) {
+      let entry = subgroupEntries.find((item) => lowerKey(item.group) === lowerKey(incomingEntry.group));
+      if (!entry) {
+        entry = { group: incomingEntry.group, subgroups: [] };
+        subgroupEntries.push(entry);
+      }
+      for (const subgroup of incomingEntry.subgroups) {
+        if (entry.subgroups.some((existing) => lowerKey(existing) === lowerKey(subgroup))) continue;
+        entry.subgroups.push(subgroup);
+        addedSubgroups += 1;
+      }
+    }
+    current.subgroups = { version: 1, groups: subgroupEntries };
+
+    const merged = validateLibrary(current);
+    if (addedStations || updatedStations || addedGroups || addedSubgroups) {
+      this.#atomicWrite(LIBRARY_FILE, merged);
+    }
+    preferences.lastLibraryUpdate = updatedAt;
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return { applied: true, addedStations, updatedStations, addedGroups, addedSubgroups };
+  }
 
   importLibrary(value, { mode = "add" } = {}) {
     const incoming = validateLibrary(value);

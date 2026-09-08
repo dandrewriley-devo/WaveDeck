@@ -1,5 +1,5 @@
 WAVEDECK PORTABLE FOR WINDOWS
-Version 0.4.3 (64-bit Intel/AMD)
+Version 0.5.0 (64-bit Intel/AMD)
 
 QUICK START
 
@@ -49,10 +49,21 @@ WaveDeck from registering it.
 
 LIBRARY IMPORT AND EXPORT
 
-Export Library creates one JSON file containing stations, groups, subgroups,
-their order, and station assignments. It never includes Favorites or Presets.
+Export Library creates WaveDeck_Library.json containing stations, groups,
+subgroups, their order, station assignments, and an automatic update timestamp.
+It never includes Favorites or Presets.
 Import can add only new listings or replace the entire library after a strong
 confirmation; either choice preserves the user's personal preferences.
+
+AUTOMATIC STATION UPDATES
+
+WaveDeck quietly checks for a newer master station library when it starts. The
+check can add stations, groups, and subgroups and correct existing stream URLs,
+countries, and descriptions. It never deletes a local station, restores a
+station you deleted, or changes Favorites and Presets. If the update site is
+unavailable or its file is invalid, WaveDeck continues using the local library
+without displaying an error. Use Download new stations on the Settings Stations
+tab to disable or re-enable the check; WaveDeck remembers the choice.
 
 SEARCH, PRESETS, AND MOST PLAYED
 

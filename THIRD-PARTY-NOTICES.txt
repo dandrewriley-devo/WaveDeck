@@ -7,15 +7,11 @@ The WaveDeck Windows package bundles mpv from the shinchiro Windows builds:
   https://github.com/shinchiro/mpv-winbuild-cmake/releases
   https://mpv.io/
 
-The WaveDeck macOS package bundles the Intel and Apple Silicon mpv application
-bundles published by stolendata and linked from mpv's installation page:
-  https://laboratory.stolendata.net/~djinn/mpv_osx/
-  https://mpv.io/installation/
-
-mpv is free software. The bundled builds are distributed under GNU GPL version
-2 or later. A copy of GPL version 2 is included as
-licenses/mpv-GPL-2.0.txt. Corresponding mpv source, the Windows cross-build
-scripts, dependency recipes, and their revision history are available from:
+mpv is free software. The bundled build is distributed under GNU GPL version 2
+or later. A copy of
+GPL version 2 is included as licenses/mpv-GPL-2.0.txt. Corresponding mpv source,
+the Windows cross-build scripts, dependency recipes, and their revision history
+are available from:
   https://github.com/mpv-player/mpv
   https://github.com/shinchiro/mpv-winbuild-cmake
 

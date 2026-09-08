@@ -1,5 +1,5 @@
 WAVEDECK PORTABLE FOR LINUX AND WINDOWS
-Version 0.4.3 (64-bit Intel/AMD)
+Version 0.5.0 (64-bit Intel/AMD)
 
 QUICK START
 
@@ -43,7 +43,7 @@ AppImage:
 2. Launch WaveDeck.AppImage directly.
 3. Open Settings, select Panel Shortcut, and click "Update WaveDeck
    Applications Menu Entry."
-4. Confirm your panel shortcut opens version 0.4.3. You may then delete the
+4. Confirm your panel shortcut opens version 0.5.0. You may then delete the
    older version-numbered AppImage.
 
 Starting with version 0.1.11, the executable is always named WaveDeck.AppImage.
@@ -164,6 +164,19 @@ starts hidden and appears at the top of the list stack when opened. It matches
 station names, groups, subgroups, countries, descriptions, and stream URLs.
 Matching groups open automatically; clearing or hiding Search restores the
 normal collapsed or expanded group layout.
+
+AUTOMATIC STATION UPDATES
+
+WaveDeck quietly checks for a newer master station library when it starts. The
+check can add stations, groups, and subgroups and correct existing stream URLs,
+countries, and descriptions. It never deletes a local station, restores a
+station you deleted, or changes Favorites and Presets. If the update site is
+unavailable or its file is invalid, WaveDeck simply continues using your local
+library without displaying an error.
+
+Open Settings > Stations and turn off Download new stations if you do not want
+the startup check. WaveDeck remembers that choice. Export Library creates
+WaveDeck_Library.json with the update timestamp filled in automatically.
 
 PRESETS, FAVORITES, AND PRE-ROLL MARKERS
 

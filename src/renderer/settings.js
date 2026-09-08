@@ -13,6 +13,7 @@ const statusImportExport = document.getElementById("statusImportExport");
 const stationSearch = document.getElementById("stationSearch");
 const stationGroupFilter = document.getElementById("stationGroupFilter");
 const newStationBtn = document.getElementById("newStationBtn");
+const downloadNewStations = document.getElementById("downloadNewStations");
 const stationsTbody = document.getElementById("stationsTbody");
 const stationEditor = document.getElementById("stationEditor");
 const stationEditorHome = document.getElementById("stationEditorHome");
@@ -157,6 +158,15 @@ async function loadLauncherStatus() {
     installLauncherBtn.disabled = true;
     removeLauncherBtn.disabled = true;
     setStatus(statusLauncher, `Launcher check failed: ${error.message}`, false);
+  }
+}
+
+async function loadLibraryUpdateState() {
+  try {
+    const state = await window.wavedeck.getLibraryUpdateState();
+    downloadNewStations.checked = state?.enabled !== false;
+  } catch {
+    downloadNewStations.checked = true;
   }
 }
 
@@ -458,8 +468,10 @@ async function deleteStation(id) {
   const station = stations.find((item) => item.id === id);
   if (!station || !confirm(`Delete "${station.name}"?`)) return;
   try {
+    const result = await window.wavedeck.deleteStation(id);
+    if (!result?.ok) throw new Error(result?.reason || "Station could not be deleted.");
     stations = stations.filter((item) => item.id !== id);
-    await saveStations();
+    renderStationsTable();
     if (editingId === id) clearForm();
   } catch (error) {
     setStatus(statusStations, `Delete failed: ${error.message}`, false);
@@ -519,6 +531,19 @@ cancelEditBtn.addEventListener("click", clearForm);
 stationSearch.addEventListener("input", renderStationsTable);
 stationGroupFilter.addEventListener("change", renderStationsTable);
 stationGroup.addEventListener("change", () => rebuildSubgroupControl(""));
+downloadNewStations.addEventListener("change", async () => {
+  const requested = downloadNewStations.checked;
+  downloadNewStations.disabled = true;
+  try {
+    const state = await window.wavedeck.setLibraryUpdatesEnabled(requested);
+    downloadNewStations.checked = state?.enabled !== false;
+  } catch (error) {
+    downloadNewStations.checked = !requested;
+    setStatus(statusStations, `Could not save the download preference: ${error.message}`, false);
+  } finally {
+    downloadNewStations.disabled = false;
+  }
+});
 
 resetListeningBtn.addEventListener("click", async () => {
   if (!confirm("Reset all WaveDeck listening history?\n\nThis cannot be undone.")) return;
@@ -777,7 +802,8 @@ window.wavedeck.onWarning((warning) => setStatus(statusStations, warning, false)
   showTab(document.querySelector(".tab.active")?.dataset.tab || "stations");
   await Promise.all([
     reloadEverything(),
-    platform === "linux" ? loadLauncherStatus() : Promise.resolve()
+    platform === "linux" ? loadLauncherStatus() : Promise.resolve(),
+    loadLibraryUpdateState()
   ]);
   clearForm();
   initialized = true;

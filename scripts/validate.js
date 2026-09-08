@@ -29,11 +29,16 @@ const { cleanupCode, reservationCode, windowLookupCode } = require("../src/main/
 const { MediaController } = require("../src/main/media-controller");
 const { ListeningHistory } = require("../src/main/listening-history");
 const {
+  LIBRARY_UPDATE_URL,
+  cacheBustedUrl,
+  createLibraryUpdater,
+  downloadLibrary
+} = require("../src/main/library-updater");
+const {
   MpvPlayer,
   bitrateFromMetadata,
   bitrateFromTrackList,
   getIpcPath,
-  getMpvExecutable,
   normalizeBitrateKbps
 } = require("../src/main/player");
 const { MprisPlayerInterface, metadataForStation, stationTrackPath } = require("../src/main/mpris");
@@ -109,7 +114,7 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.4.3");
+assert.strictEqual(packageJson.version, "0.5.0");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -154,11 +159,6 @@ assert.strictEqual(resolvePortableState({
   isPackaged: false,
   appImagePath: undefined
 }), false);
-assert.strictEqual(resolvePortableState({
-  platform: "darwin",
-  isPackaged: true,
-  appImagePath: undefined
-}), true);
 
 assert.strictEqual(resolveDataDir({
   platform: "linux",
@@ -197,14 +197,6 @@ assert.strictEqual(resolveDataDir({
   homeDir: "C:\\Users\\tester"
 }), path.win32.normalize("C:\\WaveDeck\\Data"));
 
-assert.strictEqual(resolveDataDir({
-  platform: "darwin",
-  isPackaged: true,
-  execPath: "/Volumes/RADIO/WaveDeck Portable/WaveDeck.app/Contents/MacOS/WaveDeck",
-  projectRoot: "/source",
-  homeDir: "/Users/tester"
-}), path.normalize("/Volumes/RADIO/WaveDeck Portable/Data"));
-
 assert.strictEqual(resolveRuntimeDir({
   platform: "linux",
   appDataDir: "/home/tester/.config"
@@ -213,33 +205,11 @@ assert.strictEqual(resolveRuntimeDir({
   platform: "win32",
   appDataDir: "C:\\Users\\tester\\AppData\\Roaming"
 }), path.win32.normalize("C:\\Users\\tester\\AppData\\Roaming\\wavedeck-runtime\\win32"));
-assert.strictEqual(resolveRuntimeDir({
-  platform: "darwin",
-  appDataDir: "/Users/tester/Library/Application Support"
-}), path.normalize("/Users/tester/Library/Application Support/wavedeck-runtime/darwin"));
 assert.strictEqual(
   getIpcPath("linux", "/home/tester/.config/wavedeck-runtime/linux", 4242),
   path.normalize("/home/tester/.config/wavedeck-runtime/linux/mpv-4242.sock")
 );
 assert.strictEqual(getIpcPath("win32", "D:\\WaveDeck Portable\\Data", 4242), "\\\\.\\pipe\\wavedeck-4242");
-assert.strictEqual(
-  getIpcPath("darwin", "/Users/tester/Library/Application Support/wavedeck-runtime/darwin", 4242),
-  path.normalize("/Users/tester/Library/Application Support/wavedeck-runtime/darwin/mpv-4242.sock")
-);
-assert.strictEqual(getMpvExecutable({
-  platform: "darwin",
-  packaged: true,
-  architecture: "arm64",
-  resourcesPath: "/Applications/WaveDeck.app/Contents/Resources",
-  projectRoot: "/source"
-}), path.normalize("/Applications/WaveDeck.app/Contents/Resources/playback/darwin/arm64/mpv.app/Contents/MacOS/mpv"));
-assert.strictEqual(getMpvExecutable({
-  platform: "darwin",
-  packaged: true,
-  architecture: "x64",
-  resourcesPath: "/Applications/WaveDeck.app/Contents/Resources",
-  projectRoot: "/source"
-}), path.normalize("/Applications/WaveDeck.app/Contents/Resources/playback/darwin/x64/mpv.app/Contents/MacOS/mpv"));
 
 const testRoot = fs.mkdtempSync(path.join(os.tmpdir(), "wavedeck-validate-"));
 try {
@@ -270,7 +240,13 @@ try {
   assert.strictEqual(existingStorage.readStations().length, 1);
   assert.strictEqual(existingStorage.readStations()[0].name, "Existing Station");
   assert.strictEqual(existingStorage.readStations()[0].preset, false);
-  assert.deepStrictEqual(existingStorage.readPreferences(), { version: 1, stations: {} });
+  assert.deepStrictEqual(existingStorage.readPreferences(), {
+    version: 1,
+    stations: {},
+    downloadNewStations: true,
+    lastLibraryUpdate: "",
+    deletedOfficialStationIds: []
+  });
 
   const changed = storage.readStations();
   changed[0].favorite = !changed[0].favorite;
@@ -291,7 +267,8 @@ try {
   assert.strictEqual(storage.readStations()[0].presetOrder, null);
   assert.ok(fs.existsSync(path.join(dataDir, "backups", "library.json.bak")));
   assert.ok(fs.existsSync(path.join(dataDir, "preferences.json")));
-  const exportedLibrary = storage.exportLibrary();
+  const exportedLibrary = storage.exportLibrary("2026-09-08T12:34:56.789Z");
+  assert.strictEqual(exportedLibrary.updatedAt, "2026-09-08T12:34:56.789Z");
   assert.strictEqual(exportedLibrary.stations[0].favorite, undefined);
   assert.strictEqual(exportedLibrary.stations[0].preset, undefined);
   assert.strictEqual(storage.readNotepad(), "");
@@ -359,6 +336,111 @@ try {
   assert.strictEqual(reloadedStorage.readStations()[0].name, "Replacement Name");
   assert.ok(fs.existsSync(path.join(dataDir, "backups", "library.json.bak")));
   assert.doesNotThrow(() => validateLibrary([{ name: "Old Export", url: "https://example.com/old", favorite: true }]));
+
+  const updateDataDir = path.join(testRoot, "Update-Data");
+  fs.mkdirSync(updateDataDir, { recursive: true });
+  fs.writeFileSync(path.join(updateDataDir, "library.json"), JSON.stringify({
+    version: 1,
+    groups: ["Rock", "Other"],
+    subgroups: { version: 1, groups: [{ group: "Rock", subgroups: ["Local"] }] },
+    stations: [
+      {
+        id: "official-existing",
+        name: "Keep My Name",
+        url: "https://example.com/old-stream",
+        group: "Rock",
+        country: "Old Country",
+        subgroup: "Local",
+        description: "Old description",
+        hasPreRoll: true
+      },
+      { id: "official-deleted", name: "Delete Me", url: "https://example.com/delete", group: "Rock" },
+      { id: "local-only", name: "Local Only", url: "https://example.com/local-only", group: "Other" }
+    ]
+  }), "utf8");
+  fs.writeFileSync(path.join(updateDataDir, "preferences.json"), JSON.stringify({
+    version: 1,
+    stations: {
+      "official-existing": { favorite: true, preset: true, presetOrder: 2 }
+    }
+  }), "utf8");
+  const updateStorage = new PortableStorage({ dataDir: updateDataDir, defaultsDir });
+  updateStorage.initialize();
+  assert.strictEqual(updateStorage.getLibraryUpdateState().enabled, true);
+  assert.strictEqual(updateStorage.setLibraryUpdatesEnabled(false).enabled, false);
+  const updateStorageReloaded = new PortableStorage({ dataDir: updateDataDir, defaultsDir });
+  updateStorageReloaded.initialize();
+  assert.strictEqual(updateStorageReloaded.getLibraryUpdateState().enabled, false);
+  updateStorageReloaded.setLibraryUpdatesEnabled(true);
+  assert.strictEqual(updateStorageReloaded.deleteStation("official-deleted").ok, true);
+  const remoteLibrary = {
+    version: 1,
+    updatedAt: "2026-09-08T15:30:00.000Z",
+    groups: ["Rock", "Jazz", "Other"],
+    subgroups: {
+      version: 1,
+      groups: [
+        { group: "Rock", subgroups: ["Local", "Classic"] },
+        { group: "Jazz", subgroups: ["Modern"] }
+      ]
+    },
+    stations: [
+      {
+        id: "official-existing",
+        name: "Remote Name Must Not Win",
+        url: "https://example.com/new-stream",
+        group: "Jazz",
+        country: "New Country",
+        subgroup: "Modern",
+        description: "New description",
+        hasPreRoll: false
+      },
+      { id: "official-deleted", name: "Do Not Restore", url: "https://example.com/delete", group: "Rock" },
+      {
+        id: "official-new",
+        name: "Brand New",
+        url: "https://example.com/new",
+        group: "Jazz",
+        subgroup: "Modern",
+        country: "Canada",
+        description: "A new listing."
+      }
+    ]
+  };
+  const updateResult = updateStorageReloaded.applyLibraryUpdate(remoteLibrary);
+  assert.deepStrictEqual(updateResult, {
+    applied: true,
+    addedStations: 1,
+    updatedStations: 1,
+    addedGroups: 1,
+    addedSubgroups: 2
+  });
+  const updatedStations = updateStorageReloaded.readStations();
+  const updatedExisting = updatedStations.find((station) => station.id === "official-existing");
+  assert.strictEqual(updatedExisting.name, "Keep My Name");
+  assert.strictEqual(updatedExisting.group, "Rock");
+  assert.strictEqual(updatedExisting.subgroup, "Local");
+  assert.strictEqual(updatedExisting.url, "https://example.com/new-stream");
+  assert.strictEqual(updatedExisting.country, "New Country");
+  assert.strictEqual(updatedExisting.description, "New description");
+  assert.strictEqual(updatedExisting.hasPreRoll, true);
+  assert.strictEqual(updatedExisting.favorite, true);
+  assert.strictEqual(updatedExisting.preset, true);
+  assert.ok(updatedStations.some((station) => station.id === "official-new"));
+  assert.ok(updatedStations.some((station) => station.id === "local-only"));
+  assert.ok(!updatedStations.some((station) => station.id === "official-deleted"));
+  assert.ok(updateStorageReloaded.readGroups().includes("Jazz"));
+  assert.strictEqual(updateStorageReloaded.getLibraryUpdateState().lastLibraryUpdate, remoteLibrary.updatedAt);
+  assert.ok(updateStorageReloaded.readPreferences().deletedOfficialStationIds.includes("official-deleted"));
+  assert.strictEqual(updateStorageReloaded.applyLibraryUpdate({
+    ...remoteLibrary,
+    updatedAt: "2026-09-08T15:29:59.000Z"
+  }).applied, false);
+  assert.throws(() => updateStorageReloaded.applyLibraryUpdate({
+    ...remoteLibrary,
+    updatedAt: "2026-09-08T15:31:00.000Z",
+    stations: [{ name: "Missing ID", url: "https://example.com/no-id" }]
+  }), /permanent station ID/);
 
   const legacySchemaDir = path.join(testRoot, "Legacy-Schema-Data");
   fs.mkdirSync(legacySchemaDir, { recursive: true });
@@ -828,6 +910,9 @@ assert.ok(preloadSource.includes('ipcRenderer.invoke("subgroups:get"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("subgroups:rename"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("library:export"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("library:import", mode)'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("library-update:get-state")'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("library-update:set-enabled", enabled)'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("stations:delete", stationId)'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("player:play-station", stationId)'));
 assert.ok(preloadSource.includes("platform: process.platform"));
 assert.ok(!preloadSource.includes("showStationContextMenu"));
@@ -841,6 +926,8 @@ assert.ok(settingsHtml.includes('id="stationEditorHome"'));
 assert.ok(settingsHtml.includes('id="exportLibraryBtn"'));
 assert.ok(settingsHtml.includes('id="importLibraryAddBtn"'));
 assert.ok(settingsHtml.includes('id="importLibraryReplaceBtn"'));
+assert.ok(settingsHtml.includes('id="downloadNewStations"'));
+assert.ok(settingsHtml.includes("WaveDeck_Library.json"));
 assert.ok(settingsHtml.indexOf('id="stationEditorHome"') < settingsHtml.indexOf('class="listening-history-bar"'));
 assert.ok(settingsHtml.includes('id="resetListeningBtn"'));
 assert.ok(settingsHtml.includes("Listened"));
@@ -874,7 +961,6 @@ assert.ok(!mainSource.includes("mainWindow.setResizable(false)"));
 assert.ok(mainSource.includes("new MediaController"));
 assert.ok(mainSource.includes('process.platform === "linux"'));
 assert.ok(mainSource.includes('process.platform === "win32"'));
-assert.ok(mainSource.includes('process.platform === "darwin"'));
 assert.ok(mainSource.includes('CinnamonMediaKeys: PlatformMediaKeys'));
 assert.ok(mainSource.includes('WindowsMediaKeys: PlatformMediaKeys'));
 assert.ok(mainSource.includes("new MprisService"));
@@ -908,6 +994,13 @@ assert.ok(mainSource.includes('ipcMain.handle("subgroups:get"'));
 assert.ok(mainSource.includes('ipcMain.handle("subgroups:rename"'));
 assert.ok(mainSource.includes('ipcMain.handle("library:export"'));
 assert.ok(mainSource.includes('ipcMain.handle("library:import"'));
+assert.ok(mainSource.includes('ipcMain.handle("library-update:get-state"'));
+assert.ok(mainSource.includes('ipcMain.handle("library-update:set-enabled"'));
+assert.ok(mainSource.includes('ipcMain.handle("stations:delete"'));
+assert.ok(mainSource.includes('"WaveDeck_Library.json"'));
+assert.ok(mainSource.includes("createLibraryUpdater"));
+assert.ok(mainSource.includes("net.fetch"));
+assert.ok(mainSource.includes("isPaused: () => Boolean(settingsWindow"));
 assert.ok(mainSource.includes('ipcMain.handle("player:play-station"'));
 assert.ok(!mainSource.includes('ipcMain.on("stations:show-context-menu"'));
 const desktopLauncherSource = fs.readFileSync(path.join(root, "src", "main", "desktop-launcher.js"), "utf8");
@@ -984,17 +1077,6 @@ assert.ok(fs.existsSync(path.join(root, "licenses", "mpv-GPL-2.0.txt")));
 const windowsIcon = fs.readFileSync(path.join(root, "build", "icon.ico"));
 assert.deepStrictEqual([...windowsIcon.subarray(0, 4)], [0, 0, 1, 0]);
 
-const macosBuild = JSON.parse(fs.readFileSync(path.join(root, "electron-builder.macos.json"), "utf8"));
-assert.strictEqual(macosBuild.mac.target[0].target, "dir");
-assert.deepStrictEqual(macosBuild.mac.target[0].arch, ["universal"]);
-assert.strictEqual(macosBuild.mac.minimumSystemVersion, "14.0");
-assert.strictEqual(macosBuild.mac.x64ArchFiles, "Contents/Resources/playback/darwin/**");
-assert.strictEqual(macosBuild.extraResources[0].to, "playback/darwin");
-assert.ok(fs.existsSync(path.join(root, "START-HERE-MACOS.txt")));
-const macosIcon = fs.readFileSync(path.join(root, "build", "icon-macos.png"));
-assert.strictEqual(macosIcon.readUInt32BE(16), 1024);
-assert.strictEqual(macosIcon.readUInt32BE(20), 1024);
-
 for (const file of [
   "src/main/main.js",
   "src/main/data-migration.js",
@@ -1020,6 +1102,63 @@ for (const file of [
 }
 
 async function validateMediaControls() {
+  assert.strictEqual(LIBRARY_UPDATE_URL, "https://fabulon.cloud/downloads/library_update.json");
+  assert.strictEqual(
+    cacheBustedUrl(LIBRARY_UPDATE_URL, () => 1234),
+    "https://fabulon.cloud/downloads/library_update.json?wavedeck=1234"
+  );
+  let requestedLibraryUrl = "";
+  let requestedLibraryOptions = null;
+  const downloadedLibrary = await downloadLibrary({
+    now: () => 5678,
+    fetchImpl: async (url, options) => {
+      requestedLibraryUrl = url;
+      requestedLibraryOptions = options;
+      return {
+        ok: true,
+        status: 200,
+        headers: { get: () => null },
+        text: async () => JSON.stringify({ updatedAt: "2026-09-08T16:00:00.000Z" })
+      };
+    }
+  });
+  assert.strictEqual(requestedLibraryUrl, `${LIBRARY_UPDATE_URL}?wavedeck=5678`);
+  assert.strictEqual(requestedLibraryOptions.cache, "no-store");
+  assert.strictEqual(requestedLibraryOptions.headers["cache-control"], "no-cache");
+  assert.strictEqual(downloadedLibrary.updatedAt, "2026-09-08T16:00:00.000Z");
+
+  let appliedUpdate = null;
+  const updater = createLibraryUpdater({
+    storage: {
+      getLibraryUpdateState: () => ({ enabled: true }),
+      applyLibraryUpdate: (value) => {
+        appliedUpdate = value;
+        return { applied: true, addedStations: 1 };
+      }
+    },
+    fetchImpl: async () => ({
+      ok: true,
+      status: 200,
+      headers: { get: () => null },
+      text: async () => JSON.stringify({ updatedAt: "2026-09-08T16:01:00.000Z" })
+    })
+  });
+  assert.strictEqual((await updater.check()).ok, true);
+  assert.strictEqual(appliedUpdate.updatedAt, "2026-09-08T16:01:00.000Z");
+  const silentFailure = createLibraryUpdater({
+    storage: { getLibraryUpdateState: () => ({ enabled: true }) },
+    fetchImpl: async () => { throw new Error("site unavailable"); }
+  });
+  assert.deepStrictEqual(await silentFailure.check(), { ok: false, silent: true });
+  let pausedFetches = 0;
+  const pausedUpdater = createLibraryUpdater({
+    storage: { getLibraryUpdateState: () => ({ enabled: true }) },
+    isPaused: () => true,
+    fetchImpl: async () => { pausedFetches += 1; }
+  });
+  assert.deepStrictEqual(await pausedUpdater.check(), { ok: true, skipped: "paused" });
+  assert.strictEqual(pausedFetches, 0);
+
   const heartbeatEvents = [];
   const heartbeatPlayer = new MpvPlayer({
     executable: "mpv",
@@ -1176,23 +1315,6 @@ async function validateMediaControls() {
   assert.strictEqual(windowsCallbacks.size, 0);
   assert.deepStrictEqual(windowsWarnings, []);
 
-  const macMediaKeys = new WindowsMediaKeys({
-    platform: "darwin",
-    globalShortcut: mockGlobalShortcut,
-    controller: {
-      togglePlayPause: () => {},
-      nextPreset: () => {},
-      previousPreset: () => {},
-      stop: () => {}
-    },
-    onWarning: (warning) => windowsWarnings.push(warning)
-  });
-  assert.strictEqual(await macMediaKeys.start(), true);
-  assert.deepStrictEqual([...windowsCallbacks.keys()], MEDIA_KEY_BINDINGS.map(([accelerator]) => accelerator));
-  macMediaKeys.close();
-  assert.strictEqual(windowsCallbacks.size, 0);
-  assert.deepStrictEqual(windowsWarnings, []);
-
   assert.strictEqual(stationTrackPath({ id: "alpha-one" }), "/com/a17press/wavedeck/station/alpha_one");
   const metadata = metadataForStation(controller.getCurrentStation());
   assert.strictEqual(metadata["xesam:title"].value, "Alpha");
@@ -1313,7 +1435,7 @@ async function validateMediaControls() {
 }
 
 validateMediaControls().then(() => {
-console.log("WaveDeck validation passed: v0.4.3 universal macOS support, toggleable station search, USB-safe playback, shared portable data, and packaging verified.");
+console.log("WaveDeck validation passed: v0.5.0 silent station-library updates, portable exports, USB-safe playback, and packaging verified.");
 }).catch((error) => {
   console.error(error);
   process.exitCode = 1;
