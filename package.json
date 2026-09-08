@@ -1,7 +1,7 @@
 {
   "name": "wavedeck",
-  "version": "0.5.1",
-  "description": "WaveDeck portable internet-radio player for Windows and Linux Mint",
+  "version": "0.6.0",
+  "description": "WaveDeck portable internet-radio player for Linux, Windows, and macOS",
   "author": "Andrew Riley",
   "license": "MIT",
   "desktopName": "wavedeck.desktop",
@@ -10,7 +10,8 @@
     "start": "electron .",
     "test": "node scripts/validate.js",
     "dist:linux": "electron-builder --linux AppImage --x64",
-    "dist:windows": "electron-builder --win portable --x64 --config electron-builder.windows.json"
+    "dist:windows": "electron-builder --win portable --x64 --config electron-builder.windows.json",
+    "dist:macos": "electron-builder --mac dir --universal --config electron-builder.macos.json"
   },
   "devDependencies": {
     "electron": "30.5.1",

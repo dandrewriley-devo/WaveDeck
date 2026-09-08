@@ -85,12 +85,12 @@ jobs:
           install -m 644 THIRD-PARTY-NOTICES.txt "release/WaveDeck Portable/THIRD-PARTY-NOTICES.txt"
           install -m 644 licenses/mpv-GPL-2.0.txt "release/WaveDeck Portable/mpv-GPL-2.0.txt"
           cd release
-          zip -q -r -9 WaveDeck-0.5.1-Portable-Windows-Linux.zip "WaveDeck Portable"
-          unzip -t WaveDeck-0.5.1-Portable-Windows-Linux.zip
+          zip -q -r -9 WaveDeck-0.6.0-Portable-Windows-Linux.zip "WaveDeck Portable"
+          unzip -t WaveDeck-0.6.0-Portable-Windows-Linux.zip
       - uses: actions/upload-artifact@v4
         with:
-          name: WaveDeck-0.5.1-Portable-Windows-Linux
-          path: release/WaveDeck-0.5.1-Portable-Windows-Linux.zip
+          name: WaveDeck-0.6.0-Portable-Windows-Linux
+          path: release/WaveDeck-0.6.0-Portable-Windows-Linux.zip
           if-no-files-found: error
           compression-level: 0
           retention-days: 7

@@ -1,0 +1,70 @@
+WAVEDECK FOR macOS — FIRST LAUNCH
+Version 0.6.0 universal build
+
+REQUIREMENTS
+
+- Apple Silicon Mac running macOS 14 Sonoma or newer
+- Intel Mac running macOS 11 Big Sur or newer
+- An internet connection for radio streams
+
+WHAT IS IN THE ZIP
+
+- WaveDeck.app
+- START-HERE-MACOS.txt
+
+WaveDeck.app is one universal application containing native support for both
+Intel and Apple Silicon Macs. Sidebar Mode and the Linux panel-launcher tools
+are intentionally unavailable on macOS. The normal player, station library,
+search, Presets, Favorites, Most Played, Settings, import/export, automatic
+station updates, and media controls remain available.
+
+WaveDeck is not signed with a paid Apple Developer certificate. It is ad-hoc
+signed so macOS can verify that the application bundle is internally intact,
+but macOS may still block the first launch because the app is not notarized.
+
+PORTABLE USE AND THE SHARED DATA FOLDER
+
+Extract this ZIP on the Mac. Do not extract it with Windows or Linux and then
+copy the loose WaveDeck.app folder, because that can damage its permissions or
+internal links.
+
+For portable use, place WaveDeck.app beside the Data folder—not inside it:
+
+  WaveDeck Portable/
+    Data/
+    WaveDeck.app
+    WaveDeck.exe
+    WaveDeck.AppImage
+
+Only the applications you have added need to be present. All three use the same
+Data folder. WaveDeck creates missing data files but never replaces an existing
+library, preferences, listening history, notes, or backups during startup.
+
+FIRST LAUNCH
+
+1. Open Terminal from Applications > Utilities.
+2. Type the following command, including the space at the end, but do not press
+   Return yet:
+
+     xattr -dr com.apple.quarantine 
+
+3. Drag WaveDeck.app into the Terminal window. Terminal adds its complete path
+   after the command.
+4. Press Return.
+5. Control-click WaveDeck.app, choose Open, and confirm Open if macOS asks.
+
+If macOS still blocks it, open System Settings > Privacy & Security, scroll to
+Security, and choose Open Anyway for WaveDeck. This should only be necessary
+once for that copy of the app.
+
+MEDIA KEYS
+
+WaveDeck attempts to register Play/Pause, Next, Previous, and Stop. If macOS
+requests permission, open System Settings > Privacy & Security > Accessibility
+and allow WaveDeck. Mouse controls work without this permission.
+
+UPDATING OR REMOVING
+
+To update WaveDeck, close it and replace only WaveDeck.app. Leave Data untouched.
+To remove the Mac application, delete WaveDeck.app; the shared Data folder and
+the Windows and Linux applications remain unchanged.

@@ -39,6 +39,8 @@ if (process.platform === "linux") {
   ({ CinnamonMediaKeys: PlatformMediaKeys } = require("./cinnamon-media-keys"));
 } else if (process.platform === "win32") {
   ({ WindowsMediaKeys: PlatformMediaKeys } = require("./windows-media-keys"));
+} else if (process.platform === "darwin") {
+  ({ WindowsMediaKeys: PlatformMediaKeys } = require("./windows-media-keys"));
 }
 
 const FIXED_WIDTH = SIDEBAR_WIDTH;

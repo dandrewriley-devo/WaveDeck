@@ -1,5 +1,5 @@
 WAVEDECK PORTABLE FOR LINUX AND WINDOWS
-Version 0.5.1 (64-bit Intel/AMD)
+Version 0.6.0 (64-bit Intel/AMD)
 
 QUICK START
 
@@ -43,7 +43,7 @@ AppImage:
 2. Launch WaveDeck.AppImage directly.
 3. Open Settings, select Panel Shortcut, and click "Update WaveDeck
    Applications Menu Entry."
-4. Confirm your panel shortcut opens version 0.5.1. You may then delete the
+4. Confirm your panel shortcut opens version 0.6.0. You may then delete the
    older version-numbered AppImage.
 
 Starting with version 0.1.11, the executable is always named WaveDeck.AppImage.

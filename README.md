@@ -1,12 +1,12 @@
 # WaveDeck
 
-WaveDeck is a lightweight, portable internet-radio player for 64-bit Windows and Linux Mint Cinnamon. Windows runs as a normal desktop window; Linux Mint can optionally dock WaveDeck to the right edge in Sidebar Mode.
+WaveDeck is a lightweight, portable internet-radio player for 64-bit Windows, Linux Mint Cinnamon, and macOS. Windows and macOS run as normal desktop windows; Linux Mint can optionally dock WaveDeck to the right edge in Sidebar Mode.
 
 ![WaveDeck logo](assets/logo.png)
 
 ## Features
 
-- One portable ZIP containing the Windows EXE and Linux AppImage in a shared `WaveDeck Portable` folder
+- One portable ZIP containing the Windows EXE and Linux AppImage in a shared `WaveDeck Portable` folder, plus a separate universal macOS ZIP
 - Single-file station-library import/export with Add New and confirmed Replace modes
 - Optional silent startup updates that add new master-library stations and apply stream corrections without deleting local entries
 - Optional importable copy of the complete default library for existing users
@@ -26,9 +26,10 @@ WaveDeck is a lightweight, portable internet-radio player for 64-bit Windows and
 
 ## Requirements
 
-- 64-bit Windows 10/11, or 64-bit Linux
+- 64-bit Windows 10/11, 64-bit Linux, or macOS
+- macOS 14 or newer on Apple Silicon; macOS 11 or newer on Intel
 - Linux Mint Cinnamon on X11 for Sidebar Mode
-- `mpv` installed on Linux; the Windows package bundles mpv
+- `mpv` installed on Linux; the Windows and macOS packages bundle mpv
 - Node.js and npm when building from source
 
 ## Run from source
@@ -38,7 +39,7 @@ npm install
 npm start
 ```
 
-When running from source, WaveDeck stores its user data under `~/.config/wavedeck` on Linux and `Data` in the project folder on Windows.
+When running from source, WaveDeck stores its user data under `~/.config/wavedeck` on Linux and `Data` in the project folder on Windows and macOS.
 
 ## Build the portable Windows EXE
 
@@ -62,13 +63,29 @@ npm run dist:linux
 
 The AppImage is written to `dist/`. Release builds use the stable filename `WaveDeck.AppImage`. Keep future replacements at the same path so an Applications-menu or panel shortcut continues to work.
 
-For a portable release, WaveDeck stores user data in a `Data` folder beside both executables. The Windows EXE and Linux AppImage share `library.json` and `preferences.json`; Electron's temporary runtime state and Linux playback-control socket stay on the local computer so WaveDeck can launch and play from common USB filesystems. The `Data` folder is intentionally excluded from this repository because it can contain personal preferences, listening history, and notes.
+## Build the universal macOS app
+
+The GitHub Actions macOS workflow downloads the pinned Intel and Apple Silicon
+mpv builds, builds a universal application, ad-hoc signs the complete bundle,
+and packages it with first-launch instructions. To build it on a Mac after
+placing those mpv bundles under `playback/darwin/`, run:
+
+```bash
+npm install
+npm test
+npm run dist:macos
+```
+
+The resulting `WaveDeck.app` supports both Intel and Apple Silicon. Sidebar
+Mode, its notepad, and Linux panel tools are intentionally hidden on macOS.
+
+For a portable release, WaveDeck stores user data in a `Data` folder beside the executable or application bundle. The Windows EXE, Linux AppImage, and macOS app can share `library.json` and `preferences.json`; Electron's temporary runtime state and Linux playback-control socket stay on the local computer so WaveDeck can launch and play from common USB filesystems. The `Data` folder is intentionally excluded from this repository because it can contain personal preferences, listening history, and notes.
 
 WaveDeck checks `https://fabulon.cloud/downloads/library_update.json` quietly at startup unless **Download new stations** is disabled on the Stations tab in Settings. A newer timestamp can add stations, groups, and subgroups and correct existing URLs, countries, and descriptions. It never removes a local listing, restores a station the user deleted, or changes Favorites and Presets. **Export Library** creates `WaveDeck_Library.json` with the required timestamp automatically, so an exported catalog can also be used as the master update file.
 
 ## Platform notes
 
-The normal player, station library, Presets, Favorites, Most Played, groups, metadata, and Settings are shared across Windows and Linux. Sidebar reservation, its notepad, and panel-launcher integration remain Linux Mint Cinnamon features.
+The normal player, station library, Presets, Favorites, Most Played, groups, metadata, Settings, media keys, and library updates are shared across Windows, Linux, and macOS. Sidebar reservation, its notepad, and panel-launcher integration remain Linux Mint Cinnamon features.
 
 ## Project history
 

@@ -3,15 +3,18 @@ WAVEDECK THIRD-PARTY NOTICES
 WaveDeck uses Electron. Electron and Chromium license information is included
 inside each distribution.
 
-The WaveDeck Windows package bundles mpv from the shinchiro Windows builds:
+The WaveDeck Windows package bundles mpv from the shinchiro Windows builds.
+The macOS package bundles the standalone Intel and Apple Silicon builds made
+available by stolendata.net:
   https://github.com/shinchiro/mpv-winbuild-cmake/releases
+  https://laboratory.stolendata.net/~djinn/mpv_osx/
   https://mpv.io/
 
 mpv is free software. The bundled build is distributed under GNU GPL version 2
 or later. A copy of
 GPL version 2 is included as licenses/mpv-GPL-2.0.txt. Corresponding mpv source,
-the Windows cross-build scripts, dependency recipes, and their revision history
-are available from:
+the Windows cross-build scripts, macOS build information, dependency recipes,
+and their revision history are available from:
   https://github.com/mpv-player/mpv
   https://github.com/shinchiro/mpv-winbuild-cmake
 
