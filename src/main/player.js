@@ -20,7 +20,7 @@ function getMpvExecutable({ platform, packaged, resourcesPath, projectRoot, arch
   if (platform === "darwin") {
     const bundledArchitecture = architecture === "arm64" ? "arm64" : "x64";
     return packaged
-      ? path.join(resourcesPath, "playback", "darwin", bundledArchitecture, "mpv.app", "Contents", "MacOS", "mpv")
+      ? path.join(resourcesPath, "playback", "darwin", bundledArchitecture, "mpv")
       : "mpv";
   }
   return "mpv";

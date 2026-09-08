@@ -66,8 +66,8 @@ The AppImage is written to `dist/`. Release builds use the stable filename `Wave
 ## Build the universal macOS app
 
 The GitHub Actions macOS workflow downloads the pinned Intel and Apple Silicon
-mpv builds, builds a universal application, ad-hoc signs the complete bundle,
-and packages it with first-launch instructions. To build it on a Mac after
+mpv builds, builds a universal unsigned application, and packages it with
+permissions, symlinks, and first-launch instructions preserved. To build it on a Mac after
 placing those mpv bundles under `playback/darwin/`, run:
 
 ```bash

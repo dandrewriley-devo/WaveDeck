@@ -1,5 +1,5 @@
 WAVEDECK FOR macOS — FIRST LAUNCH
-Version 0.6.0 universal build
+Version 0.6.1 universal build
 
 REQUIREMENTS
 
@@ -18,9 +18,10 @@ are intentionally unavailable on macOS. The normal player, station library,
 search, Presets, Favorites, Most Played, Settings, import/export, automatic
 station updates, and media controls remain available.
 
-WaveDeck is not signed with a paid Apple Developer certificate. It is ad-hoc
-signed so macOS can verify that the application bundle is internally intact,
-but macOS may still block the first launch because the app is not notarized.
+WaveDeck is unsigned and is not notarized with a paid Apple Developer account.
+This matches the packaging used by the earlier WaveDeck Mac release that was
+verified on real Intel and Apple Silicon Macs. macOS may block its first launch
+until quarantine is removed using the steps below.
 
 PORTABLE USE AND THE SHARED DATA FOLDER
 

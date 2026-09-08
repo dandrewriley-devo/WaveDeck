@@ -48,11 +48,14 @@ jobs:
           intel_app="$(find "$intel_extract" -type d -name mpv.app -print -quit)"
           test -n "$arm_app"
           test -n "$intel_app"
-          ditto "$arm_app" playback/darwin/arm64/mpv.app
-          ditto "$intel_app" playback/darwin/x64/mpv.app
+          # Match the layout of the previously verified working Mac package:
+          # keep mpv and its lib directory as ordinary bundled files rather
+          # than embedding signed application bundles inside WaveDeck.app.
+          ditto "$arm_app/Contents/MacOS" playback/darwin/arm64
+          ditto "$intel_app/Contents/MacOS" playback/darwin/x64
 
-          arm_binary="playback/darwin/arm64/mpv.app/Contents/MacOS/mpv"
-          intel_binary="playback/darwin/x64/mpv.app/Contents/MacOS/mpv"
+          arm_binary="playback/darwin/arm64/mpv"
+          intel_binary="playback/darwin/x64/mpv"
           test -x "$arm_binary"
           test -x "$intel_binary"
           lipo -archs "$arm_binary" | grep -qw arm64
@@ -66,16 +69,13 @@ jobs:
       - name: Build universal WaveDeck app
         run: npm run dist:macos -- --publish never
 
-      - name: Sign, inspect, and package application
+      - name: Inspect and package unsigned application
         shell: bash
         run: |
           set -euo pipefail
 
           app_path="$(find dist/macos -type d -name WaveDeck.app -print -quit)"
           test -n "$app_path"
-
-          codesign --force --deep --sign - "$app_path"
-          codesign --verify --deep --strict --verbose=2 "$app_path"
 
           app_binary="$app_path/Contents/MacOS/WaveDeck"
           app_arches="$(lipo -archs "$app_binary")"
@@ -84,32 +84,43 @@ jobs:
           grep -qw x86_64 <<< "$app_arches"
 
           minimum_system="$(plutil -extract LSMinimumSystemVersion raw "$app_path/Contents/Info.plist")"
-          test "$minimum_system" = "11.0"
+          test "$minimum_system" = "11.0.0"
 
-          arm_mpv="$app_path/Contents/Resources/playback/darwin/arm64/mpv.app/Contents/MacOS/mpv"
-          intel_mpv="$app_path/Contents/Resources/playback/darwin/x64/mpv.app/Contents/MacOS/mpv"
+          arm_mpv="$app_path/Contents/Resources/playback/darwin/arm64/mpv"
+          intel_mpv="$app_path/Contents/Resources/playback/darwin/x64/mpv"
           test -x "$arm_mpv"
           test -x "$intel_mpv"
           lipo -archs "$arm_mpv" | grep -qw arm64
           lipo -archs "$intel_mpv" | grep -qw x86_64
 
+          # Do not deep-sign this free-distribution build. The earlier
+          # unsigned universal package launched successfully on real Macs,
+          # while the ad-hoc deep-signed v0.6.0 bundle was rejected by
+          # LaunchServices as unsupported despite passing codesign checks.
+          test ! -d "$app_path/Contents/_CodeSignature"
+
           mkdir -p release
           ditto "$app_path" release/WaveDeck.app
           cp START-HERE-MACOS.txt release/START-HERE-MACOS.txt
-          ditto -c -k --sequesterRsrc release WaveDeck-0.6.0-macOS-Universal.zip
+          (
+            cd release
+            zip -qry --symlinks ../WaveDeck-0.6.1-macOS-Universal.zip WaveDeck.app START-HERE-MACOS.txt
+          )
 
-          unzip -t WaveDeck-0.6.0-macOS-Universal.zip
-          unzip -Z1 WaveDeck-0.6.0-macOS-Universal.zip | grep -q '^WaveDeck.app/'
-          unzip -Z1 WaveDeck-0.6.0-macOS-Universal.zip | grep -q '^START-HERE-MACOS.txt$'
-          if unzip -Z1 WaveDeck-0.6.0-macOS-Universal.zip | grep -Eq '(^|/)Data(/|$)'; then
+          unzip -t WaveDeck-0.6.1-macOS-Universal.zip
+          unzip -Z1 WaveDeck-0.6.1-macOS-Universal.zip | grep -q '^WaveDeck.app/'
+          unzip -Z1 WaveDeck-0.6.1-macOS-Universal.zip | grep -q '^START-HERE-MACOS.txt$'
+          zipinfo -l WaveDeck-0.6.1-macOS-Universal.zip | grep -Eq '^-rwxr-xr-x .*WaveDeck.app/Contents/MacOS/WaveDeck$'
+          zipinfo -l WaveDeck-0.6.1-macOS-Universal.zip | grep -Eq '^l.*WaveDeck.app/Contents/Frameworks/.*/Versions/Current$'
+          if unzip -Z1 WaveDeck-0.6.1-macOS-Universal.zip | grep -Eq '(^|/)Data(/|$)'; then
             echo "The macOS ZIP must not contain a Data folder."
             exit 1
           fi
 
       - uses: actions/upload-artifact@v4
         with:
-          name: WaveDeck-0.6.0-macOS-Universal
-          path: WaveDeck-0.6.0-macOS-Universal.zip
+          name: WaveDeck-0.6.1-macOS-Universal
+          path: WaveDeck-0.6.1-macOS-Universal.zip
           if-no-files-found: error
           compression-level: 0
           retention-days: 14

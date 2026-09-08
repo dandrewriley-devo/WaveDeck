@@ -1,5 +1,5 @@
 WaveDeck portable Windows, Linux, and macOS source package
-Version 0.6.0
+Version 0.6.1
 
 WaveDeck is a portable internet-radio player for Linux, Windows, and macOS.
 Linux Mint Cinnamon can additionally use the sidebar toggle, which asks
@@ -189,8 +189,16 @@ Silicon and Intel Macs. It keeps the normal player, library, search, Presets,
 Favorites, Most Played, Settings, media keys, and silent library updates while
 leaving the Cinnamon-only Sidebar Mode, notepad, and panel tools on Linux. The
 Mac app uses the same adjacent Data folder as the Windows and Linux editions,
-bundles architecture-specific mpv engines, and is ad-hoc signed for free
-distribution with first-launch instructions included in its ZIP.
+bundles architecture-specific mpv engines, and includes first-launch
+instructions in its ZIP.
+
+Version 0.6.1 restores the packaging structure of the earlier universal Mac
+build that was verified on real Intel and Apple Silicon hardware. It removes
+the incompatible deep ad-hoc signature, stores each mpv engine and its
+libraries as ordinary architecture-specific resources instead of nested app
+bundles, and creates the ZIP with explicit preservation of executable modes and
+framework symlinks. The application code and shared adjacent Data behavior are
+unchanged from version 0.6.0.
 
 Build requirements:
 - 64-bit Windows, Linux, or macOS
@@ -214,9 +222,10 @@ macOS build command (run on macOS):
   npm install
   npm run dist:macos
 
-Before building macOS, place the standalone Intel and Apple Silicon mpv.app
-bundles in playback/darwin/x64 and playback/darwin/arm64 as performed by the
-macOS GitHub Actions workflow. The universal app is written below dist/macos/.
+Before building macOS, place each standalone Intel and Apple Silicon mpv binary
+and its adjacent lib directory in playback/darwin/x64 and
+playback/darwin/arm64 as performed by the macOS GitHub Actions workflow. The
+universal app is written below dist/macos/.
 
 The Linux AppImage, Windows portable executable, and macOS app all use a Data
 folder beside the executable or application bundle. They can share that folder;

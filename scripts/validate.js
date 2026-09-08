@@ -116,7 +116,7 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.6.0");
+assert.strictEqual(packageJson.version, "0.6.1");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -239,14 +239,14 @@ assert.strictEqual(getMpvExecutable({
   resourcesPath: "/Volumes/WaveDeck Portable/WaveDeck.app/Contents/Resources",
   projectRoot: "/source",
   architecture: "arm64"
-}), path.normalize("/Volumes/WaveDeck Portable/WaveDeck.app/Contents/Resources/playback/darwin/arm64/mpv.app/Contents/MacOS/mpv"));
+}), path.normalize("/Volumes/WaveDeck Portable/WaveDeck.app/Contents/Resources/playback/darwin/arm64/mpv"));
 assert.strictEqual(getMpvExecutable({
   platform: "darwin",
   packaged: true,
   resourcesPath: "/Volumes/WaveDeck Portable/WaveDeck.app/Contents/Resources",
   projectRoot: "/source",
   architecture: "x64"
-}), path.normalize("/Volumes/WaveDeck Portable/WaveDeck.app/Contents/Resources/playback/darwin/x64/mpv.app/Contents/MacOS/mpv"));
+}), path.normalize("/Volumes/WaveDeck Portable/WaveDeck.app/Contents/Resources/playback/darwin/x64/mpv"));
 
 const testRoot = fs.mkdtempSync(path.join(os.tmpdir(), "wavedeck-validate-"));
 try {
@@ -1118,13 +1118,22 @@ assert.deepStrictEqual([...windowsIcon.subarray(0, 4)], [0, 0, 1, 0]);
 const macosBuild = JSON.parse(fs.readFileSync(path.join(root, "electron-builder.macos.json"), "utf8"));
 assert.strictEqual(macosBuild.mac.target[0].target, "dir");
 assert.deepStrictEqual(macosBuild.mac.target[0].arch, ["universal"]);
-assert.strictEqual(macosBuild.mac.minimumSystemVersion, "11.0");
+assert.strictEqual(macosBuild.mac.minimumSystemVersion, "11.0.0");
 assert.strictEqual(macosBuild.mac.x64ArchFiles, "Contents/Resources/playback/darwin/**");
 assert.strictEqual(macosBuild.extraResources[0].to, "playback/darwin");
 assert.ok(fs.existsSync(path.join(root, "START-HERE-MACOS.txt")));
 const macosIcon = fs.readFileSync(path.join(root, "build", "icon-macos.png"));
 assert.strictEqual(macosIcon.readUInt32BE(16), 1024);
 assert.strictEqual(macosIcon.readUInt32BE(20), 1024);
+const macosWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "macos-portable.yml"), "utf8");
+assert.ok(macosWorkflow.includes('ditto "$arm_app/Contents/MacOS" playback/darwin/arm64'));
+assert.ok(macosWorkflow.includes('arm_binary="playback/darwin/arm64/mpv"'));
+assert.ok(macosWorkflow.includes("zip -qry --symlinks"));
+assert.ok(macosWorkflow.includes('test ! -d "$app_path/Contents/_CodeSignature"'));
+assert.ok(!macosWorkflow.includes("codesign --force --deep"));
+const macosInstructions = fs.readFileSync(path.join(root, "START-HERE-MACOS.txt"), "utf8");
+assert.ok(macosInstructions.includes("Version 0.6.1 universal build"));
+assert.ok(macosInstructions.includes("WaveDeck is unsigned"));
 
 for (const file of [
   "src/main/main.js",
@@ -1522,7 +1531,7 @@ async function validateMediaControls() {
 }
 
 validateMediaControls().then(() => {
-console.log("WaveDeck validation passed: v0.6.0 universal macOS, resilient library updates, USB-safe playback, and packaging verified.");
+console.log("WaveDeck validation passed: v0.6.1 known-good unsigned macOS packaging, resilient library updates, USB-safe playback, and packaging verified.");
 }).catch((error) => {
   console.error(error);
   process.exitCode = 1;
