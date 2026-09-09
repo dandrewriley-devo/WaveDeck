@@ -54,6 +54,12 @@ function bitrateFromTrackList(trackList) {
   );
 }
 
+function normalizeStationGainDb(value) {
+  const gain = Number(value);
+  if (!Number.isFinite(gain)) return 0;
+  return Math.round(Math.min(Math.max(gain, -12), 12) * 2) / 2;
+}
+
 class MpvPlayer {
   constructor({ executable, ipcPath, platform = process.platform, onMetadata, onStatus }) {
     this.executable = executable;
@@ -71,11 +77,13 @@ class MpvPlayer {
     this.startPromise = null;
     this.stopping = false;
     this.playSequence = 0;
+    this.gainMode = null;
     this.status = {
       state: "stopped",
       message: "Playback engine is stopped.",
       bitrateKbps: null,
-      bitrateResolved: false
+      bitrateResolved: false,
+      stationGainDb: 0
     };
   }
 
@@ -361,6 +369,37 @@ class MpvPlayer {
     return volume;
   }
 
+  async setStationGain(value) {
+    await this.start();
+    const gainDb = normalizeStationGainDb(value);
+
+    if (this.gainMode !== "filter") {
+      try {
+        await this.command(["set_property", "volume-gain", gainDb]);
+        this.gainMode = "native";
+      } catch {
+        this.gainMode = "filter";
+      }
+    }
+
+    if (this.gainMode === "filter") {
+      const label = "@wavedeck-station-gain";
+      if (gainDb === 0) {
+        await this.command(["af", "remove", label]).catch(() => null);
+      } else {
+        const limitedFilter = `${label}:lavfi=[volume=${gainDb}dB,alimiter=limit=0.98:level=false]`;
+        try {
+          await this.command(["af", "add", limitedFilter]);
+        } catch {
+          await this.command(["af", "add", `${label}:lavfi=[volume=${gainDb}dB]`]);
+        }
+      }
+    }
+
+    this.#setStatus(this.status.state, this.status.message, { stationGainDb: gainDb });
+    return gainDb;
+  }
+
   async toggleMute() {
     await this.start();
     await this.command(["cycle", "mute"]);
@@ -395,6 +434,7 @@ class MpvPlayer {
 
   #handleProcessExit(code, signal, error) {
     this.process = null;
+    this.gainMode = null;
     try { this.socket?.destroy(); } catch {}
     this.socket = null;
 
@@ -427,5 +467,6 @@ module.exports = {
   bitrateFromTrackList,
   getIpcPath,
   getMpvExecutable,
+  normalizeStationGainDb,
   normalizeBitrateKbps
 };

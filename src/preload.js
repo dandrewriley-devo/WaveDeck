@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld("wavedeck", {
   getStations: () => ipcRenderer.invoke("stations:get"),
   saveStations: (stations) => ipcRenderer.invoke("stations:save", stations),
   deleteStation: (stationId) => ipcRenderer.invoke("stations:delete", stationId),
+  setStationGain: (stationId, gainDb) => ipcRenderer.invoke("stations:set-gain", stationId, gainDb),
   onStationsChanged: (callback) => subscribe("stations:changed", callback),
   editStation: (stationId) => ipcRenderer.invoke("settings:open", stationId),
   onEditStationRequested: (callback) => subscribe("settings:edit-station", callback),

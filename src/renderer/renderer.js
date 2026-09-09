@@ -35,6 +35,8 @@ let favoritesOnlyVisible = false;
 let mostPlayedSectionVisible = false;
 let stationSearchQuery = "";
 let searchRenderTimer = null;
+const stationGainTimers = new Map();
+const stationGainVersions = new Map();
 let focusSearchAfterRender = false;
 let draggedPresetId = null;
 let listeningHistory = { version: 1, stations: {} };
@@ -208,11 +210,47 @@ function formatListeningTime(seconds) {
   return minutes ? `${hours}h ${minutes}m` : `${hours}h`;
 }
 
+function formatGainDb(value) {
+  const gainDb = Number(value) || 0;
+  return `${gainDb > 0 ? "+" : ""}${gainDb} dB`;
+}
+
+function updateStationGainUi(stationId, value) {
+  const gainDb = Number(value) || 0;
+  for (const row of listEl.querySelectorAll(".station")) {
+    if (row.dataset.id !== String(stationId)) continue;
+    row.dataset.gainDb = String(gainDb);
+    const slider = row.querySelector(".station-gain-slider");
+    const output = row.querySelector(".station-gain-value");
+    const reset = row.querySelector(".station-gain-reset");
+    if (slider && document.activeElement !== slider) slider.value = String(gainDb);
+    if (output) output.textContent = formatGainDb(gainDb);
+    if (reset) reset.disabled = gainDb === 0;
+  }
+}
+
+async function saveStationGain(stationId, value) {
+  const version = (stationGainVersions.get(stationId) || 0) + 1;
+  stationGainVersions.set(stationId, version);
+  try {
+    const result = await window.wavedeck.setStationGain(stationId, value);
+    if (stationGainVersions.get(stationId) !== version) return;
+    updateStationGainUi(stationId, result.gainDb);
+  } catch (error) {
+    if (stationGainVersions.get(stationId) !== version) return;
+    const row = [...listEl.querySelectorAll(".station")]
+      .find((candidate) => candidate.dataset.id === String(stationId));
+    updateStationGainUi(stationId, Number(row?.dataset.gainDb) || 0);
+    nowPlaying.textContent = `Could not save station gain: ${error.message}`;
+  }
+}
+
 function createStationRow(station, { presetSection = false, listenedSeconds = 0 } = {}) {
   const row = element("div", `station${String(station.id) === String(currentStationId) ? " active" : ""}`);
   row.dataset.id = String(station.id ?? "");
   row.dataset.url = String(station.url ?? "");
   row.dataset.name = String(station.name ?? "");
+  row.dataset.gainDb = String(Number(station.gainDb) || 0);
   row.title = "Click to play • Ctrl-click: Preset • Ctrl+Shift-click: pre-roll • Shift-click: edit";
 
   const starClasses = ["favBtn"];
@@ -248,6 +286,22 @@ function createStationRow(station, { presetSection = false, listenedSeconds = 0 
   );
   info.append(facts);
   if (station.description) info.append(element("div", "station-description", station.description));
+  const gainControl = element("div", "station-gain-control");
+  const gainLabel = element("span", "station-gain-label", "Station Gain");
+  const gainSlider = element("input", "station-gain-slider");
+  gainSlider.type = "range";
+  gainSlider.min = "-12";
+  gainSlider.max = "12";
+  gainSlider.step = "0.5";
+  gainSlider.value = row.dataset.gainDb;
+  gainSlider.setAttribute("aria-label", `Station gain for ${station.name}`);
+  const gainValue = element("output", "station-gain-value", formatGainDb(station.gainDb));
+  const gainReset = element("button", "station-gain-reset", "Reset");
+  gainReset.type = "button";
+  gainReset.disabled = Number(station.gainDb) === 0;
+  gainReset.title = "Reset station gain to 0 dB";
+  gainControl.append(gainLabel, gainSlider, gainValue, gainReset);
+  info.append(gainControl);
   row.append(info);
   return row;
 }
@@ -371,7 +425,7 @@ async function renderAll() {
     (!searchActive || window.WaveDeckSearch.stationMatchesQuery(station, stationSearchQuery))
   ));
   const stationStats = listeningHistory.stations || {};
-  const mostListened = mostPlayedSectionVisible
+  const mostListened = mostPlayedSectionVisible && !searchActive
     ? stations
       .map((station) => ({ station, seconds: Number(stationStats[station.id]?.seconds) || 0 }))
       .filter((item) => item.seconds >= MOST_LISTENED_MINIMUM_SECONDS)
@@ -400,7 +454,7 @@ async function renderAll() {
   }
 
   listEl.replaceChildren();
-  if (presetSectionVisible) {
+  if (presetSectionVisible && !searchActive) {
     listEl.append(createSectionTitle("Presets", presets.length ? "" : "None yet — Ctrl-click a station to add."));
     if (presets.length) {
       const block = element("div", "section-block");
@@ -410,7 +464,7 @@ async function renderAll() {
       listEl.append(element("div", "placeholder", "No presets yet."));
     }
   }
-  if (mostPlayedSectionVisible) {
+  if (mostPlayedSectionVisible && !searchActive) {
     listEl.append(createSectionTitle(
       "Your Top Five",
       mostListened.length ? "" : "Stations appear here after five minutes."
@@ -542,6 +596,37 @@ async function savePresetOrder(orderedIds) {
 
 function bindHandlers() {
   listEl.querySelectorAll(".station").forEach((row) => {
+    const gainSlider = row.querySelector(".station-gain-slider");
+    const gainReset = row.querySelector(".station-gain-reset");
+    const gainControls = row.querySelector(".station-gain-control");
+    gainControls?.addEventListener("click", (event) => event.stopPropagation());
+    gainControls?.addEventListener("pointerdown", (event) => event.stopPropagation());
+    gainSlider?.addEventListener("input", () => {
+      const gainDb = Number(gainSlider.value) || 0;
+      const output = row.querySelector(".station-gain-value");
+      if (output) output.textContent = formatGainDb(gainDb);
+      gainReset.disabled = gainDb === 0;
+      clearTimeout(stationGainTimers.get(row.dataset.id));
+      stationGainTimers.set(row.dataset.id, setTimeout(() => {
+        stationGainTimers.delete(row.dataset.id);
+        void saveStationGain(row.dataset.id, gainDb);
+      }, 60));
+    });
+    gainSlider?.addEventListener("change", () => {
+      clearTimeout(stationGainTimers.get(row.dataset.id));
+      stationGainTimers.delete(row.dataset.id);
+      void saveStationGain(row.dataset.id, Number(gainSlider.value) || 0);
+    });
+    gainReset?.addEventListener("click", () => {
+      clearTimeout(stationGainTimers.get(row.dataset.id));
+      stationGainTimers.delete(row.dataset.id);
+      gainSlider.value = "0";
+      const output = row.querySelector(".station-gain-value");
+      if (output) output.textContent = formatGainDb(0);
+      gainReset.disabled = true;
+      void saveStationGain(row.dataset.id, 0);
+    });
+
     row.querySelector(".favBtn").addEventListener("click", async (event) => {
       event.preventDefault();
       event.stopPropagation();

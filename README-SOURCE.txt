@@ -1,5 +1,5 @@
 WaveDeck portable Windows, Linux, and macOS source package
-Linux version 0.6.0
+Linux version 0.6.5
 
 WaveDeck is a portable internet-radio player for Linux, Windows, and macOS.
 Linux Mint Cinnamon can additionally use the sidebar toggle, which asks
@@ -211,6 +211,13 @@ Sidebar Mode, opens at a larger 1100-by-800 default, remembers its last size and
 position, and safely constrains restored geometry to the available monitor.
 The Stations table now fills the remaining window height with even margins, and
 subgroup names use a reliable inline Rename editor instead of a browser prompt.
+
+Linux version 0.6.5 adds live per-station gain from -12 dB to +12 dB in the
+expanded station details and saves those personal adjustments separately from
+the shareable station library. Active searches temporarily hide Presets and
+Your Top Five so only matching station results remain. The Settings control is
+again represented by a recognizable gear, and Settings > About now includes
+the complete WaveDeck changelog.
 
 Build requirements:
 - 64-bit Windows, Linux, or macOS

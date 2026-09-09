@@ -645,6 +645,52 @@ html, body{
   margin-top:3px;
 }
 
+.station-gain-control{
+  align-items:center;
+  border-top:1px solid rgba(255,255,255,0.08);
+  display:grid;
+  gap:4px 8px;
+  grid-template-columns:1fr auto auto;
+  margin-top:6px;
+  padding-top:6px;
+}
+
+.station-gain-label{
+  color:#b4b8c0;
+  font-size:10px;
+  font-weight:700;
+  text-transform:uppercase;
+}
+
+.station-gain-value{
+  color:#d0d3d9;
+  font-variant-numeric:tabular-nums;
+  min-width:42px;
+  text-align:right;
+}
+
+.station-gain-reset{
+  background:transparent;
+  border:0;
+  color:#8feab3;
+  cursor:pointer;
+  font:10px/1.2 inherit;
+  padding:1px 0;
+}
+
+.station-gain-reset:disabled{
+  color:#666;
+  cursor:default;
+}
+
+.station-gain-slider{
+  accent-color:#8feab3;
+  cursor:pointer;
+  grid-column:1 / -1;
+  margin:0;
+  width:100%;
+}
+
 
 
 

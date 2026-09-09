@@ -234,11 +234,140 @@
 
       <!-- ABOUT -->
       <section id="tab-about" class="panel hidden">
-        <p class="muted"><b>WaveDeck version <span id="aboutVersion">0.6.0</span></b><br>
+        <p class="muted"><b>WaveDeck version <span id="aboutVersion">0.6.5</span></b><br>
           Station library: <span id="aboutDataDir">Data</span></p>
         <p class="muted">WaveDeck is a lightweight, desktop-focused streaming controller designed for fast access to internet radio stations without clutter or distraction. It organizes stations into customizable groups, keeps a reorderable Presets section for quick access, lets you earmark Favorites independently, and provides subtle transport controls with real-time metadata display. On Linux Mint, optional Sidebar Mode reserves the right edge of the desktop so the player stays available beside maximized windows.</p>
         <p class="muted">Under the ample hood, the ghost of Wolfgang Amadeus Mozart manages streams with the unholy stability of Quincy Jones' broadcast console and the responsiveness of a studio-grade monitor rig. Its architecture is so efficient, it actually has negative overhead, adding extra processing power to your computer while maintaining flawless playback and gently massaging your shoulders as you listen. Advanced internal signal routing keeps everything smooth, balanced, and ready at a moment’s notice.</p>
         <p class="muted">With its proprietary quantum-adaptive resonance engine, it will subtly align waveform harmonics with local planetary magnetic flux, optimizing atmospheric coherence and gently curving the space-time substrate around your desk for improved acoustic clarity. Science people report enhanced focus, minor gravitational stabilization, and the spontaneous synchronization of parallel timelines.</p>
+
+        <div class="about-divider"></div>
+        <div class="changelog">
+          <h2>Changelog</h2>
+
+          <h3>WaveDeck 0.6.5 — Linux Update Only</h3>
+          <ul>
+            <li>Added live per-station Station Gain, adjustable from −12 dB to +12 dB.</li>
+            <li>Saved Station Gain separately in each user's preferences so library imports and updates cannot overwrite it.</li>
+            <li>Applied each station's saved gain automatically whenever it plays.</li>
+            <li>Changed active searches to show only matching station results, temporarily hiding Presets and Your Top Five.</li>
+            <li>Changed the Settings toolbar icon back to a recognizable gear.</li>
+            <li>Added the full WaveDeck changelog to the About tab.</li>
+          </ul>
+
+          <h3>WaveDeck 0.6.0 — Linux Update Only</h3>
+          <ul>
+            <li>Moved the main toolbar directly beneath the player and volume controls.</li>
+            <li>Centered and reordered the toolbar controls.</li>
+            <li>Replaced the Presets star with a bookmark icon.</li>
+            <li>Added a “show favorites-only” filter for the main station listing.</li>
+            <li>Renamed “Most Played” to “Your Top Five” and reduced the list to five stations.</li>
+            <li>Made the Search field remain fixed beneath the toolbar when enabled.</li>
+            <li>Removed the version number from the main toolbar; it remains available under Settings &gt; About.</li>
+            <li>Added an option to launch WaveDeck automatically in Sidebar Mode. (Linux Only)</li>
+            <li>Made WaveDeck remember the Settings window’s size and position.</li>
+            <li>Added monitor-safe window restoration for portable use on different computers and screen sizes.</li>
+            <li>Fixed the Stations table so it expands with the Settings window and maintains even margins.</li>
+            <li>Replaced the broken subgroup Rename dialog with reliable inline editing.</li>
+          </ul>
+
+          <h3>Version 0.5.1</h3>
+          <p>Maintenance release — no new features.</p>
+          <ul>
+            <li>Added an independent HTTPS fallback for library updates.</li>
+            <li>Fixed Linux systems failing to retrieve the master library through Electron’s network service.</li>
+            <li>Update failures remain silent when the server is unavailable.</li>
+          </ul>
+
+          <h3>Version 0.5.0</h3>
+          <ul>
+            <li>Added automatic station-library updates from the WaveDeck master library.</li>
+            <li>Added a “Download new stations” toggle in settings, enabled by default.</li>
+            <li>Updates can add stations, groups, and subgroups.</li>
+            <li>Updates can correct/update station URLs, countries, and descriptions.</li>
+            <li>Updates never delete stations or alter Favorites and Presets.</li>
+            <li>Deleted master stations remain deleted locally.</li>
+          </ul>
+
+          <h3>Version 0.4.3</h3>
+          <ul>
+            <li>Added station search with a magnifying-glass toolbar toggle.</li>
+            <li>Search checks station names, groups, subgroups, countries, descriptions, and URLs.</li>
+            <li>Search results automatically reveal matching station groups.</li>
+            <li>Reordered the listing stack to Search, Presets, Most Played, and Stations.</li>
+          </ul>
+
+          <h3>Version 0.4.2</h3>
+          <p>Maintenance release — no new features.</p>
+          <ul>
+            <li>Moved Linux mpv control sockets off the USB drive.</li>
+            <li>Fixed playback from exFAT, FAT, and other removable filesystems that cannot support Unix sockets.</li>
+          </ul>
+
+          <h3>Version 0.4.1</h3>
+          <p>Maintenance release — no new features.</p>
+          <ul>
+            <li>Moved Electron’s temporary files and lock files off the USB drive.</li>
+            <li>Fixed Linux launch failures from removable drives.</li>
+            <li>Combined Linux and Windows into one portable ZIP.</li>
+            <li>Standardized the extracted folder as “WaveDeck Portable.”</li>
+            <li>Added a complete default library with 360 stations, 17 groups, and 105 subgroups.</li>
+            <li>Added seven starter Presets for new users.</li>
+            <li>Existing user data remains untouched during updates.</li>
+          </ul>
+
+          <h3>Version 0.4.0</h3>
+          <p>Maintenance release — no new features.</p>
+          <ul>
+            <li>Standardized the shared portable data folder as “Data.”</li>
+            <li>Combined stations, groups, and subgroups into library.json.</li>
+            <li>Moved Favorites and Presets into the separate preferences.json file.</li>
+            <li>Added single-file library import and export.</li>
+            <li>Added “Add New” and confirmed “Replace” import modes.</li>
+            <li>Made the Settings header and station column headings remain visible while scrolling.</li>
+            <li>Moved the Add Station form directly beneath the station toolbar.</li>
+            <li>Fixed a Linux D-Bus crash when leaving Sidebar Mode.</li>
+            <li>Added separate platform-specific runtime storage.</li>
+          </ul>
+
+          <h3>Version 0.3.0</h3>
+          <ul>
+            <li>Added the portable Windows version.</li>
+            <li>Bundled the Windows mpv playback engine.</li>
+            <li>Added Windows media-key support with automatic registration retries.</li>
+            <li>Made the Windows EXE use the portable Data folder beside the application.</li>
+          </ul>
+
+          <h3>Version 0.2.5</h3>
+          <ul>
+            <li>Added toolbar toggles for Presets and Most Played.</li>
+            <li>Presets starts visible; Most Played starts hidden.</li>
+            <li>Expanded Most Played to ten stations.</li>
+            <li>Made Most Played available in normal and Sidebar modes.</li>
+            <li>Added the startup message “Warming up the airwaves...”</li>
+            <li>Removed media-key warnings from the visible player status.</li>
+            <li>Prevented listening-history updates from interrupting station editing.</li>
+            <li>Added automatic Linux media-key reclaiming every 15 seconds.</li>
+          </ul>
+
+          <h3>Version 0.2.4</h3>
+          <p>Maintenance release — no new features.</p>
+          <ul>
+            <li>Restored the complete WaveDeck header artwork.</li>
+            <li>Prevented accidental text selection when using station shortcuts.</li>
+            <li>Changed pre-roll marking from Alt-click to Ctrl+Shift-click.</li>
+            <li>Standardized Linux ZIP extraction into the same portable folder while preserving Data.</li>
+          </ul>
+
+          <h3>Version 0.2.3</h3>
+          <ul>
+            <li>Separated Presets from Favorites.</li>
+            <li>Migrated existing Favorites into Presets while preserving their order.</li>
+            <li>Added independent Favorite, Preset, and pre-roll station states.</li>
+            <li>Added Ctrl-click for Presets, Ctrl+Shift-click for pre-roll, Shift-click for editing, and star-click for Favorites.</li>
+            <li>Made groups and subgroups start collapsed.</li>
+            <li>Added Expand All and Collapse All controls.</li>
+          </ul>
+        </div>
       </section>
     </main>
   </div>

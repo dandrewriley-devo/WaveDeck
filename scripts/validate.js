@@ -41,6 +41,7 @@ const {
   bitrateFromTrackList,
   getIpcPath,
   getMpvExecutable,
+  normalizeStationGainDb,
   normalizeBitrateKbps
 } = require("../src/main/player");
 const { MprisPlayerInterface, metadataForStation, stationTrackPath } = require("../src/main/mpris");
@@ -59,6 +60,7 @@ const {
 const {
   PortableStorage,
   STARTER_PRESET_NAMES,
+  cleanStationGainDb,
   validateGroups,
   validateLibrary,
   validateStations,
@@ -120,7 +122,7 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.6.0");
+assert.strictEqual(packageJson.version, "0.6.5");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -326,12 +328,19 @@ try {
   unorderedPreset[0].presetOrder = null;
   storage.writeStations(unorderedPreset);
   assert.strictEqual(storage.readStations()[0].presetOrder, null);
+  const gainStationId = storage.readStations()[0].id;
+  assert.strictEqual(storage.setStationGain(gainStationId, 20), 12);
+  assert.strictEqual(storage.readStations()[0].gainDb, 12);
+  assert.strictEqual(storage.readPreferences().stations[gainStationId].gainDb, 12);
+  assert.strictEqual(storage.setStationGain(gainStationId, -4.25), -4);
+  assert.strictEqual(storage.readStations()[0].gainDb, -4);
   assert.ok(fs.existsSync(path.join(dataDir, "backups", "library.json.bak")));
   assert.ok(fs.existsSync(path.join(dataDir, "preferences.json")));
   const exportedLibrary = storage.exportLibrary("2026-09-08T12:34:56.789Z");
   assert.strictEqual(exportedLibrary.updatedAt, "2026-09-08T12:34:56.789Z");
   assert.strictEqual(exportedLibrary.stations[0].favorite, undefined);
   assert.strictEqual(exportedLibrary.stations[0].preset, undefined);
+  assert.strictEqual(exportedLibrary.stations[0].gainDb, undefined);
   assert.strictEqual(storage.readNotepad(), "");
   storage.writeNotepad("Call Ben\nOrder filters");
   assert.strictEqual(storage.readNotepad(), "Call Ben\nOrder filters");
@@ -394,6 +403,7 @@ try {
   assert.strictEqual(replaceResult.stationCount, 1);
   assert.strictEqual(reloadedStorage.readStations()[0].favorite, true);
   assert.strictEqual(reloadedStorage.readStations()[0].preset, true);
+  assert.strictEqual(reloadedStorage.readStations()[0].gainDb, -4);
   assert.strictEqual(reloadedStorage.readStations()[0].name, "Replacement Name");
   assert.ok(fs.existsSync(path.join(dataDir, "backups", "library.json.bak")));
   assert.doesNotThrow(() => validateLibrary([{ name: "Old Export", url: "https://example.com/old", favorite: true }]));
@@ -694,6 +704,10 @@ assert.strictEqual(indieHistory.getStats().stations.st_mtjk2dw5_kn5p33sb.seconds
 assert.ok(indieWrites.length >= 1);
 indieHistory.close();
 assert.strictEqual(normalizeBitrateKbps("128 kb/s"), 128);
+assert.strictEqual(normalizeStationGainDb(20), 12);
+assert.strictEqual(normalizeStationGainDb(-20), -12);
+assert.strictEqual(normalizeStationGainDb(2.24), 2);
+assert.strictEqual(cleanStationGainDb(2.26), 2.5);
 assert.strictEqual(normalizeBitrateKbps(192000, { assumeBitsPerSecond: true }), 192);
 assert.strictEqual(bitrateFromMetadata({ "icy-br": "320" }), 320);
 assert.strictEqual(bitrateFromTrackList([{ type: "audio", selected: true, "demux-bitrate": 256000 }]), 256);
@@ -994,6 +1008,7 @@ assert.ok(preloadSource.includes('ipcRenderer.invoke("library:import", mode)'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("library-update:get-state")'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("library-update:set-enabled", enabled)'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("stations:delete", stationId)'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("stations:set-gain", stationId, gainDb)'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("player:play-station", stationId)'));
 assert.ok(preloadSource.includes("platform: process.platform"));
 assert.ok(!preloadSource.includes("showStationContextMenu"));
@@ -1018,6 +1033,8 @@ assert.ok(settingsHtml.includes('id="st_description"'));
 assert.ok(settingsHtml.includes('id="st_favorite"'));
 assert.ok(settingsHtml.includes('id="st_preset"'));
 assert.ok(settingsHtml.includes('id="st_has_preroll"'));
+assert.ok(settingsHtml.includes("WaveDeck 0.6.5 — Linux Update Only"));
+assert.ok(settingsHtml.includes("Changelog"));
 const settingsStyles = fs.readFileSync(path.join(root, "src", "renderer", "settings.css"), "utf8");
 assert.ok(settingsStyles.includes("position: sticky"));
 assert.ok(settingsStyles.includes("overflow: auto"));
@@ -1089,6 +1106,7 @@ assert.ok(mainSource.includes('ipcMain.handle("library:import"'));
 assert.ok(mainSource.includes('ipcMain.handle("library-update:get-state"'));
 assert.ok(mainSource.includes('ipcMain.handle("library-update:set-enabled"'));
 assert.ok(mainSource.includes('ipcMain.handle("stations:delete"'));
+assert.ok(mainSource.includes('ipcMain.handle("stations:set-gain"'));
 assert.ok(mainSource.includes('"WaveDeck_Library.json"'));
 assert.ok(mainSource.includes("createLibraryUpdater"));
 assert.ok(mainSource.includes("net.fetch"));
@@ -1131,8 +1149,8 @@ assert.ok(rendererSource.includes("event.ctrlKey"));
 assert.ok(rendererSource.includes("event.ctrlKey && event.shiftKey"));
 assert.ok(rendererSource.includes('row.addEventListener("pointerdown"'));
 assert.ok(!rendererSource.includes("event.altKey"));
-const presetStackIndex = rendererSource.indexOf('if (presetSectionVisible) {');
-const mostPlayedStackIndex = rendererSource.indexOf('if (mostPlayedSectionVisible) {', presetStackIndex);
+const presetStackIndex = rendererSource.indexOf('if (presetSectionVisible && !searchActive) {');
+const mostPlayedStackIndex = rendererSource.indexOf('if (mostPlayedSectionVisible && !searchActive) {', presetStackIndex);
 const stationsStackIndex = rendererSource.indexOf('listEl.append(createSectionTitle("stations"', mostPlayedStackIndex);
 assert.ok(presetStackIndex >= 0);
 assert.ok(presetStackIndex < mostPlayedStackIndex);
@@ -1148,6 +1166,10 @@ assert.ok(rendererSource.includes("Detecting bitrate"));
 assert.ok(rendererSource.includes("createSubgroupBlock"));
 assert.ok(rendererSource.includes("playStation(row.dataset.id)"));
 assert.ok(rendererSource.includes("currentStationId"));
+assert.ok(rendererSource.includes("station-gain-slider"));
+assert.ok(rendererSource.includes("setStationGain(stationId, value)"));
+assert.ok(rendererSource.includes("presetSectionVisible && !searchActive"));
+assert.ok(rendererSource.includes("mostPlayedSectionVisible && !searchActive"));
 assert.ok(rendererSource.includes('platform !== "linux"'));
 const settingsSource = fs.readFileSync(path.join(root, "src", "renderer", "settings.js"), "utf8");
 assert.ok(settingsSource.includes("addSubgroup"));
@@ -1195,7 +1217,7 @@ const combinedWorkflow = fs.readFileSync(path.join(root, ".github", "workflows",
 assert.ok(!combinedWorkflow.includes("  push:"));
 const linuxWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "linux-portable.yml"), "utf8");
 assert.ok(linuxWorkflow.includes("  push:"));
-assert.ok(linuxWorkflow.includes("WaveDeck-0.6.0-Linux.zip"));
+assert.ok(linuxWorkflow.includes("WaveDeck-0.6.5-Linux.zip"));
 assert.ok(linuxWorkflow.includes('install -m 755 dist/WaveDeck.AppImage'));
 const macosInstructions = fs.readFileSync(path.join(root, "START-HERE-MACOS.txt"), "utf8");
 assert.ok(macosInstructions.includes("Version 0.6.1 universal build"));
@@ -1303,6 +1325,36 @@ async function validateMediaControls() {
   assert.deepStrictEqual(await pausedUpdater.check(), { ok: true, skipped: "paused" });
   assert.strictEqual(pausedFetches, 0);
 
+  const nativeGainCommands = [];
+  const nativeGainPlayer = new MpvPlayer({ executable: "mpv", ipcPath: "/tmp/test-native-gain.sock" });
+  nativeGainPlayer.start = async () => true;
+  nativeGainPlayer.command = async (command) => {
+    nativeGainCommands.push(command);
+    return { error: "success" };
+  };
+  assert.strictEqual(await nativeGainPlayer.setStationGain(4.25), 4.5);
+  assert.deepStrictEqual(nativeGainCommands, [["set_property", "volume-gain", 4.5]]);
+  assert.strictEqual(nativeGainPlayer.getStatus().stationGainDb, 4.5);
+
+  const fallbackGainCommands = [];
+  const fallbackGainPlayer = new MpvPlayer({ executable: "mpv", ipcPath: "/tmp/test-filter-gain.sock" });
+  fallbackGainPlayer.start = async () => true;
+  fallbackGainPlayer.command = async (command) => {
+    fallbackGainCommands.push(command);
+    if (command[0] === "set_property" && command[1] === "volume-gain") {
+      throw new Error("property not found");
+    }
+    return { error: "success" };
+  };
+  assert.strictEqual(await fallbackGainPlayer.setStationGain(6), 6);
+  assert.deepStrictEqual(fallbackGainCommands.at(-1), [
+    "af",
+    "add",
+    "@wavedeck-station-gain:lavfi=[volume=6dB,alimiter=limit=0.98:level=false]"
+  ]);
+  assert.strictEqual(await fallbackGainPlayer.setStationGain(0), 0);
+  assert.deepStrictEqual(fallbackGainCommands.at(-1), ["af", "remove", "@wavedeck-station-gain"]);
+
   const heartbeatEvents = [];
   const heartbeatPlayer = new MpvPlayer({
     executable: "mpv",
@@ -1338,6 +1390,7 @@ async function validateMediaControls() {
   });
   const missingEventPlayer = {
     getStatus: () => ({ state: "ready", playing: false }),
+    setStationGain: async () => 0,
     play: async () => true,
     stop: async () => true
   };
@@ -1377,6 +1430,11 @@ async function validateMediaControls() {
       calls.push(["volume", value]);
       this.status = { ...this.status, volume: value };
       return value;
+    },
+    async setStationGain(value) {
+      calls.push(["gain", value]);
+      this.status = { ...this.status, stationGainDb: value };
+      return value;
     }
   };
   const stationEvents = [];
@@ -1414,6 +1472,11 @@ async function validateMediaControls() {
   await controller.playStationById("beta");
   assert.strictEqual(controller.getCurrentStation().id, "beta");
   assert.strictEqual(controller.getCurrentStation().name, "Beta");
+  assert.deepStrictEqual(calls.at(-2), ["gain", 0]);
+  assert.strictEqual(await controller.setStationGain("beta", 4.5), true);
+  assert.strictEqual(controller.getCurrentStation().gainDb, 4.5);
+  assert.deepStrictEqual(calls.at(-1), ["gain", 4.5]);
+  assert.strictEqual(await controller.setStationGain("alpha", 2), false);
   await controller.playStationById("beta-alias");
   assert.strictEqual(controller.getCurrentStation().id, "beta-alias");
   assert.strictEqual(controller.getCurrentStation().name, "Beta Alias");
@@ -1597,7 +1660,7 @@ async function validateMediaControls() {
 }
 
 validateMediaControls().then(() => {
-console.log("WaveDeck validation passed: v0.6.0 Linux toolbar, filters, Settings geometry, Sidebar startup, portable data, and packaging verified.");
+console.log("WaveDeck validation passed: v0.6.5 Linux search, Station Gain, changelog, portable data, and packaging verified.");
 }).catch((error) => {
   console.error(error);
   process.exitCode = 1;

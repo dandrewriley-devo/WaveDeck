@@ -515,3 +515,41 @@ section#tab-about p {
   line-height: 1.6;
   font-weight: 400;
 }
+
+.about-divider{
+  background:var(--border);
+  height:1px;
+  margin:24px 0 20px;
+}
+
+.changelog{
+  color:#c8c8c8;
+  line-height:1.5;
+  max-width:900px;
+}
+
+.changelog h2{
+  color:var(--text);
+  font-size:18px;
+  margin:0 0 16px;
+}
+
+.changelog h3{
+  color:#d7d7d7;
+  font-size:14px;
+  margin:22px 0 7px;
+}
+
+.changelog p{
+  margin:0 0 7px;
+}
+
+.changelog ul{
+  margin:0 0 12px;
+  padding-left:21px;
+}
+
+.changelog li{
+  font-size:13px;
+  margin:3px 0;
+}

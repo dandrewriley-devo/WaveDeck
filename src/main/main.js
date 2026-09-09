@@ -465,6 +465,11 @@ function installIpcHandlers() {
     }
     return result;
   });
+  ipcMain.handle("stations:set-gain", async (_event, stationId, value) => {
+    const gainDb = storage.setStationGain(stationId, value);
+    const applied = await mediaController.setStationGain(stationId, gainDb);
+    return { gainDb, applied };
+  });
 
   ipcMain.handle("groups:get", () => storage.readGroups());
   ipcMain.handle("groups:save", (_event, groups) => {

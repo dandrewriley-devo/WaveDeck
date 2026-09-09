@@ -62,6 +62,12 @@ function cleanPresetOrder(value) {
   return Number.isSafeInteger(order) && order >= 0 ? order : null;
 }
 
+function cleanStationGainDb(value) {
+  const gain = Number(value);
+  if (!Number.isFinite(gain)) return 0;
+  return Math.round(Math.min(Math.max(gain, -12), 12) * 2) / 2;
+}
+
 function hasOwn(value, key) { return Object.prototype.hasOwnProperty.call(value, key); }
 
 function cleanStation(raw, index = 0) {
@@ -93,7 +99,8 @@ function cleanStation(raw, index = 0) {
     country: String(raw.country ?? "").trim(),
     subgroup: normalizeSubgroupName(raw.subgroup),
     description: String(raw.description ?? "").trim().slice(0, 2000),
-    hasPreRoll: currentSchema && Boolean(raw.hasPreRoll)
+    hasPreRoll: currentSchema && Boolean(raw.hasPreRoll),
+    gainDb: cleanStationGainDb(raw.gainDb)
   };
 }
 
@@ -203,12 +210,15 @@ function validatePreferences(value) {
       if (!id || !rawEntry || typeof rawEntry !== "object" || Array.isArray(rawEntry)) continue;
       const favorite = Boolean(rawEntry.favorite);
       const preset = Boolean(rawEntry.preset);
-      if (!favorite && !preset) continue;
-      stations[id] = {
+      const gainDb = cleanStationGainDb(rawEntry.gainDb);
+      if (!favorite && !preset && gainDb === 0) continue;
+      const stationPreferences = {
         favorite,
         preset,
         presetOrder: preset ? cleanPresetOrder(rawEntry.presetOrder) : null
       };
+      if (gainDb !== 0) stationPreferences.gainDb = gainDb;
+      stations[id] = stationPreferences;
     }
   }
   const rawDeletedIds = value && typeof value === "object" && !Array.isArray(value)
@@ -249,12 +259,15 @@ function validatePreferences(value) {
 function preferencesFromStations(stations) {
   const preferences = validatePreferences(null);
   for (const station of stations) {
-    if (!station.favorite && !station.preset) continue;
-    preferences.stations[station.id] = {
+    const gainDb = cleanStationGainDb(station.gainDb);
+    if (!station.favorite && !station.preset && gainDb === 0) continue;
+    const stationPreferences = {
       favorite: Boolean(station.favorite),
       preset: Boolean(station.preset),
       presetOrder: station.preset ? cleanPresetOrder(station.presetOrder) : null
     };
+    if (gainDb !== 0) stationPreferences.gainDb = gainDb;
+    preferences.stations[station.id] = stationPreferences;
   }
   return preferences;
 }
@@ -323,7 +336,8 @@ class PortableStorage {
         ...station,
         favorite: Boolean(preference.favorite),
         preset: Boolean(preference.preset),
-        presetOrder: preference.preset ? cleanPresetOrder(preference.presetOrder) : null
+        presetOrder: preference.preset ? cleanPresetOrder(preference.presetOrder) : null,
+        gainDb: cleanStationGainDb(preference.gainDb)
       };
     });
   }
@@ -426,6 +440,26 @@ class PortableStorage {
     preferences.settingsWindowBounds = bounds;
     this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
     return this.getLinuxUiPreferences().settingsWindowBounds;
+  }
+
+  setStationGain(stationId, value) {
+    const id = String(stationId ?? "").trim();
+    if (!id || !this.readLibrary().stations.some((station) => station.id === id)) {
+      throw new Error("That station is no longer in WaveDeck.");
+    }
+    const gainDb = cleanStationGainDb(value);
+    const preferences = this.readPreferences();
+    const current = preferences.stations[id] || {
+      favorite: false,
+      preset: false,
+      presetOrder: null
+    };
+    if (gainDb === 0) delete current.gainDb;
+    else current.gainDb = gainDb;
+    if (current.favorite || current.preset || current.gainDb) preferences.stations[id] = current;
+    else delete preferences.stations[id];
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return gainDb;
   }
 
   deleteStation(stationId) {
@@ -808,6 +842,7 @@ class PortableStorage {
 module.exports = {
   STARTER_PRESET_NAMES,
   PortableStorage,
+  cleanStationGainDb,
   cleanStation,
   ensureOtherLast,
   normalizeGroupName,

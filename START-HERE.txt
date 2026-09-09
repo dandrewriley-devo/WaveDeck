@@ -1,5 +1,5 @@
 WAVEDECK PORTABLE FOR LINUX
-Version 0.6.0 (64-bit Intel/AMD)
+Version 0.6.5 (64-bit Intel/AMD)
 
 QUICK START
 
@@ -42,7 +42,7 @@ AppImage:
 2. Launch WaveDeck.AppImage directly.
 3. Open Settings, select Panel Shortcut, and click "Update WaveDeck
    Applications Menu Entry."
-4. Confirm your panel shortcut opens version 0.6.0. You may then delete the
+4. Confirm your panel shortcut opens version 0.6.5. You may then delete the
    older version-numbered AppImage.
 
 Starting with version 0.1.11, the executable is always named WaveDeck.AppImage.
@@ -143,6 +143,12 @@ rechecks mpv every 10 seconds, so a missed notification cannot leave a station
 untracked. Failed, paused, and stopped playback still ends the session. The
 expanded station details now sit more tightly beneath the station name.
 
+Version 0.6.5 adds a Station Gain slider to those expanded details. Each
+station can be adjusted from -12 dB to +12 dB while it is playing. WaveDeck
+saves the adjustment in preferences.json and reapplies it automatically the
+next time that station plays. Station Gain is independent of the main volume
+slider and is never included in exported or downloaded station libraries.
+
 Version 0.2.3 separates the quick-access Presets list from Favorite markers,
 keeps Presets in their normal listings, adds Ctrl/Alt/Shift-click shortcuts,
 reverses the pre-roll field into an ad warning, and starts station groups
@@ -168,6 +174,10 @@ toolbar nor Search scrolls out of sight. Search matches
 station names, groups, subgroups, countries, descriptions, and stream URLs.
 Matching groups open automatically; clearing or hiding Search restores the
 normal collapsed or expanded group layout.
+
+While text is present in Search, WaveDeck temporarily hides Presets and Your
+Top Five so only matching station results are shown. Clearing Search restores
+both sections exactly as they were without changing their toolbar toggles.
 
 AUTOMATIC STATION UPDATES
 

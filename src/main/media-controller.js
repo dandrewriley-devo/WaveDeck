@@ -31,7 +31,8 @@ function publicStation(station) {
     subgroup: String(station.subgroup ?? ""),
     favorite: Boolean(station.favorite),
     preset: Boolean(station.preset),
-    hasPreRoll: Boolean(station.hasPreRoll)
+    hasPreRoll: Boolean(station.hasPreRoll),
+    gainDb: Number.isFinite(Number(station.gainDb)) ? Number(station.gainDb) : 0
   };
 }
 
@@ -87,6 +88,7 @@ class MediaController {
     this.onStationChanged(this.getCurrentStation());
     this.onStateChanged(this.getStatus());
     try {
+      await this.player.setStationGain(this.currentStation.gainDb);
       await this.player.play(this.currentStation.url);
     } catch (error) {
       if (String(this.currentStation?.id) === stationId) {
@@ -122,6 +124,16 @@ class MediaController {
     const normalized = Math.min(Math.max(Number(normalizedValue) || 0, 0), 1);
     await this.player.setVolume(normalized * 100);
     return normalized;
+  }
+
+  async setStationGain(stationId, value) {
+    const id = String(stationId ?? "").trim();
+    const gainDb = Number(value) || 0;
+    if (String(this.currentStation?.id) !== id) return false;
+    this.currentStation = { ...this.currentStation, gainDb };
+    await this.player.setStationGain(gainDb);
+    this.onStateChanged(this.getStatus());
+    return true;
   }
 
   async play() {

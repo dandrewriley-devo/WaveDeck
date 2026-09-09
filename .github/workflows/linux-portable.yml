@@ -34,18 +34,18 @@ jobs:
           install -m 644 THIRD-PARTY-NOTICES.txt "release/WaveDeck Portable/THIRD-PARTY-NOTICES.txt"
           install -m 644 licenses/mpv-GPL-2.0.txt "release/WaveDeck Portable/mpv-GPL-2.0.txt"
           cd release
-          zip -q -r -9 WaveDeck-0.6.0-Linux.zip "WaveDeck Portable"
-          unzip -t WaveDeck-0.6.0-Linux.zip
-          zipinfo -l WaveDeck-0.6.0-Linux.zip | grep -Eq '^-rwxr-xr-x .*WaveDeck Portable/WaveDeck.AppImage$'
-          if unzip -Z1 WaveDeck-0.6.0-Linux.zip | grep -Eq '^WaveDeck Portable/Data(/|$)'; then
+          zip -q -r -9 WaveDeck-0.6.5-Linux.zip "WaveDeck Portable"
+          unzip -t WaveDeck-0.6.5-Linux.zip
+          zipinfo -l WaveDeck-0.6.5-Linux.zip | grep -Eq '^-rwxr-xr-x .*WaveDeck Portable/WaveDeck.AppImage$'
+          if unzip -Z1 WaveDeck-0.6.5-Linux.zip | grep -Eq '^WaveDeck Portable/Data(/|$)'; then
             echo "The release ZIP must not contain a Data folder."
             exit 1
           fi
 
       - uses: actions/upload-artifact@v4
         with:
-          name: WaveDeck-0.6.0-Linux
-          path: release/WaveDeck-0.6.0-Linux.zip
+          name: WaveDeck-0.6.5-Linux
+          path: release/WaveDeck-0.6.5-Linux.zip
           if-no-files-found: error
           compression-level: 0
           retention-days: 14
