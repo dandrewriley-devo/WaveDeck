@@ -181,30 +181,22 @@ html, body{
 }
 
 
-.footer{
+.toolbar{
   align-items: center;
   background: var(--panel);
-  border-bottom: none;
+  border-bottom: 1px solid var(--border);
   border-top: 1px solid var(--border);
+  flex: 0 0 32px;
   padding: 0px;
   display: flex;
-  justify-content: flex-start;
+  justify-content: center;
   min-height: 32px;
   width: 100%;
   min-width: 0;
   overflow: hidden;
 }
 
-.footer-version{
-  color:#515151;
-  font-size:9px;
-  letter-spacing:0.02em;
-  margin-left:9px;
-  margin-right:auto;
-  user-select:none;
-}
-
-.footer button {
+.toolbar button {
   align-items: center;
   background: transparent;
   border: none;
@@ -218,25 +210,25 @@ html, body{
   width: 34px;
 }
 
-.footer button[hidden] {
+.toolbar button[hidden] {
   display: none;
 }
 
-.footer button:hover,
-.footer button:focus-visible {
+.toolbar button:hover,
+.toolbar button:focus-visible {
   color: #e7e9f3;
 }
 
-.footer button.active {
+.toolbar button.active {
   color: #8feab3;
 }
 
-.footer button:disabled {
+.toolbar button:disabled {
   cursor: default;
   opacity: 0.35;
 }
 
-.footer svg {
+.toolbar svg {
   height: 18px;
   width: 18px;
 }
@@ -348,8 +340,14 @@ html, body{
   margin-bottom: 14px;
 }
 
-.station-search-block{
-  margin:10px 10px 12px;
+.station-search-panel{
+  background:#161616;
+  flex:0 0 auto;
+  padding:10px 10px 12px;
+}
+
+.station-search-panel[hidden]{
+  display:none;
 }
 
 .station-search-field{

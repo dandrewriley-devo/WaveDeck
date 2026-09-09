@@ -12,17 +12,19 @@ WaveDeck is a lightweight, portable internet-radio player for 64-bit Windows, Li
 - Optional importable copy of the complete default library for existing users
 - Personal Favorites and Presets stored separately from the shareable station library
 - Linux Mint Cinnamon Sidebar Mode (Linux only)
+- Optional automatic Sidebar Mode at Linux startup
 - Toggleable Presets with drag-and-drop ordering and media-key navigation
-- Independent Favorites and pre-roll markers
+- Independent Favorites, a Favorites-only station filter, and pre-roll markers
 - Native media-key controls with periodic registration checks
-- Toggleable ten-station Most Played listening statistics
-- Toggleable station search across names, groups, subgroups, countries, descriptions, and URLs
+- Toggleable five-station Your Top Five listening statistics
+- Fixed toolbar and toggleable station search across names, groups, subgroups, countries, descriptions, and URLs
 - Groups and optional subgroups
 - Shift-click station editing and Ctrl+Shift-click pre-roll marking
 - Country, description, and best-effort bitrate information
 - Collapsed station groups with Expand All / Collapse All
 - Collapsible, persistent sidebar notepad (Linux Sidebar Mode)
 - Linux Applications-menu and panel-launcher integration (Linux only)
+- A larger Linux Settings window that remembers its monitor-safe size and position
 
 ## Requirements
 
@@ -85,7 +87,7 @@ WaveDeck checks `https://fabulon.cloud/downloads/library_update.json` quietly at
 
 ## Platform notes
 
-The normal player, station library, Presets, Favorites, Most Played, groups, metadata, Settings, media keys, and library updates are shared across Windows, Linux, and macOS. Sidebar reservation, its notepad, and panel-launcher integration remain Linux Mint Cinnamon features.
+The normal player, station library, Presets, Favorites, listening statistics, groups, metadata, Settings, media keys, and library updates are shared across Windows, Linux, and macOS. Current feature development and testing are focused on Linux Mint Cinnamon; the other platform packages are updated after the Linux edition reaches a stable milestone. Sidebar reservation, its notepad, and panel-launcher integration remain Linux Mint Cinnamon features.
 
 ## Project history
 

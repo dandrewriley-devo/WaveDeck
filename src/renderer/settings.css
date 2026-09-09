@@ -17,7 +17,13 @@ html, body{
   color: var(--text);
 }
 
-.wrap{ padding: 16px; }
+.wrap{
+  display:flex;
+  flex-direction:column;
+  height:100%;
+  overflow:hidden;
+  padding:16px;
+}
 
 .top{
   display:flex;
@@ -65,10 +71,29 @@ h1{
 .panel{
   border: 1px solid var(--border);
   background: var(--panel);
+  height:100%;
+  overflow:auto;
   padding: 14px;
+  width:100%;
 }
 
-.hidden{ display:none; }
+.hidden{ display:none !important; }
+
+main{
+  flex:1;
+  min-height:0;
+}
+
+#tab-stations{
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+  overflow:auto;
+}
+
+#tab-stations > #status:empty{
+  display:none;
+}
 
 .row{
   margin-bottom: 12px;
@@ -226,7 +251,8 @@ select:focus{
 
 .table-wrap{
   border: 1px solid var(--border);
-  max-height: min(62vh, calc(100vh - 245px));
+  flex:1 1 auto;
+  min-height:180px;
   overflow: auto;
   background: var(--panel);
 }
@@ -320,7 +346,8 @@ select:focus{
   min-width:220px;
 }
 
-.library-update-toggle{
+.library-update-toggle,
+.preference-toggle{
   align-items:center;
   color:var(--muted);
   cursor:pointer;
@@ -331,7 +358,8 @@ select:focus{
   white-space:nowrap;
 }
 
-.library-update-toggle input{
+.library-update-toggle input,
+.preference-toggle input{
   opacity:0;
   position:absolute;
   pointer-events:none;
@@ -360,24 +388,37 @@ select:focus{
   width:12px;
 }
 
-.library-update-toggle input:checked + .toggle-switch{
+.library-update-toggle input:checked + .toggle-switch,
+.preference-toggle input:checked + .toggle-switch{
   background:#527b24;
   border-color:#76a83f;
 }
 
-.library-update-toggle input:checked + .toggle-switch::after{
+.library-update-toggle input:checked + .toggle-switch::after,
+.preference-toggle input:checked + .toggle-switch::after{
   background:#d8f7b7;
   transform:translateX(16px);
 }
 
-.library-update-toggle input:focus-visible + .toggle-switch{
+.library-update-toggle input:focus-visible + .toggle-switch,
+.preference-toggle input:focus-visible + .toggle-switch{
   outline:2px solid #8abf50;
   outline-offset:2px;
 }
 
-.library-update-toggle:has(input:disabled){
+.library-update-toggle:has(input:disabled),
+.preference-toggle:has(input:disabled){
   cursor:wait;
   opacity:0.6;
+}
+
+.preference-toggle{
+  margin:8px 0 0;
+}
+
+.subgroup-rename-input{
+  flex:1;
+  min-width:120px;
 }
 
 .listening-history-bar{

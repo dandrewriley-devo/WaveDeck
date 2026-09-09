@@ -7,12 +7,15 @@ const volumeSlider = document.getElementById("volSlider");
 const openSettingsBtn = document.getElementById("openSettingsBtn");
 const searchSectionToggleBtn = document.getElementById("searchSectionToggleBtn");
 const presetSectionToggleBtn = document.getElementById("presetSectionToggleBtn");
+const favoritesOnlyToggleBtn = document.getElementById("favoritesOnlyToggleBtn");
 const mostPlayedSectionToggleBtn = document.getElementById("mostPlayedSectionToggleBtn");
 const sidebarModeBtn = document.getElementById("sidebarModeBtn");
 const notepadToggleBtn = document.getElementById("notepadToggleBtn");
 const notepadPanel = document.getElementById("notepadPanel");
 const notepadText = document.getElementById("notepadText");
-const appVersion = document.getElementById("appVersion");
+const searchPanel = document.getElementById("searchPanel");
+const stationSearchInput = document.getElementById("stationSearchInput");
+const clearStationSearchBtn = document.getElementById("clearStationSearchBtn");
 const listEl = document.querySelector(".list");
 const platform = window.wavedeck.platform;
 
@@ -28,6 +31,7 @@ let notepadOpen = false;
 let sidebarModeEnabled = false;
 let searchSectionVisible = false;
 let presetSectionVisible = true;
+let favoritesOnlyVisible = false;
 let mostPlayedSectionVisible = false;
 let stationSearchQuery = "";
 let searchRenderTimer = null;
@@ -136,17 +140,25 @@ function setSidebarUi(state) {
 function setSectionVisibilityUi(state = {}) {
   const search = state.search === true;
   const presets = state.presets !== false;
+  const favoritesOnly = state.favoritesOnly === true;
   const mostPlayed = state.mostPlayed === true;
-  const changed = searchSectionVisible !== search || presetSectionVisible !== presets || mostPlayedSectionVisible !== mostPlayed;
+  const changed = searchSectionVisible !== search || presetSectionVisible !== presets ||
+    favoritesOnlyVisible !== favoritesOnly || mostPlayedSectionVisible !== mostPlayed;
   searchSectionVisible = search;
   presetSectionVisible = presets;
+  favoritesOnlyVisible = favoritesOnly;
   mostPlayedSectionVisible = mostPlayed;
 
   if (!search) {
     stationSearchQuery = "";
+    stationSearchInput.value = "";
+    clearStationSearchBtn.hidden = true;
     clearTimeout(searchRenderTimer);
     searchRenderTimer = null;
   }
+
+  searchPanel.hidden = !search;
+  searchPanel.setAttribute("aria-hidden", String(!search));
 
   searchSectionToggleBtn.classList.toggle("active", search);
   searchSectionToggleBtn.setAttribute("aria-pressed", String(search));
@@ -154,9 +166,12 @@ function setSectionVisibilityUi(state = {}) {
   presetSectionToggleBtn.classList.toggle("active", presets);
   presetSectionToggleBtn.setAttribute("aria-pressed", String(presets));
   presetSectionToggleBtn.setAttribute("aria-label", presets ? "Hide Presets" : "Show Presets");
+  favoritesOnlyToggleBtn.classList.toggle("active", favoritesOnly);
+  favoritesOnlyToggleBtn.setAttribute("aria-pressed", String(favoritesOnly));
+  favoritesOnlyToggleBtn.setAttribute("aria-label", favoritesOnly ? "Show all Stations" : "Show Favorites only");
   mostPlayedSectionToggleBtn.classList.toggle("active", mostPlayed);
   mostPlayedSectionToggleBtn.setAttribute("aria-pressed", String(mostPlayed));
-  mostPlayedSectionToggleBtn.setAttribute("aria-label", mostPlayed ? "Hide Most Played" : "Show Most Played");
+  mostPlayedSectionToggleBtn.setAttribute("aria-label", mostPlayed ? "Hide Your Top Five" : "Show Your Top Five");
 
   if (changed) queueRender();
 }
@@ -253,28 +268,6 @@ function createSectionTitle(title, subtitle = "", action = null) {
   return section;
 }
 
-function createSearchBlock() {
-  const block = element("section", "station-search-block");
-  const field = element("div", "station-search-field");
-  const input = element("input", "station-search-input");
-  input.id = "stationSearchInput";
-  input.type = "search";
-  input.value = stationSearchQuery;
-  input.placeholder = "Search stations…";
-  input.autocomplete = "off";
-  input.spellcheck = false;
-  input.setAttribute("aria-label", "Search stations");
-  const clear = element("button", "station-search-clear", "×");
-  clear.id = "clearStationSearchBtn";
-  clear.type = "button";
-  clear.hidden = !stationSearchQuery;
-  clear.title = "Clear search";
-  clear.setAttribute("aria-label", "Clear station search");
-  field.append(input, clear);
-  block.append(field);
-  return block;
-}
-
 function subgroupKey(groupName, subgroupName) {
   return `${groupName}\u0000${subgroupName}`;
 }
@@ -362,7 +355,7 @@ function buildGroupsInOrder(stations, groupOrder) {
 }
 
 async function renderAll() {
-  const searchInputHadFocus = document.activeElement?.id === "stationSearchInput";
+  const searchInputHadFocus = document.activeElement === stationSearchInput;
   const [stations, groupOrder, subgroupConfig, history] = await Promise.all([
     window.wavedeck.getStations(),
     window.wavedeck.getGroups(),
@@ -373,16 +366,17 @@ async function renderAll() {
 
   const presets = stations.filter((station) => station.preset).sort(sortPresets);
   const searchActive = searchSectionVisible && Boolean(window.WaveDeckSearch.normalizeSearchText(stationSearchQuery));
-  const filteredStations = searchActive
-    ? stations.filter((station) => window.WaveDeckSearch.stationMatchesQuery(station, stationSearchQuery))
-    : stations;
+  const filteredStations = stations.filter((station) => (
+    (!favoritesOnlyVisible || station.favorite) &&
+    (!searchActive || window.WaveDeckSearch.stationMatchesQuery(station, stationSearchQuery))
+  ));
   const stationStats = listeningHistory.stations || {};
   const mostListened = mostPlayedSectionVisible
     ? stations
       .map((station) => ({ station, seconds: Number(stationStats[station.id]?.seconds) || 0 }))
       .filter((item) => item.seconds >= MOST_LISTENED_MINIMUM_SECONDS)
       .sort((a, b) => b.seconds - a.seconds || sortByName(a.station, b.station))
-      .slice(0, 10)
+      .slice(0, 5)
     : [];
   const allGroups = buildGroupsInOrder(stations, groupOrder);
   const groups = buildGroupsInOrder(filteredStations, groupOrder);
@@ -406,7 +400,6 @@ async function renderAll() {
   }
 
   listEl.replaceChildren();
-  if (searchSectionVisible) listEl.append(createSearchBlock());
   if (presetSectionVisible) {
     listEl.append(createSectionTitle("Presets", presets.length ? "" : "None yet — Ctrl-click a station to add."));
     if (presets.length) {
@@ -419,7 +412,7 @@ async function renderAll() {
   }
   if (mostPlayedSectionVisible) {
     listEl.append(createSectionTitle(
-      "Most Played",
+      "Your Top Five",
       mostListened.length ? "" : "Stations appear here after five minutes."
     ));
     if (mostListened.length) {
@@ -441,7 +434,10 @@ async function renderAll() {
     label: allExpanded ? "Collapse All" : "Expand All"
   }));
   if (!filteredStations.length) {
-    listEl.append(element("div", "placeholder", searchActive ? "No stations match your search." : "No stations yet."));
+    const emptyMessage = searchActive
+      ? "No stations match your search."
+      : (favoritesOnlyVisible ? "No Favorite stations yet." : "No stations yet.");
+    listEl.append(element("div", "placeholder", emptyMessage));
   } else {
     const groupsEl = element("div", "groups");
     groupsEl.append(...groups.map((group) => {
@@ -464,9 +460,8 @@ async function renderAll() {
 
   bindHandlers();
   if (searchSectionVisible && (searchInputHadFocus || focusSearchAfterRender)) {
-    const searchInput = document.getElementById("stationSearchInput");
-    searchInput?.focus({ preventScroll: true });
-    searchInput?.setSelectionRange(stationSearchQuery.length, stationSearchQuery.length);
+    stationSearchInput.focus({ preventScroll: true });
+    stationSearchInput.setSelectionRange(stationSearchQuery.length, stationSearchQuery.length);
   }
   focusSearchAfterRender = false;
   if (expandedStationId) {
@@ -546,34 +541,6 @@ async function savePresetOrder(orderedIds) {
 }
 
 function bindHandlers() {
-  const searchInput = document.getElementById("stationSearchInput");
-  searchInput?.addEventListener("input", () => {
-    stationSearchQuery = searchInput.value;
-    const clearButton = document.getElementById("clearStationSearchBtn");
-    if (clearButton) clearButton.hidden = !stationSearchQuery;
-    clearTimeout(searchRenderTimer);
-    searchRenderTimer = setTimeout(() => {
-      focusSearchAfterRender = true;
-      queueRender();
-    }, 75);
-  });
-  searchInput?.addEventListener("keydown", (event) => {
-    if (event.key !== "Escape" || !stationSearchQuery) return;
-    event.preventDefault();
-    clearTimeout(searchRenderTimer);
-    searchRenderTimer = null;
-    stationSearchQuery = "";
-    focusSearchAfterRender = true;
-    queueRender();
-  });
-  document.getElementById("clearStationSearchBtn")?.addEventListener("click", () => {
-    clearTimeout(searchRenderTimer);
-    searchRenderTimer = null;
-    stationSearchQuery = "";
-    focusSearchAfterRender = true;
-    queueRender();
-  });
-
   listEl.querySelectorAll(".station").forEach((row) => {
     row.querySelector(".favBtn").addEventListener("click", async (event) => {
       event.preventDefault();
@@ -811,6 +778,19 @@ presetSectionToggleBtn.addEventListener("click", async () => {
   }
 });
 
+favoritesOnlyToggleBtn.addEventListener("click", async () => {
+  favoritesOnlyToggleBtn.disabled = true;
+  try {
+    setSectionVisibilityUi(await window.wavedeck.setSectionVisibility({
+      favoritesOnly: !favoritesOnlyVisible
+    }));
+  } catch (error) {
+    nowPlaying.textContent = `Could not toggle Favorites: ${error.message}`;
+  } finally {
+    favoritesOnlyToggleBtn.disabled = false;
+  }
+});
+
 mostPlayedSectionToggleBtn.addEventListener("click", async () => {
   mostPlayedSectionToggleBtn.disabled = true;
   try {
@@ -818,7 +798,7 @@ mostPlayedSectionToggleBtn.addEventListener("click", async () => {
       mostPlayed: !mostPlayedSectionVisible
     }));
   } catch (error) {
-    nowPlaying.textContent = `Could not toggle Most Played: ${error.message}`;
+    nowPlaying.textContent = `Could not toggle Your Top Five: ${error.message}`;
   } finally {
     mostPlayedSectionToggleBtn.disabled = false;
   }
@@ -854,6 +834,38 @@ notepadText.addEventListener("input", () => {
   notepadDirty = true;
   clearTimeout(notepadSaveTimer);
   notepadSaveTimer = setTimeout(() => void saveNotepadNow(), 350);
+});
+
+stationSearchInput.addEventListener("input", () => {
+  stationSearchQuery = stationSearchInput.value;
+  clearStationSearchBtn.hidden = !stationSearchQuery;
+  clearTimeout(searchRenderTimer);
+  searchRenderTimer = setTimeout(() => {
+    focusSearchAfterRender = true;
+    queueRender();
+  }, 75);
+});
+
+stationSearchInput.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape" || !stationSearchQuery) return;
+  event.preventDefault();
+  clearTimeout(searchRenderTimer);
+  searchRenderTimer = null;
+  stationSearchQuery = "";
+  stationSearchInput.value = "";
+  clearStationSearchBtn.hidden = true;
+  focusSearchAfterRender = true;
+  queueRender();
+});
+
+clearStationSearchBtn.addEventListener("click", () => {
+  clearTimeout(searchRenderTimer);
+  searchRenderTimer = null;
+  stationSearchQuery = "";
+  stationSearchInput.value = "";
+  clearStationSearchBtn.hidden = true;
+  focusSearchAfterRender = true;
+  queueRender();
 });
 
 window.addEventListener("beforeunload", () => {
@@ -911,15 +923,13 @@ window.wavedeck.onWarning((warning) => {
   setMuteUi(false);
   await renderAll();
   try {
-    const [status, sidebarState, sectionVisibility, savedNotepad, info] = await Promise.all([
+    const [status, sidebarState, sectionVisibility, savedNotepad] = await Promise.all([
       window.wavedeck.getPlayerStatus(),
       window.wavedeck.getSidebarState(),
       window.wavedeck.getSectionVisibility(),
-      window.wavedeck.getNotepad(),
-      window.wavedeck.getAppInfo()
+      window.wavedeck.getNotepad()
     ]);
     currentPlayerStatus = status;
-    appVersion.textContent = `v${info.version}`;
     notepadText.value = savedNotepad || "";
     notepadDirty = false;
     setNotepadOpen(false);

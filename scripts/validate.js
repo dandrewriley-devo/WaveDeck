@@ -64,7 +64,11 @@ const {
   validateStations,
   validateSubgroups
 } = require("../src/main/storage");
-const { calculateBottomRightBounds, calculateCenteredBounds } = require("../src/main/window-layout");
+const {
+  calculateBottomRightBounds,
+  calculateCenteredBounds,
+  constrainBoundsToDisplay
+} = require("../src/main/window-layout");
 
 const root = path.resolve(__dirname, "..");
 const defaultsDir = path.join(root, "defaults");
@@ -116,7 +120,7 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.6.1");
+assert.strictEqual(packageJson.version, "0.6.0");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -281,8 +285,28 @@ try {
     version: 1,
     stations: {},
     downloadNewStations: true,
+    launchInSidebarMode: false,
+    settingsWindowBounds: null,
     lastLibraryUpdate: "",
     deletedOfficialStationIds: []
+  });
+
+  assert.deepStrictEqual(storage.getLinuxUiPreferences(), {
+    launchInSidebarMode: false,
+    settingsWindowBounds: null
+  });
+  assert.strictEqual(storage.setLaunchInSidebarMode(true).launchInSidebarMode, true);
+  assert.deepStrictEqual(storage.setSettingsWindowBounds({ x: 2100.4, y: 40.6, width: 1120.2, height: 840.8 }), {
+    x: 2100,
+    y: 41,
+    width: 1120,
+    height: 841
+  });
+  const uiPreferenceReload = new PortableStorage({ dataDir, defaultsDir });
+  uiPreferenceReload.initialize();
+  assert.deepStrictEqual(uiPreferenceReload.getLinuxUiPreferences(), {
+    launchInSidebarMode: true,
+    settingsWindowBounds: { x: 2100, y: 41, width: 1120, height: 841 }
   });
 
   const changed = storage.readStations();
@@ -691,6 +715,14 @@ assert.deepStrictEqual(
   calculateCenteredBounds(primary, 860, 620),
   { x: 530, y: 244, width: 860, height: 620 }
 );
+assert.deepStrictEqual(
+  constrainBoundsToDisplay(primary, { x: 1800, y: -500, width: 2200, height: 1400 }, { minWidth: 700, minHeight: 500 }),
+  { x: 0, y: 28, width: 1920, height: 1052 }
+);
+assert.deepStrictEqual(
+  constrainBoundsToDisplay(primary, { x: -400, y: 800, width: 1100, height: 800 }, { minWidth: 700, minHeight: 500 }),
+  { x: 0, y: 280, width: 1100, height: 800 }
+);
 const sidebarLayout = calculateSidebarLayout(primary, [primary]);
 assert.deepStrictEqual(sidebarLayout.bounds, { x: 1620, y: 28, width: 300, height: 1052 });
 assert.strictEqual(sidebarLayout.canUseDesktopStrut, true);
@@ -901,18 +933,25 @@ assert.ok(cinnamonCalls.some((call) => (
 const indexHtml = fs.readFileSync(path.join(root, "src", "renderer", "index.html"), "utf8");
 assert.ok(indexHtml.includes('id="searchSectionToggleBtn"'));
 assert.ok(indexHtml.includes('id="presetSectionToggleBtn"'));
+assert.ok(indexHtml.includes('id="favoritesOnlyToggleBtn"'));
 assert.ok(indexHtml.includes('id="mostPlayedSectionToggleBtn"'));
 assert.ok(indexHtml.includes('id="sidebarModeBtn"'));
 assert.ok(indexHtml.includes('id="notepadToggleBtn"'));
 assert.ok(indexHtml.includes('id="notepadPanel"'));
 assert.ok(indexHtml.includes('id="notepadText"'));
-assert.ok(indexHtml.includes('id="appVersion"'));
+assert.ok(indexHtml.includes('id="searchPanel"'));
+assert.ok(indexHtml.includes('id="stationSearchInput"'));
+assert.ok(!indexHtml.includes('id="appVersion"'));
 assert.ok(indexHtml.includes("Warming up the airwaves..."));
 assert.ok(indexHtml.indexOf('id="searchSectionToggleBtn"') < indexHtml.indexOf('id="presetSectionToggleBtn"'));
-assert.ok(indexHtml.indexOf('id="presetSectionToggleBtn"') < indexHtml.indexOf('id="sidebarModeBtn"'));
+assert.ok(indexHtml.indexOf('id="presetSectionToggleBtn"') < indexHtml.indexOf('id="favoritesOnlyToggleBtn"'));
+assert.ok(indexHtml.indexOf('id="favoritesOnlyToggleBtn"') < indexHtml.indexOf('id="mostPlayedSectionToggleBtn"'));
 assert.ok(indexHtml.indexOf('id="mostPlayedSectionToggleBtn"') < indexHtml.indexOf('id="sidebarModeBtn"'));
+assert.ok(indexHtml.indexOf('id="mostPlayedSectionToggleBtn"') < indexHtml.indexOf('id="notepadToggleBtn"'));
+assert.ok(indexHtml.indexOf('id="notepadToggleBtn"') < indexHtml.indexOf('id="sidebarModeBtn"'));
 assert.ok(indexHtml.indexOf('id="sidebarModeBtn"') < indexHtml.indexOf('id="openSettingsBtn"'));
-assert.ok(indexHtml.indexOf('id="notepadToggleBtn"') < indexHtml.indexOf('id="openSettingsBtn"'));
+assert.ok(indexHtml.indexOf('class="toolbar"') < indexHtml.indexOf('id="searchPanel"'));
+assert.ok(indexHtml.indexOf('id="searchPanel"') < indexHtml.indexOf('class="list"'));
 const stylesSource = fs.readFileSync(path.join(root, "src", "renderer", "styles.css"), "utf8");
 assert.ok(stylesSource.includes("flex: 0 0 20vh"));
 assert.ok(stylesSource.includes("height: 32px"));
@@ -924,6 +963,9 @@ assert.ok(stylesSource.includes("#e65324"));
 assert.ok(stylesSource.includes(".section-action"));
 assert.ok(stylesSource.includes(".station-search-input"));
 assert.ok(stylesSource.includes(".station-search-clear"));
+assert.ok(stylesSource.includes(".station-search-panel"));
+assert.ok(stylesSource.includes(".toolbar"));
+assert.ok(stylesSource.includes("justify-content: center"));
 assert.ok(stylesSource.includes(".station-info"));
 assert.ok(stylesSource.includes("column-gap:10px"));
 assert.ok(stylesSource.includes("row-gap:0"));
@@ -937,6 +979,8 @@ assert.ok(preloadSource.includes('ipcRenderer.invoke("notepad:save"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("launcher:get-status"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("launcher:install"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("launcher:remove"'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("linux-ui:get-preferences"'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("linux-ui:set-launch-in-sidebar", enabled)'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("listening:get"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("listening:reset"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("sections:get-state"'));
@@ -964,6 +1008,7 @@ assert.ok(settingsHtml.includes('id="exportLibraryBtn"'));
 assert.ok(settingsHtml.includes('id="importLibraryAddBtn"'));
 assert.ok(settingsHtml.includes('id="importLibraryReplaceBtn"'));
 assert.ok(settingsHtml.includes('id="downloadNewStations"'));
+assert.ok(settingsHtml.includes('id="launchInSidebarMode"'));
 assert.ok(settingsHtml.includes("WaveDeck_Library.json"));
 assert.ok(settingsHtml.indexOf('id="stationEditorHome"') < settingsHtml.indexOf('class="listening-history-bar"'));
 assert.ok(settingsHtml.includes('id="resetListeningBtn"'));
@@ -976,6 +1021,8 @@ assert.ok(settingsHtml.includes('id="st_has_preroll"'));
 const settingsStyles = fs.readFileSync(path.join(root, "src", "renderer", "settings.css"), "utf8");
 assert.ok(settingsStyles.includes("position: sticky"));
 assert.ok(settingsStyles.includes("overflow: auto"));
+assert.ok(settingsStyles.includes("flex:1 1 auto"));
+assert.ok(!settingsStyles.includes("min(62vh"));
 const mainSource = fs.readFileSync(path.join(root, "src", "main", "main.js"), "utf8");
 assert.ok(!mainSource.includes("loadSidebarState"));
 assert.ok(!mainSource.includes("saveSidebarState"));
@@ -985,6 +1032,7 @@ assert.ok(mainSource.includes("screen.getPrimaryDisplay()"));
 assert.ok(mainSource.includes("screen.getDisplayMatching(mainWindow.getBounds())"));
 assert.ok(mainSource.includes("calculateBottomRightBounds"));
 assert.ok(mainSource.includes("calculateCenteredBounds"));
+assert.ok(mainSource.includes("constrainBoundsToDisplay"));
 assert.ok(!mainSource.includes("calculateSidebarLayout"));
 assert.ok(!mainSource.includes("setReservedSpace"));
 assert.ok(mainSource.includes('type: sidebar ? "dock" : undefined'));
@@ -1024,10 +1072,16 @@ assert.ok(mainSource.includes('ipcMain.handle("launcher:install"'));
 assert.ok(mainSource.includes('ipcMain.handle("launcher:remove"'));
 assert.ok(mainSource.includes('ipcMain.handle("listening:get"'));
 assert.ok(mainSource.includes('ipcMain.handle("listening:reset"'));
-assert.ok(mainSource.includes('let sectionVisibility = { search: false, presets: true, mostPlayed: false }'));
+assert.ok(mainSource.includes('let sectionVisibility = { search: false, presets: true, favoritesOnly: false, mostPlayed: false }'));
 assert.ok(mainSource.includes('ipcMain.handle("sections:get-state"'));
 assert.ok(mainSource.includes('ipcMain.handle("sections:set-state"'));
 assert.ok(mainSource.includes('sendToAll("sections:state-changed"'));
+assert.ok(mainSource.includes('ipcMain.handle("linux-ui:get-preferences"'));
+assert.ok(mainSource.includes('ipcMain.handle("linux-ui:set-launch-in-sidebar"'));
+assert.ok(mainSource.includes("storage.setSettingsWindowBounds(bounds)"));
+assert.ok(mainSource.includes("SETTINGS_DEFAULT_WIDTH = 1100"));
+assert.ok(mainSource.includes("SETTINGS_DEFAULT_HEIGHT = 800"));
+assert.ok(mainSource.includes("await setSidebarMode(true)"));
 assert.ok(mainSource.includes('ipcMain.handle("subgroups:get"'));
 assert.ok(mainSource.includes('ipcMain.handle("subgroups:rename"'));
 assert.ok(mainSource.includes('ipcMain.handle("library:export"'));
@@ -1052,7 +1106,7 @@ assert.ok(rendererSource.includes('createSectionTitle("Presets"'));
 assert.ok(rendererSource.includes("const groups = buildGroupsInOrder(filteredStations, groupOrder)"));
 assert.ok(rendererSource.includes('id: "toggleAllGroupsBtn"'));
 assert.ok(rendererSource.includes("renderedGroupNames.forEach"));
-assert.ok(rendererSource.includes('"Most Played",\n      mostListened.length'));
+assert.ok(rendererSource.includes('"Your Top Five",\n      mostListened.length'));
 assert.ok(rendererSource.includes("const MOST_LISTENED_MINIMUM_SECONDS = 5 * 60"));
 assert.ok(rendererSource.includes("mostPlayedSectionVisible"));
 assert.ok(rendererSource.includes("presetSectionVisible"));
@@ -1061,9 +1115,11 @@ assert.ok(rendererSource.includes("stationSearchQuery"));
 assert.ok(rendererSource.includes("window.WaveDeckSearch.stationMatchesQuery"));
 assert.ok(rendererSource.includes('setAttribute("aria-label", search ? "Hide Search" : "Show Search")'));
 assert.ok(rendererSource.includes("const allGroups = buildGroupsInOrder(stations, groupOrder)"));
-assert.ok(rendererSource.includes(".slice(0, 10)"));
+assert.ok(rendererSource.includes(".slice(0, 5)"));
 assert.ok(rendererSource.includes('setAttribute("aria-label", presets ? "Hide Presets" : "Show Presets")'));
-assert.ok(rendererSource.includes('setAttribute("aria-label", mostPlayed ? "Hide Most Played" : "Show Most Played")'));
+assert.ok(rendererSource.includes('setAttribute("aria-label", mostPlayed ? "Hide Your Top Five" : "Show Your Top Five")'));
+assert.ok(rendererSource.includes("favoritesOnlyVisible"));
+assert.ok(rendererSource.includes("!favoritesOnlyVisible || station.favorite"));
 assert.ok(rendererSource.includes('getSectionVisibility()'));
 assert.ok(rendererSource.includes('setSectionVisibility({'));
 assert.ok(rendererSource.includes('onSectionVisibilityChanged(setSectionVisibilityUi)'));
@@ -1075,12 +1131,10 @@ assert.ok(rendererSource.includes("event.ctrlKey"));
 assert.ok(rendererSource.includes("event.ctrlKey && event.shiftKey"));
 assert.ok(rendererSource.includes('row.addEventListener("pointerdown"'));
 assert.ok(!rendererSource.includes("event.altKey"));
-const searchStackIndex = rendererSource.indexOf('if (searchSectionVisible) listEl.append(createSearchBlock());');
-const presetStackIndex = rendererSource.indexOf('if (presetSectionVisible) {', searchStackIndex);
+const presetStackIndex = rendererSource.indexOf('if (presetSectionVisible) {');
 const mostPlayedStackIndex = rendererSource.indexOf('if (mostPlayedSectionVisible) {', presetStackIndex);
 const stationsStackIndex = rendererSource.indexOf('listEl.append(createSectionTitle("stations"', mostPlayedStackIndex);
-assert.ok(searchStackIndex >= 0);
-assert.ok(searchStackIndex < presetStackIndex);
+assert.ok(presetStackIndex >= 0);
 assert.ok(presetStackIndex < mostPlayedStackIndex);
 assert.ok(mostPlayedStackIndex < stationsStackIndex);
 assert.ok(
@@ -1098,12 +1152,17 @@ assert.ok(rendererSource.includes('platform !== "linux"'));
 const settingsSource = fs.readFileSync(path.join(root, "src", "renderer", "settings.js"), "utf8");
 assert.ok(settingsSource.includes("addSubgroup"));
 assert.ok(settingsSource.includes("renameSubgroup"));
+assert.ok(settingsSource.includes("beginSubgroupRename"));
+assert.ok(settingsSource.includes("cancelSubgroupRename"));
+assert.ok(settingsSource.includes("subgroup-rename-input"));
+assert.ok(!settingsSource.includes("prompt("));
 assert.ok(settingsSource.includes("moveSubgroup"));
 assert.ok(settingsSource.includes("deleteSubgroup"));
 assert.ok(settingsSource.includes('stationsTbody.querySelectorAll("tr[data-station-id]")'));
 assert.ok(settingsSource.includes('row.querySelector(".listened-total")'));
 assert.ok(settingsSource.includes('platform !== "linux"'));
 assert.ok(settingsSource.includes('platform === "linux" ? loadLauncherStatus()'));
+assert.ok(settingsSource.includes('platform === "linux" ? loadLinuxUiPreferences()'));
 
 const windowsBuild = JSON.parse(fs.readFileSync(path.join(root, "electron-builder.windows.json"), "utf8"));
 assert.strictEqual(windowsBuild.win.artifactName, "WaveDeck.exe");
@@ -1131,6 +1190,13 @@ assert.ok(macosWorkflow.includes('arm_binary="playback/darwin/arm64/mpv"'));
 assert.ok(macosWorkflow.includes("zip -qry --symlinks"));
 assert.ok(macosWorkflow.includes('test ! -d "$app_path/Contents/_CodeSignature"'));
 assert.ok(!macosWorkflow.includes("codesign --force --deep"));
+assert.ok(!macosWorkflow.includes("  push:"));
+const combinedWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "portable-release.yml"), "utf8");
+assert.ok(!combinedWorkflow.includes("  push:"));
+const linuxWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "linux-portable.yml"), "utf8");
+assert.ok(linuxWorkflow.includes("  push:"));
+assert.ok(linuxWorkflow.includes("WaveDeck-0.6.0-Linux.zip"));
+assert.ok(linuxWorkflow.includes('install -m 755 dist/WaveDeck.AppImage'));
 const macosInstructions = fs.readFileSync(path.join(root, "START-HERE-MACOS.txt"), "utf8");
 assert.ok(macosInstructions.includes("Version 0.6.1 universal build"));
 assert.ok(macosInstructions.includes("WaveDeck is unsigned"));
@@ -1531,7 +1597,7 @@ async function validateMediaControls() {
 }
 
 validateMediaControls().then(() => {
-console.log("WaveDeck validation passed: v0.6.1 known-good unsigned macOS packaging, resilient library updates, USB-safe playback, and packaging verified.");
+console.log("WaveDeck validation passed: v0.6.0 Linux toolbar, filters, Settings geometry, Sidebar startup, portable data, and packaging verified.");
 }).catch((error) => {
   console.error(error);
   process.exitCode = 1;

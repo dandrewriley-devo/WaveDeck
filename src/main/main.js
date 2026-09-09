@@ -30,7 +30,11 @@ const {
   SIDEBAR_WIDTH,
   sidebarAvailability
 } = require("./sidebar");
-const { calculateBottomRightBounds, calculateCenteredBounds } = require("./window-layout");
+const {
+  calculateBottomRightBounds,
+  calculateCenteredBounds,
+  constrainBoundsToDisplay
+} = require("./window-layout");
 
 let MprisService = null;
 let PlatformMediaKeys = null;
@@ -50,6 +54,10 @@ const SIDEBAR_NATIVE_TITLE = "WaveDeck Sidebar";
 const SIDEBAR_REALIZE_DELAY_MS = 150;
 const MEDIA_KEY_RECLAIM_INTERVAL_MS = 15_000;
 const PLAYBACK_HEARTBEAT_MS = 10_000;
+const SETTINGS_DEFAULT_WIDTH = 1100;
+const SETTINGS_DEFAULT_HEIGHT = 800;
+const SETTINGS_MIN_WIDTH = 700;
+const SETTINGS_MIN_HEIGHT = 500;
 
 let mainWindow = null;
 let settingsWindow = null;
@@ -68,7 +76,7 @@ let libraryUpdateTimer = null;
 let sidebarApplied = false;
 let sidebarTransitioning = false;
 let floatingBounds = null;
-let sectionVisibility = { search: false, presets: true, mostPlayed: false };
+let sectionVisibility = { search: false, presets: true, favoritesOnly: false, mostPlayed: false };
 const startupWarnings = [];
 
 function getDataDir() {
@@ -291,12 +299,37 @@ function openSettingsWindow(stationId = "") {
   const display = mainWindow && !mainWindow.isDestroyed()
     ? screen.getDisplayMatching(mainWindow.getBounds())
     : screen.getPrimaryDisplay();
+  let geometry = calculateCenteredBounds(
+    display,
+    process.platform === "linux" ? SETTINGS_DEFAULT_WIDTH : 860,
+    process.platform === "linux" ? SETTINGS_DEFAULT_HEIGHT : 620
+  );
+  if (process.platform === "linux") {
+    const savedBounds = storage.getLinuxUiPreferences().settingsWindowBounds;
+    const targetDisplay = savedBounds ? screen.getDisplayMatching(savedBounds) : display;
+    geometry = constrainBoundsToDisplay(targetDisplay, savedBounds || geometry, {
+      minWidth: SETTINGS_MIN_WIDTH,
+      minHeight: SETTINGS_MIN_HEIGHT
+    });
+  }
   settingsWindow = createSecureWindow({
-    ...calculateCenteredBounds(display, 860, 620),
-    minWidth: 700,
-    minHeight: 500,
+    ...geometry,
+    minWidth: Math.min(SETTINGS_MIN_WIDTH, geometry.width),
+    minHeight: Math.min(SETTINGS_MIN_HEIGHT, geometry.height),
     resizable: true,
     title: "WaveDeck Settings"
+  });
+
+  settingsWindow.on("close", () => {
+    if (process.platform !== "linux" || !settingsWindow || settingsWindow.isDestroyed()) return;
+    try {
+      const bounds = settingsWindow.isMaximized()
+        ? settingsWindow.getNormalBounds()
+        : settingsWindow.getBounds();
+      storage.setSettingsWindowBounds(bounds);
+    } catch (error) {
+      console.warn(`Could not remember the Settings window position: ${error.message}`);
+    }
   });
 
   settingsWindow.on("closed", () => {
@@ -538,6 +571,7 @@ function installIpcHandlers() {
     sectionVisibility = {
       search: typeof state.search === "boolean" ? state.search : sectionVisibility.search,
       presets: typeof state.presets === "boolean" ? state.presets : sectionVisibility.presets,
+      favoritesOnly: typeof state.favoritesOnly === "boolean" ? state.favoritesOnly : sectionVisibility.favoritesOnly,
       mostPlayed: typeof state.mostPlayed === "boolean" ? state.mostPlayed : sectionVisibility.mostPlayed
     };
     sendToAll("sections:state-changed", { ...sectionVisibility });
@@ -566,6 +600,16 @@ function installIpcHandlers() {
     });
     refreshApplicationsMenu();
     return getDesktopLauncherState();
+  });
+
+  ipcMain.handle("linux-ui:get-preferences", () => (
+    process.platform === "linux"
+      ? storage.getLinuxUiPreferences()
+      : { launchInSidebarMode: false, settingsWindowBounds: null }
+  ));
+  ipcMain.handle("linux-ui:set-launch-in-sidebar", (_event, enabled) => {
+    if (process.platform !== "linux") throw new Error("Sidebar launch is only available on Linux.");
+    return storage.setLaunchInSidebarMode(enabled);
   });
 
   ipcMain.handle("player:status", () => mediaController.getStatus());
@@ -686,10 +730,12 @@ if (!hasSingleInstanceLock) {
     }
 
     installIpcHandlers();
-    createMainWindow();
+    const launchInSidebarMode = process.platform === "linux" &&
+      storage.getLinuxUiPreferences().launchInSidebarMode === true;
+    const initialWindow = createMainWindow({ showOnReady: !launchInSidebarMode });
     scheduleLibraryUpdateCheck();
 
-    mainWindow.webContents.once("did-finish-load", () => {
+    initialWindow.webContents.once("did-finish-load", () => {
       for (const warning of startupWarnings) sendToMain("app:warning", warning);
     });
 
@@ -704,6 +750,18 @@ if (!hasSingleInstanceLock) {
     await platformMediaKeys?.start();
     mediaKeyReclaimEnabled = Boolean(platformMediaKeys);
     if (mediaKeyReclaimEnabled) startMediaKeyReclaim();
+
+    if (launchInSidebarMode) {
+      try {
+        await initialWindow.waveDeckLoadPromise;
+        await setSidebarMode(true);
+      } catch (error) {
+        if (mainWindow && !mainWindow.isDestroyed()) mainWindow.show();
+        const message = `WaveDeck could not start in Sidebar Mode. ${error.message}`;
+        console.warn(message);
+        sendToMain("app:warning", message);
+      }
+    }
   });
 }
 

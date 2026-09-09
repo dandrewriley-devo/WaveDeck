@@ -207,6 +207,20 @@
         <div class="divider"></div>
 
         <div class="row">
+          <div class="label">Startup</div>
+          <label class="preference-toggle" title="Automatically enter Sidebar Mode whenever WaveDeck starts">
+            <input id="launchInSidebarMode" type="checkbox" />
+            <span class="toggle-switch" aria-hidden="true"></span>
+            <span>Launch in Sidebar Mode</span>
+          </label>
+          <div class="hint mt-6">
+            When enabled, WaveDeck automatically reserves the right edge of the Linux Mint desktop at startup.
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="row">
           <div class="label">Add it to the bottom panel</div>
           <div class="hint launcher-instructions">
             After adding the launcher, open the Mint menu, find <b>WaveDeck</b>,
@@ -220,7 +234,7 @@
 
       <!-- ABOUT -->
       <section id="tab-about" class="panel hidden">
-        <p class="muted"><b>WaveDeck version <span id="aboutVersion">0.6.1</span></b><br>
+        <p class="muted"><b>WaveDeck version <span id="aboutVersion">0.6.0</span></b><br>
           Station library: <span id="aboutDataDir">Data</span></p>
         <p class="muted">WaveDeck is a lightweight, desktop-focused streaming controller designed for fast access to internet radio stations without clutter or distraction. It organizes stations into customizable groups, keeps a reorderable Presets section for quick access, lets you earmark Favorites independently, and provides subtle transport controls with real-time metadata display. On Linux Mint, optional Sidebar Mode reserves the right edge of the desktop so the player stays available beside maximized windows.</p>
         <p class="muted">Under the ample hood, the ghost of Wolfgang Amadeus Mozart manages streams with the unholy stability of Quincy Jones' broadcast console and the responsiveness of a studio-grade monitor rig. Its architecture is so efficient, it actually has negative overhead, adding extra processing power to your computer while maintaining flawless playback and gently massaging your shoulders as you listen. Advanced internal signal routing keeps everything smooth, balanced, and ready at a moment’s notice.</p>

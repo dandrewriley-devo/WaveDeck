@@ -223,12 +223,24 @@ function validatePreferences(value) {
     deletedOfficialStationIds.push(id);
   }
   const parsedUpdatedAt = Date.parse(String(value?.lastLibraryUpdate ?? ""));
+  const rawSettingsBounds = value?.settingsWindowBounds;
+  const settingsWindowBounds = rawSettingsBounds && typeof rawSettingsBounds === "object" && !Array.isArray(rawSettingsBounds) &&
+    ["x", "y", "width", "height"].every((key) => Number.isFinite(Number(rawSettingsBounds[key])))
+    ? {
+        x: Math.round(Number(rawSettingsBounds.x)),
+        y: Math.round(Number(rawSettingsBounds.y)),
+        width: Math.max(1, Math.round(Number(rawSettingsBounds.width))),
+        height: Math.max(1, Math.round(Number(rawSettingsBounds.height)))
+      }
+    : null;
   return {
     version: 1,
     stations,
     downloadNewStations: typeof value?.downloadNewStations === "boolean"
       ? value.downloadNewStations
       : true,
+    launchInSidebarMode: value?.launchInSidebarMode === true,
+    settingsWindowBounds,
     lastLibraryUpdate: Number.isFinite(parsedUpdatedAt) ? new Date(parsedUpdatedAt).toISOString() : "",
     deletedOfficialStationIds
   };
@@ -390,6 +402,30 @@ class PortableStorage {
     preferences.downloadNewStations = Boolean(enabled);
     this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
     return this.getLibraryUpdateState();
+  }
+
+  getLinuxUiPreferences() {
+    const preferences = this.readPreferences();
+    return {
+      launchInSidebarMode: preferences.launchInSidebarMode,
+      settingsWindowBounds: preferences.settingsWindowBounds
+        ? { ...preferences.settingsWindowBounds }
+        : null
+    };
+  }
+
+  setLaunchInSidebarMode(enabled) {
+    const preferences = this.readPreferences();
+    preferences.launchInSidebarMode = Boolean(enabled);
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getLinuxUiPreferences();
+  }
+
+  setSettingsWindowBounds(bounds) {
+    const preferences = this.readPreferences();
+    preferences.settingsWindowBounds = bounds;
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getLinuxUiPreferences().settingsWindowBounds;
   }
 
   deleteStation(stationId) {

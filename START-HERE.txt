@@ -1,12 +1,11 @@
-WAVEDECK PORTABLE FOR LINUX AND WINDOWS
-Version 0.6.1 (64-bit Intel/AMD)
+WAVEDECK PORTABLE FOR LINUX
+Version 0.6.0 (64-bit Intel/AMD)
 
 QUICK START
 
 1. Unzip the package to your computer or thumb drive. It creates one folder
    named WaveDeck Portable.
-2. On Linux, double-click WaveDeck.AppImage. On Windows, double-click
-   WaveDeck.exe.
+2. Double-click WaveDeck.AppImage.
 
 The file is already marked executable inside this ZIP. If your unzip program
 does not preserve that setting:
@@ -43,7 +42,7 @@ AppImage:
 2. Launch WaveDeck.AppImage directly.
 3. Open Settings, select Panel Shortcut, and click "Update WaveDeck
    Applications Menu Entry."
-4. Confirm your panel shortcut opens version 0.6.1. You may then delete the
+4. Confirm your panel shortcut opens version 0.6.0. You may then delete the
    older version-numbered AppImage.
 
 Starting with version 0.1.11, the executable is always named WaveDeck.AppImage.
@@ -53,9 +52,12 @@ to work without being updated.
 
 STARTING POSITION
 
-WaveDeck always starts in normal floating-window mode at the bottom-right of
-the primary screen, above the Linux panel. You can move it normally afterward.
-The Settings window opens centered on the screen containing WaveDeck.
+WaveDeck normally starts in floating-window mode at the bottom-right of the
+primary screen, above the Linux panel. Settings > Panel Shortcut includes a
+Launch in Sidebar Mode switch if you prefer to enter Sidebar Mode automatically
+at every startup. The Settings window opens at 1100 by 800 pixels the first time,
+then remembers its size and position while keeping itself safely within the
+available area of the current monitor.
 
 SIDEBAR MODE
 
@@ -65,7 +67,8 @@ The small sidebar icon beside the settings gear toggles Sidebar Mode.
     screen's right edge.
   - Maximized windows will use the remaining desktop space.
   - Click the icon again to return to the previous floating window.
-  - WaveDeck always starts in normal floating-window mode.
+  - Enable Launch in Sidebar Mode under Settings > Panel Shortcut to enter it
+    automatically at startup.
 
 Sidebar Mode is designed for Linux Mint Cinnamon running an X11 session.
 Cinnamon performs the entire docking operation itself: it identifies the
@@ -89,7 +92,7 @@ shows the reason beneath the logo instead of silently applying a partial dock.
 
 SIDEBAR NOTEPAD
 
-The notepad button appears in the bottom bar while Sidebar Mode is active.
+The notepad button appears in the toolbar while Sidebar Mode is active.
 Click it to open or collapse a plain-text notepad at the bottom of the sidebar.
 When open, it uses about 20 percent of the screen height and the station list
 shrinks to make room. Notes save automatically in Data and remain
@@ -123,9 +126,9 @@ Settings uses the same inline editor.
 
 WaveDeck begins counting from its active station/play state and ignores visits
 shorter than 30 seconds. Stations with at least five minutes of listening time
-can appear in the ten-item Most Played section. Use the footer's clock-and-list
-button to show it and the star button to show or hide Presets. Each fresh launch
-starts with Presets visible and Most Played hidden. Settings shows each station's
+can appear in the five-item Your Top Five section. Use the toolbar's clock-and-list
+button to show it and the bookmark button to show or hide Presets. Each fresh
+launch starts with Presets visible and Your Top Five hidden. Settings shows each station's
 total and provides a Reset Listening History button. History is saved as
 listening-history.json in Data.
 
@@ -159,8 +162,9 @@ WaveDeck reclaims Cinnamon media-key control every 15 seconds while it runs.
 
 STATION SEARCH
 
-The magnifying-glass button in the bottom bar shows or hides Search. Search
-starts hidden and appears at the top of the list stack when opened. It matches
+The magnifying-glass button in the fixed toolbar shows or hides Search. Search
+starts hidden and appears directly beneath the toolbar when opened. Neither the
+toolbar nor Search scrolls out of sight. Search matches
 station names, groups, subgroups, countries, descriptions, and stream URLs.
 Matching groups open automatically; clearing or hiding Search restores the
 normal collapsed or expanded group layout.
@@ -184,6 +188,10 @@ WaveDeck keeps these independent. Ctrl-click a station to add or remove it from
 Presets, Ctrl+Shift-click to mark whether it has pre-roll ads, and Shift-click
 to edit it. Click the star itself to toggle Favorite status. The same controls
 are also available in the station editor.
+
+The toolbar's star button filters the main Stations listing to Favorites only.
+Click it again to restore all stations. This filter never changes which stations
+are marked as Favorites.
 
 Star shape shows Favorite status: filled is a Favorite and outline is not. Star
 color shows station status: lime green is a Preset, gold is ordinary, and dark
@@ -235,8 +243,8 @@ Keep the AppImage and Data folder together when moving WaveDeck.
 
 You can place WaveDeck.AppImage and the portable Windows WaveDeck.exe beside the
 same Data folder on a USB stick. Both versions use the same stations, groups,
-Favorites, and Presets. This combined ZIP places both executables in the same
-WaveDeck Portable folder.
+Favorites, and Presets. The Linux-only ZIP retains the same WaveDeck Portable
+folder structure for compatibility with a combined installation.
 
 LIBRARY IMPORT AND EXPORT
 

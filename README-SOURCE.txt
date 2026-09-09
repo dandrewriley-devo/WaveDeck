@@ -1,5 +1,5 @@
 WaveDeck portable Windows, Linux, and macOS source package
-Version 0.6.1
+Linux version 0.6.0
 
 WaveDeck is a portable internet-radio player for Linux, Windows, and macOS.
 Linux Mint Cinnamon can additionally use the sidebar toggle, which asks
@@ -7,7 +7,8 @@ Cinnamon to identify the Meta.Window's current monitor, read its work area,
 move and size the Meta.Window, and create a matching built-in strut as one
 desktop-side operation. There is no Electron-coordinate or X11-strut fallback;
 a Cinnamon error is shown in the player instead of silently applying a partial
-dock. The app always starts in normal mode.
+dock. The Linux build can start normally or automatically enter Sidebar Mode,
+according to the portable preference selected in Settings.
 
 Version 0.1.4 leaves Electron's height resizable while Sidebar Mode is active
 and uses a Cinnamon-side geometry retry plus a lightweight periodic check to
@@ -199,6 +200,17 @@ libraries as ordinary architecture-specific resources instead of nested app
 bundles, and creates the ZIP with explicit preservation of executable modes and
 framework symlinks. The application code and shared adjacent Data behavior are
 unchanged from version 0.6.0.
+
+Linux version 0.6.0 moves the centered toolbar directly beneath the player and
+keeps both it and the optional Search field outside the scrolling station list.
+Its controls are Search, Presets, Favorites Only, Your Top Five, Notepad,
+Sidebar Mode, and Settings; Presets now uses a bookmark icon and the redundant
+toolbar version label is removed. Most Played is renamed Your Top Five and is
+again limited to five stations. Settings can optionally launch WaveDeck in
+Sidebar Mode, opens at a larger 1100-by-800 default, remembers its last size and
+position, and safely constrains restored geometry to the available monitor.
+The Stations table now fills the remaining window height with even margins, and
+subgroup names use a reliable inline Rename editor instead of a browser prompt.
 
 Build requirements:
 - 64-bit Windows, Linux, or macOS

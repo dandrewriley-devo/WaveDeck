@@ -41,6 +41,7 @@ const launcherState = document.getElementById("launcherState");
 const statusLauncher = document.getElementById("statusLauncher");
 const installLauncherBtn = document.getElementById("installLauncherBtn");
 const removeLauncherBtn = document.getElementById("removeLauncherBtn");
+const launchInSidebarMode = document.getElementById("launchInSidebarMode");
 const resetListeningBtn = document.getElementById("resetListeningBtn");
 const platform = window.wavedeck.platform;
 const launcherTab = document.querySelector('[data-tab="launcher"]');
@@ -56,6 +57,7 @@ let editorVisible = false;
 let reloadQueued = false;
 let initialized = false;
 let pendingEditId = "";
+let activeSubgroupRename = null;
 
 function element(tag, className, text) {
   const node = document.createElement(tag);
@@ -158,6 +160,17 @@ async function loadLauncherStatus() {
     installLauncherBtn.disabled = true;
     removeLauncherBtn.disabled = true;
     setStatus(statusLauncher, `Launcher check failed: ${error.message}`, false);
+  }
+}
+
+async function loadLinuxUiPreferences() {
+  if (platform !== "linux") return;
+  try {
+    const preferences = await window.wavedeck.getLinuxUiPreferences();
+    launchInSidebarMode.checked = preferences?.launchInSidebarMode === true;
+  } catch (error) {
+    launchInSidebarMode.checked = false;
+    setStatus(statusLauncher, `Could not load the startup preference: ${error.message}`, false);
   }
 }
 
@@ -352,18 +365,42 @@ function renderGroups() {
     if (!names.length) subgroupArea.append(element("div", "muted subgroup-empty", "No subgroups."));
     names.forEach((name, subgroupIndex) => {
       const subgroupRow = element("div", "subgroup-row");
-      subgroupRow.append(element("span", "subgroup-label", name));
       const subgroupActions = element("div", "group-actions");
-      const upSubgroup = miniButton("Up", "", () => moveSubgroup(group, subgroupIndex, -1));
-      const downSubgroup = miniButton("Down", "", () => moveSubgroup(group, subgroupIndex, 1));
-      upSubgroup.disabled = subgroupIndex === 0;
-      downSubgroup.disabled = subgroupIndex === names.length - 1;
-      subgroupActions.append(
-        upSubgroup,
-        downSubgroup,
-        miniButton("Rename", "", () => renameSubgroup(group, name)),
-        miniButton("Delete", "danger", () => deleteSubgroup(group, name))
-      );
+      const isRenaming = activeSubgroupRename &&
+        lowerKey(activeSubgroupRename.group) === lowerKey(group) &&
+        lowerKey(activeSubgroupRename.name) === lowerKey(name);
+      if (isRenaming) {
+        const input = element("input", "input subgroup-rename-input");
+        input.type = "text";
+        input.value = name;
+        input.setAttribute("aria-label", `Rename ${name}`);
+        subgroupRow.append(input);
+        subgroupActions.append(
+          miniButton("Save", "", () => renameSubgroup(group, name, input)),
+          miniButton("Cancel", "", cancelSubgroupRename)
+        );
+        input.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            void renameSubgroup(group, name, input);
+          } else if (event.key === "Escape") {
+            event.preventDefault();
+            cancelSubgroupRename();
+          }
+        });
+      } else {
+        subgroupRow.append(element("span", "subgroup-label", name));
+        const upSubgroup = miniButton("Up", "", () => moveSubgroup(group, subgroupIndex, -1));
+        const downSubgroup = miniButton("Down", "", () => moveSubgroup(group, subgroupIndex, 1));
+        upSubgroup.disabled = subgroupIndex === 0;
+        downSubgroup.disabled = subgroupIndex === names.length - 1;
+        subgroupActions.append(
+          upSubgroup,
+          downSubgroup,
+          miniButton("Rename", "", () => beginSubgroupRename(group, name)),
+          miniButton("Delete", "danger", () => deleteSubgroup(group, name))
+        );
+      }
       subgroupRow.append(subgroupActions);
       subgroupArea.append(subgroupRow);
     });
@@ -629,12 +666,27 @@ async function moveSubgroup(group, index, direction) {
   }
 }
 
-async function renameSubgroup(group, oldName) {
-  const nextName = prompt(`Rename subgroup "${oldName}" to:`, oldName)?.trim();
-  if (!nextName || nextName === oldName) return;
+function beginSubgroupRename(group, name) {
+  activeSubgroupRename = { group, name };
+  renderGroups();
+  const input = groupsList.querySelector(".subgroup-rename-input");
+  input?.focus();
+  input?.select();
+}
+
+function cancelSubgroupRename() {
+  activeSubgroupRename = null;
+  renderGroups();
+}
+
+async function renameSubgroup(group, oldName, input) {
+  const nextName = input.value.trim();
+  if (!nextName) return setStatus(statusGroups, "Subgroup names cannot be empty.", false);
+  if (nextName === oldName) return cancelSubgroupRename();
   try {
     const result = await window.wavedeck.renameSubgroup(group, oldName, nextName);
     if (!result?.ok) throw new Error(result?.reason || "Subgroup could not be renamed.");
+    activeSubgroupRename = null;
     await reloadEverything();
     setStatus(statusGroups, `Subgroup renamed to "${nextName}".`);
   } catch (error) {
@@ -762,6 +814,26 @@ removeLauncherBtn.addEventListener("click", async () => {
   }
 });
 
+launchInSidebarMode.addEventListener("change", async () => {
+  const requested = launchInSidebarMode.checked;
+  launchInSidebarMode.disabled = true;
+  try {
+    const preferences = await window.wavedeck.setLaunchInSidebarMode(requested);
+    launchInSidebarMode.checked = preferences?.launchInSidebarMode === true;
+    setStatus(
+      statusLauncher,
+      launchInSidebarMode.checked
+        ? "WaveDeck will launch in Sidebar Mode."
+        : "WaveDeck will launch as a normal window."
+    );
+  } catch (error) {
+    launchInSidebarMode.checked = !requested;
+    setStatus(statusLauncher, `Could not save the startup preference: ${error.message}`, false);
+  } finally {
+    launchInSidebarMode.disabled = false;
+  }
+});
+
 async function reloadEverything() {
   await loadData();
   rebuildGroupControls();
@@ -803,6 +875,7 @@ window.wavedeck.onWarning((warning) => setStatus(statusStations, warning, false)
   await Promise.all([
     reloadEverything(),
     platform === "linux" ? loadLauncherStatus() : Promise.resolve(),
+    platform === "linux" ? loadLinuxUiPreferences() : Promise.resolve(),
     loadLibraryUpdateState()
   ]);
   clearForm();
