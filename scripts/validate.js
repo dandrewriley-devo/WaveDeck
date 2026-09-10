@@ -30,6 +30,7 @@ const {
 } = require("../src/main/sidebar");
 const {
   WindowsSidebar,
+  calculateWindowsSidebarBounds,
   nativeWindowHandleString,
   parseReadyLine,
   resolveWindowsSidebarHelper
@@ -786,6 +787,16 @@ assert.deepStrictEqual(parseReadyLine("READY|-300|24|300|1056"), {
   x: -300, y: 24, width: 300, height: 1056
 });
 assert.strictEqual(parseReadyLine("ERROR|nope"), null);
+assert.deepStrictEqual(calculateWindowsSidebarBounds({
+  workArea: { x: -1600, y: 40, width: 1600, height: 860 }
+}, 300), { x: -300, y: 40, width: 300, height: 860 });
+assert.deepStrictEqual(calculateWindowsSidebarBounds({
+  workArea: { x: 0, y: 0, width: 180, height: 720 }
+}, 300), { x: 0, y: 0, width: 180, height: 720 });
+assert.throws(
+  () => calculateWindowsSidebarBounds(null, 300),
+  /No display is available/
+);
 assert.ok(resolveWindowsSidebarHelper({
   packaged: true,
   resourcesPath: "C:\\WaveDeckResources",
@@ -1110,6 +1121,11 @@ assert.ok(mainSource.includes("new MediaController"));
 assert.ok(mainSource.includes('process.platform === "linux"'));
 assert.ok(mainSource.includes('process.platform === "win32"'));
 assert.ok(mainSource.includes('process.platform === "darwin"'));
+assert.ok(mainSource.includes("calculateWindowsSidebarBounds("));
+assert.strictEqual(
+  (mainSource.match(/mainWindow\.setBounds\(windowsDockBounds, false\)/g) || []).length,
+  2
+);
 assert.ok(mainSource.includes('CinnamonMediaKeys: PlatformMediaKeys'));
 assert.ok(mainSource.includes('WindowsMediaKeys: PlatformMediaKeys'));
 assert.ok(mainSource.includes("new MprisService"));
@@ -1273,6 +1289,8 @@ assert.ok(windowsSidebarNativeSource.includes("SHAppBarMessage(ABM_QUERYPOS"));
 assert.ok(windowsSidebarNativeSource.includes("SHAppBarMessage(ABM_SETPOS"));
 assert.ok(windowsSidebarNativeSource.includes("SHAppBarMessage(ABM_REMOVE"));
 assert.ok(windowsSidebarNativeSource.includes('RegisterWindowMessageW(L"TaskbarCreated")'));
+assert.ok(windowsSidebarNativeSource.includes("target_rect.top = monitor_info.rcWork.top"));
+assert.ok(windowsSidebarNativeSource.includes("target_rect.bottom = monitor_info.rcWork.bottom"));
 const windowsWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "windows-portable.yml"), "utf8");
 assert.ok(windowsWorkflow.includes("  push:"));
 assert.ok(windowsWorkflow.includes("Build and inspect Windows Sidebar helper"));

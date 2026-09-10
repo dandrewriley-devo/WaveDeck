@@ -37,6 +37,7 @@ const {
 } = require("./window-layout");
 const {
   WindowsSidebar,
+  calculateWindowsSidebarBounds,
   resolveWindowsSidebarHelper
 } = require("./windows-sidebar");
 
@@ -379,15 +380,24 @@ async function setSidebarMode(enabled) {
       if (enabled) {
         if (sidebarApplied) return getSidebarState();
         floatingBounds = mainWindow.getBounds();
+        const windowsDockBounds = calculateWindowsSidebarBounds(
+          screen.getDisplayMatching(floatingBounds),
+          FIXED_WIDTH
+        );
         sidebarApplied = true;
         try {
           mainWindow.setAlwaysOnTop(true);
           mainWindow.setSkipTaskbar(true);
+          mainWindow.setBounds(windowsDockBounds, false);
+          await windowsSidebar.apply(mainWindow, FIXED_WIDTH);
+          // Keep Electron's DPI-aware window geometry authoritative. The
+          // native AppBar owns the desktop reservation, but some Windows
+          // configurations do not resize the Electron window to its height.
+          mainWindow.setBounds(windowsDockBounds, false);
           mainWindow.setResizable(false);
           mainWindow.setMovable(false);
           mainWindow.setMinimizable(false);
           mainWindow.setMaximizable(false);
-          await windowsSidebar.apply(mainWindow, FIXED_WIDTH);
           mainWindow.show();
           mainWindow.moveTop();
         } catch (error) {

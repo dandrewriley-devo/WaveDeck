@@ -101,7 +101,14 @@ static BOOL position_appbar(void) {
   SHAppBarMessage(ABM_QUERYPOS, &data);
   data.rc.left = data.rc.right - width_pixels;
   SHAppBarMessage(ABM_SETPOS, &data);
-  current_rect = data.rc;
+
+  // AppBar negotiation owns the horizontal reservation. Use the monitor's
+  // usable vertical work area for the visible Electron window so Windows
+  // cannot leave it at its previous floating height.
+  RECT target_rect = data.rc;
+  target_rect.top = monitor_info.rcWork.top;
+  target_rect.bottom = monitor_info.rcWork.bottom;
+  current_rect = target_rect;
 
   MoveWindow(
     helper_window,
@@ -114,10 +121,10 @@ static BOOL position_appbar(void) {
   BOOL moved = SetWindowPos(
     target_window,
     HWND_TOPMOST,
-    data.rc.left,
-    data.rc.top,
-    data.rc.right - data.rc.left,
-    data.rc.bottom - data.rc.top,
+    target_rect.left,
+    target_rect.top,
+    target_rect.right - target_rect.left,
+    target_rect.bottom - target_rect.top,
     SWP_NOACTIVATE | SWP_SHOWWINDOW
   );
   positioning = FALSE;

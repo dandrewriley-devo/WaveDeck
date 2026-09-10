@@ -5,6 +5,24 @@ const path = require("path");
 const DEFAULT_START_TIMEOUT_MS = 6_000;
 const DEFAULT_STOP_TIMEOUT_MS = 2_000;
 
+function calculateWindowsSidebarBounds(display, logicalWidth = 300) {
+  if (!display?.workArea) {
+    throw new Error("No display is available for Windows Sidebar Mode.");
+  }
+
+  const workArea = display.workArea;
+  const availableWidth = Math.max(1, Math.round(Number(workArea.width) || 0));
+  const requestedWidth = Math.max(200, Math.round(Number(logicalWidth) || 300));
+  const width = Math.min(availableWidth, requestedWidth);
+  const height = Math.max(1, Math.round(Number(workArea.height) || 0));
+  return {
+    x: Math.round(Number(workArea.x) || 0) + availableWidth - width,
+    y: Math.round(Number(workArea.y) || 0),
+    width,
+    height
+  };
+}
+
 function resolveWindowsSidebarHelper({ packaged, resourcesPath, projectRoot }) {
   return packaged
     ? path.join(resourcesPath, "native", "WaveDeckSidebar.exe")
@@ -154,6 +172,7 @@ class WindowsSidebar {
 
 module.exports = {
   WindowsSidebar,
+  calculateWindowsSidebarBounds,
   nativeWindowHandleString,
   parseReadyLine,
   resolveWindowsSidebarHelper
