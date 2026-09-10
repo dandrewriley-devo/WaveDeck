@@ -14,6 +14,7 @@ const {
   getLauncherPaths,
   getLauncherStatus,
   installLauncher,
+  quoteExecArgument,
   removeLauncher
 } = require("../src/main/desktop-launcher");
 const {
@@ -568,55 +569,61 @@ try {
   fs.writeFileSync(fakeIcon, "png-icon");
 
   const desktopEntry = buildDesktopEntry({ appImagePath: fakeAppImage, version: "0.1.14" });
-  assert.ok(desktopEntry.includes(`Exec="${fakeAppImage}"`));
+  assert.ok(desktopEntry.includes(`Exec=${quoteExecArgument(fakeAppImage)}`));
   assert.ok(desktopEntry.includes("Icon=wavedeck"));
   assert.ok(desktopEntry.includes("StartupWMClass=wavedeck"));
   assert.ok(desktopEntry.includes(MANAGED_MARKER));
 
-  const installedLauncher = installLauncher({
-    homeDir: testRoot,
-    appImagePath: fakeAppImage,
-    iconSourcePath: fakeIcon,
-    version: "0.1.14"
-  });
-  assert.strictEqual(installedLauncher.installed, true);
-  assert.strictEqual(installedLauncher.managed, true);
-  assert.strictEqual(installedLauncher.current, true);
-  assert.strictEqual(fs.statSync(installedLauncher.launcherPath).mode & 0o777, 0o755);
-  assert.strictEqual(fs.statSync(installedLauncher.iconPath).mode & 0o777, 0o644);
-  assert.strictEqual(fs.readFileSync(installedLauncher.iconPath, "utf8"), "png-icon");
-
-  const updatedLauncher = installLauncher({
-    homeDir: testRoot,
-    appImagePath: nextFakeAppImage,
-    iconSourcePath: fakeIcon,
-    version: "0.1.14"
-  });
-  assert.strictEqual(updatedLauncher.current, true);
-  assert.ok(fs.readFileSync(updatedLauncher.launcherPath, "utf8").includes(`Exec="${nextFakeAppImage}"`));
-  assert.strictEqual(getLauncherStatus({ homeDir: testRoot, appImagePath: fakeAppImage }).current, false);
-
-  const removedLauncher = removeLauncher({ homeDir: testRoot, appImagePath: nextFakeAppImage });
-  assert.strictEqual(removedLauncher.installed, false);
-  assert.strictEqual(fs.existsSync(updatedLauncher.iconPath), false);
-
-  const launcherPaths = getLauncherPaths(testRoot);
-  fs.mkdirSync(launcherPaths.applicationsDir, { recursive: true });
-  fs.writeFileSync(launcherPaths.launcherPath, "[Desktop Entry]\nName=Custom WaveDeck\n");
-  assert.throws(
-    () => installLauncher({
+  // Desktop-entry installation is a Linux-only feature. Its file-mode behavior
+  // cannot be meaningfully exercised on a Windows filesystem.
+  if (process.platform !== "win32") {
+    const installedLauncher = installLauncher({
       homeDir: testRoot,
       appImagePath: fakeAppImage,
       iconSourcePath: fakeIcon,
       version: "0.1.14"
-    }),
-    /will not overwrite/
-  );
-  assert.throws(
-    () => removeLauncher({ homeDir: testRoot, appImagePath: fakeAppImage }),
-    /left untouched/
-  );
-  assert.ok(fs.readFileSync(launcherPaths.launcherPath, "utf8").includes("Custom WaveDeck"));
+    });
+    assert.strictEqual(installedLauncher.installed, true);
+    assert.strictEqual(installedLauncher.managed, true);
+    assert.strictEqual(installedLauncher.current, true);
+    assert.strictEqual(fs.statSync(installedLauncher.launcherPath).mode & 0o777, 0o755);
+    assert.strictEqual(fs.statSync(installedLauncher.iconPath).mode & 0o777, 0o644);
+    assert.strictEqual(fs.readFileSync(installedLauncher.iconPath, "utf8"), "png-icon");
+
+    const updatedLauncher = installLauncher({
+      homeDir: testRoot,
+      appImagePath: nextFakeAppImage,
+      iconSourcePath: fakeIcon,
+      version: "0.1.14"
+    });
+    assert.strictEqual(updatedLauncher.current, true);
+    assert.ok(fs.readFileSync(updatedLauncher.launcherPath, "utf8").includes(
+      `Exec=${quoteExecArgument(nextFakeAppImage)}`
+    ));
+    assert.strictEqual(getLauncherStatus({ homeDir: testRoot, appImagePath: fakeAppImage }).current, false);
+
+    const removedLauncher = removeLauncher({ homeDir: testRoot, appImagePath: nextFakeAppImage });
+    assert.strictEqual(removedLauncher.installed, false);
+    assert.strictEqual(fs.existsSync(updatedLauncher.iconPath), false);
+
+    const launcherPaths = getLauncherPaths(testRoot);
+    fs.mkdirSync(launcherPaths.applicationsDir, { recursive: true });
+    fs.writeFileSync(launcherPaths.launcherPath, "[Desktop Entry]\nName=Custom WaveDeck\n");
+    assert.throws(
+      () => installLauncher({
+        homeDir: testRoot,
+        appImagePath: fakeAppImage,
+        iconSourcePath: fakeIcon,
+        version: "0.1.14"
+      }),
+      /will not overwrite/
+    );
+    assert.throws(
+      () => removeLauncher({ homeDir: testRoot, appImagePath: fakeAppImage }),
+      /left untouched/
+    );
+    assert.ok(fs.readFileSync(launcherPaths.launcherPath, "utf8").includes("Custom WaveDeck"));
+  }
 } finally {
   fs.rmSync(testRoot, { recursive: true, force: true });
 }
