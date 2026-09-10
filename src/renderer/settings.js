@@ -42,11 +42,18 @@ const statusLauncher = document.getElementById("statusLauncher");
 const installLauncherBtn = document.getElementById("installLauncherBtn");
 const removeLauncherBtn = document.getElementById("removeLauncherBtn");
 const launchInSidebarMode = document.getElementById("launchInSidebarMode");
+const sidebarStartupHint = document.getElementById("sidebarStartupHint");
 const resetListeningBtn = document.getElementById("resetListeningBtn");
 const platform = window.wavedeck.platform;
 const launcherTab = document.querySelector('[data-tab="launcher"]');
 
-if (platform !== "linux") launcherTab.hidden = true;
+const sidebarPlatform = platform === "linux" || platform === "win32";
+if (!sidebarPlatform) launcherTab.hidden = true;
+if (platform === "win32") {
+  launcherTab.textContent = "Sidebar";
+  document.querySelectorAll(".linux-launcher-only").forEach((node) => { node.hidden = true; });
+  sidebarStartupHint.textContent = "When enabled, WaveDeck automatically reserves the right edge of the Windows desktop at startup.";
+}
 
 let stations = [];
 let groups = [];
@@ -163,10 +170,10 @@ async function loadLauncherStatus() {
   }
 }
 
-async function loadLinuxUiPreferences() {
-  if (platform !== "linux") return;
+async function loadUiPreferences() {
+  if (!sidebarPlatform) return;
   try {
-    const preferences = await window.wavedeck.getLinuxUiPreferences();
+    const preferences = await window.wavedeck.getUiPreferences();
     launchInSidebarMode.checked = preferences?.launchInSidebarMode === true;
   } catch (error) {
     launchInSidebarMode.checked = false;
@@ -875,7 +882,7 @@ window.wavedeck.onWarning((warning) => setStatus(statusStations, warning, false)
   await Promise.all([
     reloadEverything(),
     platform === "linux" ? loadLauncherStatus() : Promise.resolve(),
-    platform === "linux" ? loadLinuxUiPreferences() : Promise.resolve(),
+    sidebarPlatform ? loadUiPreferences() : Promise.resolve(),
     loadLibraryUpdateState()
   ]);
   clearForm();

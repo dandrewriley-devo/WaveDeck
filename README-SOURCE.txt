@@ -219,6 +219,15 @@ Your Top Five so only matching station results remain. The Settings control is
 again represented by a recognizable gear, and Settings > About now includes
 the complete WaveDeck changelog.
 
+Windows version 0.6.5 brings the portable EXE into parity with the Linux
+player. It adds the 0.6.0 and 0.6.5 interface features plus native Windows
+Sidebar Mode, automatic Sidebar startup, and the same collapsible, shared-Data
+Notepad. A small bundled Win32 helper registers WaveDeck with the Windows
+AppBar API, reserves the right edge of the selected monitor, honors per-monitor
+display scaling, and releases the desktop reservation when Sidebar Mode or
+WaveDeck closes. Linux Applications-menu and panel-shortcut management remains
+Linux-only.
+
 Build requirements:
 - 64-bit Windows, Linux, or macOS
 - Node.js and npm
@@ -234,8 +243,11 @@ Windows build command:
   npm run dist:windows
 
 Before building Windows, place the pinned generic 64-bit mpv.exe described in
-playback/win32/README.txt at playback/win32/mpv.exe. The portable executable is
-written to dist/windows/WaveDeck.exe.
+playback/win32/README.txt at playback/win32/mpv.exe and compile
+native/windows/WaveDeckSidebar.c as
+native/windows/bin/WaveDeckSidebar.exe. The GitHub Actions workflow performs
+both steps automatically. The portable executable is written to
+dist/windows/WaveDeck.exe.
 
 macOS build command (run on macOS):
   npm install
@@ -259,8 +271,10 @@ interface through dbus-next.
 
 The Windows portable executable stores its data in Data beside WaveDeck.exe.
 It uses the bundled mpv.exe and Electron global shortcuts for Windows media
-keys. Sidebar Mode remains Linux-only.
+keys. Native Windows Sidebar Mode reserves the right edge of the chosen monitor
+and provides the same collapsible notepad used by Linux Sidebar Mode.
 
 The universal macOS app stores its data in Data beside WaveDeck.app. It bundles
 separate Intel and Apple Silicon mpv engines and registers macOS media keys.
-Sidebar Mode, its notepad, and Linux panel integration remain Linux-only.
+Sidebar Mode and its notepad are not available on macOS; Linux panel integration
+remains Linux-only.

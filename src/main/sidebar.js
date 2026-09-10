@@ -96,11 +96,20 @@ async function clearReservedSpace(window) {
   });
 }
 
-function sidebarAvailability() {
-  if (process.platform !== "linux") {
-    return { available: false, reason: "Sidebar Mode is only available on Linux." };
+function sidebarAvailability({
+  platform = process.platform,
+  env = process.env,
+  windowsHelperAvailable = false
+} = {}) {
+  if (platform === "win32") {
+    return windowsHelperAvailable
+      ? { available: true, reason: "" }
+      : { available: false, reason: "The Windows Sidebar component is unavailable." };
   }
-  if (!process.env.DISPLAY || String(process.env.XDG_SESSION_TYPE).toLowerCase() === "wayland") {
+  if (platform !== "linux") {
+    return { available: false, reason: "Sidebar Mode is not available on this operating system." };
+  }
+  if (!env.DISPLAY || String(env.XDG_SESSION_TYPE).toLowerCase() === "wayland") {
     return {
       available: false,
       reason: "Sidebar Mode requires a Linux Mint X11 session."

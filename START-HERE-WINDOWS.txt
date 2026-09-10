@@ -1,5 +1,5 @@
 WAVEDECK PORTABLE FOR WINDOWS
-Version 0.6.1 (64-bit Intel/AMD)
+Version 0.6.5 (64-bit Intel/AMD)
 
 QUICK START
 
@@ -13,10 +13,6 @@ WaveDeck is portable. It does not install itself or write an uninstaller.
 On a completely new installation, WaveDeck creates its library with 360
 stations and adds seven varied stations to Presets as a useful starting point.
 Existing Data files are never replaced during startup.
-
-Existing users can open Settings > Import / Export, choose "Add New from
-Library," and select WaveDeck-Default-Library.json from this folder. WaveDeck
-adds new listings without changing existing stations, Favorites, or Presets.
 
 PORTABLE DATA
 
@@ -33,7 +29,7 @@ while each operating system keeps its temporary runtime files on that computer.
 To update later, close WaveDeck and replace only WaveDeck.exe. Leave Data
 untouched.
 
-WINDOWS MEDIA KEYS
+KEYBOARD MEDIA KEYS
 
 While WaveDeck is running, it registers the standard media keys directly with
 Windows:
@@ -65,13 +61,23 @@ unavailable or its file is invalid, WaveDeck continues using the local library
 without displaying an error. Use Download new stations on the Settings Stations
 tab to disable or re-enable the check; WaveDeck remembers the choice.
 
-SEARCH, PRESETS, AND MOST PLAYED
+SEARCH, PRESETS, FAVORITES, AND YOUR TOP FIVE
 
 The magnifying-glass button shows or hides station search, which begins hidden
 on each fresh launch. Search matches station names, groups, subgroups, countries,
-descriptions, and stream URLs. The star button shows or hides Presets; Presets is
-visible on each fresh launch. The clock-and-list button shows or hides the
-ten-station Most Played section, which begins hidden on each fresh launch.
+descriptions, and stream URLs. While a search is active, Presets and Your Top
+Five temporarily disappear so only matching stations remain. The bookmark
+button shows or hides Presets; Presets is visible on each fresh launch. The star
+button filters the main station list to Favorites only. The clock-and-list
+button shows or hides the five-station Your Top Five section, which begins
+hidden on each fresh launch.
+
+STATION GAIN
+
+Click a playing station to open its details. Station Gain adjusts only that
+station from -12 dB to +12 dB while it plays. WaveDeck remembers the adjustment
+in preferences.json and automatically applies it the next time that station
+plays. Station Gain is never included in a library export or update.
 
 STATION SHORTCUTS
 
@@ -81,10 +87,18 @@ STATION SHORTCUTS
   - Ctrl+Shift-click: toggle the pre-roll warning.
   - Shift-click: edit the station in Settings.
 
-WINDOWS NOTES
+SIDEBAR MODE AND NOTEPAD
 
-This first Windows release uses the normal floating WaveDeck window. Linux
-Mint's Sidebar Mode, sidebar notepad, and panel-shortcut controls are not shown
-because they depend on Cinnamon and X11.
+The Sidebar button docks WaveDeck against the right side of the current monitor
+and reserves that part of the Windows desktop. Maximized windows use the space
+beside it. Click the button again to restore WaveDeck's previous floating size
+and position. Settings > Sidebar can make WaveDeck enter Sidebar Mode each time
+it starts.
+
+The Notepad button appears while Sidebar Mode is active. It opens a collapsible,
+automatically saved plain-text notepad. Notes remain in the shared Data folder.
+
+Linux Applications-menu and panel-shortcut management is not available on
+Windows.
 
 Playback is provided by the bundled mpv engine; no separate player is needed.

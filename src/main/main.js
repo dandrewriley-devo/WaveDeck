@@ -35,6 +35,10 @@ const {
   calculateCenteredBounds,
   constrainBoundsToDisplay
 } = require("./window-layout");
+const {
+  WindowsSidebar,
+  resolveWindowsSidebarHelper
+} = require("./windows-sidebar");
 
 let MprisService = null;
 let PlatformMediaKeys = null;
@@ -73,6 +77,7 @@ let mediaKeyReclaimEnabled = false;
 let mediaKeyReclaimPaused = false;
 let libraryUpdater = null;
 let libraryUpdateTimer = null;
+let windowsSidebar = null;
 let sidebarApplied = false;
 let sidebarTransitioning = false;
 let floatingBounds = null;
@@ -259,7 +264,7 @@ function createMainWindow({
     resizable: true,
     skipTaskbar: sidebar,
     title: nativeTitle,
-    type: sidebar ? "dock" : undefined
+    type: sidebar && process.platform === "linux" ? "dock" : undefined
   }, { showOnReady });
 
   window.setTitle(nativeTitle);
@@ -299,13 +304,14 @@ function openSettingsWindow(stationId = "") {
   const display = mainWindow && !mainWindow.isDestroyed()
     ? screen.getDisplayMatching(mainWindow.getBounds())
     : screen.getPrimaryDisplay();
+  const remembersWindowGeometry = process.platform === "linux" || process.platform === "win32";
   let geometry = calculateCenteredBounds(
     display,
-    process.platform === "linux" ? SETTINGS_DEFAULT_WIDTH : 860,
-    process.platform === "linux" ? SETTINGS_DEFAULT_HEIGHT : 620
+    remembersWindowGeometry ? SETTINGS_DEFAULT_WIDTH : 860,
+    remembersWindowGeometry ? SETTINGS_DEFAULT_HEIGHT : 620
   );
-  if (process.platform === "linux") {
-    const savedBounds = storage.getLinuxUiPreferences().settingsWindowBounds;
+  if (remembersWindowGeometry) {
+    const savedBounds = storage.getUiPreferences().settingsWindowBounds;
     const targetDisplay = savedBounds ? screen.getDisplayMatching(savedBounds) : display;
     geometry = constrainBoundsToDisplay(targetDisplay, savedBounds || geometry, {
       minWidth: SETTINGS_MIN_WIDTH,
@@ -321,7 +327,7 @@ function openSettingsWindow(stationId = "") {
   });
 
   settingsWindow.on("close", () => {
-    if (process.platform !== "linux" || !settingsWindow || settingsWindow.isDestroyed()) return;
+    if (!remembersWindowGeometry || !settingsWindow || settingsWindow.isDestroyed()) return;
     try {
       const bounds = settingsWindow.isMaximized()
         ? settingsWindow.getNormalBounds()
@@ -348,7 +354,9 @@ function openSettingsWindow(stationId = "") {
 }
 
 function getSidebarState() {
-  const availability = sidebarAvailability();
+  const availability = sidebarAvailability({
+    windowsHelperAvailable: process.platform === "win32" && windowsSidebar?.isAvailable() === true
+  });
   return {
     ...availability,
     enabled: availability.available && sidebarApplied
@@ -362,6 +370,64 @@ async function setSidebarMode(enabled) {
   mediaKeyReclaimPaused = true;
 
   try {
+    if (process.platform === "win32") {
+      const availability = sidebarAvailability({
+        windowsHelperAvailable: windowsSidebar?.isAvailable() === true
+      });
+      if (!availability.available) throw new Error(availability.reason);
+
+      if (enabled) {
+        if (sidebarApplied) return getSidebarState();
+        floatingBounds = mainWindow.getBounds();
+        sidebarApplied = true;
+        try {
+          mainWindow.setAlwaysOnTop(true);
+          mainWindow.setSkipTaskbar(true);
+          mainWindow.setResizable(false);
+          mainWindow.setMovable(false);
+          mainWindow.setMinimizable(false);
+          mainWindow.setMaximizable(false);
+          await windowsSidebar.apply(mainWindow, FIXED_WIDTH);
+          mainWindow.show();
+          mainWindow.moveTop();
+        } catch (error) {
+          await windowsSidebar?.remove();
+          sidebarApplied = false;
+          mainWindow.setAlwaysOnTop(false);
+          mainWindow.setSkipTaskbar(false);
+          mainWindow.setResizable(true);
+          mainWindow.setMovable(true);
+          mainWindow.setMinimizable(true);
+          mainWindow.setMaximizable(true);
+          if (floatingBounds) mainWindow.setBounds(floatingBounds);
+          throw new Error(`Windows could not apply Sidebar Mode. ${error.message}`);
+        }
+      } else {
+        if (!sidebarApplied) return getSidebarState();
+        await windowsSidebar.remove();
+        sidebarApplied = false;
+        mainWindow.setAlwaysOnTop(false);
+        mainWindow.setSkipTaskbar(false);
+        mainWindow.setResizable(true);
+        mainWindow.setMovable(true);
+        mainWindow.setMinimizable(true);
+        mainWindow.setMaximizable(true);
+        if (floatingBounds) {
+          const display = screen.getDisplayMatching(floatingBounds);
+          mainWindow.setBounds(constrainBoundsToDisplay(display, floatingBounds, {
+            minWidth: FIXED_WIDTH,
+            minHeight: 400
+          }));
+        }
+        mainWindow.show();
+        mainWindow.focus();
+      }
+
+      const state = getSidebarState();
+      sendToMain("sidebar:state-changed", state);
+      return state;
+    }
+
     if (enabled) {
       const availability = sidebarAvailability();
       if (!availability.available) throw new Error(availability.reason);
@@ -607,13 +673,21 @@ function installIpcHandlers() {
     return getDesktopLauncherState();
   });
 
-  ipcMain.handle("linux-ui:get-preferences", () => (
-    process.platform === "linux"
-      ? storage.getLinuxUiPreferences()
-      : { launchInSidebarMode: false, settingsWindowBounds: null }
-  ));
+  ipcMain.handle("ui:get-preferences", () => storage.getUiPreferences());
+  ipcMain.handle("ui:set-launch-in-sidebar", (_event, enabled) => {
+    if (process.platform !== "linux" && process.platform !== "win32") {
+      throw new Error("Sidebar launch is not available on this operating system.");
+    }
+    return storage.setLaunchInSidebarMode(enabled);
+  });
+
+  // Retain the original channels for older renderer bundles and portable data
+  // created before the preference became available on Windows.
+  ipcMain.handle("linux-ui:get-preferences", () => storage.getUiPreferences());
   ipcMain.handle("linux-ui:set-launch-in-sidebar", (_event, enabled) => {
-    if (process.platform !== "linux") throw new Error("Sidebar launch is only available on Linux.");
+    if (process.platform !== "linux" && process.platform !== "win32") {
+      throw new Error("Sidebar launch is not available on this operating system.");
+    }
     return storage.setLaunchInSidebarMode(enabled);
   });
 
@@ -661,6 +735,33 @@ if (!hasSingleInstanceLock) {
         sendToAll("app:warning", message);
       }
     });
+
+    if (process.platform === "win32") {
+      windowsSidebar = new WindowsSidebar({
+        helperPath: resolveWindowsSidebarHelper({
+          packaged: app.isPackaged,
+          resourcesPath: process.resourcesPath,
+          projectRoot: PROJECT_ROOT
+        }),
+        onUnexpectedExit: () => {
+          if (!sidebarApplied || !mainWindow || mainWindow.isDestroyed()) return;
+          sidebarApplied = false;
+          try {
+            mainWindow.setAlwaysOnTop(false);
+            mainWindow.setSkipTaskbar(false);
+            mainWindow.setResizable(true);
+            mainWindow.setMovable(true);
+            mainWindow.setMinimizable(true);
+            mainWindow.setMaximizable(true);
+            if (floatingBounds) mainWindow.setBounds(floatingBounds);
+          } catch {}
+          const message = "Windows released Sidebar Mode unexpectedly. WaveDeck returned to its normal window.";
+          startupWarnings.push(message);
+          sendToMain("app:warning", message);
+          sendToMain("sidebar:state-changed", getSidebarState());
+        }
+      });
+    }
 
     try {
       storage.initialize();
@@ -735,8 +836,9 @@ if (!hasSingleInstanceLock) {
     }
 
     installIpcHandlers();
-    const launchInSidebarMode = process.platform === "linux" &&
-      storage.getLinuxUiPreferences().launchInSidebarMode === true;
+    const supportsStartupSidebar = process.platform === "linux" || process.platform === "win32";
+    const launchInSidebarMode = supportsStartupSidebar &&
+      storage.getUiPreferences().launchInSidebarMode === true;
     const initialWindow = createMainWindow({ showOnReady: !launchInSidebarMode });
     scheduleLibraryUpdateCheck();
 
@@ -781,6 +883,7 @@ app.on("before-quit", () => {
   listeningHistory?.close();
   platformMediaKeys?.close();
   mprisService?.close();
+  windowsSidebar?.close();
   player?.close();
 });
 app.on("window-all-closed", () => app.quit());

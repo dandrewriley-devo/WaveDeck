@@ -418,7 +418,7 @@ class PortableStorage {
     return this.getLibraryUpdateState();
   }
 
-  getLinuxUiPreferences() {
+  getUiPreferences() {
     const preferences = this.readPreferences();
     return {
       launchInSidebarMode: preferences.launchInSidebarMode,
@@ -428,18 +428,22 @@ class PortableStorage {
     };
   }
 
+  getLinuxUiPreferences() {
+    return this.getUiPreferences();
+  }
+
   setLaunchInSidebarMode(enabled) {
     const preferences = this.readPreferences();
     preferences.launchInSidebarMode = Boolean(enabled);
     this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
-    return this.getLinuxUiPreferences();
+    return this.getUiPreferences();
   }
 
   setSettingsWindowBounds(bounds) {
     const preferences = this.readPreferences();
     preferences.settingsWindowBounds = bounds;
     this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
-    return this.getLinuxUiPreferences().settingsWindowBounds;
+    return this.getUiPreferences().settingsWindowBounds;
   }
 
   setStationGain(stationId, value) {

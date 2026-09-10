@@ -22,6 +22,10 @@
     {
       "from": "THIRD-PARTY-NOTICES.txt",
       "to": "THIRD-PARTY-NOTICES.txt"
+    },
+    {
+      "from": "native/windows/bin/WaveDeckSidebar.exe",
+      "to": "native/WaveDeckSidebar.exe"
     }
   ],
   "directories": {

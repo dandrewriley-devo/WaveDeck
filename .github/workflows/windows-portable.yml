@@ -1,0 +1,72 @@
+name: Build Windows portable release
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Build and inspect Windows Sidebar helper
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force native/windows/bin | Out-Null
+          cl /nologo /O2 /W4 /MT /Fe:native\windows\bin\WaveDeckSidebar.exe native\windows\WaveDeckSidebar.c /link user32.lib shell32.lib
+          if (-not (Test-Path native/windows/bin/WaveDeckSidebar.exe)) {
+            throw "The Windows Sidebar helper was not created."
+          }
+          & native/windows/bin/WaveDeckSidebar.exe
+          if ($LASTEXITCODE -ne 2) {
+            throw "The Windows Sidebar helper did not return its expected usage result."
+          }
+
+      - name: Download pinned Windows mpv
+        shell: pwsh
+        run: |
+          $archive = Join-Path $env:RUNNER_TEMP "mpv.7z"
+          Invoke-WebRequest "https://github.com/shinchiro/mpv-winbuild-cmake/releases/download/20260903/mpv-x86_64-20260903-git-69e63f425a.7z" -OutFile $archive
+          $archiveHash = (Get-FileHash $archive -Algorithm SHA256).Hash.ToLower()
+          if ($archiveHash -ne "418dbfb5feb851cbed33d6c05d8481ba71802621bfd6efe8974522b28d42ac97") {
+            throw "The downloaded mpv archive did not match the pinned SHA-256."
+          }
+          New-Item -ItemType Directory -Force playback/win32 | Out-Null
+          & 7z e $archive -oplayback/win32 mpv.exe -r -y
+          $mpvHash = (Get-FileHash playback/win32/mpv.exe -Algorithm SHA256).Hash.ToLower()
+          if ($mpvHash -ne "4a0bc712bc98e6f80cd980930b74b6ac202b8ccf2041e887adab69906f82731c") {
+            throw "The extracted mpv.exe did not match the pinned SHA-256."
+          }
+
+      - run: npm ci
+      - run: npm test
+      - run: npm run dist:windows -- --publish never
+
+      - name: Inspect portable EXE
+        shell: pwsh
+        run: |
+          $exe = "dist/windows/WaveDeck.exe"
+          if (-not (Test-Path $exe)) { throw "WaveDeck.exe was not created." }
+          $size = (Get-Item $exe).Length
+          if ($size -lt 100MB) { throw "WaveDeck.exe is unexpectedly small: $size bytes." }
+          $hash = (Get-FileHash $exe -Algorithm SHA256).Hash.ToLower()
+          "WaveDeck.exe size: $size bytes"
+          "WaveDeck.exe SHA-256: $hash"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WaveDeck-0.6.5-Windows
+          path: dist/windows/WaveDeck.exe
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14

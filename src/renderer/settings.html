@@ -188,7 +188,7 @@
 
       <!-- PANEL SHORTCUT -->
       <section id="tab-launcher" class="panel hidden">
-        <div class="row">
+        <div class="row linux-launcher-only">
           <div class="label">Linux Mint Panel Shortcut</div>
           <div class="hint">
             WaveDeck can add this portable AppImage to Linux Mint's Applications
@@ -196,7 +196,7 @@
           </div>
         </div>
 
-        <div class="launcher-box">
+        <div class="launcher-box linux-launcher-only">
           <div id="launcherState" class="launcher-state">Checking launcher…</div>
           <div class="launcher-actions">
             <button id="installLauncherBtn" class="btn" type="button">Add WaveDeck to Applications Menu</button>
@@ -204,7 +204,7 @@
           </div>
         </div>
 
-        <div class="divider"></div>
+        <div class="divider linux-launcher-only"></div>
 
         <div class="row">
           <div class="label">Startup</div>
@@ -213,14 +213,14 @@
             <span class="toggle-switch" aria-hidden="true"></span>
             <span>Launch in Sidebar Mode</span>
           </label>
-          <div class="hint mt-6">
-            When enabled, WaveDeck automatically reserves the right edge of the Linux Mint desktop at startup.
+          <div id="sidebarStartupHint" class="hint mt-6">
+            When enabled, WaveDeck automatically reserves the right edge of the desktop at startup.
           </div>
         </div>
 
-        <div class="divider"></div>
+        <div class="divider linux-launcher-only"></div>
 
-        <div class="row">
+        <div class="row linux-launcher-only">
           <div class="label">Add it to the bottom panel</div>
           <div class="hint launcher-instructions">
             After adding the launcher, open the Mint menu, find <b>WaveDeck</b>,
@@ -236,7 +236,7 @@
       <section id="tab-about" class="panel hidden">
         <p class="muted"><b>WaveDeck version <span id="aboutVersion">0.6.5</span></b><br>
           Station library: <span id="aboutDataDir">Data</span></p>
-        <p class="muted">WaveDeck is a lightweight, desktop-focused streaming controller designed for fast access to internet radio stations without clutter or distraction. It organizes stations into customizable groups, keeps a reorderable Presets section for quick access, lets you earmark Favorites independently, and provides subtle transport controls with real-time metadata display. On Linux Mint, optional Sidebar Mode reserves the right edge of the desktop so the player stays available beside maximized windows.</p>
+        <p class="muted">WaveDeck is a lightweight, desktop-focused streaming controller designed for fast access to internet radio stations without clutter or distraction. It organizes stations into customizable groups, keeps a reorderable Presets section for quick access, lets you earmark Favorites independently, and provides subtle transport controls with real-time metadata display. On Linux Mint and Windows, optional Sidebar Mode reserves the right edge of the desktop so the player stays available beside maximized windows.</p>
         <p class="muted">Under the ample hood, the ghost of Wolfgang Amadeus Mozart manages streams with the unholy stability of Quincy Jones' broadcast console and the responsiveness of a studio-grade monitor rig. Its architecture is so efficient, it actually has negative overhead, adding extra processing power to your computer while maintaining flawless playback and gently massaging your shoulders as you listen. Advanced internal signal routing keeps everything smooth, balanced, and ready at a moment’s notice.</p>
         <p class="muted">With its proprietary quantum-adaptive resonance engine, it will subtly align waveform harmonics with local planetary magnetic flux, optimizing atmospheric coherence and gently curving the space-time substrate around your desk for improved acoustic clarity. Science people report enhanced focus, minor gravitational stabilization, and the spontaneous synchronization of parallel timelines.</p>
 
@@ -244,7 +244,7 @@
         <div class="changelog">
           <h2>Changelog</h2>
 
-          <h3>WaveDeck 0.6.5 — Linux Update Only</h3>
+          <h3>WaveDeck 0.6.5</h3>
           <ul>
             <li>Added live per-station Station Gain, adjustable from −12 dB to +12 dB.</li>
             <li>Saved Station Gain separately in each user's preferences so library imports and updates cannot overwrite it.</li>
@@ -252,6 +252,7 @@
             <li>Changed active searches to show only matching station results, temporarily hiding Presets and Your Top Five.</li>
             <li>Changed the Settings toolbar icon back to a recognizable gear.</li>
             <li>Added the full WaveDeck changelog to the About tab.</li>
+            <li>Brought the Windows edition into feature parity with Linux, including native Sidebar Mode, automatic Sidebar startup, and the Sidebar Notepad.</li>
           </ul>
 
           <h3>WaveDeck 0.6.0 — Linux Update Only</h3>

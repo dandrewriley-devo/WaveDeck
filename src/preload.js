@@ -43,8 +43,8 @@ contextBridge.exposeInMainWorld("wavedeck", {
   getLauncherStatus: () => ipcRenderer.invoke("launcher:get-status"),
   installLauncher: () => ipcRenderer.invoke("launcher:install"),
   removeLauncher: () => ipcRenderer.invoke("launcher:remove"),
-  getLinuxUiPreferences: () => ipcRenderer.invoke("linux-ui:get-preferences"),
-  setLaunchInSidebarMode: (enabled) => ipcRenderer.invoke("linux-ui:set-launch-in-sidebar", enabled),
+  getUiPreferences: () => ipcRenderer.invoke("ui:get-preferences"),
+  setLaunchInSidebarMode: (enabled) => ipcRenderer.invoke("ui:set-launch-in-sidebar", enabled),
 
   exportLibrary: () => ipcRenderer.invoke("library:export"),
   importLibrary: (mode) => ipcRenderer.invoke("library:import", mode),

@@ -19,7 +19,7 @@ const clearStationSearchBtn = document.getElementById("clearStationSearchBtn");
 const listEl = document.querySelector(".list");
 const platform = window.wavedeck.platform;
 
-if (platform !== "linux") sidebarModeBtn.hidden = true;
+if (platform !== "linux" && platform !== "win32") sidebarModeBtn.hidden = true;
 
 let currentStationId = null;
 let isMuted = false;

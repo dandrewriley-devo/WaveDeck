@@ -5,6 +5,7 @@ const path = require("path");
 const vm = require("vm");
 const zlib = require("zlib");
 const { EventEmitter } = require("events");
+const { PassThrough } = require("stream");
 
 const { copyLegacyData } = require("../src/main/data-migration");
 const {
@@ -23,8 +24,15 @@ const {
 } = require("../src/main/portable-paths");
 const {
   calculateSidebarLayout,
-  getX11WindowId
+  getX11WindowId,
+  sidebarAvailability
 } = require("../src/main/sidebar");
+const {
+  WindowsSidebar,
+  nativeWindowHandleString,
+  parseReadyLine,
+  resolveWindowsSidebarHelper
+} = require("../src/main/windows-sidebar");
 const { cleanupCode, reservationCode, windowLookupCode } = require("../src/main/cinnamon-reservation");
 const { MediaController } = require("../src/main/media-controller");
 const { ListeningHistory } = require("../src/main/listening-history");
@@ -297,6 +305,7 @@ try {
     launchInSidebarMode: false,
     settingsWindowBounds: null
   });
+  assert.deepStrictEqual(storage.getUiPreferences(), storage.getLinuxUiPreferences());
   assert.strictEqual(storage.setLaunchInSidebarMode(true).launchInSidebarMode, true);
   assert.deepStrictEqual(storage.setSettingsWindowBounds({ x: 2100.4, y: 40.6, width: 1120.2, height: 840.8 }), {
     x: 2100,
@@ -748,6 +757,33 @@ assert.deepStrictEqual(
 assert.strictEqual(getX11WindowId({
   getNativeWindowHandle: () => Buffer.from([0x78, 0x56, 0x34, 0x12])
 }), 0x12345678);
+assert.deepStrictEqual(
+  sidebarAvailability({ platform: "win32", windowsHelperAvailable: true }),
+  { available: true, reason: "" }
+);
+assert.strictEqual(
+  sidebarAvailability({ platform: "win32", windowsHelperAvailable: false }).available,
+  false
+);
+assert.strictEqual(
+  sidebarAvailability({ platform: "darwin", windowsHelperAvailable: true }).available,
+  false
+);
+assert.strictEqual(nativeWindowHandleString({
+  getNativeWindowHandle: () => Buffer.from([0x78, 0x56, 0x34, 0x12])
+}), "305419896");
+assert.strictEqual(nativeWindowHandleString({
+  getNativeWindowHandle: () => Buffer.from([0x78, 0x56, 0x34, 0x12, 0, 0, 0, 0])
+}), "305419896");
+assert.deepStrictEqual(parseReadyLine("READY|-300|24|300|1056"), {
+  x: -300, y: 24, width: 300, height: 1056
+});
+assert.strictEqual(parseReadyLine("ERROR|nope"), null);
+assert.ok(resolveWindowsSidebarHelper({
+  packaged: true,
+  resourcesPath: "C:\\WaveDeckResources",
+  projectRoot: "C:\\Source"
+}).endsWith(path.join("native", "WaveDeckSidebar.exe")));
 const internalMonitorLayout = calculateSidebarLayout(primary, [
   primary,
   {
@@ -993,8 +1029,8 @@ assert.ok(preloadSource.includes('ipcRenderer.invoke("notepad:save"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("launcher:get-status"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("launcher:install"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("launcher:remove"'));
-assert.ok(preloadSource.includes('ipcRenderer.invoke("linux-ui:get-preferences"'));
-assert.ok(preloadSource.includes('ipcRenderer.invoke("linux-ui:set-launch-in-sidebar", enabled)'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("ui:get-preferences"'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("ui:set-launch-in-sidebar", enabled)'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("listening:get"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("listening:reset"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("sections:get-state"'));
@@ -1033,7 +1069,8 @@ assert.ok(settingsHtml.includes('id="st_description"'));
 assert.ok(settingsHtml.includes('id="st_favorite"'));
 assert.ok(settingsHtml.includes('id="st_preset"'));
 assert.ok(settingsHtml.includes('id="st_has_preroll"'));
-assert.ok(settingsHtml.includes("WaveDeck 0.6.5 — Linux Update Only"));
+assert.ok(settingsHtml.includes("WaveDeck 0.6.5"));
+assert.ok(settingsHtml.includes("native Sidebar Mode"));
 assert.ok(settingsHtml.includes("Changelog"));
 const settingsStyles = fs.readFileSync(path.join(root, "src", "renderer", "settings.css"), "utf8");
 assert.ok(settingsStyles.includes("position: sticky"));
@@ -1052,14 +1089,16 @@ assert.ok(mainSource.includes("calculateCenteredBounds"));
 assert.ok(mainSource.includes("constrainBoundsToDisplay"));
 assert.ok(!mainSource.includes("calculateSidebarLayout"));
 assert.ok(!mainSource.includes("setReservedSpace"));
-assert.ok(mainSource.includes('type: sidebar ? "dock" : undefined'));
+assert.ok(mainSource.includes('type: sidebar && process.platform === "linux" ? "dock" : undefined'));
 assert.ok(mainSource.includes("SIDEBAR_NATIVE_TITLE"));
 assert.ok(mainSource.includes("dockWindow.waveDeckLoadPromise"));
 assert.ok(mainSource.includes("setCinnamonReservedSpace(process.pid, SIDEBAR_NATIVE_TITLE)"));
 assert.ok(mainSource.includes("clearCinnamonReservedSpace(process.pid, false, SIDEBAR_NATIVE_TITLE)"));
 assert.ok(mainSource.includes("Cinnamon could not apply Sidebar Mode"));
 assert.ok(!mainSource.includes("mainWindow.setBounds(layout.bounds)"));
-assert.ok(!mainSource.includes("mainWindow.setResizable(false)"));
+assert.ok(mainSource.includes("mainWindow.setResizable(false)"));
+assert.ok(mainSource.includes("await windowsSidebar.apply(mainWindow, FIXED_WIDTH)"));
+assert.ok(mainSource.includes("await windowsSidebar.remove()"));
 assert.ok(mainSource.includes("new MediaController"));
 assert.ok(mainSource.includes('process.platform === "linux"'));
 assert.ok(mainSource.includes('process.platform === "win32"'));
@@ -1095,10 +1134,13 @@ assert.ok(mainSource.includes('ipcMain.handle("sections:set-state"'));
 assert.ok(mainSource.includes('sendToAll("sections:state-changed"'));
 assert.ok(mainSource.includes('ipcMain.handle("linux-ui:get-preferences"'));
 assert.ok(mainSource.includes('ipcMain.handle("linux-ui:set-launch-in-sidebar"'));
+assert.ok(mainSource.includes('ipcMain.handle("ui:get-preferences"'));
+assert.ok(mainSource.includes('ipcMain.handle("ui:set-launch-in-sidebar"'));
 assert.ok(mainSource.includes("storage.setSettingsWindowBounds(bounds)"));
 assert.ok(mainSource.includes("SETTINGS_DEFAULT_WIDTH = 1100"));
 assert.ok(mainSource.includes("SETTINGS_DEFAULT_HEIGHT = 800"));
 assert.ok(mainSource.includes("await setSidebarMode(true)"));
+assert.ok(mainSource.includes('process.platform === "linux" || process.platform === "win32"'));
 assert.ok(mainSource.includes('ipcMain.handle("subgroups:get"'));
 assert.ok(mainSource.includes('ipcMain.handle("subgroups:rename"'));
 assert.ok(mainSource.includes('ipcMain.handle("library:export"'));
@@ -1170,7 +1212,7 @@ assert.ok(rendererSource.includes("station-gain-slider"));
 assert.ok(rendererSource.includes("setStationGain(stationId, value)"));
 assert.ok(rendererSource.includes("presetSectionVisible && !searchActive"));
 assert.ok(rendererSource.includes("mostPlayedSectionVisible && !searchActive"));
-assert.ok(rendererSource.includes('platform !== "linux"'));
+assert.ok(rendererSource.includes('platform !== "linux" && platform !== "win32"'));
 const settingsSource = fs.readFileSync(path.join(root, "src", "renderer", "settings.js"), "utf8");
 assert.ok(settingsSource.includes("addSubgroup"));
 assert.ok(settingsSource.includes("renameSubgroup"));
@@ -1182,9 +1224,9 @@ assert.ok(settingsSource.includes("moveSubgroup"));
 assert.ok(settingsSource.includes("deleteSubgroup"));
 assert.ok(settingsSource.includes('stationsTbody.querySelectorAll("tr[data-station-id]")'));
 assert.ok(settingsSource.includes('row.querySelector(".listened-total")'));
-assert.ok(settingsSource.includes('platform !== "linux"'));
+assert.ok(settingsSource.includes('platform === "linux" || platform === "win32"'));
 assert.ok(settingsSource.includes('platform === "linux" ? loadLauncherStatus()'));
-assert.ok(settingsSource.includes('platform === "linux" ? loadLinuxUiPreferences()'));
+assert.ok(settingsSource.includes('sidebarPlatform ? loadUiPreferences()'));
 
 const windowsBuild = JSON.parse(fs.readFileSync(path.join(root, "electron-builder.windows.json"), "utf8"));
 assert.strictEqual(windowsBuild.win.artifactName, "WaveDeck.exe");
@@ -1215,6 +1257,19 @@ assert.ok(!macosWorkflow.includes("codesign --force --deep"));
 assert.ok(!macosWorkflow.includes("  push:"));
 const combinedWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "portable-release.yml"), "utf8");
 assert.ok(!combinedWorkflow.includes("  push:"));
+assert.ok(combinedWorkflow.includes("Build Windows Sidebar helper"));
+assert.ok(combinedWorkflow.includes("WaveDeckSidebar.c"));
+assert.ok(windowsBuild.extraResources.some((resource) => resource.to === "native/WaveDeckSidebar.exe"));
+const windowsSidebarNativeSource = fs.readFileSync(path.join(root, "native", "windows", "WaveDeckSidebar.c"), "utf8");
+assert.ok(windowsSidebarNativeSource.includes("SHAppBarMessage(ABM_NEW"));
+assert.ok(windowsSidebarNativeSource.includes("SHAppBarMessage(ABM_QUERYPOS"));
+assert.ok(windowsSidebarNativeSource.includes("SHAppBarMessage(ABM_SETPOS"));
+assert.ok(windowsSidebarNativeSource.includes("SHAppBarMessage(ABM_REMOVE"));
+assert.ok(windowsSidebarNativeSource.includes('RegisterWindowMessageW(L"TaskbarCreated")'));
+const windowsWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "windows-portable.yml"), "utf8");
+assert.ok(windowsWorkflow.includes("  push:"));
+assert.ok(windowsWorkflow.includes("Build and inspect Windows Sidebar helper"));
+assert.ok(windowsWorkflow.includes("WaveDeck-0.6.5-Windows"));
 const linuxWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "linux-portable.yml"), "utf8");
 assert.ok(linuxWorkflow.includes("  push:"));
 assert.ok(linuxWorkflow.includes("WaveDeck-0.6.5-Linux.zip"));
@@ -1235,6 +1290,7 @@ for (const file of [
   "src/main/cinnamon-reservation.js",
   "src/main/cinnamon-media-keys.js",
   "src/main/windows-media-keys.js",
+  "src/main/windows-sidebar.js",
   "src/main/media-controller.js",
   "src/main/listening-history.js",
   "src/main/mpris.js",
@@ -1248,6 +1304,39 @@ for (const file of [
 }
 
 async function validateMediaControls() {
+  const windowsHelperTestDir = fs.mkdtempSync(path.join(os.tmpdir(), "wavedeck-sidebar-"));
+  const fakeWindowsHelper = path.join(windowsHelperTestDir, "WaveDeckSidebar.exe");
+  fs.writeFileSync(fakeWindowsHelper, "test", "utf8");
+  let spawnedArguments = null;
+  const fakeChild = new EventEmitter();
+  fakeChild.stdin = new PassThrough();
+  fakeChild.stdout = new PassThrough();
+  fakeChild.stderr = new PassThrough();
+  fakeChild.kill = () => { setImmediate(() => fakeChild.emit("exit", 1)); };
+  fakeChild.stdin.on("data", (chunk) => {
+    if (String(chunk).includes("REMOVE")) setImmediate(() => fakeChild.emit("exit", 0));
+  });
+  const windowsSidebar = new WindowsSidebar({
+    helperPath: fakeWindowsHelper,
+    spawnImpl: (executable, args, options) => {
+      spawnedArguments = { executable, args, options };
+      setImmediate(() => fakeChild.stdout.write("READY|-450|60|450|1380\n"));
+      return fakeChild;
+    },
+    startTimeoutMs: 500,
+    stopTimeoutMs: 500
+  });
+  assert.strictEqual(windowsSidebar.isAvailable(), true);
+  assert.deepStrictEqual(await windowsSidebar.apply({
+    getNativeWindowHandle: () => Buffer.from([0x78, 0x56, 0x34, 0x12, 0, 0, 0, 0])
+  }, 300), { x: -450, y: 60, width: 450, height: 1380 });
+  assert.deepStrictEqual(spawnedArguments.args, ["305419896", "300"]);
+  assert.strictEqual(spawnedArguments.options.windowsHide, true);
+  assert.strictEqual(windowsSidebar.active, true);
+  await windowsSidebar.remove();
+  assert.strictEqual(windowsSidebar.active, false);
+  fs.rmSync(windowsHelperTestDir, { recursive: true, force: true });
+
   assert.strictEqual(LIBRARY_UPDATE_URL, "https://fabulon.cloud/downloads/library_update.json");
   assert.strictEqual(
     cacheBustedUrl(LIBRARY_UPDATE_URL, () => 1234),
@@ -1660,7 +1749,7 @@ async function validateMediaControls() {
 }
 
 validateMediaControls().then(() => {
-console.log("WaveDeck validation passed: v0.6.5 Linux search, Station Gain, changelog, portable data, and packaging verified.");
+  console.log(`WaveDeck validation passed: v${packageJson.version} Linux/Windows feature parity, Sidebar Mode, portable data, and packaging verified.`);
 }).catch((error) => {
   console.error(error);
   process.exitCode = 1;

@@ -11,8 +11,8 @@ WaveDeck is a lightweight, portable internet-radio player for 64-bit Windows, Li
 - Optional silent startup updates that add new master-library stations and apply stream corrections without deleting local entries
 - Optional importable copy of the complete default library for existing users
 - Personal Favorites and Presets stored separately from the shareable station library
-- Linux Mint Cinnamon Sidebar Mode (Linux only)
-- Optional automatic Sidebar Mode at Linux startup
+- Linux Mint Cinnamon and Windows Sidebar Mode
+- Optional automatic Sidebar Mode at startup on Linux and Windows
 - Toggleable Presets with drag-and-drop ordering and media-key navigation
 - Independent Favorites, a Favorites-only station filter, and pre-roll markers
 - Native media-key controls with periodic registration checks
@@ -22,9 +22,9 @@ WaveDeck is a lightweight, portable internet-radio player for 64-bit Windows, Li
 - Shift-click station editing and Ctrl+Shift-click pre-roll marking
 - Country, description, and best-effort bitrate information
 - Collapsed station groups with Expand All / Collapse All
-- Collapsible, persistent sidebar notepad (Linux Sidebar Mode)
+- Collapsible, persistent sidebar notepad (Linux and Windows Sidebar Mode)
 - Linux Applications-menu and panel-launcher integration (Linux only)
-- A larger Linux Settings window that remembers its monitor-safe size and position
+- A larger Settings window that remembers its monitor-safe size and position on Linux and Windows
 
 ## Requirements
 
@@ -45,7 +45,7 @@ When running from source, WaveDeck stores its user data under `~/.config/wavedec
 
 ## Build the portable Windows EXE
 
-Place the generic 64-bit `mpv.exe` described in [`playback/win32/README.txt`](playback/win32/README.txt) at `playback/win32/mpv.exe`, then run:
+Place the generic 64-bit `mpv.exe` described in [`playback/win32/README.txt`](playback/win32/README.txt) at `playback/win32/mpv.exe` and compile `native/windows/WaveDeckSidebar.c` to `native/windows/bin/WaveDeckSidebar.exe`, then run:
 
 ```bash
 npm install
@@ -53,7 +53,7 @@ npm test
 npm run dist:windows
 ```
 
-The portable executable is written to `dist/windows/WaveDeck.exe`. On first launch it creates `Data` beside the EXE. Windows Sidebar Mode and Linux launcher controls are intentionally hidden.
+The Windows GitHub Actions workflow builds both bundled native components automatically. The portable executable is written to `dist/windows/WaveDeck.exe`. On first launch it creates `Data` beside the EXE. Windows Sidebar Mode and its Notepad are available; Linux Applications-menu and panel-launcher controls are intentionally omitted.
 
 ## Build the portable AppImage
 
@@ -87,7 +87,7 @@ WaveDeck checks `https://fabulon.cloud/downloads/library_update.json` quietly at
 
 ## Platform notes
 
-The normal player, station library, Presets, Favorites, listening statistics, groups, metadata, Settings, media keys, and library updates are shared across Windows, Linux, and macOS. Current feature development and testing are focused on Linux Mint Cinnamon; the other platform packages are updated after the Linux edition reaches a stable milestone. Sidebar reservation, its notepad, and panel-launcher integration remain Linux Mint Cinnamon features.
+The normal player, station library, Presets, Favorites, listening statistics, groups, metadata, Settings, media keys, and library updates are shared across Windows, Linux, and macOS. Sidebar Mode and its notepad are available on Linux Mint Cinnamon and Windows. Applications-menu and panel-launcher integration remain Linux-only; Sidebar Mode and the notepad are not available on macOS.
 
 ## Project history
 
