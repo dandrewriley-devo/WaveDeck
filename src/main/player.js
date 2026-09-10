@@ -7,20 +7,20 @@ function getIpcPath(platform, runtimeDir, processId = process.pid) {
   if (platform === "win32") {
     return `\\\\.\\pipe\\wavedeck-${processId}`;
   }
-  return path.join(runtimeDir, `mpv-${processId}.sock`);
+  return path.posix.join(runtimeDir, `mpv-${processId}.sock`);
 }
 
 function getMpvExecutable({ platform, packaged, resourcesPath, projectRoot, architecture = process.arch }) {
   if (process.env.WAVEDECK_MPV_PATH) return process.env.WAVEDECK_MPV_PATH;
   if (platform === "win32") {
     return packaged
-      ? path.join(resourcesPath, "playback", "mpv.exe")
-      : path.join(projectRoot, "playback", "win32", "mpv.exe");
+      ? path.win32.join(resourcesPath, "playback", "mpv.exe")
+      : path.win32.join(projectRoot, "playback", "win32", "mpv.exe");
   }
   if (platform === "darwin") {
     const bundledArchitecture = architecture === "arm64" ? "arm64" : "x64";
     return packaged
-      ? path.join(resourcesPath, "playback", "darwin", bundledArchitecture, "mpv")
+      ? path.posix.join(resourcesPath, "playback", "darwin", bundledArchitecture, "mpv")
       : "mpv";
   }
   return "mpv";

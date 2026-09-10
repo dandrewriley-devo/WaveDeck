@@ -16,7 +16,7 @@ function resolveDataDir({
   projectRoot,
   homeDir
 }) {
-  const pathApi = platform === "win32" ? path.win32 : path;
+  const pathApi = platform === "win32" ? path.win32 : path.posix;
   if (envDataDir) return pathApi.resolve(envDataDir);
 
   if (platform === "win32" && isPackaged) {
@@ -38,7 +38,7 @@ function resolveDataDir({
 }
 
 function resolveLegacyDataDirs({ platform, isPackaged, appImagePath, homeDir }) {
-  const pathApi = platform === "win32" ? path.win32 : path;
+  const pathApi = platform === "win32" ? path.win32 : path.posix;
   if (platform === "linux" && isPackaged && appImagePath) {
     const appDirectory = pathApi.dirname(pathApi.resolve(appImagePath));
     return [
@@ -52,7 +52,7 @@ function resolveLegacyDataDirs({ platform, isPackaged, appImagePath, homeDir }) 
 }
 
 function resolveRuntimeDir({ platform, appDataDir }) {
-  const pathApi = platform === "win32" ? path.win32 : path;
+  const pathApi = platform === "win32" ? path.win32 : path.posix;
   return pathApi.join(pathApi.resolve(appDataDir), "wavedeck-runtime", platform);
 }
 

@@ -188,7 +188,7 @@ assert.strictEqual(resolveDataDir({
   execPath: "/tmp/mount/wavedeck",
   projectRoot: "/source",
   homeDir: "/home/tester"
-}), path.normalize("/media/USB/Data"));
+}), path.posix.normalize("/media/USB/Data"));
 
 assert.deepStrictEqual(resolveLegacyDataDirs({
   platform: "linux",
@@ -196,9 +196,9 @@ assert.deepStrictEqual(resolveLegacyDataDirs({
   appImagePath: "/media/USB/WaveDeck Portable Linux/WaveDeck.AppImage",
   homeDir: "/home/tester"
 }), [
-  path.normalize("/media/USB/WaveDeck Portable Linux/WaveDeck-Data"),
-  path.normalize("/media/USB/WaveDeck Portable Linux/WaveDeckSB-Data"),
-  path.normalize("/media/USB/WaveDeckSB Portable Linux/WaveDeckSB-Data")
+  path.posix.normalize("/media/USB/WaveDeck Portable Linux/WaveDeck-Data"),
+  path.posix.normalize("/media/USB/WaveDeck Portable Linux/WaveDeckSB-Data"),
+  path.posix.normalize("/media/USB/WaveDeckSB Portable Linux/WaveDeckSB-Data")
 ]);
 
 assert.strictEqual(resolveDataDir({
@@ -224,12 +224,12 @@ assert.strictEqual(resolveDataDir({
   execPath: "/Volumes/WaveDeck Portable/WaveDeck.app/Contents/MacOS/WaveDeck",
   projectRoot: "/source",
   homeDir: "/Users/tester"
-}), path.normalize("/Volumes/WaveDeck Portable/Data"));
+}), path.posix.normalize("/Volumes/WaveDeck Portable/Data"));
 
 assert.strictEqual(resolveRuntimeDir({
   platform: "linux",
   appDataDir: "/home/tester/.config"
-}), path.normalize("/home/tester/.config/wavedeck-runtime/linux"));
+}), path.posix.normalize("/home/tester/.config/wavedeck-runtime/linux"));
 assert.strictEqual(resolveRuntimeDir({
   platform: "win32",
   appDataDir: "C:\\Users\\tester\\AppData\\Roaming"
@@ -237,15 +237,15 @@ assert.strictEqual(resolveRuntimeDir({
 assert.strictEqual(resolveRuntimeDir({
   platform: "darwin",
   appDataDir: "/Users/tester/Library/Application Support"
-}), path.normalize("/Users/tester/Library/Application Support/wavedeck-runtime/darwin"));
+}), path.posix.normalize("/Users/tester/Library/Application Support/wavedeck-runtime/darwin"));
 assert.strictEqual(
   getIpcPath("linux", "/home/tester/.config/wavedeck-runtime/linux", 4242),
-  path.normalize("/home/tester/.config/wavedeck-runtime/linux/mpv-4242.sock")
+  path.posix.normalize("/home/tester/.config/wavedeck-runtime/linux/mpv-4242.sock")
 );
 assert.strictEqual(getIpcPath("win32", "D:\\WaveDeck Portable\\Data", 4242), "\\\\.\\pipe\\wavedeck-4242");
 assert.strictEqual(
   getIpcPath("darwin", "/Users/tester/Library/Application Support/wavedeck-runtime/darwin", 4242),
-  path.normalize("/Users/tester/Library/Application Support/wavedeck-runtime/darwin/mpv-4242.sock")
+  path.posix.normalize("/Users/tester/Library/Application Support/wavedeck-runtime/darwin/mpv-4242.sock")
 );
 assert.strictEqual(getMpvExecutable({
   platform: "darwin",
@@ -253,14 +253,14 @@ assert.strictEqual(getMpvExecutable({
   resourcesPath: "/Volumes/WaveDeck Portable/WaveDeck.app/Contents/Resources",
   projectRoot: "/source",
   architecture: "arm64"
-}), path.normalize("/Volumes/WaveDeck Portable/WaveDeck.app/Contents/Resources/playback/darwin/arm64/mpv"));
+}), path.posix.normalize("/Volumes/WaveDeck Portable/WaveDeck.app/Contents/Resources/playback/darwin/arm64/mpv"));
 assert.strictEqual(getMpvExecutable({
   platform: "darwin",
   packaged: true,
   resourcesPath: "/Volumes/WaveDeck Portable/WaveDeck.app/Contents/Resources",
   projectRoot: "/source",
   architecture: "x64"
-}), path.normalize("/Volumes/WaveDeck Portable/WaveDeck.app/Contents/Resources/playback/darwin/x64/mpv"));
+}), path.posix.normalize("/Volumes/WaveDeck Portable/WaveDeck.app/Contents/Resources/playback/darwin/x64/mpv"));
 
 const testRoot = fs.mkdtempSync(path.join(os.tmpdir(), "wavedeck-validate-"));
 try {
