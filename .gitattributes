@@ -1,0 +1,10 @@
+* text=auto eol=lf
+
+*.ico binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.AppImage binary
+*.exe binary
+*.7z binary
+*.zip binary
