@@ -188,18 +188,18 @@ static LRESULT CALLBACK helper_window_proc(HWND hwnd, UINT message, WPARAM w_par
 }
 
 static DWORD WINAPI watch_input_and_close_helper(LPVOID helper_window_value) {
-  HWND helper_window = (HWND)helper_window_value;
+  HWND helper_handle = (HWND)helper_window_value;
   char buffer[32];
   DWORD bytes_read = 0;
   while (ReadFile(GetStdHandle(STD_INPUT_HANDLE), buffer, sizeof(buffer), &bytes_read, NULL) && bytes_read > 0) {
     for (DWORD index = 0; index < bytes_read; ++index) {
       if (buffer[index] == '\n' || buffer[index] == '\r') {
-        PostMessageW(helper_window, WM_CLOSE, 0, 0);
+        PostMessageW(helper_handle, WM_CLOSE, 0, 0);
         return 0;
       }
     }
   }
-  PostMessageW(helper_window, WM_CLOSE, 0, 0);
+  PostMessageW(helper_handle, WM_CLOSE, 0, 0);
   return 0;
 }
 

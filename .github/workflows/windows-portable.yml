@@ -27,8 +27,12 @@ jobs:
           if (-not (Test-Path native/windows/bin/WaveDeckSidebar.exe)) {
             throw "The Windows Sidebar helper was not created."
           }
-          & native/windows/bin/WaveDeckSidebar.exe
-          if ($LASTEXITCODE -ne 2) {
+          $helperCheck = Start-Process `
+            -FilePath native/windows/bin/WaveDeckSidebar.exe `
+            -Wait `
+            -PassThru `
+            -NoNewWindow
+          if ($helperCheck.ExitCode -ne 2) {
             throw "The Windows Sidebar helper did not return its expected usage result."
           }
 
