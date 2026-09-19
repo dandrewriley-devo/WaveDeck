@@ -1330,7 +1330,7 @@ assert.ok(windowsWorkflow.includes("Build and inspect Windows Sidebar helper"));
 assert.ok(windowsWorkflow.includes("WaveDeck-0.6.5-Windows"));
 const linuxWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "linux-portable.yml"), "utf8");
 assert.ok(linuxWorkflow.includes("  push:"));
-assert.ok(linuxWorkflow.includes("WaveDeck-0.6.6-Linux.zip"));
+assert.ok(linuxWorkflow.includes("WaveDeck-0.6.6.1-Linux.zip"));
 assert.ok(linuxWorkflow.includes('install -m 755 dist/WaveDeck.AppImage'));
 assert.ok(linuxWorkflow.includes('install -m 644 USER-GUIDE.html'));
 assert.ok(!linuxWorkflow.includes('install -m 644 START-HERE.txt'));
