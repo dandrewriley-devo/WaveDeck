@@ -9,7 +9,8 @@ const { MediaController } = require("./media-controller");
 const {
   StreamRecorder,
   prepareFfmpegExecutable,
-  resolveFfmpegExecutable
+  resolveFfmpegExecutable,
+  verifyFfmpegExecutable
 } = require("./recorder");
 const { ListeningHistory } = require("./listening-history");
 const { createLibraryUpdater, nodeHttpsFetch } = require("./library-updater");
@@ -848,6 +849,10 @@ if (!hasSingleInstanceLock) {
           executable: resolveFfmpegExecutable({ packaged: app.isPackaged }),
           runtimeDir: getRuntimeDir(),
           packaged: app.isPackaged
+        });
+        verifyFfmpegExecutable({
+          executable: recorderExecutable,
+          runtimeDir: getRuntimeDir()
         });
         recorder = new StreamRecorder({
           executable: recorderExecutable,

@@ -30,18 +30,18 @@ jobs:
           install -m 644 defaults/library.json "release/WaveDeck Portable/WaveDeck-Default-Library.json"
           install -m 644 USER-GUIDE.html "release/WaveDeck Portable/USER-GUIDE.html"
           cd release
-          zip -q -r -9 WaveDeck-0.6.6.1-Linux.zip "WaveDeck Portable"
-          unzip -t WaveDeck-0.6.6.1-Linux.zip
-          zipinfo -l WaveDeck-0.6.6.1-Linux.zip | grep -Eq '^-rwxr-xr-x .*WaveDeck Portable/WaveDeck.AppImage$'
-          if unzip -Z1 WaveDeck-0.6.6.1-Linux.zip | grep -Eq '^WaveDeck Portable/(Data|Recordings)(/|$)'; then
+          zip -q -r -9 WaveDeck-0.6.6.2-Linux.zip "WaveDeck Portable"
+          unzip -t WaveDeck-0.6.6.2-Linux.zip
+          zipinfo -l WaveDeck-0.6.6.2-Linux.zip | grep -Eq '^-rwxr-xr-x .*WaveDeck Portable/WaveDeck.AppImage$'
+          if unzip -Z1 WaveDeck-0.6.6.2-Linux.zip | grep -Eq '^WaveDeck Portable/(Data|Recordings)(/|$)'; then
             echo "The release ZIP must not contain a Data folder."
             exit 1
           fi
 
       - uses: actions/upload-artifact@v4
         with:
-          name: WaveDeck-0.6.6.1-Linux
-          path: release/WaveDeck-0.6.6.1-Linux.zip
+          name: WaveDeck-0.6.6.2-Linux
+          path: release/WaveDeck-0.6.6.2-Linux.zip
           if-no-files-found: error
           compression-level: 0
           retention-days: 14

@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const { spawn } = require("child_process");
+const { spawn, spawnSync } = require("child_process");
 
 const RECORDING_BITRATE = "192k";
 const GRACEFUL_STOP_TIMEOUT_MS = 10_000;
@@ -47,14 +47,10 @@ function uniquePath(filePath, fileSystem = fs) {
 }
 
 function resolveFfmpegExecutable({ packaged = false } = {}) {
-  let executable = require("ffmpeg-static");
-  if (packaged) {
-    executable = executable.replace(
-      /([\\/])app\.asar([\\/])/,
-      "$1app.asar.unpacked$2"
-    );
-  }
-  return executable;
+  if (process.env.WAVEDECK_FFMPEG_PATH) return process.env.WAVEDECK_FFMPEG_PATH;
+  return packaged
+    ? path.join(process.resourcesPath, "recording", "ffmpeg")
+    : path.join(__dirname, "..", "..", ".cache", "wavedeck-tools", "linux", "ffmpeg");
 }
 
 function prepareFfmpegExecutable({
@@ -90,6 +86,49 @@ function prepareFfmpegExecutable({
   }
   fileSystem.chmodSync(runtimeExecutable, 0o755);
   return runtimeExecutable;
+}
+
+function verifyFfmpegExecutable({
+  executable,
+  runtimeDir,
+  spawnSyncImpl = spawnSync,
+  fileSystem = fs
+}) {
+  const probePath = path.join(runtimeDir, "tools", `ffmpeg-self-test-${process.pid}.mp3`);
+  fileSystem.mkdirSync(path.dirname(probePath), { recursive: true });
+  try {
+    const result = spawnSyncImpl(executable, [
+      "-hide_banner",
+      "-loglevel", "error",
+      "-nostdin",
+      "-f", "lavfi",
+      "-i", "anullsrc=r=8000:cl=mono",
+      "-t", "0.05",
+      "-c:a", "libmp3lame",
+      "-f", "mp3",
+      "-y",
+      probePath
+    ], {
+      encoding: "utf8",
+      timeout: 10_000,
+      windowsHide: true
+    });
+    let validOutput = false;
+    try {
+      const stat = fileSystem.statSync(probePath);
+      validOutput = stat.isFile() && stat.size > 0;
+    } catch {}
+    if (result.error || result.status !== 0 || result.signal || !validOutput) {
+      const stderr = String(result.stderr || "").trim().split("\n").filter(Boolean).pop();
+      const detail = stderr
+        || result.error?.message
+        || (result.signal ? `stopped by ${result.signal}` : `exit code ${result.status ?? "unknown"}`);
+      throw new Error(`Bundled recording engine failed its startup test: ${detail}`);
+    }
+    return true;
+  } finally {
+    try { fileSystem.unlinkSync(probePath); } catch {}
+  }
 }
 
 function recoverPartialRecordings(recordingsDir, fileSystem = fs) {
@@ -312,5 +351,6 @@ module.exports = {
   recoverPartialRecordings,
   resolveFfmpegExecutable,
   safeFilename,
-  uniquePath
+  uniquePath,
+  verifyFfmpegExecutable
 };

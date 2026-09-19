@@ -9,5 +9,6 @@ WaveDeckSB-Data/
 .DS_Store
 *.log
 npm-debug.log*
+.cache/wavedeck-tools/
 playback/win32/mpv.exe
 Data/

@@ -1,7 +1,7 @@
 {
   "name": "wavedeck",
   "version": "0.6.6",
-  "wavedeckVersion": "0.6.6.1",
+  "wavedeckVersion": "0.6.6.2",
   "description": "WaveDeck portable internet-radio player for Linux, Windows, and macOS",
   "author": "Andrew Riley",
   "license": "MIT",
@@ -10,7 +10,8 @@
   "scripts": {
     "start": "electron .",
     "test": "node scripts/validate.js",
-    "dist:linux": "electron-builder --linux AppImage --x64",
+    "prepare:linux-recorder": "node scripts/prepare-linux-ffmpeg.js",
+    "dist:linux": "npm run prepare:linux-recorder && electron-builder --linux AppImage --x64",
     "dist:windows": "electron-builder --win portable --x64 --config electron-builder.windows.json",
     "dist:macos": "electron-builder --mac dir --universal --config electron-builder.macos.json"
   },
@@ -22,15 +23,18 @@
     "appId": "com.a17press.wavedeck",
     "productName": "WaveDeck",
     "asar": true,
-    "asarUnpack": [
-      "node_modules/ffmpeg-static/ffmpeg"
-    ],
     "files": [
       "assets/**/*",
       "build/**/*",
       "defaults/**/*",
       "src/**/*",
       "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": ".cache/wavedeck-tools/linux/ffmpeg",
+        "to": "recording/ffmpeg"
+      }
     ],
     "directories": {
       "output": "dist"
@@ -52,7 +56,6 @@
   },
   "dependencies": {
     "dbus-next": "^0.10.2",
-    "ffmpeg-static": "5.2.0",
     "x11": "^4.1.0"
   }
 }
