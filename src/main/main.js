@@ -6,7 +6,11 @@ const path = require("path");
 
 const { MpvPlayer, getIpcPath, getMpvExecutable } = require("./player");
 const { MediaController } = require("./media-controller");
-const { StreamRecorder, resolveFfmpegExecutable } = require("./recorder");
+const {
+  StreamRecorder,
+  prepareFfmpegExecutable,
+  resolveFfmpegExecutable
+} = require("./recorder");
 const { ListeningHistory } = require("./listening-history");
 const { createLibraryUpdater, nodeHttpsFetch } = require("./library-updater");
 const { copyLegacyData } = require("./data-migration");
@@ -64,6 +68,7 @@ const SETTINGS_DEFAULT_WIDTH = 1100;
 const SETTINGS_DEFAULT_HEIGHT = 800;
 const SETTINGS_MIN_WIDTH = 700;
 const SETTINGS_MIN_HEIGHT = 500;
+const DISPLAY_VERSION = require("../../package.json").wavedeckVersion || app.getVersion();
 
 let mainWindow = null;
 let settingsWindow = null;
@@ -131,13 +136,17 @@ function configurePortableRuntimePaths() {
     }
   }
   if (!isPortableBuild()) return;
-  const runtimeDir = resolveRuntimeDir({
-    platform: process.platform,
-    appDataDir: app.getPath("appData")
-  });
+  const runtimeDir = getRuntimeDir();
   fs.mkdirSync(runtimeDir, { recursive: true });
   app.setPath("userData", runtimeDir);
   app.setPath("sessionData", runtimeDir);
+}
+
+function getRuntimeDir() {
+  return resolveRuntimeDir({
+    platform: process.platform,
+    appDataDir: app.getPath("appData")
+  });
 }
 
 function getDefaultsDir() {
@@ -769,7 +778,7 @@ function installIpcHandlers() {
   ipcMain.handle("sidebar:toggle", () => setSidebarMode(!sidebarApplied));
 
   ipcMain.handle("app:info", () => ({
-    version: app.getVersion(),
+    version: DISPLAY_VERSION,
     platform: process.platform,
     portable: isPortableBuild(),
     dataDir: storage.dataDir
@@ -835,8 +844,13 @@ if (!hasSingleInstanceLock) {
 
     if (process.platform === "linux") {
       try {
-        recorder = new StreamRecorder({
+        const recorderExecutable = prepareFfmpegExecutable({
           executable: resolveFfmpegExecutable({ packaged: app.isPackaged }),
+          runtimeDir: getRuntimeDir(),
+          packaged: app.isPackaged
+        });
+        recorder = new StreamRecorder({
+          executable: recorderExecutable,
           recordingsDir: getRecordingsDir(),
           onStateChanged: broadcastRecordingState
         });

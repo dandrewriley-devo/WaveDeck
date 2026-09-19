@@ -65,6 +65,7 @@ const { MEDIA_KEY_BINDINGS, WindowsMediaKeys } = require("../src/main/windows-me
 const {
   StreamRecorder,
   recordingTimestamp,
+  prepareFfmpegExecutable,
   recoverPartialRecordings,
   safeFilename,
   uniquePath
@@ -140,6 +141,7 @@ assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
 assert.strictEqual(packageJson.version, "0.6.6");
+assert.strictEqual(packageJson.wavedeckVersion, "0.6.6.1");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -1201,6 +1203,7 @@ assert.ok(mainSource.includes("isPaused: () => Boolean(settingsWindow"));
 assert.ok(mainSource.includes('ipcMain.handle("player:play-station"'));
 assert.ok(mainSource.includes('ipcMain.handle("recording:toggle"'));
 assert.ok(mainSource.includes("new StreamRecorder"));
+assert.ok(mainSource.includes("prepareFfmpegExecutable"));
 assert.ok(mainSource.includes('path.dirname(getDataDir()), "Recordings"'));
 assert.ok(!mainSource.includes('ipcMain.on("stations:show-context-menu"'));
 const desktopLauncherSource = fs.readFileSync(path.join(root, "src", "main", "desktop-launcher.js"), "utf8");
@@ -1397,6 +1400,24 @@ async function validateMediaControls() {
   assert.strictEqual(recordingTimestamp(new Date(2026, 8, 19, 20, 32, 47)), "2026-09-19 20-32-47");
   assert.strictEqual(safeFilename('Virgin: Radio / Rock? *'), "Virgin - Radio - Rock");
   const recorderTestDir = fs.mkdtempSync(path.join(os.tmpdir(), "wavedeck-recorder-"));
+  const recorderRuntimeDir = fs.mkdtempSync(path.join(os.tmpdir(), "wavedeck-runtime-"));
+  const packagedFfmpeg = path.join(recorderTestDir, "packaged-ffmpeg");
+  fs.writeFileSync(packagedFfmpeg, "fake ffmpeg", { mode: 0o644 });
+  const runtimeFfmpeg = prepareFfmpegExecutable({
+    executable: packagedFfmpeg,
+    runtimeDir: recorderRuntimeDir,
+    packaged: true,
+    platform: "linux"
+  });
+  assert.ok(runtimeFfmpeg.startsWith(path.join(recorderRuntimeDir, "tools")));
+  assert.strictEqual(fs.readFileSync(runtimeFfmpeg, "utf8"), "fake ffmpeg");
+  assert.strictEqual(fs.statSync(runtimeFfmpeg).mode & 0o777, 0o755);
+  assert.strictEqual(prepareFfmpegExecutable({
+    executable: packagedFfmpeg,
+    runtimeDir: recorderRuntimeDir,
+    packaged: false,
+    platform: "linux"
+  }), packagedFfmpeg);
   const abandonedPart = path.join(recorderTestDir, "Earlier Station - 2026-09-19 10-00-00.mp3.part");
   fs.writeFileSync(abandonedPart, "partial recording", "utf8");
   const recovered = recoverPartialRecordings(recorderTestDir);
@@ -1415,14 +1436,12 @@ async function validateMediaControls() {
     spawnImpl: (executable, args, options) => {
       const child = new EventEmitter();
       child.stderr = new PassThrough();
-      child.stdin = {
-        write(value) {
-          assert.strictEqual(value, "q\n");
+      child.kill = (signal) => {
+        if (signal === "SIGINT") {
           fs.writeFileSync(args.at(-1), Buffer.from("recorded mp3"));
-          setImmediate(() => child.emit("exit", 0));
+          setImmediate(() => child.emit("exit", 0, null));
         }
       };
-      child.kill = () => {};
       recorderSpawn = { executable, args, options };
       return child;
     }
@@ -1436,8 +1455,10 @@ async function validateMediaControls() {
   assert.strictEqual(recordingStarted.active, true);
   assert.strictEqual(recorderSpawn.executable, "/test/ffmpeg");
   assert.ok(recorderSpawn.args.includes("libmp3lame"));
+  assert.ok(recorderSpawn.args.includes("-nostdin"));
   assert.ok(recorderSpawn.args.includes("https://example.com/live"));
   assert.strictEqual(recorderSpawn.options.windowsHide, true);
+  assert.deepStrictEqual(recorderSpawn.options.stdio, ["ignore", "ignore", "pipe"]);
   const recordingStopped = await recorder.stop();
   assert.strictEqual(recordingStopped.active, false);
   assert.strictEqual(recordingStopped.finalizing, false);
@@ -1445,6 +1466,7 @@ async function validateMediaControls() {
   assert.ok(fs.existsSync(path.join(recorderTestDir, recordingStopped.lastFileName)));
   assert.ok(recorderStates.some((state) => state.active));
   fs.rmSync(recorderTestDir, { recursive: true, force: true });
+  fs.rmSync(recorderRuntimeDir, { recursive: true, force: true });
 
   assert.strictEqual(LIBRARY_UPDATE_URL, "https://fabulon.cloud/downloads/library_update.json");
   assert.strictEqual(

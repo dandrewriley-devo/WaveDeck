@@ -57,6 +57,41 @@ function resolveFfmpegExecutable({ packaged = false } = {}) {
   return executable;
 }
 
+function prepareFfmpegExecutable({
+  executable,
+  runtimeDir,
+  packaged = false,
+  platform = process.platform,
+  fileSystem = fs
+}) {
+  if (!packaged || platform !== "linux") return executable;
+
+  const sourceStat = fileSystem.statSync(executable);
+  const toolsDir = path.join(runtimeDir, "tools");
+  const runtimeExecutable = path.join(toolsDir, `ffmpeg-${sourceStat.size}`);
+  fileSystem.mkdirSync(toolsDir, { recursive: true });
+
+  let copyRequired = true;
+  try {
+    const destinationStat = fileSystem.statSync(runtimeExecutable);
+    copyRequired = !destinationStat.isFile() || destinationStat.size !== sourceStat.size;
+  } catch {}
+
+  if (copyRequired) {
+    const temporaryExecutable = `${runtimeExecutable}.copying-${process.pid}`;
+    try {
+      fileSystem.copyFileSync(executable, temporaryExecutable);
+      fileSystem.chmodSync(temporaryExecutable, 0o755);
+      fileSystem.renameSync(temporaryExecutable, runtimeExecutable);
+    } catch (error) {
+      try { fileSystem.unlinkSync(temporaryExecutable); } catch {}
+      throw error;
+    }
+  }
+  fileSystem.chmodSync(runtimeExecutable, 0o755);
+  return runtimeExecutable;
+}
+
 function recoverPartialRecordings(recordingsDir, fileSystem = fs) {
   if (!fileSystem.existsSync(recordingsDir)) return [];
   const recovered = [];
@@ -159,6 +194,7 @@ class StreamRecorder {
     const args = [
       "-hide_banner",
       "-loglevel", "warning",
+      "-nostdin",
       "-reconnect", "1",
       "-reconnect_streamed", "1",
       "-reconnect_delay_max", "2",
@@ -189,7 +225,7 @@ class StreamRecorder {
     let child;
     try {
       child = this.spawnImpl(this.executable, args, {
-        stdio: ["pipe", "ignore", "pipe"],
+        stdio: ["ignore", "ignore", "pipe"],
         windowsHide: true
       });
       this.process = child;
@@ -205,9 +241,9 @@ class StreamRecorder {
     });
     child.once("error", (error) => {
       this.lastError = `Recording failed: ${error.message}`;
-      this.#finish(-1);
+      this.#finish(-1, null);
     });
-    child.once("exit", (code) => this.#finish(code));
+    child.once("exit", (code, signal) => this.#finish(code, signal));
     this.#emitState();
     return this.getState();
   }
@@ -218,7 +254,7 @@ class StreamRecorder {
 
     this.stopPromise = new Promise((resolve) => { this.stopResolve = resolve; });
     this.#emitState();
-    try { this.process?.stdin?.write("q\n"); } catch {}
+    try { this.process?.kill("SIGINT"); } catch {}
     this.stopTimer = setTimeout(() => {
       try { this.process?.kill("SIGTERM"); } catch {}
     }, GRACEFUL_STOP_TIMEOUT_MS);
@@ -230,7 +266,7 @@ class StreamRecorder {
     return this.stop();
   }
 
-  #finish(code) {
+  #finish(code, signal = null) {
     if (!this.session) return;
     if (this.stopTimer) clearTimeout(this.stopTimer);
     this.stopTimer = null;
@@ -255,7 +291,9 @@ class StreamRecorder {
       const detail = this.stderr.trim().split("\n").filter(Boolean).pop();
       this.lastError = detail
         ? `Recording stopped unexpectedly: ${detail}`
-        : "Recording stopped before any audio was saved.";
+        : signal
+          ? `Recording engine stopped unexpectedly (${signal}).`
+          : `Recording engine stopped unexpectedly (exit code ${code ?? "unknown"}).`;
     } else if (saved) {
       this.lastError = "";
     }
@@ -270,6 +308,7 @@ module.exports = {
   RECORDING_BITRATE,
   StreamRecorder,
   recordingTimestamp,
+  prepareFfmpegExecutable,
   recoverPartialRecordings,
   resolveFfmpegExecutable,
   safeFilename,
