@@ -1,6 +1,6 @@
 {
   "name": "wavedeck",
-  "version": "0.6.5",
+  "version": "0.6.6",
   "description": "WaveDeck portable internet-radio player for Linux, Windows, and macOS",
   "author": "Andrew Riley",
   "license": "MIT",
@@ -21,6 +21,9 @@
     "appId": "com.a17press.wavedeck",
     "productName": "WaveDeck",
     "asar": true,
+    "asarUnpack": [
+      "node_modules/ffmpeg-static/ffmpeg"
+    ],
     "files": [
       "assets/**/*",
       "build/**/*",
@@ -48,6 +51,7 @@
   },
   "dependencies": {
     "dbus-next": "^0.10.2",
+    "ffmpeg-static": "5.2.0",
     "x11": "^4.1.0"
   }
 }

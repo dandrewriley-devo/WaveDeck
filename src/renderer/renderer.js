@@ -2,7 +2,12 @@ const headerStationName = document.querySelector(".station-name");
 const nowPlaying = document.getElementById("nowPlaying");
 const muteBtn = document.getElementById("muteBtn");
 const muteIcon = document.getElementById("muteIcon");
+const previousPresetBtn = document.getElementById("previousPresetBtn");
+const playPauseBtn = document.getElementById("playPauseBtn");
+const playPauseIcon = document.getElementById("playPauseIcon");
+const recordBtn = document.getElementById("recordBtn");
 const stopBtn = document.getElementById("stopBtn");
+const nextPresetBtn = document.getElementById("nextPresetBtn");
 const volumeSlider = document.getElementById("volSlider");
 const openSettingsBtn = document.getElementById("openSettingsBtn");
 const searchSectionToggleBtn = document.getElementById("searchSectionToggleBtn");
@@ -29,6 +34,9 @@ let notepadSaveTimer = null;
 let notepadDirty = false;
 let notepadOpen = false;
 let sidebarModeEnabled = false;
+let proModeEnabled = false;
+let recordingState = { available: false, active: false, finalizing: false };
+let recordingClock = null;
 let searchSectionVisible = false;
 let presetSectionVisible = true;
 let favoritesOnlyVisible = false;
@@ -121,6 +129,70 @@ function setMuteUi(muted) {
   muteBtn.setAttribute("aria-label", isMuted ? "Unmute" : "Mute");
 }
 
+function formatElapsed(seconds) {
+  const value = Math.max(0, Math.floor(Number(seconds) || 0));
+  const hours = Math.floor(value / 3600);
+  const minutes = Math.floor((value % 3600) / 60);
+  const remainder = value % 60;
+  return hours
+    ? `${hours}:${String(minutes).padStart(2, "0")}:${String(remainder).padStart(2, "0")}`
+    : `${minutes}:${String(remainder).padStart(2, "0")}`;
+}
+
+function recordingElapsedSeconds() {
+  const startedAt = Date.parse(recordingState?.startedAt || "");
+  if (!Number.isFinite(startedAt)) return Number(recordingState?.elapsedSeconds) || 0;
+  return Math.max(0, Math.floor((Date.now() - startedAt) / 1000));
+}
+
+function refreshRecordingTitle() {
+  if (recordingState?.active) {
+    const elapsed = formatElapsed(recordingElapsedSeconds());
+    recordBtn.title = `Stop Recording (${elapsed})`;
+    recordBtn.setAttribute("aria-label", `Stop recording, elapsed ${elapsed}`);
+  } else if (recordingState?.finalizing) {
+    recordBtn.title = "Finishing recording…";
+    recordBtn.setAttribute("aria-label", "Finishing recording");
+  } else {
+    recordBtn.title = recordingState?.available ? "Record" : "Recording unavailable";
+    recordBtn.setAttribute("aria-label", "Start recording");
+  }
+}
+
+function setRecordingUi(state = {}) {
+  recordingState = { ...recordingState, ...state };
+  const active = recordingState.active === true;
+  const finalizing = recordingState.finalizing === true;
+  recordBtn.classList.toggle("recording", active || finalizing);
+  recordBtn.disabled = !proModeEnabled || recordingState.available !== true || finalizing;
+  clearInterval(recordingClock);
+  recordingClock = null;
+  refreshRecordingTitle();
+  if (active) {
+    recordingClock = setInterval(refreshRecordingTitle, 1000);
+  }
+}
+
+function setPlayPauseUi(status = currentPlayerStatus) {
+  const playing = status?.mediaState === "playing";
+  playPauseIcon.innerHTML = playing
+    ? '<path d="M7 5h4v14H7zM13 5h4v14h-4z" fill="currentColor"/>'
+    : '<path d="m8 5 11 7-11 7z" fill="currentColor"/>';
+  playPauseBtn.title = playing ? "Pause" : "Play";
+  playPauseBtn.setAttribute("aria-label", playing ? "Pause" : "Play");
+}
+
+function setProModeUi(preferences = {}) {
+  proModeEnabled = preferences?.proModeEnabled === true;
+  document.querySelectorAll("[data-pro-only]").forEach((node) => {
+    node.hidden = !proModeEnabled;
+  });
+  notepadToggleBtn.hidden = !proModeEnabled || !sidebarModeEnabled;
+  if (!proModeEnabled) setNotepadOpen(false);
+  setRecordingUi(recordingState);
+  queueRender();
+}
+
 function setSidebarUi(state) {
   const enabled = state?.enabled === true;
   const changed = sidebarModeEnabled !== enabled;
@@ -133,8 +205,8 @@ function setSidebarUi(state) {
   sidebarModeBtn.title = available
     ? (enabled ? "Exit Sidebar Mode" : "Sidebar Mode")
     : (state?.reason || "Sidebar Mode unavailable");
-  notepadToggleBtn.hidden = !enabled;
-  notepadToggleBtn.disabled = !enabled;
+  notepadToggleBtn.hidden = !proModeEnabled || !enabled;
+  notepadToggleBtn.disabled = !proModeEnabled || !enabled;
   if (!enabled) setNotepadOpen(false);
   if (changed) queueRender();
 }
@@ -420,12 +492,14 @@ async function renderAll() {
 
   const presets = stations.filter((station) => station.preset).sort(sortPresets);
   const searchActive = searchSectionVisible && Boolean(window.WaveDeckSearch.normalizeSearchText(stationSearchQuery));
+  const favoritesFilterActive = proModeEnabled && favoritesOnlyVisible;
+  const topFiveActive = proModeEnabled && mostPlayedSectionVisible;
   const filteredStations = stations.filter((station) => (
-    (!favoritesOnlyVisible || station.favorite) &&
+    (!favoritesFilterActive || station.favorite) &&
     (!searchActive || window.WaveDeckSearch.stationMatchesQuery(station, stationSearchQuery))
   ));
   const stationStats = listeningHistory.stations || {};
-  const mostListened = mostPlayedSectionVisible && !searchActive
+  const mostListened = topFiveActive && !searchActive
     ? stations
       .map((station) => ({ station, seconds: Number(stationStats[station.id]?.seconds) || 0 }))
       .filter((item) => item.seconds >= MOST_LISTENED_MINIMUM_SECONDS)
@@ -464,7 +538,7 @@ async function renderAll() {
       listEl.append(element("div", "placeholder", "No presets yet."));
     }
   }
-  if (mostPlayedSectionVisible && !searchActive) {
+  if (topFiveActive && !searchActive) {
     listEl.append(createSectionTitle(
       "Your Top Five",
       mostListened.length ? "" : "Stations appear here after five minutes."
@@ -490,7 +564,7 @@ async function renderAll() {
   if (!filteredStations.length) {
     const emptyMessage = searchActive
       ? "No stations match your search."
-      : (favoritesOnlyVisible ? "No Favorite stations yet." : "No stations yet.");
+      : (favoritesFilterActive ? "No Favorite stations yet." : "No stations yet.");
     listEl.append(element("div", "placeholder", emptyMessage));
   } else {
     const groupsEl = element("div", "groups");
@@ -792,6 +866,46 @@ function bindHandlers() {
   });
 }
 
+async function runTransport(button, action, failureLabel) {
+  button.disabled = true;
+  try {
+    await action();
+  } catch (error) {
+    nowPlaying.textContent = `${failureLabel}: ${error.message}`;
+  } finally {
+    button.disabled = false;
+  }
+}
+
+previousPresetBtn.addEventListener("click", () => runTransport(
+  previousPresetBtn,
+  () => window.wavedeck.previousPreset(),
+  "Previous Preset failed"
+));
+
+playPauseBtn.addEventListener("click", () => runTransport(
+  playPauseBtn,
+  () => window.wavedeck.playPause(),
+  "Playback failed"
+));
+
+recordBtn.addEventListener("click", async () => {
+  recordBtn.disabled = true;
+  try {
+    setRecordingUi(await window.wavedeck.toggleRecording());
+  } catch (error) {
+    nowPlaying.textContent = `Recording failed: ${error.message}`;
+  } finally {
+    setRecordingUi(recordingState);
+  }
+});
+
+nextPresetBtn.addEventListener("click", () => runTransport(
+  nextPresetBtn,
+  () => window.wavedeck.nextPreset(),
+  "Next Preset failed"
+));
+
 muteBtn.addEventListener("click", async () => {
   muteBtn.disabled = true;
   try {
@@ -970,6 +1084,7 @@ window.wavedeck.onStationChanged((station) => {
 
 window.wavedeck.onPlayerStatus((status) => {
   currentPlayerStatus = status;
+  setPlayPauseUi(status);
   if (typeof status?.muted === "boolean") setMuteUi(status.muted);
   if (Number.isFinite(status?.volume) && document.activeElement !== volumeSlider) {
     volumeSlider.value = String(Math.round(status.volume));
@@ -995,6 +1110,11 @@ window.wavedeck.onListeningHistoryChanged((history) => {
 });
 
 window.wavedeck.onSectionVisibilityChanged(setSectionVisibilityUi);
+window.wavedeck.onUiPreferencesChanged(setProModeUi);
+window.wavedeck.onRecordingState((state) => {
+  setRecordingUi(state);
+  if (state?.error) nowPlaying.textContent = state.error;
+});
 
 window.wavedeck.onStationsChanged(queueRender);
 window.wavedeck.onGroupsChanged(queueRender);
@@ -1008,18 +1128,23 @@ window.wavedeck.onWarning((warning) => {
   setMuteUi(false);
   await renderAll();
   try {
-    const [status, sidebarState, sectionVisibility, savedNotepad] = await Promise.all([
+    const [status, sidebarState, sectionVisibility, savedNotepad, preferences, savedRecordingState] = await Promise.all([
       window.wavedeck.getPlayerStatus(),
       window.wavedeck.getSidebarState(),
       window.wavedeck.getSectionVisibility(),
-      window.wavedeck.getNotepad()
+      window.wavedeck.getNotepad(),
+      window.wavedeck.getUiPreferences(),
+      window.wavedeck.getRecordingState()
     ]);
     currentPlayerStatus = status;
     notepadText.value = savedNotepad || "";
     notepadDirty = false;
     setNotepadOpen(false);
+    setProModeUi(preferences);
     setSidebarUi(sidebarState);
     setSectionVisibilityUi(sectionVisibility);
+    setRecordingUi(savedRecordingState);
+    setPlayPauseUi(status);
     if (typeof status?.muted === "boolean") setMuteUi(status.muted);
     if (Number.isFinite(status?.volume)) volumeSlider.value = String(Math.round(status.volume));
     if (status?.currentStation && status?.mediaState !== "stopped") {

@@ -45,6 +45,8 @@ contextBridge.exposeInMainWorld("wavedeck", {
   removeLauncher: () => ipcRenderer.invoke("launcher:remove"),
   getUiPreferences: () => ipcRenderer.invoke("ui:get-preferences"),
   setLaunchInSidebarMode: (enabled) => ipcRenderer.invoke("ui:set-launch-in-sidebar", enabled),
+  setProModeEnabled: (enabled) => ipcRenderer.invoke("ui:set-pro-mode", enabled),
+  onUiPreferencesChanged: (callback) => subscribe("ui:preferences-changed", callback),
 
   exportLibrary: () => ipcRenderer.invoke("library:export"),
   importLibrary: (mode) => ipcRenderer.invoke("library:import", mode),
@@ -53,6 +55,9 @@ contextBridge.exposeInMainWorld("wavedeck", {
   testStreamUrl: (url) => ipcRenderer.invoke("stream:test", url),
 
   playStation: (stationId) => ipcRenderer.invoke("player:play-station", stationId),
+  playPause: () => ipcRenderer.invoke("player:play-pause"),
+  previousPreset: () => ipcRenderer.invoke("player:previous-preset"),
+  nextPreset: () => ipcRenderer.invoke("player:next-preset"),
   stop: () => ipcRenderer.invoke("player:stop"),
   setVolume: (value) => ipcRenderer.invoke("player:volume", value),
   toggleMute: () => ipcRenderer.invoke("player:mute"),
@@ -60,6 +65,10 @@ contextBridge.exposeInMainWorld("wavedeck", {
   onPlayerStatus: (callback) => subscribe("player:status-changed", callback),
   onStationChanged: (callback) => subscribe("player:station-changed", callback),
   onMetadata: (callback) => subscribe("player:metadata", callback),
+
+  getRecordingState: () => ipcRenderer.invoke("recording:get-state"),
+  toggleRecording: () => ipcRenderer.invoke("recording:toggle"),
+  onRecordingState: (callback) => subscribe("recording:state-changed", callback),
 
   getSidebarState: () => ipcRenderer.invoke("sidebar:get-state"),
   toggleSidebar: () => ipcRenderer.invoke("sidebar:toggle"),

@@ -63,6 +63,13 @@ const {
 } = require("../src/main/cinnamon-media-keys");
 const { MEDIA_KEY_BINDINGS, WindowsMediaKeys } = require("../src/main/windows-media-keys");
 const {
+  StreamRecorder,
+  recordingTimestamp,
+  recoverPartialRecordings,
+  safeFilename,
+  uniquePath
+} = require("../src/main/recorder");
+const {
   SEARCH_FIELDS,
   normalizeSearchText,
   stationMatchesQuery
@@ -132,11 +139,13 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.6.5");
+assert.strictEqual(packageJson.version, "0.6.6");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
 assert.strictEqual(packageJson.dependencies["dbus-next"], "^0.10.2");
+assert.strictEqual(packageJson.dependencies["ffmpeg-static"], "5.2.0");
+assert.ok(packageJson.build.asarUnpack.includes("node_modules/ffmpeg-static/ffmpeg"));
 assert.strictEqual(packageJson.build.linux.syncDesktopName, true);
 assert.strictEqual(packageJson.build.linux.artifactName, "WaveDeck.${ext}");
 assert.ok(packageJson.scripts["dist:windows"].includes("electron-builder.windows.json"));
@@ -297,6 +306,7 @@ try {
     version: 1,
     stations: {},
     downloadNewStations: true,
+    proModeEnabled: false,
     launchInSidebarMode: false,
     settingsWindowBounds: null,
     lastLibraryUpdate: "",
@@ -304,11 +314,13 @@ try {
   });
 
   assert.deepStrictEqual(storage.getLinuxUiPreferences(), {
+    proModeEnabled: false,
     launchInSidebarMode: false,
     settingsWindowBounds: null
   });
   assert.deepStrictEqual(storage.getUiPreferences(), storage.getLinuxUiPreferences());
   assert.strictEqual(storage.setLaunchInSidebarMode(true).launchInSidebarMode, true);
+  assert.strictEqual(storage.setProModeEnabled(true).proModeEnabled, true);
   assert.deepStrictEqual(storage.setSettingsWindowBounds({ x: 2100.4, y: 40.6, width: 1120.2, height: 840.8 }), {
     x: 2100,
     y: 41,
@@ -318,6 +330,7 @@ try {
   const uiPreferenceReload = new PortableStorage({ dataDir, defaultsDir });
   uiPreferenceReload.initialize();
   assert.deepStrictEqual(uiPreferenceReload.getLinuxUiPreferences(), {
+    proModeEnabled: true,
     launchInSidebarMode: true,
     settingsWindowBounds: { x: 2100, y: 41, width: 1120, height: 841 }
   });
@@ -1049,6 +1062,8 @@ assert.ok(preloadSource.includes('ipcRenderer.invoke("launcher:install"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("launcher:remove"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("ui:get-preferences"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("ui:set-launch-in-sidebar", enabled)'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("ui:set-pro-mode", enabled)'));
+assert.ok(preloadSource.includes('subscribe("ui:preferences-changed"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("listening:get"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("listening:reset"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("sections:get-state"'));
@@ -1064,6 +1079,11 @@ assert.ok(preloadSource.includes('ipcRenderer.invoke("library-update:set-enabled
 assert.ok(preloadSource.includes('ipcRenderer.invoke("stations:delete", stationId)'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("stations:set-gain", stationId, gainDb)'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("player:play-station", stationId)'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("player:play-pause")'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("player:previous-preset")'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("player:next-preset")'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("recording:get-state")'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("recording:toggle")'));
 assert.ok(preloadSource.includes("platform: process.platform"));
 assert.ok(!preloadSource.includes("showStationContextMenu"));
 const settingsHtml = fs.readFileSync(path.join(root, "src", "renderer", "settings.html"), "utf8");
@@ -1078,6 +1098,7 @@ assert.ok(settingsHtml.includes('id="importLibraryAddBtn"'));
 assert.ok(settingsHtml.includes('id="importLibraryReplaceBtn"'));
 assert.ok(settingsHtml.includes('id="downloadNewStations"'));
 assert.ok(settingsHtml.includes('id="launchInSidebarMode"'));
+assert.ok(settingsHtml.includes('id="proModeEnabled"'));
 assert.ok(settingsHtml.includes("WaveDeck_Library.json"));
 assert.ok(settingsHtml.indexOf('id="stationEditorHome"') < settingsHtml.indexOf('class="listening-history-bar"'));
 assert.ok(settingsHtml.includes('id="resetListeningBtn"'));
@@ -1087,7 +1108,7 @@ assert.ok(settingsHtml.includes('id="st_description"'));
 assert.ok(settingsHtml.includes('id="st_favorite"'));
 assert.ok(settingsHtml.includes('id="st_preset"'));
 assert.ok(settingsHtml.includes('id="st_has_preroll"'));
-assert.ok(settingsHtml.includes("WaveDeck 0.6.5"));
+assert.ok(settingsHtml.includes("WaveDeck 0.6.6 — Stream Recording Update"));
 assert.ok(settingsHtml.includes("native Sidebar Mode"));
 assert.ok(settingsHtml.includes("Changelog"));
 const settingsStyles = fs.readFileSync(path.join(root, "src", "renderer", "settings.css"), "utf8");
@@ -1159,6 +1180,7 @@ assert.ok(mainSource.includes('ipcMain.handle("linux-ui:get-preferences"'));
 assert.ok(mainSource.includes('ipcMain.handle("linux-ui:set-launch-in-sidebar"'));
 assert.ok(mainSource.includes('ipcMain.handle("ui:get-preferences"'));
 assert.ok(mainSource.includes('ipcMain.handle("ui:set-launch-in-sidebar"'));
+assert.ok(mainSource.includes('ipcMain.handle("ui:set-pro-mode"'));
 assert.ok(mainSource.includes("storage.setSettingsWindowBounds(bounds)"));
 assert.ok(mainSource.includes("SETTINGS_DEFAULT_WIDTH = 1100"));
 assert.ok(mainSource.includes("SETTINGS_DEFAULT_HEIGHT = 800"));
@@ -1177,6 +1199,9 @@ assert.ok(mainSource.includes("createLibraryUpdater"));
 assert.ok(mainSource.includes("net.fetch"));
 assert.ok(mainSource.includes("isPaused: () => Boolean(settingsWindow"));
 assert.ok(mainSource.includes('ipcMain.handle("player:play-station"'));
+assert.ok(mainSource.includes('ipcMain.handle("recording:toggle"'));
+assert.ok(mainSource.includes("new StreamRecorder"));
+assert.ok(mainSource.includes('path.dirname(getDataDir()), "Recordings"'));
 assert.ok(!mainSource.includes('ipcMain.on("stations:show-context-menu"'));
 const desktopLauncherSource = fs.readFileSync(path.join(root, "src", "main", "desktop-launcher.js"), "utf8");
 assert.ok(desktopLauncherSource.includes('.local", "share", "applications"'));
@@ -1202,7 +1227,7 @@ assert.ok(rendererSource.includes(".slice(0, 5)"));
 assert.ok(rendererSource.includes('setAttribute("aria-label", presets ? "Hide Presets" : "Show Presets")'));
 assert.ok(rendererSource.includes('setAttribute("aria-label", mostPlayed ? "Hide Your Top Five" : "Show Your Top Five")'));
 assert.ok(rendererSource.includes("favoritesOnlyVisible"));
-assert.ok(rendererSource.includes("!favoritesOnlyVisible || station.favorite"));
+assert.ok(rendererSource.includes("!favoritesFilterActive || station.favorite"));
 assert.ok(rendererSource.includes('getSectionVisibility()'));
 assert.ok(rendererSource.includes('setSectionVisibility({'));
 assert.ok(rendererSource.includes('onSectionVisibilityChanged(setSectionVisibilityUi)'));
@@ -1215,7 +1240,7 @@ assert.ok(rendererSource.includes("event.ctrlKey && event.shiftKey"));
 assert.ok(rendererSource.includes('row.addEventListener("pointerdown"'));
 assert.ok(!rendererSource.includes("event.altKey"));
 const presetStackIndex = rendererSource.indexOf('if (presetSectionVisible && !searchActive) {');
-const mostPlayedStackIndex = rendererSource.indexOf('if (mostPlayedSectionVisible && !searchActive) {', presetStackIndex);
+const mostPlayedStackIndex = rendererSource.indexOf('if (topFiveActive && !searchActive) {', presetStackIndex);
 const stationsStackIndex = rendererSource.indexOf('listEl.append(createSectionTitle("stations"', mostPlayedStackIndex);
 assert.ok(presetStackIndex >= 0);
 assert.ok(presetStackIndex < mostPlayedStackIndex);
@@ -1234,8 +1259,12 @@ assert.ok(rendererSource.includes("currentStationId"));
 assert.ok(rendererSource.includes("station-gain-slider"));
 assert.ok(rendererSource.includes("setStationGain(stationId, value)"));
 assert.ok(rendererSource.includes("presetSectionVisible && !searchActive"));
-assert.ok(rendererSource.includes("mostPlayedSectionVisible && !searchActive"));
+assert.ok(rendererSource.includes("topFiveActive && !searchActive"));
 assert.ok(rendererSource.includes('platform !== "linux" && platform !== "win32"'));
+assert.ok(rendererSource.includes("setProModeUi"));
+assert.ok(rendererSource.includes("toggleRecording"));
+assert.ok(rendererSource.includes("previousPreset"));
+assert.ok(rendererSource.includes("nextPreset"));
 const settingsSource = fs.readFileSync(path.join(root, "src", "renderer", "settings.js"), "utf8");
 assert.ok(settingsSource.includes("addSubgroup"));
 assert.ok(settingsSource.includes("renameSubgroup"));
@@ -1249,7 +1278,8 @@ assert.ok(settingsSource.includes('stationsTbody.querySelectorAll("tr[data-stati
 assert.ok(settingsSource.includes('row.querySelector(".listened-total")'));
 assert.ok(settingsSource.includes('platform === "linux" || platform === "win32"'));
 assert.ok(settingsSource.includes('platform === "linux" ? loadLauncherStatus()'));
-assert.ok(settingsSource.includes('sidebarPlatform ? loadUiPreferences()'));
+assert.ok(settingsSource.includes("setProModeEnabled(requested)"));
+assert.ok(settingsSource.includes("loadUiPreferences()"));
 
 const windowsBuild = JSON.parse(fs.readFileSync(path.join(root, "electron-builder.windows.json"), "utf8"));
 assert.strictEqual(windowsBuild.win.artifactName, "WaveDeck.exe");
@@ -1297,8 +1327,10 @@ assert.ok(windowsWorkflow.includes("Build and inspect Windows Sidebar helper"));
 assert.ok(windowsWorkflow.includes("WaveDeck-0.6.5-Windows"));
 const linuxWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "linux-portable.yml"), "utf8");
 assert.ok(linuxWorkflow.includes("  push:"));
-assert.ok(linuxWorkflow.includes("WaveDeck-0.6.5-Linux.zip"));
+assert.ok(linuxWorkflow.includes("WaveDeck-0.6.6-Linux.zip"));
 assert.ok(linuxWorkflow.includes('install -m 755 dist/WaveDeck.AppImage'));
+assert.ok(linuxWorkflow.includes('install -m 644 USER-GUIDE.html'));
+assert.ok(!linuxWorkflow.includes('install -m 644 START-HERE.txt'));
 const macosInstructions = fs.readFileSync(path.join(root, "START-HERE-MACOS.txt"), "utf8");
 assert.ok(macosInstructions.includes("Version 0.6.1 universal build"));
 assert.ok(macosInstructions.includes("WaveDeck is unsigned"));
@@ -1361,6 +1393,58 @@ async function validateMediaControls() {
   await windowsSidebar.remove();
   assert.strictEqual(windowsSidebar.active, false);
   fs.rmSync(windowsHelperTestDir, { recursive: true, force: true });
+
+  assert.strictEqual(recordingTimestamp(new Date(2026, 8, 19, 20, 32, 47)), "2026-09-19 20-32-47");
+  assert.strictEqual(safeFilename('Virgin: Radio / Rock? *'), "Virgin - Radio - Rock");
+  const recorderTestDir = fs.mkdtempSync(path.join(os.tmpdir(), "wavedeck-recorder-"));
+  const abandonedPart = path.join(recorderTestDir, "Earlier Station - 2026-09-19 10-00-00.mp3.part");
+  fs.writeFileSync(abandonedPart, "partial recording", "utf8");
+  const recovered = recoverPartialRecordings(recorderTestDir);
+  assert.strictEqual(recovered.length, 1);
+  assert.ok(recovered[0].endsWith(" - incomplete.mp3"));
+  assert.strictEqual(uniquePath(recovered[0]).includes("(2).mp3"), true);
+
+  let recorderSpawn = null;
+  const recorderStates = [];
+  const recorder = new StreamRecorder({
+    executable: "/test/ffmpeg",
+    recordingsDir: recorderTestDir,
+    platform: "linux",
+    now: () => new Date(2026, 8, 19, 20, 32, 47),
+    onStateChanged: (state) => recorderStates.push(state),
+    spawnImpl: (executable, args, options) => {
+      const child = new EventEmitter();
+      child.stderr = new PassThrough();
+      child.stdin = {
+        write(value) {
+          assert.strictEqual(value, "q\n");
+          fs.writeFileSync(args.at(-1), Buffer.from("recorded mp3"));
+          setImmediate(() => child.emit("exit", 0));
+        }
+      };
+      child.kill = () => {};
+      recorderSpawn = { executable, args, options };
+      return child;
+    }
+  });
+  recorder.initialize();
+  const recordingStarted = await recorder.start({
+    id: "station-one",
+    name: "Virgin: Radio / Rock?",
+    url: "https://example.com/live"
+  });
+  assert.strictEqual(recordingStarted.active, true);
+  assert.strictEqual(recorderSpawn.executable, "/test/ffmpeg");
+  assert.ok(recorderSpawn.args.includes("libmp3lame"));
+  assert.ok(recorderSpawn.args.includes("https://example.com/live"));
+  assert.strictEqual(recorderSpawn.options.windowsHide, true);
+  const recordingStopped = await recorder.stop();
+  assert.strictEqual(recordingStopped.active, false);
+  assert.strictEqual(recordingStopped.finalizing, false);
+  assert.ok(recordingStopped.lastFileName.endsWith(".mp3"));
+  assert.ok(fs.existsSync(path.join(recorderTestDir, recordingStopped.lastFileName)));
+  assert.ok(recorderStates.some((state) => state.active));
+  fs.rmSync(recorderTestDir, { recursive: true, force: true });
 
   assert.strictEqual(LIBRARY_UPDATE_URL, "https://fabulon.cloud/downloads/library_update.json");
   assert.strictEqual(
@@ -1774,7 +1858,7 @@ async function validateMediaControls() {
 }
 
 validateMediaControls().then(() => {
-  console.log(`WaveDeck validation passed: v${packageJson.version} Linux/Windows feature parity, Sidebar Mode, portable data, and packaging verified.`);
+  console.log(`WaveDeck validation passed: v${packageJson.version} Stream Recording Update, Simple/Pro Mode, portable data, and packaging verified.`);
 }).catch((error) => {
   console.error(error);
   process.exitCode = 1;

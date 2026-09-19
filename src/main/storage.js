@@ -249,6 +249,7 @@ function validatePreferences(value) {
     downloadNewStations: typeof value?.downloadNewStations === "boolean"
       ? value.downloadNewStations
       : true,
+    proModeEnabled: value?.proModeEnabled === true,
     launchInSidebarMode: value?.launchInSidebarMode === true,
     settingsWindowBounds,
     lastLibraryUpdate: Number.isFinite(parsedUpdatedAt) ? new Date(parsedUpdatedAt).toISOString() : "",
@@ -421,6 +422,7 @@ class PortableStorage {
   getUiPreferences() {
     const preferences = this.readPreferences();
     return {
+      proModeEnabled: preferences.proModeEnabled,
       launchInSidebarMode: preferences.launchInSidebarMode,
       settingsWindowBounds: preferences.settingsWindowBounds
         ? { ...preferences.settingsWindowBounds }
@@ -435,6 +437,13 @@ class PortableStorage {
   setLaunchInSidebarMode(enabled) {
     const preferences = this.readPreferences();
     preferences.launchInSidebarMode = Boolean(enabled);
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences();
+  }
+
+  setProModeEnabled(enabled) {
+    const preferences = this.readPreferences();
+    preferences.proModeEnabled = Boolean(enabled);
     this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
     return this.getUiPreferences();
   }

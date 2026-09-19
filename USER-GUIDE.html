@@ -216,12 +216,12 @@
     <main>
       <section id="what">
         <h2>What is WaveDeck?</h2>
-        <p>WaveDeck is a lightweight, portable internet-radio player for Linux, Windows, and macOS. It organizes streaming stations into searchable groups and subgroups, lets you build personal Presets and Favorites, remembers your listening history and station-volume adjustments, and can carry the same library and preferences between computers on a USB stick.</p>
+        <p>WaveDeck is a lightweight, portable internet-radio player for Linux, Windows, and macOS. It organizes streaming stations into searchable groups and subgroups, lets you build personal Presets and Favorites, remembers your listening history and station-volume adjustments, and can carry the same library and preferences between computers on a USB stick. Simple Mode keeps the controls uncluttered; Pro Mode adds advanced listening and recording tools.</p>
       </section>
 
       <section id="quick-start" class="quick">
         <h2>1. Quick Start</h2>
-        <p>Extract the complete package to a normal folder or USB stick, then launch the version made for your computer. Click a station to play it, use the volume control beneath the artwork, and use the toolbar to show Search, Presets, Favorites, or Your Top Five. WaveDeck creates a <code>Data</code> folder beside the application and leaves existing files in it alone.</p>
+        <p>Extract the complete package to a normal folder or USB stick, then launch the version made for your computer. Click a station to play it, use the volume control beneath the artwork, and use the toolbar to show Search or Presets. WaveDeck starts in Simple Mode. Turn on <strong>Pro Mode</strong> under Settings → Interface when you want the expanded controls, Favorites filter, Your Top Five, Notepad, and stream recording. WaveDeck creates its portable folders beside the application and leaves existing files alone.</p>
 
         <div class="platforms">
           <article class="card">
@@ -244,6 +244,7 @@
         <p>WaveDeck keeps your information in a folder named <code>Data</code> beside the application. If the Windows EXE, Linux AppImage, and macOS app are placed in the same <code>WaveDeck Portable</code> folder, they can all use that same data.</p>
         <div class="note"><strong>Updating WaveDeck:</strong> Close the application and replace only the executable or app. Do not delete or replace the <code>Data</code> folder.</div>
         <p>WaveDeck creates missing files for a new user, but it does not overwrite an existing library, preferences, listening history, notes, or backups during startup.</p>
+        <p>On Linux, WaveDeck also creates a <code>Recordings</code> folder beside <code>Data</code>. This folder contains recordings you make in Pro Mode and is not part of the station library.</p>
         <table>
           <thead><tr><th>File</th><th>What it contains</th></tr></thead>
           <tbody>
@@ -257,7 +258,10 @@
 
       <section id="player">
         <h2>3. Playing Stations</h2>
-        <p>Click a station name to start its live stream. Clicking the selected station also opens its details, including country, description, best-effort bitrate information, and its Station Gain control. Use the square Stop button to stop playback, the speaker button to mute, and the slider to change overall volume.</p>
+        <p>Click a station name to start its live stream. Clicking the selected station also opens its details, including country, description, best-effort bitrate information, and its Station Gain control. Use the square Stop button to stop playback, the speaker button to mute, and the slider to change overall volume. In Pro Mode, Previous and Next move through Presets, while Play/Pause stops and reconnects the live stream.</p>
+
+        <h3>Stream Recording (Linux)</h3>
+        <p>In Pro Mode, click Record while a station is playing to save a continuous MP3 file. Click Record again to finish the file. Stop, changing stations, and closing WaveDeck also finish the current recording safely. Files are named from the WaveDeck station name and the date and time recording began, then saved in the portable <code>Recordings</code> folder. WaveDeck never splits recordings into individual songs. Recording captures the station through an independent stream connection, so listening volume, mute, and Station Gain do not change the saved audio.</p>
 
         <h3>Station Gain</h3>
         <p>Some streams arrive naturally louder or quieter than others. The Station Gain slider adjusts only the selected station from −12 dB to +12 dB in 0.5 dB steps. You can move it while listening and hear the result immediately. WaveDeck remembers the setting for that station and applies it automatically next time. <strong>Reset</strong> returns it to 0 dB.</p>
@@ -268,15 +272,15 @@
 
       <section id="toolbar">
         <h2>4. Toolbar and Station Lists</h2>
-        <p>The fixed toolbar sits directly beneath the player controls. From left to right:</p>
+        <p>The fixed toolbar sits directly beneath the player controls. Simple Mode shows Search, Presets, Sidebar Mode, and Settings. Pro Mode adds the controls marked below:</p>
         <table>
           <thead><tr><th>Control</th><th>What it does</th></tr></thead>
           <tbody>
             <tr><td>Search</td><td>Shows or hides Search. It matches names, groups, subgroups, countries, descriptions, and stream URLs. While text is present, Presets and Your Top Five temporarily disappear so only results are shown.</td></tr>
             <tr><td>Presets</td><td>Shows or hides your ordered Presets list. Presets begins visible on each launch.</td></tr>
-            <tr><td>Favorites</td><td>Filters the main Stations listing to Favorites only. Click again to restore every station.</td></tr>
-            <tr><td>Your Top Five</td><td>Shows or hides your five most-listened stations. It begins hidden on each launch.</td></tr>
-            <tr><td>Notepad</td><td>Opens the auto-saving notepad while Sidebar Mode is active. Notepad is available on Linux and Windows but not on macOS.</td></tr>
+            <tr><td>Favorites (Pro)</td><td>Filters the main Stations listing to Favorites only. Click again to restore every station.</td></tr>
+            <tr><td>Your Top Five (Pro)</td><td>Shows or hides your five most-listened stations. It begins hidden on each launch.</td></tr>
+            <tr><td>Notepad (Pro)</td><td>Opens the auto-saving notepad while Sidebar Mode is active. Notepad is available on Linux and Windows but not on macOS.</td></tr>
             <tr><td>Sidebar Mode</td><td>Docks WaveDeck against the right edge of the desktop on Linux Mint Cinnamon or Windows. Sidebar Mode is not available on macOS.</td></tr>
             <tr><td>Settings</td><td>Opens station management, groups, importing and exporting, platform controls, About, and the changelog.</td></tr>
           </tbody>
@@ -304,6 +308,9 @@
 
       <section id="settings">
         <h2>6. Settings and Library Management</h2>
+        <h3>Interface</h3>
+        <p><strong>Enable Pro Mode</strong> switches between WaveDeck's compact four-button toolbar and its advanced controls. The setting is remembered in the portable <code>Data</code> folder. Simple Mode is the default for a new user.</p>
+
         <h3>Stations</h3>
         <p>Add, edit, delete, search, and filter stations. Each station can have a name, URL, group, optional subgroup, country, description, Favorite status, Preset status, and pre-roll warning. Only the user can delete a local station.</p>
 
@@ -398,6 +405,16 @@ SOFTWARE.</pre>
 
 WaveDeck uses Electron. Electron and Chromium license information is included
 inside each distribution.
+
+The Linux package bundles an FFmpeg executable through ffmpeg-static for the
+Stream Recording feature:
+  https://ffmpeg.org/
+  https://github.com/eugeneware/ffmpeg-static
+
+FFmpeg is free software distributed under the GNU General Public License,
+version 3 or later. License and source information are available at:
+  https://ffmpeg.org/legal.html
+  https://ffmpeg.org/download.html#get-sources
 
 The WaveDeck Windows package bundles mpv from the shinchiro Windows builds.
 The macOS package bundles the standalone Intel and Apple Silicon builds made
@@ -807,6 +824,6 @@ Public License instead of this License.</pre>
     </main>
   </div>
 
-  <footer>WaveDeck User Guide · Version 0.6.5</footer>
+  <footer>WaveDeck User Guide · Version 0.6.6</footer>
 </body>
 </html>

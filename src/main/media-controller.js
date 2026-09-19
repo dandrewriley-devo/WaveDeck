@@ -37,11 +37,20 @@ function publicStation(station) {
 }
 
 class MediaController {
-  constructor({ player, getStations, onStationChanged, onStateChanged }) {
+  constructor({
+    player,
+    getStations,
+    onStationChanged,
+    onStateChanged,
+    beforeStationChange,
+    beforeStop
+  }) {
     this.player = player;
     this.getStations = getStations;
     this.onStationChanged = onStationChanged || (() => {});
     this.onStateChanged = onStateChanged || (() => {});
+    this.beforeStationChange = beforeStationChange || (async () => {});
+    this.beforeStop = beforeStop || (async () => {});
     this.currentStation = null;
     this.mediaState = "stopped";
   }
@@ -82,7 +91,18 @@ class MediaController {
   }
 
   async playStation(station) {
-    this.currentStation = publicStation(station);
+    const nextStation = publicStation(station);
+    const stationChanged = this.currentStation && (
+      String(this.currentStation.id) !== String(nextStation.id) ||
+      this.currentStation.url !== nextStation.url
+    );
+    if (stationChanged) {
+      await this.beforeStationChange({
+        previousStation: this.getCurrentStation(),
+        nextStation
+      });
+    }
+    this.currentStation = nextStation;
     const stationId = this.currentStation.id;
     this.mediaState = "playing";
     this.onStationChanged(this.getCurrentStation());
@@ -107,6 +127,7 @@ class MediaController {
 
   async pause() {
     if (this.mediaState !== "playing") return false;
+    await this.beforeStop({ reason: "pause", station: this.getCurrentStation() });
     this.mediaState = "paused";
     this.onStateChanged(this.getStatus());
     await this.player.stop();
@@ -114,6 +135,7 @@ class MediaController {
   }
 
   async stop() {
+    await this.beforeStop({ reason: "stop", station: this.getCurrentStation() });
     this.mediaState = "stopped";
     this.onStateChanged(this.getStatus());
     await this.player.stop();

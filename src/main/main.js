@@ -6,6 +6,7 @@ const path = require("path");
 
 const { MpvPlayer, getIpcPath, getMpvExecutable } = require("./player");
 const { MediaController } = require("./media-controller");
+const { StreamRecorder, resolveFfmpegExecutable } = require("./recorder");
 const { ListeningHistory } = require("./listening-history");
 const { createLibraryUpdater, nodeHttpsFetch } = require("./library-updater");
 const { copyLegacyData } = require("./data-migration");
@@ -69,6 +70,7 @@ let settingsWindow = null;
 let storage = null;
 let player = null;
 let mediaController = null;
+let recorder = null;
 let mprisService = null;
 let platformMediaKeys = null;
 let listeningHistory = null;
@@ -83,6 +85,8 @@ let sidebarApplied = false;
 let sidebarTransitioning = false;
 let floatingBounds = null;
 let sectionVisibility = { search: false, presets: true, favoritesOnly: false, mostPlayed: false };
+let quitFinalizingRecording = false;
+let cleanupComplete = false;
 const startupWarnings = [];
 
 function getDataDir() {
@@ -140,6 +144,10 @@ function getDefaultsDir() {
   return path.join(app.getAppPath(), "defaults");
 }
 
+function getRecordingsDir() {
+  return path.join(path.dirname(getDataDir()), "Recordings");
+}
+
 function getDesktopLauncherState() {
   const appImagePath = process.platform === "linux" && app.isPackaged && process.env.APPIMAGE
     ? path.resolve(process.env.APPIMAGE)
@@ -183,6 +191,11 @@ function broadcastStationChanged(station) {
   sendToMain("player:station-changed", station);
   mprisService?.update(mediaController?.getStatus());
   reclaimMediaKeys();
+}
+
+function broadcastRecordingState(state = recorder?.getState()) {
+  if (state) sendToMain("recording:state-changed", state);
+  return state;
 }
 
 function reclaimMediaKeys() {
@@ -690,6 +703,22 @@ function installIpcHandlers() {
     }
     return storage.setLaunchInSidebarMode(enabled);
   });
+  ipcMain.handle("ui:set-pro-mode", (_event, enabled) => {
+    if (!enabled && recorder?.isRecording()) {
+      throw new Error("Stop the current recording before turning Pro Mode off.");
+    }
+    const preferences = storage.setProModeEnabled(enabled);
+    if (!preferences.proModeEnabled) {
+      sectionVisibility = {
+        ...sectionVisibility,
+        favoritesOnly: false,
+        mostPlayed: false
+      };
+      sendToAll("sections:state-changed", { ...sectionVisibility });
+    }
+    sendToAll("ui:preferences-changed", preferences);
+    return preferences;
+  });
 
   // Retain the original channels for older renderer bundles and portable data
   // created before the preference became available on Windows.
@@ -703,9 +732,33 @@ function installIpcHandlers() {
 
   ipcMain.handle("player:status", () => mediaController.getStatus());
   ipcMain.handle("player:play-station", (_event, stationId) => mediaController.playStationById(stationId));
+  ipcMain.handle("player:play-pause", () => mediaController.togglePlayPause());
+  ipcMain.handle("player:previous-preset", () => mediaController.previousPreset());
+  ipcMain.handle("player:next-preset", () => mediaController.nextPreset());
   ipcMain.handle("player:stop", () => mediaController.stop());
   ipcMain.handle("player:volume", (_event, value) => player.setVolume(value));
   ipcMain.handle("player:mute", () => player.toggleMute());
+
+  ipcMain.handle("recording:get-state", () => recorder?.getState() || {
+    available: false,
+    active: false,
+    finalizing: false,
+    error: ""
+  });
+  ipcMain.handle("recording:toggle", async () => {
+    if (!storage.getUiPreferences().proModeEnabled) {
+      throw new Error("Turn on Pro Mode in Settings before recording.");
+    }
+    if (!recorder?.isAvailable()) {
+      throw new Error("Stream recording is available in the Linux edition.");
+    }
+    if (recorder.isRecording()) return recorder.stop();
+    const station = mediaController.getCurrentStation();
+    if (!station || mediaController.getMediaState() !== "playing") {
+      throw new Error("Start a station before recording.");
+    }
+    return recorder.start(station);
+  });
 
   ipcMain.handle("settings:open", (_event, stationId = "") => {
     openSettingsWindow(stationId);
@@ -780,6 +833,19 @@ if (!hasSingleInstanceLock) {
       startupWarnings.push(`WaveDeck's Data folder is not writable. Changes may not be saved. ${error.message}`);
     }
 
+    if (process.platform === "linux") {
+      try {
+        recorder = new StreamRecorder({
+          executable: resolveFfmpegExecutable({ packaged: app.isPackaged }),
+          recordingsDir: getRecordingsDir(),
+          onStateChanged: broadcastRecordingState
+        });
+        recorder.initialize();
+      } catch (error) {
+        console.warn(`Stream recording is unavailable: ${error.message}`);
+      }
+    }
+
     libraryUpdater = createLibraryUpdater({
       storage,
       fetchImpl: (...args) => net.fetch(...args),
@@ -812,7 +878,9 @@ if (!hasSingleInstanceLock) {
       player,
       getStations: () => storage.readStations(),
       onStationChanged: broadcastStationChanged,
-      onStateChanged: broadcastPlayerStatus
+      onStateChanged: broadcastPlayerStatus,
+      beforeStationChange: () => recorder?.stop(),
+      beforeStop: () => recorder?.stop()
     });
 
     listeningHistory = new ListeningHistory({
@@ -882,7 +950,9 @@ if (!hasSingleInstanceLock) {
   });
 }
 
-app.on("before-quit", () => {
+function finishShutdown() {
+  if (cleanupComplete) return;
+  cleanupComplete = true;
   if (libraryUpdateTimer) clearTimeout(libraryUpdateTimer);
   libraryUpdateTimer = null;
   if (playbackHeartbeat) clearInterval(playbackHeartbeat);
@@ -895,6 +965,19 @@ app.on("before-quit", () => {
   mprisService?.close();
   windowsSidebar?.close();
   player?.close();
+}
+
+app.on("before-quit", (event) => {
+  if (!quitFinalizingRecording && recorder?.isRecording()) {
+    event.preventDefault();
+    quitFinalizingRecording = true;
+    void recorder.close().finally(() => {
+      finishShutdown();
+      app.quit();
+    });
+    return;
+  }
+  finishShutdown();
 });
 app.on("window-all-closed", () => app.quit());
 

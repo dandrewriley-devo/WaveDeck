@@ -3,6 +3,16 @@ WAVEDECK THIRD-PARTY NOTICES
 WaveDeck uses Electron. Electron and Chromium license information is included
 inside each distribution.
 
+The Linux package bundles an FFmpeg executable through ffmpeg-static for the
+Stream Recording feature:
+  https://ffmpeg.org/
+  https://github.com/eugeneware/ffmpeg-static
+
+FFmpeg is free software distributed under the GNU General Public License,
+version 3 or later. License and source information are available at:
+  https://ffmpeg.org/legal.html
+  https://ffmpeg.org/download.html#get-sources
+
 The WaveDeck Windows package bundles mpv from the shinchiro Windows builds.
 The macOS package bundles the standalone Intel and Apple Silicon builds made
 available by stolendata.net:

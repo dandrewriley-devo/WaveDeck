@@ -1,5 +1,6 @@
 const tabs = document.querySelectorAll(".tab");
 const panels = new Map([
+  ["interface", document.getElementById("tab-interface")],
   ["stations", document.getElementById("tab-stations")],
   ["groups", document.getElementById("tab-groups")],
   ["importexport", document.getElementById("tab-importexport")],
@@ -8,6 +9,7 @@ const panels = new Map([
 ]);
 
 const statusStations = document.getElementById("status");
+const statusInterface = document.getElementById("statusInterface");
 const statusGroups = document.getElementById("statusGroups");
 const statusImportExport = document.getElementById("statusImportExport");
 const stationSearch = document.getElementById("stationSearch");
@@ -42,6 +44,7 @@ const statusLauncher = document.getElementById("statusLauncher");
 const installLauncherBtn = document.getElementById("installLauncherBtn");
 const removeLauncherBtn = document.getElementById("removeLauncherBtn");
 const launchInSidebarMode = document.getElementById("launchInSidebarMode");
+const proModeEnabled = document.getElementById("proModeEnabled");
 const sidebarStartupHint = document.getElementById("sidebarStartupHint");
 const resetListeningBtn = document.getElementById("resetListeningBtn");
 const platform = window.wavedeck.platform;
@@ -171,13 +174,14 @@ async function loadLauncherStatus() {
 }
 
 async function loadUiPreferences() {
-  if (!sidebarPlatform) return;
   try {
     const preferences = await window.wavedeck.getUiPreferences();
-    launchInSidebarMode.checked = preferences?.launchInSidebarMode === true;
+    proModeEnabled.checked = preferences?.proModeEnabled === true;
+    if (sidebarPlatform) launchInSidebarMode.checked = preferences?.launchInSidebarMode === true;
   } catch (error) {
-    launchInSidebarMode.checked = false;
-    setStatus(statusLauncher, `Could not load the startup preference: ${error.message}`, false);
+    proModeEnabled.checked = false;
+    if (sidebarPlatform) launchInSidebarMode.checked = false;
+    setStatus(statusInterface, `Could not load interface preferences: ${error.message}`, false);
   }
 }
 
@@ -841,6 +845,26 @@ launchInSidebarMode.addEventListener("change", async () => {
   }
 });
 
+proModeEnabled.addEventListener("change", async () => {
+  const requested = proModeEnabled.checked;
+  proModeEnabled.disabled = true;
+  try {
+    const preferences = await window.wavedeck.setProModeEnabled(requested);
+    proModeEnabled.checked = preferences?.proModeEnabled === true;
+    setStatus(
+      statusInterface,
+      proModeEnabled.checked
+        ? "Pro Mode is on. Advanced controls are now visible in the main window."
+        : "Simple Mode is on. WaveDeck's advanced controls are hidden."
+    );
+  } catch (error) {
+    proModeEnabled.checked = !requested;
+    setStatus(statusInterface, `Could not change modes: ${error.message}`, false);
+  } finally {
+    proModeEnabled.disabled = false;
+  }
+});
+
 async function reloadEverything() {
   await loadData();
   rebuildGroupControls();
@@ -876,13 +900,17 @@ window.wavedeck.onListeningHistoryChanged((history) => {
 });
 window.wavedeck.onEditStationRequested(requestStationEdit);
 window.wavedeck.onWarning((warning) => setStatus(statusStations, warning, false));
+window.wavedeck.onUiPreferencesChanged((preferences) => {
+  proModeEnabled.checked = preferences?.proModeEnabled === true;
+  if (sidebarPlatform) launchInSidebarMode.checked = preferences?.launchInSidebarMode === true;
+});
 
 (async function initialize() {
   showTab(document.querySelector(".tab.active")?.dataset.tab || "stations");
   await Promise.all([
     reloadEverything(),
     platform === "linux" ? loadLauncherStatus() : Promise.resolve(),
-    sidebarPlatform ? loadUiPreferences() : Promise.resolve(),
+    loadUiPreferences(),
     loadLibraryUpdateState()
   ]);
   clearForm();
