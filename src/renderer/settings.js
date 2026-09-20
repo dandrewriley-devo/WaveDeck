@@ -4,7 +4,6 @@ const panels = new Map([
   ["stations", document.getElementById("tab-stations")],
   ["groups", document.getElementById("tab-groups")],
   ["importexport", document.getElementById("tab-importexport")],
-  ["launcher", document.getElementById("tab-launcher")],
   ["about", document.getElementById("tab-about")]
 ]);
 
@@ -48,15 +47,10 @@ const proModeEnabled = document.getElementById("proModeEnabled");
 const sidebarStartupHint = document.getElementById("sidebarStartupHint");
 const resetListeningBtn = document.getElementById("resetListeningBtn");
 const platform = window.wavedeck.platform;
-const launcherTab = document.querySelector('[data-tab="launcher"]');
 
 const sidebarPlatform = platform === "linux" || platform === "win32";
-if (!sidebarPlatform) launcherTab.hidden = true;
-if (platform === "win32") {
-  launcherTab.textContent = "Sidebar";
-  document.querySelectorAll(".linux-launcher-only").forEach((node) => { node.hidden = true; });
-  sidebarStartupHint.textContent = "When enabled, WaveDeck automatically reserves the right edge of the Windows desktop at startup.";
-}
+if (platform !== "linux") document.querySelectorAll(".linux-launcher-only").forEach((node) => { node.hidden = true; });
+if (platform === "win32") sidebarStartupHint.textContent = "When enabled, WaveDeck automatically reserves the right edge of the Windows desktop at startup.";
 
 let stations = [];
 let groups = [];

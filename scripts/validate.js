@@ -68,8 +68,7 @@ const {
   prepareFfmpegExecutable,
   recoverPartialRecordings,
   safeFilename,
-  uniquePath,
-  verifyFfmpegExecutable
+  uniquePath
 } = require("../src/main/recorder");
 const {
   SEARCH_FIELDS,
@@ -142,14 +141,13 @@ assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
 assert.strictEqual(packageJson.version, "0.6.6");
-assert.strictEqual(packageJson.wavedeckVersion, "0.6.6.2");
+assert.strictEqual(packageJson.wavedeckVersion, "0.6.6.1");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
 assert.strictEqual(packageJson.dependencies["dbus-next"], "^0.10.2");
-assert.ok(!Object.hasOwn(packageJson.dependencies, "ffmpeg-static"));
-assert.strictEqual(packageJson.build.extraResources[0].to, "recording/ffmpeg");
-assert.ok(packageJson.scripts["dist:linux"].includes("prepare:linux-recorder"));
+assert.strictEqual(packageJson.dependencies["ffmpeg-static"], "5.2.0");
+assert.ok(packageJson.build.asarUnpack.includes("node_modules/ffmpeg-static/ffmpeg"));
 assert.strictEqual(packageJson.build.linux.syncDesktopName, true);
 assert.strictEqual(packageJson.build.linux.artifactName, "WaveDeck.${ext}");
 assert.ok(packageJson.scripts["dist:windows"].includes("electron-builder.windows.json"));
@@ -1091,8 +1089,9 @@ assert.ok(preloadSource.includes('ipcRenderer.invoke("recording:toggle")'));
 assert.ok(preloadSource.includes("platform: process.platform"));
 assert.ok(!preloadSource.includes("showStationContextMenu"));
 const settingsHtml = fs.readFileSync(path.join(root, "src", "renderer", "settings.html"), "utf8");
-assert.ok(settingsHtml.includes('data-tab="launcher"'));
-assert.ok(settingsHtml.includes('id="tab-launcher"'));
+assert.ok(!settingsHtml.includes('data-tab="launcher"'));
+assert.ok(!settingsHtml.includes('id="tab-launcher"'));
+assert.ok(settingsHtml.includes('id="tab-interface"'));
 assert.ok(settingsHtml.includes('id="installLauncherBtn"'));
 assert.ok(settingsHtml.includes('id="removeLauncherBtn"'));
 assert.ok(settingsHtml.includes('id="stationEditor"'));
@@ -1332,7 +1331,7 @@ assert.ok(windowsWorkflow.includes("Build and inspect Windows Sidebar helper"));
 assert.ok(windowsWorkflow.includes("WaveDeck-0.6.5-Windows"));
 const linuxWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "linux-portable.yml"), "utf8");
 assert.ok(linuxWorkflow.includes("  push:"));
-assert.ok(linuxWorkflow.includes("WaveDeck-0.6.6.2-Linux.zip"));
+assert.ok(linuxWorkflow.includes("WaveDeck-0.6.6-Linux.zip"));
 assert.ok(linuxWorkflow.includes('install -m 755 dist/WaveDeck.AppImage'));
 assert.ok(linuxWorkflow.includes('install -m 644 USER-GUIDE.html'));
 assert.ok(!linuxWorkflow.includes('install -m 644 START-HERE.txt'));
@@ -1420,25 +1419,6 @@ async function validateMediaControls() {
     packaged: false,
     platform: "linux"
   }), packagedFfmpeg);
-  let selfTestInvocation = null;
-  assert.strictEqual(verifyFfmpegExecutable({
-    executable: runtimeFfmpeg,
-    runtimeDir: recorderRuntimeDir,
-    spawnSyncImpl: (executable, args, options) => {
-      selfTestInvocation = { executable, args, options };
-      fs.writeFileSync(args.at(-1), Buffer.from("test mp3"));
-      return { status: 0, signal: null, stderr: "" };
-    }
-  }), true);
-  assert.strictEqual(selfTestInvocation.executable, runtimeFfmpeg);
-  assert.ok(selfTestInvocation.args.includes("anullsrc=r=8000:cl=mono"));
-  assert.ok(selfTestInvocation.args.includes("libmp3lame"));
-  assert.strictEqual(fs.existsSync(selfTestInvocation.args.at(-1)), false);
-  assert.throws(() => verifyFfmpegExecutable({
-    executable: runtimeFfmpeg,
-    runtimeDir: recorderRuntimeDir,
-    spawnSyncImpl: () => ({ status: null, signal: "SIGSEGV", stderr: "" })
-  }), /SIGSEGV/);
   const abandonedPart = path.join(recorderTestDir, "Earlier Station - 2026-09-19 10-00-00.mp3.part");
   fs.writeFileSync(abandonedPart, "partial recording", "utf8");
   const recovered = recoverPartialRecordings(recorderTestDir);
