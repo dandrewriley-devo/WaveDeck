@@ -638,7 +638,8 @@ section#tab-about p {
 }
 
 .about-logo{
-  border:1px solid var(--border);
+  background:#000;
+  border:1px solid #000;
   flex:0 0 220px;
   height:auto;
   max-width:220px;
