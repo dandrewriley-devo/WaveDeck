@@ -140,8 +140,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.6.6");
-assert.strictEqual(packageJson.wavedeckVersion, "0.6.6.1");
+assert.strictEqual(packageJson.version, "0.6.7");
+assert.strictEqual(packageJson.wavedeckVersion, "0.6.7");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -1119,7 +1119,7 @@ assert.ok(settingsHtml.includes('id="st_description"'));
 assert.ok(settingsHtml.includes('id="st_favorite"'));
 assert.ok(settingsHtml.includes('id="st_preset"'));
 assert.ok(settingsHtml.includes('id="st_has_preroll"'));
-assert.ok(settingsHtml.includes("WaveDeck 0.6.6 — Stream Recording Update"));
+assert.ok(settingsHtml.includes("WaveDeck 0.6.7 — Stream Recording & Settings Update"));
 assert.ok(settingsHtml.includes("native Sidebar Mode"));
 assert.ok(settingsHtml.includes("Changelog"));
 const settingsStyles = fs.readFileSync(path.join(root, "src", "renderer", "settings.css"), "utf8");
@@ -1339,7 +1339,7 @@ assert.ok(windowsWorkflow.includes("Build and inspect Windows Sidebar helper"));
 assert.ok(windowsWorkflow.includes("WaveDeck-0.6.5-Windows"));
 const linuxWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "linux-portable.yml"), "utf8");
 assert.ok(linuxWorkflow.includes("  push:"));
-assert.ok(linuxWorkflow.includes("WaveDeck-0.6.6-Linux.zip"));
+assert.ok(linuxWorkflow.includes("WaveDeck-0.6.7-Linux.zip"));
 assert.ok(linuxWorkflow.includes('install -m 755 dist/WaveDeck.AppImage'));
 assert.ok(linuxWorkflow.includes('install -m 644 USER-GUIDE.html'));
 assert.ok(!linuxWorkflow.includes('install -m 644 START-HERE.txt'));
