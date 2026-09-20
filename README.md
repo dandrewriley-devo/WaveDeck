@@ -41,7 +41,7 @@ npm install
 npm start
 ```
 
-When running from source, WaveDeck stores its user data under `~/.config/wavedeck` on Linux and `Data` in the project folder on Windows and macOS.
+On Linux, the first start downloads WaveDeck's pinned portable FFmpeg recorder and verifies both the archive and executable checksums. Later starts reuse it. When running from source, WaveDeck stores its user data under `~/.config/wavedeck` on Linux and `Data` in the project folder on Windows and macOS.
 
 ## Build the portable Windows EXE
 
@@ -63,7 +63,7 @@ npm test
 npm run dist:linux
 ```
 
-The AppImage is written to `dist/`. Release builds use the stable filename `WaveDeck.AppImage`. Keep future replacements at the same path so an Applications-menu or panel shortcut continues to work.
+The build automatically downloads and checksum-verifies WaveDeck's pinned portable FFmpeg recorder before packaging. The AppImage is written to `dist/`. Release builds use the stable filename `WaveDeck.AppImage`. Keep future replacements at the same path so an Applications-menu or panel shortcut continues to work.
 
 ## Build the universal macOS app
 

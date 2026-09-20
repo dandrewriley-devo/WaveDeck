@@ -67,8 +67,10 @@ const {
   recordingTimestamp,
   prepareFfmpegExecutable,
   recoverPartialRecordings,
+  resolveFfmpegExecutable,
   safeFilename,
-  uniquePath
+  uniquePath,
+  verifyFfmpegExecutable
 } = require("../src/main/recorder");
 const {
   SEARCH_FIELDS,
@@ -146,8 +148,14 @@ assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
 assert.strictEqual(packageJson.dependencies["dbus-next"], "^0.10.2");
-assert.strictEqual(packageJson.dependencies["ffmpeg-static"], "5.2.0");
-assert.ok(packageJson.build.asarUnpack.includes("node_modules/ffmpeg-static/ffmpeg"));
+assert.ok(packageJson.scripts["prepare:linux-recorder"].includes("prepare-linux-ffmpeg.js"));
+assert.ok(packageJson.scripts.start.includes("prepare:linux-recorder"));
+assert.ok(packageJson.scripts["dist:linux"].includes("prepare:linux-recorder"));
+assert.ok(!packageJson.build.asarUnpack);
+assert.deepStrictEqual(packageJson.build.extraResources, [{
+  from: ".cache/wavedeck-tools/linux/ffmpeg",
+  to: "recording/ffmpeg"
+}]);
 assert.strictEqual(packageJson.build.linux.syncDesktopName, true);
 assert.strictEqual(packageJson.build.linux.artifactName, "WaveDeck.${ext}");
 assert.ok(packageJson.scripts["dist:windows"].includes("electron-builder.windows.json"));
@@ -1408,6 +1416,7 @@ async function validateMediaControls() {
 
   assert.strictEqual(recordingTimestamp(new Date(2026, 8, 19, 20, 32, 47)), "2026-09-19 20-32-47");
   assert.strictEqual(safeFilename('Virgin: Radio / Rock? *'), "Virgin - Radio - Rock");
+  assert.strictEqual(resolveFfmpegExecutable(), path.join(root, ".cache", "wavedeck-tools", "linux", "ffmpeg"));
   const recorderTestDir = fs.mkdtempSync(path.join(os.tmpdir(), "wavedeck-recorder-"));
   const recorderRuntimeDir = fs.mkdtempSync(path.join(os.tmpdir(), "wavedeck-runtime-"));
   const packagedFfmpeg = path.join(recorderTestDir, "packaged-ffmpeg");
@@ -1427,6 +1436,14 @@ async function validateMediaControls() {
     packaged: false,
     platform: "linux"
   }), packagedFfmpeg);
+  assert.strictEqual(verifyFfmpegExecutable({
+    executable: runtimeFfmpeg,
+    runtimeDir: recorderRuntimeDir,
+    spawnSyncImpl: (_executable, args) => {
+      fs.writeFileSync(args.at(-1), "probe mp3", "utf8");
+      return { status: 0, stderr: "" };
+    }
+  }), true);
   const abandonedPart = path.join(recorderTestDir, "Earlier Station - 2026-09-19 10-00-00.mp3.part");
   fs.writeFileSync(abandonedPart, "partial recording", "utf8");
   const recovered = recoverPartialRecordings(recorderTestDir);
