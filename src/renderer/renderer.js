@@ -222,6 +222,15 @@ function setSidebarUi(state) {
   if (changed) queueRender();
 }
 
+function updateSectionToolbarHighlights() {
+  const showingRecordings = recordingsSectionVisible;
+  searchSectionToggleBtn.classList.toggle("active", !showingRecordings && searchSectionVisible);
+  presetSectionToggleBtn.classList.toggle("active", !showingRecordings && presetSectionVisible);
+  favoritesOnlyToggleBtn.classList.toggle("active", !showingRecordings && favoritesOnlyVisible);
+  mostPlayedSectionToggleBtn.classList.toggle("active", !showingRecordings && mostPlayedSectionVisible);
+  recordingsSectionToggleBtn.classList.toggle("active", showingRecordings);
+}
+
 function setSectionVisibilityUi(state = {}) {
   const search = state.search === true;
   const presets = state.presets !== false;
@@ -245,18 +254,16 @@ function setSectionVisibilityUi(state = {}) {
   searchPanel.hidden = !search || recordingsSectionVisible;
   searchPanel.setAttribute("aria-hidden", String(!search || recordingsSectionVisible));
 
-  searchSectionToggleBtn.classList.toggle("active", search);
   searchSectionToggleBtn.setAttribute("aria-pressed", String(search));
   searchSectionToggleBtn.setAttribute("aria-label", search ? "Hide Search" : "Show Search");
-  presetSectionToggleBtn.classList.toggle("active", presets);
   presetSectionToggleBtn.setAttribute("aria-pressed", String(presets));
   presetSectionToggleBtn.setAttribute("aria-label", presets ? "Hide Presets" : "Show Presets");
-  favoritesOnlyToggleBtn.classList.toggle("active", favoritesOnly);
   favoritesOnlyToggleBtn.setAttribute("aria-pressed", String(favoritesOnly));
   favoritesOnlyToggleBtn.setAttribute("aria-label", favoritesOnly ? "Show all Stations" : "Show Favorites only");
-  mostPlayedSectionToggleBtn.classList.toggle("active", mostPlayed);
   mostPlayedSectionToggleBtn.setAttribute("aria-pressed", String(mostPlayed));
   mostPlayedSectionToggleBtn.setAttribute("aria-label", mostPlayed ? "Hide Your Top Five" : "Show Your Top Five");
+
+  updateSectionToolbarHighlights();
 
   if (changed) queueRender();
 }
@@ -277,10 +284,10 @@ function setRecordingsSectionVisible(visible) {
   recordingsPanel.setAttribute("aria-hidden", String(!next));
   searchPanel.hidden = !searchSectionVisible || next;
   searchPanel.setAttribute("aria-hidden", String(!searchSectionVisible || next));
-  recordingsSectionToggleBtn.classList.toggle("active", next);
   recordingsSectionToggleBtn.setAttribute("aria-pressed", String(next));
   recordingsSectionToggleBtn.setAttribute("aria-label", next ? "Close Recordings" : "Open Recordings");
   recordingsSectionToggleBtn.title = next ? "Close Recordings" : "Recordings";
+  updateSectionToolbarHighlights();
   if (changed) queueRender();
 }
 
