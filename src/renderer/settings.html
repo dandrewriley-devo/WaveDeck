@@ -23,8 +23,13 @@
     <main>
       <!-- INTERFACE -->
       <section id="tab-interface" class="panel hidden">
-        <div class="row">
+        <div class="general-sections">
+        <section class="general-card">
+        <div class="general-card-header">
           <div class="label">Startup</div>
+          <div class="hint">Choose how WaveDeck opens when it starts.</div>
+        </div>
+        <div class="general-card-body">
           <label class="preference-toggle" title="Automatically enter Sidebar Mode whenever WaveDeck starts">
             <input id="launchInSidebarMode" type="checkbox" />
             <span class="toggle-switch" aria-hidden="true"></span>
@@ -34,10 +39,10 @@
             When enabled, WaveDeck automatically reserves the right edge of the desktop at startup.
           </div>
         </div>
+        </section>
 
-        <div class="divider"></div>
-
-        <div class="row">
+        <section class="general-card">
+        <div class="general-card-header">
           <div class="label">WaveDeck Pro</div>
           <div class="hint">
             Simple Mode keeps WaveDeck focused on Search, Presets, Sidebar Mode, and Settings.
@@ -45,8 +50,7 @@
             transport controls, and stream recording.
           </div>
         </div>
-
-        <div class="launcher-box">
+        <div class="general-card-body">
           <label class="preference-toggle" title="Show WaveDeck's advanced controls and features">
             <input id="proModeEnabled" type="checkbox" />
             <span class="toggle-switch" aria-hidden="true"></span>
@@ -57,28 +61,23 @@
             <b>Recordings</b> folder beside <b>Data</b>. Recording is currently available on Linux.
           </div>
         </div>
+        </section>
 
-        <div class="divider linux-launcher-only"></div>
-
-        <div class="row linux-launcher-only">
+        <section class="general-card linux-launcher-only">
+        <div class="general-card-header">
           <div class="label">Linux Mint Panel Shortcut</div>
           <div class="hint">
             WaveDeck can add this portable AppImage to Linux Mint's Applications
             menu without installing or moving the app itself.
           </div>
         </div>
-
-        <div class="launcher-box linux-launcher-only">
+        <div class="general-card-body">
           <div id="launcherState" class="launcher-state">Checking launcher…</div>
           <div class="launcher-actions">
             <button id="installLauncherBtn" class="btn" type="button">Add WaveDeck to Applications Menu</button>
             <button id="removeLauncherBtn" class="btn danger" type="button">Remove WaveDeck Launcher</button>
           </div>
-        </div>
-
-        <div class="divider linux-launcher-only"></div>
-
-        <div class="row linux-launcher-only">
+        <div class="panel-help">
           <div class="label">Add it to the bottom panel</div>
           <div class="hint launcher-instructions">
             After adding the launcher, open the Mint menu, find <b>WaveDeck</b>,
@@ -86,45 +85,41 @@
             AppImage, launch it directly and return here to update the launcher.
           </div>
         </div>
+        </div>
+        </section>
 
-        <div id="statusInterface" class="status"></div>
-        <div id="statusLauncher" class="status"></div>
-
-        <div class="divider"></div>
-
-        <div class="row">
+        <section class="general-card">
+        <div class="general-card-header">
           <div class="label">Import / Export</div>
           <div class="hint">
             A WaveDeck library file contains stations, groups, subgroups, ordering, and assignments.
             Your personal Favorites and Presets are kept separately and are never imported or exported.
           </div>
         </div>
-
+        <div class="general-card-body io-actions">
         <div class="io-box">
           <button id="exportLibraryBtn" class="btn">Export</button>
           <div class="muted mt-6">
             Creates <b>WaveDeck_Library.json</b>, a shareable station library with its update timestamp added automatically.
           </div>
         </div>
-
-        <div class="divider"></div>
-
         <div class="io-box">
           <button id="importLibraryAddBtn" class="btn">Import Stations</button>
           <div class="muted mt-6">
             Adds only new stations, groups, and subgroups. Existing listings are left untouched.
           </div>
         </div>
-
-        <div class="divider"></div>
-
         <div class="io-box">
           <button id="importLibraryReplaceBtn" class="btn danger">Replace Library</button>
           <div class="muted mt-6">
             Completely replaces the station library after confirmation. Favorites and Presets are preserved.
           </div>
         </div>
-
+        </div>
+        </section>
+        </div>
+        <div id="statusInterface" class="status"></div>
+        <div id="statusLauncher" class="status"></div>
         <div id="statusImportExport" class="status"></div>
       </section>
 

@@ -100,6 +100,60 @@ main{
   margin-bottom: 12px;
 }
 
+.general-sections{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+
+.general-card{
+  border:1px solid var(--border);
+  background:#242424;
+}
+
+.general-card-header{
+  border-bottom:1px solid #343434;
+  padding:12px 14px 10px;
+}
+
+.general-card-header .label{
+  font-size:16px;
+  margin-bottom:4px;
+}
+
+.general-card-body{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  padding:12px 14px;
+}
+
+.general-card-body .preference-toggle{
+  align-self:flex-start;
+}
+
+.panel-help{
+  border-top:1px solid #343434;
+  margin-top:4px;
+  padding-top:12px;
+}
+
+.io-actions{
+  gap:0;
+}
+
+.io-actions .io-box{
+  align-items:center;
+  border-bottom:1px solid #343434;
+  display:flex;
+  gap:12px;
+  padding:7px 0;
+}
+
+.io-actions .io-box:first-child{ padding-top:0; }
+.io-actions .io-box:last-child{ border-bottom:0; padding-bottom:0; }
+.io-actions .io-box .muted{ flex:1; margin-top:0; }
+
 .label{
   font-weight: 600;
   margin-bottom: 6px;
