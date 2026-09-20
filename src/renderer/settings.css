@@ -210,10 +210,27 @@ select:focus{
 
 .subgroup-row{
   align-items:center;
+  border:1px solid transparent;
   display:flex;
   gap:10px;
   justify-content:space-between;
   padding:4px 0;
+  cursor:grab;
+  transition:background 120ms ease, border-color 120ms ease, opacity 120ms ease;
+}
+
+.subgroup-row:active,
+.subgroup-row.dragging{
+  cursor:grabbing;
+}
+
+.subgroup-row.dragging{
+  opacity:0.45;
+}
+
+.subgroup-row.drag-over{
+  background:#303030;
+  border-color:var(--accent);
 }
 
 .subgroup-label{

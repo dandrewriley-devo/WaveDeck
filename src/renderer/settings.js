@@ -374,6 +374,31 @@ function renderGroups() {
       const isRenaming = activeSubgroupRename &&
         lowerKey(activeSubgroupRename.group) === lowerKey(group) &&
         lowerKey(activeSubgroupRename.name) === lowerKey(name);
+      subgroupRow.draggable = !isRenaming;
+      subgroupRow.title = isRenaming ? "Finish renaming this subgroup first" : "Drag to reorder this subgroup";
+      if (!isRenaming) {
+        subgroupRow.addEventListener("dragstart", (event) => {
+          event.dataTransfer.effectAllowed = "move";
+          event.dataTransfer.setData("text/plain", String(subgroupIndex));
+          subgroupRow.classList.add("dragging");
+        });
+        subgroupRow.addEventListener("dragover", (event) => {
+          event.preventDefault();
+          event.dataTransfer.dropEffect = "move";
+          subgroupRow.classList.add("drag-over");
+        });
+        subgroupRow.addEventListener("dragleave", () => subgroupRow.classList.remove("drag-over"));
+        subgroupRow.addEventListener("dragend", () => {
+          subgroupRow.classList.remove("dragging", "drag-over");
+          groupsList.querySelectorAll(".subgroup-row").forEach((row) => row.classList.remove("drag-over"));
+        });
+        subgroupRow.addEventListener("drop", (event) => {
+          event.preventDefault();
+          subgroupRow.classList.remove("drag-over");
+          const sourceIndex = Number(event.dataTransfer.getData("text/plain"));
+          void reorderSubgroup(group, sourceIndex, subgroupIndex);
+        });
+      }
       if (isRenaming) {
         const input = element("input", "input subgroup-rename-input");
         input.type = "text";
@@ -395,13 +420,7 @@ function renderGroups() {
         });
       } else {
         subgroupRow.append(element("span", "subgroup-label", name));
-        const upSubgroup = miniButton("Up", "", () => moveSubgroup(group, subgroupIndex, -1));
-        const downSubgroup = miniButton("Down", "", () => moveSubgroup(group, subgroupIndex, 1));
-        upSubgroup.disabled = subgroupIndex === 0;
-        downSubgroup.disabled = subgroupIndex === names.length - 1;
         subgroupActions.append(
-          upSubgroup,
-          downSubgroup,
           miniButton("Rename", "", () => beginSubgroupRename(group, name)),
           miniButton("Delete", "danger", () => deleteSubgroup(group, name))
         );
@@ -658,11 +677,11 @@ async function addSubgroup(group, input) {
   }
 }
 
-async function moveSubgroup(group, index, direction) {
+async function reorderSubgroup(group, index, target) {
   const entry = subgroupEntry(group);
-  const target = index + direction;
-  if (!entry || target < 0 || target >= entry.subgroups.length) return;
-  [entry.subgroups[index], entry.subgroups[target]] = [entry.subgroups[target], entry.subgroups[index]];
+  if (!entry || index < 0 || target < 0 || index >= entry.subgroups.length || target >= entry.subgroups.length || index === target) return;
+  const [subgroup] = entry.subgroups.splice(index, 1);
+  entry.subgroups.splice(target, 0, subgroup);
   try {
     await saveSubgroupConfig();
   } catch (error) {

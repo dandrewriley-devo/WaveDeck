@@ -1094,6 +1094,8 @@ assert.ok(!settingsHtml.includes('id="tab-launcher"'));
 assert.ok(settingsHtml.includes('id="tab-interface"'));
 assert.ok(settingsHtml.includes('id="installLauncherBtn"'));
 assert.ok(settingsHtml.includes('id="removeLauncherBtn"'));
+const settingsRendererSource = fs.readFileSync(path.join(root, "src", "renderer", "settings.js"), "utf8");
+assert.ok(settingsRendererSource.includes('Drag to reorder this subgroup'));
 assert.ok(settingsHtml.includes('id="stationEditor"'));
 assert.ok(settingsHtml.includes('id="stationEditorHome"'));
 assert.ok(settingsHtml.includes('id="exportLibraryBtn"'));
