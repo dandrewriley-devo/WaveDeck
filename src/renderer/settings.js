@@ -385,18 +385,22 @@ function renderGroups() {
         subgroupRow.addEventListener("dragover", (event) => {
           event.preventDefault();
           event.dataTransfer.dropEffect = "move";
-          subgroupRow.classList.add("drag-over");
+          const midpoint = subgroupRow.getBoundingClientRect().top + subgroupRow.offsetHeight / 2;
+          subgroupRow.classList.toggle("drop-before", event.clientY < midpoint);
+          subgroupRow.classList.toggle("drop-after", event.clientY >= midpoint);
         });
-        subgroupRow.addEventListener("dragleave", () => subgroupRow.classList.remove("drag-over"));
+        subgroupRow.addEventListener("dragleave", () => subgroupRow.classList.remove("drop-before", "drop-after"));
         subgroupRow.addEventListener("dragend", () => {
-          subgroupRow.classList.remove("dragging", "drag-over");
-          groupsList.querySelectorAll(".subgroup-row").forEach((row) => row.classList.remove("drag-over"));
+          subgroupRow.classList.remove("dragging", "drop-before", "drop-after");
+          groupsList.querySelectorAll(".subgroup-row").forEach((row) => row.classList.remove("drop-before", "drop-after"));
         });
         subgroupRow.addEventListener("drop", (event) => {
           event.preventDefault();
-          subgroupRow.classList.remove("drag-over");
+          const midpoint = subgroupRow.getBoundingClientRect().top + subgroupRow.offsetHeight / 2;
+          const insertionIndex = subgroupIndex + (event.clientY >= midpoint ? 1 : 0);
+          subgroupRow.classList.remove("drop-before", "drop-after");
           const sourceIndex = Number(event.dataTransfer.getData("text/plain"));
-          void reorderSubgroup(group, sourceIndex, subgroupIndex);
+          void reorderSubgroup(group, sourceIndex, insertionIndex);
         });
       }
       if (isRenaming) {
@@ -419,7 +423,9 @@ function renderGroups() {
           }
         });
       } else {
-        subgroupRow.append(element("span", "subgroup-label", name));
+        const handle = element("span", "subgroup-drag-handle", "⋮⋮");
+        handle.setAttribute("aria-hidden", "true");
+        subgroupRow.append(handle, element("span", "subgroup-label", name));
         subgroupActions.append(
           miniButton("Rename", "", () => beginSubgroupRename(group, name)),
           miniButton("Delete", "danger", () => deleteSubgroup(group, name))
@@ -679,8 +685,9 @@ async function addSubgroup(group, input) {
 
 async function reorderSubgroup(group, index, target) {
   const entry = subgroupEntry(group);
-  if (!entry || index < 0 || target < 0 || index >= entry.subgroups.length || target >= entry.subgroups.length || index === target) return;
+  if (!entry || index < 0 || target < 0 || index >= entry.subgroups.length || target > entry.subgroups.length || target === index || target === index + 1) return;
   const [subgroup] = entry.subgroups.splice(index, 1);
+  if (target > index) target -= 1;
   entry.subgroups.splice(target, 0, subgroup);
   try {
     await saveSubgroupConfig();

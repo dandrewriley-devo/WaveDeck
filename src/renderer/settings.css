@@ -216,6 +216,7 @@ select:focus{
   justify-content:space-between;
   padding:4px 0;
   cursor:grab;
+  position:relative;
   transition:background 120ms ease, border-color 120ms ease, opacity 120ms ease;
 }
 
@@ -228,9 +229,31 @@ select:focus{
   opacity:0.45;
 }
 
-.subgroup-row.drag-over{
-  background:#303030;
-  border-color:var(--accent);
+.subgroup-row.drop-before::before,
+.subgroup-row.drop-after::after{
+  background:var(--accent);
+  border-radius:2px;
+  content:"";
+  height:2px;
+  left:0;
+  position:absolute;
+  right:0;
+  z-index:2;
+}
+
+.subgroup-row.drop-before::before{ top:-2px; }
+.subgroup-row.drop-after::after{ bottom:-2px; }
+
+.subgroup-drag-handle{
+  color:var(--muted);
+  cursor:grab;
+  flex:0 0 16px;
+  font-size:15px;
+  letter-spacing:-3px;
+  line-height:1;
+  margin-right:-4px;
+  text-align:center;
+  user-select:none;
 }
 
 .subgroup-label{
