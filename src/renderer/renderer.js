@@ -1120,7 +1120,7 @@ openSettingsBtn.addEventListener("click", async () => {
 
 searchSectionToggleBtn.addEventListener("click", async () => {
   searchSectionToggleBtn.disabled = true;
-  const showSearch = !searchSectionVisible;
+  const showSearch = recordingsSectionVisible || !searchSectionVisible;
   if (showSearch) focusSearchAfterRender = true;
   try {
     if (recordingsSectionVisible) setRecordingsSectionVisible(false);
@@ -1137,9 +1137,11 @@ searchSectionToggleBtn.addEventListener("click", async () => {
 
 presetSectionToggleBtn.addEventListener("click", async () => {
   presetSectionToggleBtn.disabled = true;
+  const showPresets = recordingsSectionVisible || !presetSectionVisible;
   try {
+    if (recordingsSectionVisible) setRecordingsSectionVisible(false);
     setSectionVisibilityUi(await window.wavedeck.setSectionVisibility({
-      presets: !presetSectionVisible
+      presets: showPresets
     }));
   } catch (error) {
     nowPlaying.textContent = `Could not toggle Presets: ${error.message}`;
@@ -1150,9 +1152,11 @@ presetSectionToggleBtn.addEventListener("click", async () => {
 
 favoritesOnlyToggleBtn.addEventListener("click", async () => {
   favoritesOnlyToggleBtn.disabled = true;
+  const showFavoritesOnly = recordingsSectionVisible || !favoritesOnlyVisible;
   try {
+    if (recordingsSectionVisible) setRecordingsSectionVisible(false);
     setSectionVisibilityUi(await window.wavedeck.setSectionVisibility({
-      favoritesOnly: !favoritesOnlyVisible
+      favoritesOnly: showFavoritesOnly
     }));
   } catch (error) {
     nowPlaying.textContent = `Could not toggle Favorites: ${error.message}`;
@@ -1163,9 +1167,11 @@ favoritesOnlyToggleBtn.addEventListener("click", async () => {
 
 mostPlayedSectionToggleBtn.addEventListener("click", async () => {
   mostPlayedSectionToggleBtn.disabled = true;
+  const showMostPlayed = recordingsSectionVisible || !mostPlayedSectionVisible;
   try {
+    if (recordingsSectionVisible) setRecordingsSectionVisible(false);
     setSectionVisibilityUi(await window.wavedeck.setSectionVisibility({
-      mostPlayed: !mostPlayedSectionVisible
+      mostPlayed: showMostPlayed
     }));
   } catch (error) {
     nowPlaying.textContent = `Could not toggle Your Top Five: ${error.message}`;
