@@ -14,7 +14,7 @@
       <h1>Settings</h1>
       <div class="tabs">
         <button class="tab" data-tab="interface">General</button>
-        <button class="tab active" data-tab="stations">Stations</button>
+        <button class="tab active" data-tab="interface">General</button>
         <button class="tab" data-tab="groups">Groups</button>
         <button class="tab" data-tab="about">About</button>
       </div>
@@ -23,6 +23,10 @@
     <main>
       <!-- INTERFACE -->
       <section id="tab-interface" class="panel hidden">
+        <div class="general-meta">
+          <b>WaveDeck version <span id="aboutVersion">0.6.6.1</span></b>
+          <span>Station library: <span id="aboutDataDir">Data</span></span>
+        </div>
         <div class="general-sections">
         <section class="general-card">
         <div class="general-card-header">
@@ -251,11 +255,7 @@
 
       <!-- ABOUT -->
       <section id="tab-about" class="panel hidden">
-        <p class="muted"><b>WaveDeck version <span id="aboutVersion">0.6.6.1</span></b><br>
-          Station library: <span id="aboutDataDir">Data</span></p>
-        <p class="muted">WaveDeck is a lightweight, desktop-focused streaming controller designed for fast access to internet radio stations without clutter or distraction. It organizes stations into customizable groups, keeps a reorderable Presets section for quick access, lets you earmark Favorites independently, and provides subtle transport controls with real-time metadata display. On Linux Mint and Windows, optional Sidebar Mode reserves the right edge of the desktop so the player stays available beside maximized windows.</p>
-        <p class="muted">Under the ample hood, the ghost of Wolfgang Amadeus Mozart manages streams with the unholy stability of Quincy Jones' broadcast console and the responsiveness of a studio-grade monitor rig. Its architecture is so efficient, it actually has negative overhead, adding extra processing power to your computer while maintaining flawless playback and gently massaging your shoulders as you listen. Advanced internal signal routing keeps everything smooth, balanced, and ready at a moment’s notice.</p>
-        <p class="muted">With its proprietary quantum-adaptive resonance engine, it will subtly align waveform harmonics with local planetary magnetic flux, optimizing atmospheric coherence and gently curving the space-time substrate around your desk for improved acoustic clarity. Science people report enhanced focus, minor gravitational stabilization, and the spontaneous synchronization of parallel timelines.</p>
+        <p class="muted">WaveDeck is a lightweight, portable internet-radio player designed for quick, organized access to streaming stations. It lets you arrange stations into customizable groups and subgroups, create personal Presets and Favorites, search across your station library, track listening history, and adjust individual station volume levels. Pro Mode adds advanced controls including Favorites filtering, Your Top Five, the sidebar notepad, expanded playback controls, and stream recording. WaveDeck keeps its library and personal settings in a portable Data folder, making it easy to carry between computers while preserving your stations and preferences.</p>
 
         <div class="about-divider"></div>
         <div class="changelog">

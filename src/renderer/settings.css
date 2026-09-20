@@ -106,6 +106,17 @@ main{
   gap:14px;
 }
 
+.general-meta{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  margin-bottom:14px;
+  color:var(--muted);
+  font-size:12px;
+}
+
+.general-meta b{ color:var(--text); font-size:13px; }
+
 .general-card{
   border:1px solid var(--border);
   background:#242424;

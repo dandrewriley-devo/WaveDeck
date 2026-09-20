@@ -925,7 +925,7 @@ window.wavedeck.onUiPreferencesChanged((preferences) => {
 });
 
 (async function initialize() {
-  showTab(document.querySelector(".tab.active")?.dataset.tab || "stations");
+  showTab(document.querySelector(".tab.active")?.dataset.tab || "interface");
   await Promise.all([
     reloadEverything(),
     platform === "linux" ? loadLauncherStatus() : Promise.resolve(),
