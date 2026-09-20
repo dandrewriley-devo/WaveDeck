@@ -8,7 +8,9 @@ const { MpvPlayer, getIpcPath, getMpvExecutable } = require("./player");
 const { MediaController } = require("./media-controller");
 const {
   StreamRecorder,
+  prepareFfprobeExecutable,
   prepareFfmpegExecutable,
+  resolveFfprobeExecutable,
   resolveFfmpegExecutable,
   verifyFfmpegExecutable
 } = require("./recorder");
@@ -77,6 +79,7 @@ let settingsWindow = null;
 let storage = null;
 let player = null;
 let recordingLibrary = null;
+let recordingProbeExecutable = "";
 let mediaController = null;
 let recorder = null;
 let mprisService = null;
@@ -879,6 +882,11 @@ if (!hasSingleInstanceLock) {
           runtimeDir: getRuntimeDir(),
           packaged: app.isPackaged
         });
+        recordingProbeExecutable = prepareFfprobeExecutable({
+          executable: resolveFfprobeExecutable({ packaged: app.isPackaged }),
+          runtimeDir: getRuntimeDir(),
+          packaged: app.isPackaged
+        });
         verifyFfmpegExecutable({
           executable: recorderExecutable,
           runtimeDir: getRuntimeDir()
@@ -894,7 +902,10 @@ if (!hasSingleInstanceLock) {
       }
     }
 
-    recordingLibrary = new RecordingLibrary({ recordingsDir: getRecordingsDir() });
+    recordingLibrary = new RecordingLibrary({
+      recordingsDir: getRecordingsDir(),
+      probeExecutable: recordingProbeExecutable
+    });
     recordingLibrary.ensureDirectory();
 
     libraryUpdater = createLibraryUpdater({

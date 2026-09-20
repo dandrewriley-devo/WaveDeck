@@ -43,7 +43,10 @@ function publicRecording(recording) {
     fileName: String(recording.fileName ?? ""),
     name: String(recording.name ?? "WaveDeck Recording"),
     modifiedAt: String(recording.modifiedAt ?? ""),
-    size: Number(recording.size) || 0
+    size: Number(recording.size) || 0,
+    durationSeconds: Number.isFinite(Number(recording.durationSeconds))
+      ? Number(recording.durationSeconds)
+      : null
   };
 }
 

@@ -53,18 +53,26 @@ function resolveFfmpegExecutable({ packaged = false } = {}) {
     : path.join(__dirname, "..", "..", ".cache", "wavedeck-tools", "linux", "ffmpeg");
 }
 
+function resolveFfprobeExecutable({ packaged = false } = {}) {
+  if (process.env.WAVEDECK_FFPROBE_PATH) return process.env.WAVEDECK_FFPROBE_PATH;
+  return packaged
+    ? path.join(process.resourcesPath, "recording", "ffprobe")
+    : path.join(__dirname, "..", "..", ".cache", "wavedeck-tools", "linux", "ffprobe");
+}
+
 function prepareFfmpegExecutable({
   executable,
   runtimeDir,
   packaged = false,
   platform = process.platform,
+  toolName = "ffmpeg",
   fileSystem = fs
 }) {
   if (!packaged || platform !== "linux") return executable;
 
   const sourceStat = fileSystem.statSync(executable);
   const toolsDir = path.join(runtimeDir, "tools");
-  const runtimeExecutable = path.join(toolsDir, `ffmpeg-${sourceStat.size}`);
+  const runtimeExecutable = path.join(toolsDir, `${toolName}-${sourceStat.size}`);
   fileSystem.mkdirSync(toolsDir, { recursive: true });
 
   let copyRequired = true;
@@ -86,6 +94,10 @@ function prepareFfmpegExecutable({
   }
   fileSystem.chmodSync(runtimeExecutable, 0o755);
   return runtimeExecutable;
+}
+
+function prepareFfprobeExecutable(options = {}) {
+  return prepareFfmpegExecutable({ ...options, toolName: "ffprobe" });
 }
 
 function verifyFfmpegExecutable({
@@ -347,8 +359,10 @@ module.exports = {
   RECORDING_BITRATE,
   StreamRecorder,
   recordingTimestamp,
+  prepareFfprobeExecutable,
   prepareFfmpegExecutable,
   recoverPartialRecordings,
+  resolveFfprobeExecutable,
   resolveFfmpegExecutable,
   safeFilename,
   uniquePath,

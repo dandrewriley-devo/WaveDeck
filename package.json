@@ -34,6 +34,10 @@
       {
         "from": ".cache/wavedeck-tools/linux/ffmpeg",
         "to": "recording/ffmpeg"
+      },
+      {
+        "from": ".cache/wavedeck-tools/linux/ffprobe",
+        "to": "recording/ffprobe"
       }
     ],
     "directories": {

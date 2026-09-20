@@ -66,8 +66,10 @@ const { MEDIA_KEY_BINDINGS, WindowsMediaKeys } = require("../src/main/windows-me
 const {
   StreamRecorder,
   recordingTimestamp,
+  prepareFfprobeExecutable,
   prepareFfmpegExecutable,
   recoverPartialRecordings,
+  resolveFfprobeExecutable,
   resolveFfmpegExecutable,
   safeFilename,
   uniquePath,
@@ -153,10 +155,16 @@ assert.ok(packageJson.scripts["prepare:linux-recorder"].includes("prepare-linux-
 assert.ok(packageJson.scripts.start.includes("prepare:linux-recorder"));
 assert.ok(packageJson.scripts["dist:linux"].includes("prepare:linux-recorder"));
 assert.ok(!packageJson.build.asarUnpack);
-assert.deepStrictEqual(packageJson.build.extraResources, [{
-  from: ".cache/wavedeck-tools/linux/ffmpeg",
-  to: "recording/ffmpeg"
-}]);
+assert.deepStrictEqual(packageJson.build.extraResources, [
+  {
+    from: ".cache/wavedeck-tools/linux/ffmpeg",
+    to: "recording/ffmpeg"
+  },
+  {
+    from: ".cache/wavedeck-tools/linux/ffprobe",
+    to: "recording/ffprobe"
+  }
+]);
 assert.strictEqual(packageJson.build.linux.syncDesktopName, true);
 assert.strictEqual(packageJson.build.linux.artifactName, "WaveDeck.${ext}");
 assert.ok(packageJson.scripts["dist:windows"].includes("electron-builder.windows.json"));
@@ -1427,7 +1435,8 @@ async function validateMediaControls() {
 
   assert.strictEqual(recordingTimestamp(new Date(2026, 8, 19, 20, 32, 47)), "2026-09-19 20-32-47");
   assert.strictEqual(safeFilename('Virgin: Radio / Rock? *'), "Virgin - Radio - Rock");
-  assert.strictEqual(resolveFfmpegExecutable(), path.join(root, ".cache", "wavedeck-tools", "linux", "ffmpeg"));
+assert.strictEqual(resolveFfmpegExecutable(), path.join(root, ".cache", "wavedeck-tools", "linux", "ffmpeg"));
+  assert.strictEqual(resolveFfprobeExecutable(), path.join(root, ".cache", "wavedeck-tools", "linux", "ffprobe"));
   const recorderTestDir = fs.mkdtempSync(path.join(os.tmpdir(), "wavedeck-recorder-"));
   const recorderRuntimeDir = fs.mkdtempSync(path.join(os.tmpdir(), "wavedeck-runtime-"));
   const packagedFfmpeg = path.join(recorderTestDir, "packaged-ffmpeg");
@@ -1441,6 +1450,16 @@ async function validateMediaControls() {
   assert.ok(runtimeFfmpeg.startsWith(path.join(recorderRuntimeDir, "tools")));
   assert.strictEqual(fs.readFileSync(runtimeFfmpeg, "utf8"), "fake ffmpeg");
   assert.strictEqual(fs.statSync(runtimeFfmpeg).mode & 0o777, 0o755);
+  const packagedFfprobe = path.join(recorderTestDir, "packaged-ffprobe");
+  fs.writeFileSync(packagedFfprobe, "fake ffprobe", { mode: 0o644 });
+  const runtimeFfprobe = prepareFfprobeExecutable({
+    executable: packagedFfprobe,
+    runtimeDir: recorderRuntimeDir,
+    packaged: true,
+    platform: "linux"
+  });
+  assert.ok(path.basename(runtimeFfprobe).startsWith("ffprobe-"));
+  assert.strictEqual(fs.readFileSync(runtimeFfprobe, "utf8"), "fake ffprobe");
   assert.strictEqual(prepareFfmpegExecutable({
     executable: packagedFfmpeg,
     runtimeDir: recorderRuntimeDir,
@@ -1508,10 +1527,15 @@ async function validateMediaControls() {
   const recordingLibraryDir = fs.mkdtempSync(path.join(os.tmpdir(), "wavedeck-recordings-"));
   fs.writeFileSync(path.join(recordingLibraryDir, "Virgin Radio Rock '70 - 2026-09-20 09-15-00.mp3"), "mp3");
   fs.writeFileSync(path.join(recordingLibraryDir, "ignore.mp3.part"), "partial");
-  const recordingLibrary = new RecordingLibrary({ recordingsDir: recordingLibraryDir });
+  const recordingLibrary = new RecordingLibrary({
+    recordingsDir: recordingLibraryDir,
+    probeExecutable: "/test/ffprobe",
+    spawnSyncImpl: () => ({ status: 0, stdout: "2537.4\n" })
+  });
   const recordings = recordingLibrary.list();
   assert.strictEqual(recordings.length, 1);
   assert.strictEqual(recordings[0].name, "Virgin Radio Rock '70");
+  assert.strictEqual(recordings[0].durationSeconds, 2537);
   assert.strictEqual(safeRecordingId("../outside.mp3"), "");
   assert.strictEqual(safeRecordingId("inside.mp3"), "inside.mp3");
   assert.strictEqual(displayName("A Station - 2026-09-20 09-15-00.mp3"), "A Station");

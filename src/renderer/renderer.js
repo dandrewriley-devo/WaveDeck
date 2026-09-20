@@ -526,10 +526,16 @@ function formatRecordingDate(value) {
   });
 }
 
-function formatFileSize(value) {
-  const bytes = Math.max(0, Number(value) || 0);
-  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(bytes >= 100 * 1024 * 1024 ? 0 : 1)} MB`;
+function formatRecordingDuration(value) {
+  if (value === null || value === undefined || value === "") return "Length unavailable";
+  const seconds = Math.max(0, Math.round(Number(value) || 0));
+  if (!Number.isFinite(Number(value))) return "Length unavailable";
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remainingSeconds = seconds % 60;
+  return hours
+    ? `${hours}:${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`
+    : `${minutes}:${String(remainingSeconds).padStart(2, "0")}`;
 }
 
 async function playRecording(recording) {
@@ -557,7 +563,7 @@ function createRecordingRow(recording) {
   const meta = element("div", "recording-meta");
   meta.append(
     element("div", "recording-name", recording.name),
-    element("div", "recording-details", `${formatRecordingDate(recording.modifiedAt)} • ${formatFileSize(recording.size)}`)
+    element("div", "recording-details", `${formatRecordingDate(recording.modifiedAt)} • ${formatRecordingDuration(recording.durationSeconds)}`)
   );
   row.append(meta);
 
