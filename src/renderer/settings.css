@@ -630,6 +630,33 @@ section#tab-about p {
   font-weight: 400;
 }
 
+.about-intro{
+  align-items:center;
+  display:flex;
+  gap:22px;
+  max-width:900px;
+}
+
+.about-logo{
+  border:1px solid var(--border);
+  flex:0 0 220px;
+  height:auto;
+  max-width:220px;
+}
+
+.about-copy{ flex:1; }
+
+.about-copy h2{
+  color:var(--text);
+  font-size:20px;
+  margin:0 0 10px;
+}
+
+@media (max-width:620px){
+  .about-intro{ align-items:stretch; flex-direction:column; }
+  .about-logo{ align-self:center; flex-basis:auto; max-width:280px; }
+}
+
 .about-divider{
   background:var(--border);
   height:1px;
