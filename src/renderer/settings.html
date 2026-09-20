@@ -13,10 +13,9 @@
     <header class="top">
       <h1>Settings</h1>
       <div class="tabs">
-        <button class="tab" data-tab="interface">Interface</button>
+        <button class="tab" data-tab="interface">General</button>
         <button class="tab active" data-tab="stations">Stations</button>
         <button class="tab" data-tab="groups">Groups</button>
-        <button class="tab" data-tab="importexport">Import / Export</button>
         <button class="tab" data-tab="about">About</button>
       </div>
     </header>
@@ -90,6 +89,43 @@
 
         <div id="statusInterface" class="status"></div>
         <div id="statusLauncher" class="status"></div>
+
+        <div class="divider"></div>
+
+        <div class="row">
+          <div class="label">Import / Export</div>
+          <div class="hint">
+            A WaveDeck library file contains stations, groups, subgroups, ordering, and assignments.
+            Your personal Favorites and Presets are kept separately and are never imported or exported.
+          </div>
+        </div>
+
+        <div class="io-box">
+          <button id="exportLibraryBtn" class="btn">Export</button>
+          <div class="muted mt-6">
+            Creates <b>WaveDeck_Library.json</b>, a shareable station library with its update timestamp added automatically.
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="io-box">
+          <button id="importLibraryAddBtn" class="btn">Import Stations</button>
+          <div class="muted mt-6">
+            Adds only new stations, groups, and subgroups. Existing listings are left untouched.
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="io-box">
+          <button id="importLibraryReplaceBtn" class="btn danger">Replace Library</button>
+          <div class="muted mt-6">
+            Completely replaces the station library after confirmation. Favorites and Presets are preserved.
+          </div>
+        </div>
+
+        <div id="statusImportExport" class="status"></div>
       </section>
 
       <!-- STATIONS -->
@@ -216,44 +252,6 @@
         </div>
 
         <div id="statusGroups" class="status"></div>
-      </section>
-
-      <!-- IMPORT / EXPORT -->
-      <section id="tab-importexport" class="panel hidden">
-        <div class="row">
-          <div class="label">Import / Export</div>
-          <div class="hint">
-            A WaveDeck library file contains stations, groups, subgroups, ordering, and assignments.
-            Your personal Favorites and Presets are kept separately and are never imported or exported.
-          </div>
-        </div>
-
-        <div class="io-box">
-          <button id="exportLibraryBtn" class="btn">Export Library…</button>
-          <div class="muted mt-6">
-            Creates <b>WaveDeck_Library.json</b>, a shareable station library with its update timestamp added automatically.
-          </div>
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="io-box">
-          <button id="importLibraryAddBtn" class="btn">Add New from Library…</button>
-          <div class="muted mt-6">
-            Adds only new stations, groups, and subgroups. Existing listings are left untouched.
-          </div>
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="io-box">
-          <button id="importLibraryReplaceBtn" class="btn danger">Replace Library…</button>
-          <div class="muted mt-6">
-            Completely replaces the station library after confirmation. Favorites and Presets are preserved.
-          </div>
-        </div>
-
-        <div id="statusImportExport" class="status"></div>
       </section>
 
       <!-- ABOUT -->

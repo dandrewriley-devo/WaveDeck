@@ -3,7 +3,6 @@ const panels = new Map([
   ["interface", document.getElementById("tab-interface")],
   ["stations", document.getElementById("tab-stations")],
   ["groups", document.getElementById("tab-groups")],
-  ["importexport", document.getElementById("tab-importexport")],
   ["about", document.getElementById("tab-about")]
 ]);
 
