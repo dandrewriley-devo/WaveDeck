@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog, globalShortcut, ipcMain, Menu, net, screen } = require("electron");
+const { app, BrowserWindow, dialog, globalShortcut, ipcMain, Menu, net, screen, shell } = require("electron");
 const { execFile } = require("child_process");
 const fs = require("fs");
 const os = require("os");
@@ -15,6 +15,7 @@ const {
 const { ListeningHistory } = require("./listening-history");
 const { createLibraryUpdater, nodeHttpsFetch } = require("./library-updater");
 const { copyLegacyData } = require("./data-migration");
+const { RecordingLibrary } = require("./recording-library");
 const {
   getLauncherStatus,
   installLauncher,
@@ -75,6 +76,7 @@ let mainWindow = null;
 let settingsWindow = null;
 let storage = null;
 let player = null;
+let recordingLibrary = null;
 let mediaController = null;
 let recorder = null;
 let mprisService = null;
@@ -205,6 +207,7 @@ function broadcastStationChanged(station) {
 
 function broadcastRecordingState(state = recorder?.getState()) {
   if (state) sendToMain("recording:state-changed", state);
+  if (state?.lastFileName && !state.active && !state.finalizing) sendToMain("recordings:changed");
   return state;
 }
 
@@ -770,6 +773,32 @@ function installIpcHandlers() {
     return recorder.start(station);
   });
 
+  ipcMain.handle("recordings:list", () => recordingLibrary?.list() || []);
+  ipcMain.handle("recordings:play", async (_event, recordingId) => {
+    if (!storage.getUiPreferences().proModeEnabled) {
+      throw new Error("Turn on Pro Mode in Settings before playing recordings.");
+    }
+    const recording = recordingLibrary?.get(recordingId);
+    if (!recording) throw new Error("That recording is no longer available.");
+    return mediaController.playRecording(recording);
+  });
+  ipcMain.handle("recordings:reveal", (_event, recordingId) => {
+    const recording = recordingLibrary?.get(recordingId);
+    if (!recording) throw new Error("That recording is no longer available.");
+    shell.showItemInFolder(recording.path);
+    return true;
+  });
+  ipcMain.handle("recordings:delete", async (_event, recordingId) => {
+    const recording = recordingLibrary?.get(recordingId);
+    if (!recording) throw new Error("That recording is no longer available.");
+    if (String(mediaController.getStatus().currentRecording?.id) === recording.id) {
+      await mediaController.stop();
+    }
+    await shell.trashItem(recording.path);
+    sendToMain("recordings:changed");
+    return true;
+  });
+
   ipcMain.handle("settings:open", (_event, stationId = "") => {
     openSettingsWindow(stationId);
     return true;
@@ -864,6 +893,9 @@ if (!hasSingleInstanceLock) {
         console.warn(`Stream recording is unavailable: ${error.message}`);
       }
     }
+
+    recordingLibrary = new RecordingLibrary({ recordingsDir: getRecordingsDir() });
+    recordingLibrary.ensureDirectory();
 
     libraryUpdater = createLibraryUpdater({
       storage,

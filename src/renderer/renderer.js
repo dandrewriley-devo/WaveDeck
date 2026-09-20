@@ -14,6 +14,7 @@ const searchSectionToggleBtn = document.getElementById("searchSectionToggleBtn")
 const presetSectionToggleBtn = document.getElementById("presetSectionToggleBtn");
 const favoritesOnlyToggleBtn = document.getElementById("favoritesOnlyToggleBtn");
 const mostPlayedSectionToggleBtn = document.getElementById("mostPlayedSectionToggleBtn");
+const recordingsSectionToggleBtn = document.getElementById("recordingsSectionToggleBtn");
 const sidebarModeBtn = document.getElementById("sidebarModeBtn");
 const notepadToggleBtn = document.getElementById("notepadToggleBtn");
 const notepadPanel = document.getElementById("notepadPanel");
@@ -21,12 +22,16 @@ const notepadText = document.getElementById("notepadText");
 const searchPanel = document.getElementById("searchPanel");
 const stationSearchInput = document.getElementById("stationSearchInput");
 const clearStationSearchBtn = document.getElementById("clearStationSearchBtn");
+const recordingsPanel = document.getElementById("recordingsPanel");
+const recordingSearchInput = document.getElementById("recordingSearchInput");
+const clearRecordingSearchBtn = document.getElementById("clearRecordingSearchBtn");
 const listEl = document.querySelector(".list");
 const platform = window.wavedeck.platform;
 
 if (platform !== "linux" && platform !== "win32") sidebarModeBtn.hidden = true;
 
 let currentStationId = null;
+let currentRecordingId = null;
 let isMuted = false;
 let renderQueued = false;
 let volumeTimer = null;
@@ -41,11 +46,16 @@ let searchSectionVisible = false;
 let presetSectionVisible = true;
 let favoritesOnlyVisible = false;
 let mostPlayedSectionVisible = false;
+let recordingsSectionVisible = false;
 let stationSearchQuery = "";
+let recordingSearchQuery = "";
 let searchRenderTimer = null;
+let recordingSearchRenderTimer = null;
 const stationGainTimers = new Map();
 const stationGainVersions = new Map();
 let focusSearchAfterRender = false;
+let focusRecordingSearchAfterRender = false;
+let selectedRecordingId = "";
 let draggedPresetId = null;
 let listeningHistory = { version: 1, stations: {} };
 let currentPlayerStatus = null;
@@ -189,6 +199,7 @@ function setProModeUi(preferences = {}) {
   });
   notepadToggleBtn.hidden = !proModeEnabled || !sidebarModeEnabled;
   if (!proModeEnabled) setNotepadOpen(false);
+  if (!proModeEnabled && recordingsSectionVisible) setRecordingsSectionVisible(false);
   setRecordingUi(recordingState);
   queueRender();
 }
@@ -231,8 +242,8 @@ function setSectionVisibilityUi(state = {}) {
     searchRenderTimer = null;
   }
 
-  searchPanel.hidden = !search;
-  searchPanel.setAttribute("aria-hidden", String(!search));
+  searchPanel.hidden = !search || recordingsSectionVisible;
+  searchPanel.setAttribute("aria-hidden", String(!search || recordingsSectionVisible));
 
   searchSectionToggleBtn.classList.toggle("active", search);
   searchSectionToggleBtn.setAttribute("aria-pressed", String(search));
@@ -247,6 +258,29 @@ function setSectionVisibilityUi(state = {}) {
   mostPlayedSectionToggleBtn.setAttribute("aria-pressed", String(mostPlayed));
   mostPlayedSectionToggleBtn.setAttribute("aria-label", mostPlayed ? "Hide Your Top Five" : "Show Your Top Five");
 
+  if (changed) queueRender();
+}
+
+function setRecordingsSectionVisible(visible) {
+  const next = proModeEnabled && Boolean(visible);
+  const changed = recordingsSectionVisible !== next;
+  recordingsSectionVisible = next;
+  if (!next) {
+    recordingSearchQuery = "";
+    recordingSearchInput.value = "";
+    clearRecordingSearchBtn.hidden = true;
+    selectedRecordingId = "";
+    clearTimeout(recordingSearchRenderTimer);
+    recordingSearchRenderTimer = null;
+  }
+  recordingsPanel.hidden = !next;
+  recordingsPanel.setAttribute("aria-hidden", String(!next));
+  searchPanel.hidden = !searchSectionVisible || next;
+  searchPanel.setAttribute("aria-hidden", String(!searchSectionVisible || next));
+  recordingsSectionToggleBtn.classList.toggle("active", next);
+  recordingsSectionToggleBtn.setAttribute("aria-pressed", String(next));
+  recordingsSectionToggleBtn.setAttribute("aria-label", next ? "Close Recordings" : "Open Recordings");
+  recordingsSectionToggleBtn.title = next ? "Close Recordings" : "Recordings";
   if (changed) queueRender();
 }
 
@@ -480,7 +514,126 @@ function buildGroupsInOrder(stations, groupOrder) {
   return blocks;
 }
 
+function formatRecordingDate(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Date unavailable";
+  return date.toLocaleString([], {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit"
+  });
+}
+
+function formatFileSize(value) {
+  const bytes = Math.max(0, Number(value) || 0);
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(bytes >= 100 * 1024 * 1024 ? 0 : 1)} MB`;
+}
+
+async function playRecording(recording) {
+  selectedRecordingId = recording.id;
+  currentRecordingId = recording.id;
+  headerStationName.textContent = recording.name || "WaveDeck Recording";
+  nowPlaying.textContent = "Loading recording…";
+  updateActiveHighlight();
+  try {
+    await window.wavedeck.playRecording(recording.id);
+  } catch (error) {
+    currentRecordingId = null;
+    updateActiveHighlight();
+    nowPlaying.textContent = `Could not play recording: ${error.message}`;
+  }
+}
+
+function createRecordingRow(recording) {
+  const active = String(recording.id) === String(currentRecordingId);
+  const selected = String(recording.id) === String(selectedRecordingId);
+  const row = element("div", `recording-row${active ? " active" : ""}${selected ? " info-open" : ""}`);
+  row.dataset.id = recording.id;
+  row.title = `Play ${recording.name}`;
+  row.append(element("div", "recording-icon", "▶"));
+  const meta = element("div", "recording-meta");
+  meta.append(
+    element("div", "recording-name", recording.name),
+    element("div", "recording-details", `${formatRecordingDate(recording.modifiedAt)} • ${formatFileSize(recording.size)}`)
+  );
+  row.append(meta);
+
+  const info = element("div", "recording-info");
+  info.hidden = !selected;
+  const actions = element("div", "recording-actions");
+  const play = element("button", "recording-action", "Play");
+  const reveal = element("button", "recording-action", "Show in Folder");
+  const remove = element("button", "recording-action recording-delete", "Delete");
+  [play, reveal, remove].forEach((button) => { button.type = "button"; });
+  play.addEventListener("click", (event) => {
+    event.stopPropagation();
+    void playRecording(recording);
+  });
+  reveal.addEventListener("click", async (event) => {
+    event.stopPropagation();
+    try {
+      await window.wavedeck.revealRecording(recording.id);
+    } catch (error) {
+      nowPlaying.textContent = `Could not show recording: ${error.message}`;
+    }
+  });
+  remove.addEventListener("click", async (event) => {
+    event.stopPropagation();
+    if (!window.confirm(`Move “${recording.name}” to the Trash?`)) return;
+    remove.disabled = true;
+    try {
+      await window.wavedeck.deleteRecording(recording.id);
+      if (selectedRecordingId === recording.id) selectedRecordingId = "";
+      if (currentRecordingId === recording.id) currentRecordingId = null;
+      queueRender();
+    } catch (error) {
+      nowPlaying.textContent = `Could not delete recording: ${error.message}`;
+      remove.disabled = false;
+    }
+  });
+  actions.append(play, reveal, remove);
+  info.append(actions, element("div", "recording-file-name", recording.fileName));
+  row.append(info);
+  row.addEventListener("click", () => {
+    selectedRecordingId = recording.id;
+    void playRecording(recording);
+    queueRender();
+  });
+  return row;
+}
+
+async function renderRecordings() {
+  const searchInputHadFocus = document.activeElement === recordingSearchInput;
+  const recordings = await window.wavedeck.getRecordings();
+  const query = String(recordingSearchQuery || "").trim().toLocaleLowerCase();
+  const filtered = query
+    ? recordings.filter((recording) => (`${recording.name} ${recording.fileName} ${recording.modifiedAt}`)
+      .toLocaleLowerCase().includes(query))
+    : recordings;
+  listEl.replaceChildren();
+  listEl.append(createSectionTitle("Recordings", query ? `${filtered.length} ${filtered.length === 1 ? "match" : "matches"}` : "Newest first"));
+  if (!filtered.length) {
+    listEl.append(element("div", "placeholder", query ? "No recordings match your search." : "No recordings yet."));
+  } else {
+    const block = element("div", "recordings-block");
+    block.append(...filtered.map(createRecordingRow));
+    listEl.append(block);
+  }
+  if (focusRecordingSearchAfterRender || searchInputHadFocus) {
+    recordingSearchInput.focus({ preventScroll: true });
+    recordingSearchInput.setSelectionRange(recordingSearchQuery.length, recordingSearchQuery.length);
+  }
+  focusRecordingSearchAfterRender = false;
+}
+
 async function renderAll() {
+  if (recordingsSectionVisible) {
+    await renderRecordings();
+    return;
+  }
   const searchInputHadFocus = document.activeElement === stationSearchInput;
   const [stations, groupOrder, subgroupConfig, history] = await Promise.all([
     window.wavedeck.getStations(),
@@ -616,6 +769,9 @@ function queueRender() {
 function updateActiveHighlight() {
   listEl.querySelectorAll(".station").forEach((row) => {
     row.classList.toggle("active", row.dataset.id === String(currentStationId));
+  });
+  listEl.querySelectorAll(".recording-row").forEach((row) => {
+    row.classList.toggle("active", row.dataset.id === String(currentRecordingId));
   });
 }
 
@@ -921,6 +1077,7 @@ stopBtn.addEventListener("click", async () => {
   try {
     await window.wavedeck.stop();
     currentStationId = null;
+    currentRecordingId = null;
     headerStationName.textContent = "WaveDeck";
     nowPlaying.textContent = "Stopped";
     updateActiveHighlight();
@@ -953,6 +1110,7 @@ searchSectionToggleBtn.addEventListener("click", async () => {
   const showSearch = !searchSectionVisible;
   if (showSearch) focusSearchAfterRender = true;
   try {
+    if (recordingsSectionVisible) setRecordingsSectionVisible(false);
     setSectionVisibilityUi(await window.wavedeck.setSectionVisibility({
       search: showSearch
     }));
@@ -1001,6 +1159,15 @@ mostPlayedSectionToggleBtn.addEventListener("click", async () => {
   } finally {
     mostPlayedSectionToggleBtn.disabled = false;
   }
+});
+
+recordingsSectionToggleBtn.addEventListener("click", () => {
+  if (recordingsSectionVisible) {
+    setRecordingsSectionVisible(false);
+    return;
+  }
+  focusRecordingSearchAfterRender = true;
+  setRecordingsSectionVisible(true);
 });
 
 sidebarModeBtn.addEventListener("click", async () => {
@@ -1067,6 +1234,34 @@ clearStationSearchBtn.addEventListener("click", () => {
   queueRender();
 });
 
+recordingSearchInput.addEventListener("input", () => {
+  recordingSearchQuery = recordingSearchInput.value;
+  clearRecordingSearchBtn.hidden = !recordingSearchQuery;
+  clearTimeout(recordingSearchRenderTimer);
+  recordingSearchRenderTimer = setTimeout(() => {
+    focusRecordingSearchAfterRender = true;
+    queueRender();
+  }, 75);
+});
+
+recordingSearchInput.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape" || !recordingSearchQuery) return;
+  event.preventDefault();
+  recordingSearchQuery = "";
+  recordingSearchInput.value = "";
+  clearRecordingSearchBtn.hidden = true;
+  focusRecordingSearchAfterRender = true;
+  queueRender();
+});
+
+clearRecordingSearchBtn.addEventListener("click", () => {
+  recordingSearchQuery = "";
+  recordingSearchInput.value = "";
+  clearRecordingSearchBtn.hidden = true;
+  focusRecordingSearchAfterRender = true;
+  queueRender();
+});
+
 window.addEventListener("beforeunload", () => {
   if (notepadDirty) window.wavedeck.saveNotepadImmediate(notepadText.value);
 });
@@ -1077,6 +1272,7 @@ window.wavedeck.onMetadata((metadata) => {
 
 window.wavedeck.onStationChanged((station) => {
   currentStationId = station?.id || null;
+  if (station) currentRecordingId = null;
   headerStationName.textContent = station?.name || "WaveDeck";
   nowPlaying.textContent = station ? "Connecting…" : "Now Playing: (ready)";
   updateActiveHighlight();
@@ -1090,8 +1286,15 @@ window.wavedeck.onPlayerStatus((status) => {
     volumeSlider.value = String(Math.round(status.volume));
   }
   if (status?.mediaState === "paused") nowPlaying.textContent = "Paused";
+  if (status?.currentRecording && status?.mediaState !== "stopped") {
+    currentStationId = null;
+    currentRecordingId = status.currentRecording.id;
+    headerStationName.textContent = status.currentRecording.name || "WaveDeck Recording";
+    updateActiveHighlight();
+  }
   if (status?.mediaState === "stopped") {
     currentStationId = null;
+    currentRecordingId = null;
     headerStationName.textContent = "WaveDeck";
     updateActiveHighlight();
     if (status?.state !== "error") nowPlaying.textContent = "Stopped";
@@ -1114,6 +1317,9 @@ window.wavedeck.onUiPreferencesChanged(setProModeUi);
 window.wavedeck.onRecordingState((state) => {
   setRecordingUi(state);
   if (state?.error) nowPlaying.textContent = state.error;
+});
+window.wavedeck.onRecordingsChanged(() => {
+  if (recordingsSectionVisible) queueRender();
 });
 
 window.wavedeck.onStationsChanged(queueRender);
@@ -1150,6 +1356,10 @@ window.wavedeck.onWarning((warning) => {
     if (status?.currentStation && status?.mediaState !== "stopped") {
       currentStationId = status.currentStation.id;
       headerStationName.textContent = status.currentStation.name || "WaveDeck";
+      updateActiveHighlight();
+    } else if (status?.currentRecording && status?.mediaState !== "stopped") {
+      currentRecordingId = status.currentRecording.id;
+      headerStationName.textContent = status.currentRecording.name || "WaveDeck Recording";
       updateActiveHighlight();
     }
     if (status?.state === "error") nowPlaying.textContent = status.message;

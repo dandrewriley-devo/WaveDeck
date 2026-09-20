@@ -37,6 +37,7 @@ const {
 } = require("../src/main/windows-sidebar");
 const { cleanupCode, reservationCode, windowLookupCode } = require("../src/main/cinnamon-reservation");
 const { MediaController } = require("../src/main/media-controller");
+const { RecordingLibrary, displayName, safeRecordingId } = require("../src/main/recording-library");
 const { ListeningHistory } = require("../src/main/listening-history");
 const {
   LIBRARY_UPDATE_URL,
@@ -1026,6 +1027,7 @@ assert.ok(indexHtml.includes('id="searchSectionToggleBtn"'));
 assert.ok(indexHtml.includes('id="presetSectionToggleBtn"'));
 assert.ok(indexHtml.includes('id="favoritesOnlyToggleBtn"'));
 assert.ok(indexHtml.includes('id="mostPlayedSectionToggleBtn"'));
+assert.ok(indexHtml.includes('id="recordingsSectionToggleBtn"'));
 assert.ok(indexHtml.includes('id="sidebarModeBtn"'));
 assert.ok(indexHtml.includes('id="notepadToggleBtn"'));
 assert.ok(indexHtml.includes('id="notepadPanel"'));
@@ -1037,6 +1039,8 @@ assert.ok(indexHtml.includes("Warming up the airwaves..."));
 assert.ok(indexHtml.indexOf('id="searchSectionToggleBtn"') < indexHtml.indexOf('id="presetSectionToggleBtn"'));
 assert.ok(indexHtml.indexOf('id="presetSectionToggleBtn"') < indexHtml.indexOf('id="favoritesOnlyToggleBtn"'));
 assert.ok(indexHtml.indexOf('id="favoritesOnlyToggleBtn"') < indexHtml.indexOf('id="mostPlayedSectionToggleBtn"'));
+assert.ok(indexHtml.indexOf('id="mostPlayedSectionToggleBtn"') < indexHtml.indexOf('id="recordingsSectionToggleBtn"'));
+assert.ok(indexHtml.indexOf('id="recordingsSectionToggleBtn"') < indexHtml.indexOf('id="notepadToggleBtn"'));
 assert.ok(indexHtml.indexOf('id="mostPlayedSectionToggleBtn"') < indexHtml.indexOf('id="sidebarModeBtn"'));
 assert.ok(indexHtml.indexOf('id="mostPlayedSectionToggleBtn"') < indexHtml.indexOf('id="notepadToggleBtn"'));
 assert.ok(indexHtml.indexOf('id="notepadToggleBtn"') < indexHtml.indexOf('id="sidebarModeBtn"'));
@@ -1055,6 +1059,8 @@ assert.ok(stylesSource.includes(".section-action"));
 assert.ok(stylesSource.includes(".station-search-input"));
 assert.ok(stylesSource.includes(".station-search-clear"));
 assert.ok(stylesSource.includes(".station-search-panel"));
+assert.ok(stylesSource.includes(".recording-row"));
+assert.ok(stylesSource.includes(".recording-actions"));
 assert.ok(stylesSource.includes(".toolbar"));
 assert.ok(stylesSource.includes("justify-content: center"));
 assert.ok(stylesSource.includes(".station-info"));
@@ -1094,6 +1100,8 @@ assert.ok(preloadSource.includes('ipcRenderer.invoke("player:previous-preset")')
 assert.ok(preloadSource.includes('ipcRenderer.invoke("player:next-preset")'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("recording:get-state")'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("recording:toggle")'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("recordings:list")'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("recordings:play", recordingId)'));
 assert.ok(preloadSource.includes("platform: process.platform"));
 assert.ok(!preloadSource.includes("showStationContextMenu"));
 const settingsHtml = fs.readFileSync(path.join(root, "src", "renderer", "settings.html"), "utf8");
@@ -1219,6 +1227,9 @@ assert.ok(mainSource.includes("net.fetch"));
 assert.ok(mainSource.includes("isPaused: () => Boolean(settingsWindow"));
 assert.ok(mainSource.includes('ipcMain.handle("player:play-station"'));
 assert.ok(mainSource.includes('ipcMain.handle("recording:toggle"'));
+assert.ok(mainSource.includes('ipcMain.handle("recordings:list"'));
+assert.ok(mainSource.includes('ipcMain.handle("recordings:play"'));
+assert.ok(mainSource.includes('shell.trashItem(recording.path)'));
 assert.ok(mainSource.includes("new StreamRecorder"));
 assert.ok(mainSource.includes("prepareFfmpegExecutable"));
 assert.ok(mainSource.includes('path.dirname(getDataDir()), "Recordings"'));
@@ -1494,6 +1505,18 @@ async function validateMediaControls() {
   fs.rmSync(recorderTestDir, { recursive: true, force: true });
   fs.rmSync(recorderRuntimeDir, { recursive: true, force: true });
 
+  const recordingLibraryDir = fs.mkdtempSync(path.join(os.tmpdir(), "wavedeck-recordings-"));
+  fs.writeFileSync(path.join(recordingLibraryDir, "Virgin Radio Rock '70 - 2026-09-20 09-15-00.mp3"), "mp3");
+  fs.writeFileSync(path.join(recordingLibraryDir, "ignore.mp3.part"), "partial");
+  const recordingLibrary = new RecordingLibrary({ recordingsDir: recordingLibraryDir });
+  const recordings = recordingLibrary.list();
+  assert.strictEqual(recordings.length, 1);
+  assert.strictEqual(recordings[0].name, "Virgin Radio Rock '70");
+  assert.strictEqual(safeRecordingId("../outside.mp3"), "");
+  assert.strictEqual(safeRecordingId("inside.mp3"), "inside.mp3");
+  assert.strictEqual(displayName("A Station - 2026-09-20 09-15-00.mp3"), "A Station");
+  fs.rmSync(recordingLibraryDir, { recursive: true, force: true });
+
   assert.strictEqual(LIBRARY_UPDATE_URL, "https://fabulon.cloud/downloads/library_update.json");
   assert.strictEqual(
     cacheBustedUrl(LIBRARY_UPDATE_URL, () => 1234),
@@ -1718,7 +1741,6 @@ async function validateMediaControls() {
   await controller.playStationById("beta");
   assert.strictEqual(controller.getCurrentStation().id, "beta");
   assert.strictEqual(controller.getCurrentStation().name, "Beta");
-  assert.deepStrictEqual(calls.at(-2), ["gain", 0]);
   assert.strictEqual(await controller.setStationGain("beta", 4.5), true);
   assert.strictEqual(controller.getCurrentStation().gainDb, 4.5);
   assert.deepStrictEqual(calls.at(-1), ["gain", 4.5]);
@@ -1903,6 +1925,19 @@ async function validateMediaControls() {
   await new Promise((resolve) => setImmediate(resolve));
   assert.deepStrictEqual(mockMediaKeys.releases, ["WaveDeck-test"]);
   assert.strictEqual(disconnectCount, 2);
+
+  await controller.playRecording({
+    id: "Virgin Radio Rock '70 - 2026-09-20 09-15-00.mp3",
+    fileName: "Virgin Radio Rock '70 - 2026-09-20 09-15-00.mp3",
+    name: "Virgin Radio Rock '70",
+    path: "/recordings/virgin-rock.mp3",
+    modifiedAt: "2026-09-20T09:15:00.000Z",
+    size: 1234
+  });
+  assert.strictEqual(controller.getCurrentStation(), null);
+  assert.strictEqual(controller.getStatus().currentRecording.name, "Virgin Radio Rock '70");
+  assert.deepStrictEqual(calls.at(-2), ["gain", 0]);
+  assert.deepStrictEqual(calls.at(-1), ["play", "/recordings/virgin-rock.mp3"]);
 }
 
 validateMediaControls().then(() => {

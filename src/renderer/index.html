@@ -91,6 +91,14 @@
                 stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </button>
+      <button id="recordingsSectionToggleBtn" data-pro-only type="button" aria-label="Open Recordings"
+              aria-pressed="false" title="Recordings" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="3.5" y="4" width="17" height="16" rx="1.8" fill="none" stroke="currentColor" stroke-width="1.7"/>
+          <path d="m10 8.5 5 3.5-5 3.5z" fill="currentColor"/>
+          <path d="M7 17h10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </button>
       <button id="notepadToggleBtn" data-pro-only type="button" aria-label="Open notepad"
               aria-pressed="false" title="Notepad" hidden>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
@@ -121,6 +129,16 @@
                aria-label="Search stations" />
         <button id="clearStationSearchBtn" class="station-search-clear" type="button"
                 aria-label="Clear station search" title="Clear search" hidden>×</button>
+      </div>
+    </section>
+
+    <section id="recordingsPanel" class="station-search-panel" aria-label="Search recordings" hidden>
+      <div class="station-search-field">
+        <input id="recordingSearchInput" class="station-search-input" type="search"
+               placeholder="Search recordings…" autocomplete="off" spellcheck="false"
+               aria-label="Search recordings" />
+        <button id="clearRecordingSearchBtn" class="station-search-clear" type="button"
+                aria-label="Clear recordings search" title="Clear search" hidden>×</button>
       </div>
     </section>
 

@@ -36,6 +36,17 @@ function publicStation(station) {
   };
 }
 
+function publicRecording(recording) {
+  if (!recording) return null;
+  return {
+    id: String(recording.id ?? ""),
+    fileName: String(recording.fileName ?? ""),
+    name: String(recording.name ?? "WaveDeck Recording"),
+    modifiedAt: String(recording.modifiedAt ?? ""),
+    size: Number(recording.size) || 0
+  };
+}
+
 class MediaController {
   constructor({
     player,
@@ -52,6 +63,7 @@ class MediaController {
     this.beforeStationChange = beforeStationChange || (async () => {});
     this.beforeStop = beforeStop || (async () => {});
     this.currentStation = null;
+    this.currentRecording = null;
     this.mediaState = "stopped";
   }
 
@@ -67,7 +79,8 @@ class MediaController {
     return {
       ...playerStatus,
       mediaState: this.mediaState,
-      currentStation: this.getCurrentStation()
+      currentStation: this.getCurrentStation(),
+      currentRecording: publicRecording(this.currentRecording)
     };
   }
 
@@ -102,6 +115,7 @@ class MediaController {
         nextStation
       });
     }
+    this.currentRecording = null;
     this.currentStation = nextStation;
     const stationId = this.currentStation.id;
     this.mediaState = "playing";
@@ -123,6 +137,42 @@ class MediaController {
       throw error;
     }
     return this.getCurrentStation();
+  }
+
+  async playRecording(recording) {
+    const nextRecording = {
+      ...publicRecording(recording),
+      path: String(recording?.path ?? "")
+    };
+    if (!nextRecording.id || !nextRecording.path) throw new Error("That recording is no longer available.");
+
+    await this.beforeStop({
+      reason: "recording-playback",
+      station: this.getCurrentStation(),
+      recording: publicRecording(nextRecording)
+    });
+    this.currentStation = null;
+    this.currentRecording = nextRecording;
+    const recordingId = nextRecording.id;
+    this.mediaState = "playing";
+    this.onStationChanged(null);
+    this.onStateChanged(this.getStatus());
+    try {
+      await this.player.setStationGain(0);
+      await this.player.play(nextRecording.path);
+    } catch (error) {
+      if (String(this.currentRecording?.id) === recordingId) {
+        this.mediaState = "stopped";
+        this.onStateChanged({
+          ...this.getStatus(),
+          state: "error",
+          playing: false,
+          message: `Could not play recording: ${error.message}`
+        });
+      }
+      throw error;
+    }
+    return publicRecording(this.currentRecording);
   }
 
   async pause() {
@@ -164,6 +214,10 @@ class MediaController {
       await this.playStation(this.currentStation);
       return true;
     }
+    if (this.currentRecording) {
+      await this.playRecording(this.currentRecording);
+      return true;
+    }
 
     const presets = this.getPresets();
     if (!presets.length) return false;
@@ -201,4 +255,4 @@ class MediaController {
   }
 }
 
-module.exports = { MediaController, publicStation, sortByName, sortPresets };
+module.exports = { MediaController, publicRecording, publicStation, sortByName, sortPresets };

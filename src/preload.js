@@ -69,6 +69,11 @@ contextBridge.exposeInMainWorld("wavedeck", {
   getRecordingState: () => ipcRenderer.invoke("recording:get-state"),
   toggleRecording: () => ipcRenderer.invoke("recording:toggle"),
   onRecordingState: (callback) => subscribe("recording:state-changed", callback),
+  getRecordings: () => ipcRenderer.invoke("recordings:list"),
+  playRecording: (recordingId) => ipcRenderer.invoke("recordings:play", recordingId),
+  revealRecording: (recordingId) => ipcRenderer.invoke("recordings:reveal", recordingId),
+  deleteRecording: (recordingId) => ipcRenderer.invoke("recordings:delete", recordingId),
+  onRecordingsChanged: (callback) => subscribe("recordings:changed", callback),
 
   getSidebarState: () => ipcRenderer.invoke("sidebar:get-state"),
   toggleSidebar: () => ipcRenderer.invoke("sidebar:toggle"),
