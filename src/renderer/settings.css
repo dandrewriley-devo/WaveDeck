@@ -231,18 +231,26 @@ select:focus{
 
 .subgroup-row.drop-before::before,
 .subgroup-row.drop-after::after{
-  background:var(--accent);
-  border-radius:2px;
-  content:"";
-  height:2px;
+  align-items:center;
+  background:#303030;
+  border:1px dashed var(--accent);
+  border-radius:3px;
+  color:var(--accent);
+  content:"DROP HERE";
+  display:flex;
+  font-size:9px;
+  font-weight:700;
+  height:12px;
+  justify-content:center;
+  letter-spacing:0.08em;
   left:0;
   position:absolute;
   right:0;
   z-index:2;
 }
 
-.subgroup-row.drop-before::before{ top:-2px; }
-.subgroup-row.drop-after::after{ bottom:-2px; }
+.subgroup-row.drop-before::before{ top:-9px; }
+.subgroup-row.drop-after::after{ bottom:-9px; }
 
 .subgroup-drag-handle{
   color:var(--muted);
