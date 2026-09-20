@@ -243,7 +243,12 @@ html, body{
 }
 
 .toolbar button.active {
-  color: #8feab3;
+  background: #8feab3;
+  border-radius: 6px;
+  color: #151815;
+  height: 26px;
+  margin: 3px;
+  width: 28px;
 }
 
 .toolbar button:disabled {
