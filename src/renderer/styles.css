@@ -839,3 +839,15 @@ html, body{
 .list::-webkit-scrollbar-corner {
   background: transparent;
 }
+/* Local music uses the same narrow sidebar footprint as station playback. */
+.music-library-status { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; font-size: 11px; }
+.music-library-status button, .music-actions button { cursor: pointer; }
+.music-row { margin: 5px 0; padding: 8px; border: 1px solid #5556; border-radius: 5px; overflow-wrap: anywhere; }
+.music-row.active { border-color: #d29d48; }
+.music-summary { cursor: pointer; }
+.music-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 10px 0; }
+#musicTransport { padding: 5px 12px; font-size: 11px; }
+#musicPosition { width: 100%; }
+.toolbar { flex-wrap: nowrap; }
+.toolbar button { flex: 0 1 34px; min-width: 0; }
+#musicTransport, #musicPanel { flex-shrink: 0; }

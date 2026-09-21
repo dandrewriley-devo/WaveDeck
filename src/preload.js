@@ -9,6 +9,12 @@ function subscribe(channel, callback) {
 
 contextBridge.exposeInMainWorld("wavedeck", {
   platform: process.platform,
+  getMusicStatus: () => ipcRenderer.invoke('music:status'),
+  searchMusic: query => ipcRenderer.invoke('music:search', query),
+  scanMusic: () => ipcRenderer.invoke('music:scan'),
+  playMusic: (id, mode) => ipcRenderer.invoke('music:play', id, mode),
+  seekMusic: seconds => ipcRenderer.invoke('music:seek', seconds),
+  onMusicChanged: callback => subscribe('music:changed', callback),
   getStations: () => ipcRenderer.invoke("stations:get"),
   saveStations: (stations) => ipcRenderer.invoke("stations:save", stations),
   deleteStation: (stationId) => ipcRenderer.invoke("stations:delete", stationId),

@@ -5,7 +5,7 @@ const os = require("os");
 const path = require("path");
 
 const { MpvPlayer, getIpcPath, getMpvExecutable } = require("./player");
-const { MediaController } = require("./media-controller");
+const { MediaController, serializeTransport } = require("./media-controller");
 const {
   StreamRecorder,
   prepareFfprobeExecutable,
@@ -18,6 +18,8 @@ const { ListeningHistory } = require("./listening-history");
 const { createLibraryUpdater, nodeHttpsFetch } = require("./library-updater");
 const { copyLegacyData } = require("./data-migration");
 const { RecordingLibrary } = require("./recording-library");
+const { MusicLibrary } = require('./music-library');
+const { MusicRadio } = require('./music-radio');
 const {
   getLauncherStatus,
   installLauncher,
@@ -79,6 +81,7 @@ let settingsWindow = null;
 let storage = null;
 let player = null;
 let recordingLibrary = null;
+let musicLibrary = null;
 let recordingProbeExecutable = "";
 let mediaController = null;
 let recorder = null;
@@ -719,12 +722,14 @@ function installIpcHandlers() {
     }
     return storage.setLaunchInSidebarMode(enabled);
   });
-  ipcMain.handle("ui:set-pro-mode", (_event, enabled) => {
+  ipcMain.handle("ui:set-pro-mode", async (_event, enabled) => {
     if (!enabled && recorder?.isRecording()) {
       throw new Error("Stop the current recording before turning Pro Mode off.");
     }
     const preferences = storage.setProModeEnabled(enabled);
     if (!preferences.proModeEnabled) {
+      if (mediaController?.music) await mediaController.stop();
+      musicLibrary?.disable();
       sectionVisibility = {
         ...sectionVisibility,
         favoritesOnly: false,
@@ -732,6 +737,7 @@ function installIpcHandlers() {
       };
       sendToAll("sections:state-changed", { ...sectionVisibility });
     }
+    if (preferences.proModeEnabled) void musicLibrary.enable().catch(error => sendToMain('app:warning', error.message));
     sendToAll("ui:preferences-changed", preferences);
     return preferences;
   });
@@ -747,6 +753,17 @@ function installIpcHandlers() {
   });
 
   ipcMain.handle("player:status", () => mediaController.getStatus());
+  const requireMusic = async () => {
+    if (!storage.getUiPreferences().proModeEnabled) throw new Error('Enable Pro Mode to use Music.');
+    await musicLibrary.enable();
+  };
+  ipcMain.handle('music:status', async () => { await requireMusic(); return musicLibrary.call('status'); });
+  ipcMain.handle('music:search', async (_event, query) => { await requireMusic(); return musicLibrary.call('search', String(query || '')); });
+  ipcMain.handle('music:scan', async () => { await requireMusic(); return musicLibrary.rescan(); });
+  ipcMain.handle('music:play', async (_event, id, mode) => { await requireMusic(); return mediaController.playMusic(String(id), mode); });
+  ipcMain.handle('music:seek', async (_event, seconds) => {
+    if (mediaController.music) await player.seek(seconds);
+  });
   ipcMain.handle("player:play-station", (_event, stationId) => mediaController.playStationById(stationId));
   ipcMain.handle("player:play-pause", () => mediaController.togglePlayPause());
   ipcMain.handle("player:previous-preset", () => mediaController.previousPreset());
@@ -933,17 +950,22 @@ if (!hasSingleInstanceLock) {
       executable,
       ipcPath,
       onMetadata: (metadata) => sendToMain("player:metadata", metadata),
-      onStatus: (status) => broadcastPlayerStatus(status)
+      onStatus: (status) => broadcastPlayerStatus(status),
+      onEnded: (event) => { void mediaController?.handleEnded(event); }
     });
 
-    mediaController = new MediaController({
+    mediaController = serializeTransport(new MediaController({
       player,
       getStations: () => storage.readStations(),
       onStationChanged: broadcastStationChanged,
       onStateChanged: broadcastPlayerStatus,
       beforeStationChange: () => recorder?.stop(),
       beforeStop: () => recorder?.stop()
-    });
+    }));
+
+    musicLibrary = new MusicLibrary({ dataDir: getDataDir(), onStatus: status => sendToMain('music:changed', status) });
+    mediaController.configureMusic(musicLibrary, new MusicRadio({ dataDir: getDataDir() }));
+    if (storage.getUiPreferences().proModeEnabled) void musicLibrary.enable().catch(error => sendToMain('app:warning', error.message));
 
     listeningHistory = new ListeningHistory({
       storage,
@@ -1027,6 +1049,8 @@ function finishShutdown() {
   mprisService?.close();
   windowsSidebar?.close();
   player?.close();
+  mediaController?.clearMusic();
+  musicLibrary?.close();
 }
 
 app.on("before-quit", (event) => {

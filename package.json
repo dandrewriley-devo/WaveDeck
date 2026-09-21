@@ -1,16 +1,17 @@
 {
   "name": "wavedeck",
-  "version": "0.6.7",
-  "wavedeckVersion": "0.6.7",
+  "version": "0.7.0",
+  "wavedeckVersion": "0.7.0",
   "description": "WaveDeck portable internet-radio player for Linux, Windows, and macOS",
   "author": "Andrew Riley",
   "license": "MIT",
   "desktopName": "wavedeck.desktop",
   "main": "src/main/main.js",
   "scripts": {
+    "prestart": "node scripts/ensure-music-dependencies.js",
     "prepare:linux-recorder": "node scripts/prepare-linux-ffmpeg.js",
     "start": "npm run prepare:linux-recorder && electron .",
-    "test": "node scripts/validate.js",
+    "test": "node scripts/validate.js && node scripts/test-music.js",
     "dist:linux": "npm run prepare:linux-recorder && electron-builder --linux AppImage --x64",
     "dist:windows": "electron-builder --win portable --x64 --config electron-builder.windows.json",
     "dist:macos": "electron-builder --mac dir --universal --config electron-builder.macos.json"
@@ -60,6 +61,8 @@
   },
   "dependencies": {
     "dbus-next": "^0.10.2",
+    "music-metadata": "11.9.0",
+    "sql.js": "1.13.0",
     "x11": "^4.1.0"
   }
 }

@@ -245,6 +245,7 @@
         <div class="note"><strong>Updating WaveDeck:</strong> Close the application and replace only the executable or app. Do not delete or replace the <code>Data</code> folder.</div>
         <p>WaveDeck creates missing files for a new user, but it does not overwrite an existing library, preferences, listening history, notes, or backups during startup.</p>
         <p>On Linux, WaveDeck also creates a <code>Recordings</code> folder beside <code>Data</code>. This folder contains recordings you make in Pro Mode and is not part of the station library.</p>
+        <p>In Pro Mode, WaveDeck also creates a <code>Music</code> folder beside <code>Data</code>. Put MP3 files anywhere inside it; nested folders are fine. WaveDeck reads their tags and keeps a portable search index in <code>Data</code>, but never edits the MP3 files.</p>
         <table>
           <thead><tr><th>File</th><th>What it contains</th></tr></thead>
           <tbody>
@@ -262,6 +263,9 @@
 
         <h3>Stream Recording (Linux)</h3>
         <p>In Pro Mode, click Record while a station is playing to save a continuous MP3 file. Click Record again to finish the file. Stop, changing stations, and closing WaveDeck also finish the current recording safely. Files are named from the WaveDeck station name and the date and time recording began, then saved in the portable <code>Recordings</code> folder. WaveDeck never splits recordings into individual songs. Recording captures the station through an independent stream connection, so listening volume, mute, and Station Gain do not change the saved audio.</p>
+        <h2>Local music</h2>
+        <p>Click the Music button in the toolbar to search your MP3 collection by title, artist, album, genre, year, composer, comments, filename, or path. Select a result to Play Song, Play Album, start Artist Radio, or start Song Radio.</p>
+        <p>Albums play in disc and track order, then flow automatically into Artist Radio. Artist Radio and Song Radio keep playing indefinitely and select fresh tracks from your collection. Favorites and higher ratings receive a modest preference, but deeper cuts remain in rotation. One-star tracks are not automatically selected and two-star tracks are rare. WaveDeck keeps a persistent 120-minute minimum before an automatically selected song can repeat. It does not use album art or ReplayGain.</p>
 
         <h3>Station Gain</h3>
         <p>Some streams arrive naturally louder or quieter than others. The Station Gain slider adjusts only the selected station from −12 dB to +12 dB in 0.5 dB steps. You can move it while listening and hear the result immediately. WaveDeck remembers the setting for that station and applies it automatically next time. <strong>Reset</strong> returns it to 0 dB.</p>

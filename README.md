@@ -25,6 +25,7 @@ WaveDeck is a lightweight, portable internet-radio player for 64-bit Windows, Li
 - Collapsible, persistent sidebar notepad (Linux and Windows Sidebar Mode)
 - Linux Applications-menu and panel-launcher integration (Linux only)
 - A larger Settings window that remembers its monitor-safe size and position on Linux and Windows
+- Pro Mode local MP3 search, album playback, and continuous Artist/Song Radio
 
 ## Requirements
 
@@ -42,6 +43,20 @@ npm start
 ```
 
 On Linux, the first start downloads WaveDeck's pinned portable FFmpeg recorder and verifies both the archive and executable checksums. Later starts reuse it. When running from source, WaveDeck stores its user data under `~/.config/wavedeck` on Linux and `Data` in the project folder on Windows and macOS.
+
+## Local music in Pro Mode
+
+Enable Pro Mode in Settings, then use the Music toolbar button. WaveDeck creates a
+`Music` folder beside `Data` and scans every MP3 inside it, including nested folders.
+It reads tags without ever modifying the music files, keeping its portable search index
+and radio-session history in `Data`.
+
+Search by song, artist, album, genre, year, composer, comments, filename, or path. A
+song can be played directly, an album plays in disc/track order and then continues as
+Artist Radio, and Artist/Song Radio continue indefinitely. Radio uses the collection's
+existing tags, modestly favors favorites and higher-rated tracks, excludes one-star
+tracks, strongly downweights two-star tracks, and never automatically repeats a song
+within 120 minutes. It does not use album artwork or ReplayGain.
 
 ## Build the portable Windows EXE
 

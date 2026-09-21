@@ -12,3 +12,5 @@ npm-debug.log*
 playback/win32/mpv.exe
 .cache/
 Data/
+Music/
+Test Environment/

@@ -94,16 +94,21 @@ class MprisPlayerInterface extends Interface {
     this._playbackStatus = mediaState === "playing"
       ? "Playing"
       : (mediaState === "paused" ? "Paused" : "Stopped");
-    this._metadata = metadataForStation(station);
+    this._metadata = status?.currentMusic?.track ? {
+      'mpris:trackid': new Variant('o', '/com/a17press/wavedeck/music/' + status.currentMusic.track.id),
+      'xesam:title': new Variant('s', status.currentMusic.track.title),
+      'xesam:artist': new Variant('as', [status.currentMusic.track.artist]),
+      'xesam:album': new Variant('s', status.currentMusic.track.album)
+    } : metadataForStation(station);
     if (Number.isFinite(status?.volume)) this._volume = Math.min(Math.max(status.volume / 100, 0), 1);
 
     Interface.emitPropertiesChanged(this, {
       PlaybackStatus: this._playbackStatus,
       Metadata: this._metadata,
       Volume: this._volume,
-      CanGoNext: presetCount > 0,
-      CanGoPrevious: presetCount > 0,
-      CanPlay: presetCount > 0 || Boolean(station)
+      CanGoNext: presetCount > 0 || Boolean(status?.currentMusic),
+      CanGoPrevious: presetCount > 0 || Boolean(status?.currentMusic),
+      CanPlay: presetCount > 0 || Boolean(station) || Boolean(status?.currentMusic)
     });
   }
 
@@ -123,8 +128,8 @@ class MprisPlayerInterface extends Interface {
   get Position() { return 0n; }
   get MinimumRate() { return 1; }
   get MaximumRate() { return 1; }
-  get CanGoNext() { return this.controller.getPresets().length > 0; }
-  get CanGoPrevious() { return this.controller.getPresets().length > 0; }
+  get CanGoNext() { return this.controller.getPresets().length > 0 || Boolean(this.controller.getStatus().currentMusic); }
+  get CanGoPrevious() { return this.CanGoNext; }
   get CanPlay() { return this.CanGoNext || Boolean(this.controller.getCurrentStation()); }
   get CanPause() { return true; }
   get CanSeek() { return false; }

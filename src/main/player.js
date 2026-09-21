@@ -61,12 +61,14 @@ function normalizeStationGainDb(value) {
 }
 
 class MpvPlayer {
-  constructor({ executable, ipcPath, platform = process.platform, onMetadata, onStatus }) {
+  constructor({ executable, ipcPath, platform = process.platform, onMetadata, onStatus, onEnded }) {
     this.executable = executable;
     this.ipcPath = ipcPath;
     this.platform = platform;
     this.onMetadata = onMetadata || (() => {});
     this.onStatus = onStatus || (() => {});
+    this.onEnded = onEnded || (() => {});
+    this.activeEntry = null;
 
     this.process = null;
     this.socket = null;
@@ -175,7 +177,9 @@ class MpvPlayer {
       this.command(["observe_property", 4, "volume"]),
       this.command(["observe_property", 5, "idle-active"]),
       this.command(["observe_property", 6, "audio-bitrate"]).catch(() => null),
-      this.command(["observe_property", 7, "track-list"]).catch(() => null)
+      this.command(["observe_property", 7, "track-list"]).catch(() => null),
+      this.command(["observe_property", 8, "time-pos"]).catch(() => null),
+      this.command(["observe_property", 9, "duration"]).catch(() => null)
     ]);
 
     this.#setStatus("ready", "Playback engine is ready.");
@@ -237,6 +241,12 @@ class MpvPlayer {
       }
 
       if (message.event === "property-change") this.#handleProperty(message);
+      if (message.event === "start-file") this.activeEntry = message.playlist_entry_id;
+      if (message.event === "end-file" && this.activeEntry !== null &&
+          message.playlist_entry_id === this.activeEntry && ['eof', 'error'].includes(message.reason)) {
+        this.activeEntry = null;
+        this.onEnded(message);
+      }
 
       if (message.request_id && this.pending.has(message.request_id)) {
         const pending = this.pending.get(message.request_id);
@@ -252,6 +262,10 @@ class MpvPlayer {
   }
 
   #handleProperty(message) {
+    if (message.name === 'time-pos' || message.name === 'duration') {
+      this.#setStatus(this.status.state, this.status.message, { [message.name === 'time-pos' ? 'position' : 'duration']: Number(message.data) || 0 });
+      return;
+    }
     if (message.name === "metadata") {
       if (message.data?.["icy-title"]) this.onMetadata(String(message.data["icy-title"]));
       this.#updateBitrate(bitrateFromMetadata(message.data));
@@ -345,6 +359,7 @@ class MpvPlayer {
 
   async play(url) {
     await this.start();
+    this.activeEntry = null;
     this.playSequence += 1;
     this.#setStatus("connecting", "Connecting to station…", {
       playing: false,
@@ -352,7 +367,16 @@ class MpvPlayer {
       bitrateResolved: false
     });
     await this.command(["loadfile", url, "replace"]);
+    await this.command(['set_property', 'pause', false]);
     return true;
+  }
+
+  async setPaused(paused) {
+    await this.command(['set_property', 'pause', Boolean(paused)]);
+  }
+
+  async seek(seconds) {
+    await this.command(['seek', Math.max(0, Number(seconds) || 0), 'absolute']);
   }
 
   async stop() {

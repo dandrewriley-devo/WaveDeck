@@ -27,6 +27,14 @@ const recordingSearchInput = document.getElementById("recordingSearchInput");
 const clearRecordingSearchBtn = document.getElementById("clearRecordingSearchBtn");
 const listEl = document.querySelector(".list");
 const platform = window.wavedeck.platform;
+const musicToggleBtn = document.getElementById('musicToggleBtn');
+const musicPanel = document.getElementById('musicPanel');
+const musicSearch = document.getElementById('musicSearch');
+const musicStatus = document.getElementById('musicStatus');
+const musicPosition = document.getElementById('musicPosition');
+let musicVisible = false;
+let musicSearchTimer;
+let musicRenderSequence = 0;
 
 if (platform !== "linux" && platform !== "win32") sidebarModeBtn.hidden = true;
 
@@ -200,6 +208,7 @@ function setProModeUi(preferences = {}) {
   notepadToggleBtn.hidden = !proModeEnabled || !sidebarModeEnabled;
   if (!proModeEnabled) setNotepadOpen(false);
   if (!proModeEnabled && recordingsSectionVisible) setRecordingsSectionVisible(false);
+  if (!proModeEnabled && musicVisible) setMusicVisible(false);
   setRecordingUi(recordingState);
   queueRender();
 }
@@ -223,12 +232,13 @@ function setSidebarUi(state) {
 }
 
 function updateSectionToolbarHighlights() {
-  const showingRecordings = recordingsSectionVisible;
+  const showingRecordings = recordingsSectionVisible || musicVisible;
   searchSectionToggleBtn.classList.toggle("active", !showingRecordings && searchSectionVisible);
   presetSectionToggleBtn.classList.toggle("active", !showingRecordings && presetSectionVisible);
   favoritesOnlyToggleBtn.classList.toggle("active", !showingRecordings && favoritesOnlyVisible);
   mostPlayedSectionToggleBtn.classList.toggle("active", !showingRecordings && mostPlayedSectionVisible);
-  recordingsSectionToggleBtn.classList.toggle("active", showingRecordings);
+  recordingsSectionToggleBtn.classList.toggle("active", recordingsSectionVisible);
+  musicToggleBtn.classList.toggle('active', musicVisible);
 }
 
 function setSectionVisibilityUi(state = {}) {
@@ -251,7 +261,7 @@ function setSectionVisibilityUi(state = {}) {
     searchRenderTimer = null;
   }
 
-  searchPanel.hidden = !search || recordingsSectionVisible;
+  searchPanel.hidden = !search || recordingsSectionVisible || musicVisible;
   searchPanel.setAttribute("aria-hidden", String(!search || recordingsSectionVisible));
 
   searchSectionToggleBtn.setAttribute("aria-pressed", String(search));
@@ -269,6 +279,7 @@ function setSectionVisibilityUi(state = {}) {
 }
 
 function setRecordingsSectionVisible(visible) {
+  if (visible && musicVisible) setMusicVisible(false);
   const next = proModeEnabled && Boolean(visible);
   const changed = recordingsSectionVisible !== next;
   recordingsSectionVisible = next;
@@ -289,6 +300,104 @@ function setRecordingsSectionVisible(visible) {
   recordingsSectionToggleBtn.title = next ? "Close Recordings" : "Recordings";
   updateSectionToolbarHighlights();
   if (changed) queueRender();
+}
+
+function setMusicVisible(visible) {
+  musicVisible = proModeEnabled && Boolean(visible);
+  if (musicVisible && recordingsSectionVisible) setRecordingsSectionVisible(false);
+  musicPanel.hidden = !musicVisible;
+  searchPanel.hidden = musicVisible || recordingsSectionVisible || !searchSectionVisible;
+  musicToggleBtn.setAttribute('aria-pressed', String(musicVisible));
+  musicToggleBtn.setAttribute('aria-label', musicVisible ? 'Close Music' : 'Open Music');
+  updateSectionToolbarHighlights();
+  queueRender();
+  if (musicVisible) {
+    musicSearch.focus();
+    window.wavedeck.getMusicStatus().then(setMusicStatus).catch(error => { musicStatus.textContent = error.message; });
+  }
+}
+
+function setMusicStatus(status) {
+  musicStatus.textContent = status.message || (status.scanning ? `Scanning… ${status.checked || 0} checked` : `${status.count || 0} songs`);
+  musicStatus.title = status.folder || '';
+  document.getElementById('musicRescan').disabled = Boolean(status.scanning);
+}
+
+async function renderMusic() {
+  const sequence = ++musicRenderSequence;
+  const query = musicSearch.value;
+  try {
+    const result = await window.wavedeck.searchMusic(query);
+    if (!musicVisible || sequence !== musicRenderSequence || query !== musicSearch.value) return;
+    listEl.replaceChildren();
+    listEl.append(createSectionTitle('Music', query.trim() ? `${result.total} matches` : 'Search your collection'));
+    if (!query.trim()) {
+      listEl.append(element('div', 'placeholder', 'Search by song, artist, album, genre, or year. Add MP3 files to Music beside your Data folder.'));
+    } else if (!result.tracks.length) listEl.append(element('div', 'placeholder', 'No matching songs.'));
+    for (const track of result.tracks) {
+      const row = element('details', 'music-row');
+      row.dataset.musicId = track.id;
+      const summary = element('summary', 'music-summary');
+      summary.append(element('div', 'recording-name', track.title), element('div', 'recording-details',
+        [track.artist || 'Unknown artist', track.album, track.year].filter(Boolean).join(' • ')));
+      row.append(summary);
+      const actions = element('div', 'music-actions');
+      for (const [mode, label] of [['song', 'Play Song'], ['album', 'Play Album'], ['artist', 'Artist Radio'], ['radio', 'Song Radio']]) {
+        const button = element('button', 'recording-action', label);
+        button.type = 'button';
+        button.addEventListener('click', async () => {
+          button.disabled = true;
+          try { await window.wavedeck.playMusic(track.id, mode); }
+          catch (error) { nowPlaying.textContent = error.message; }
+          finally { button.disabled = false; }
+        });
+        actions.append(button);
+      }
+      row.append(actions, element('div', 'recording-details', track.relativePath));
+      listEl.append(row);
+    }
+    if (result.total > result.tracks.length && query.trim()) listEl.append(element('div', 'placeholder', 'Showing the first 200 matches. Refine your search for more.'));
+  } catch (error) { if (musicVisible) musicStatus.textContent = error.message; }
+}
+
+function showMusicPlayback(status) {
+  const music = status?.currentMusic;
+  const active = Boolean(music && status.mediaState !== 'stopped');
+  document.getElementById('musicTransport').hidden = !active;
+  previousPresetBtn.title = active ? 'Previous song' : 'Previous Preset';
+  nextPresetBtn.title = active ? 'Next song' : 'Next Preset';
+  previousPresetBtn.setAttribute('aria-label', previousPresetBtn.title);
+  nextPresetBtn.setAttribute('aria-label', nextPresetBtn.title);
+  if (!active) return;
+  const track = music.track;
+  if (track) {
+    currentStationId = null; currentRecordingId = null;
+    headerStationName.textContent = track.title;
+    nowPlaying.textContent = music.waiting ? 'Waiting for eligible music (120-minute repeat limit).' :
+      (status.mediaState === 'paused' ? 'Paused — ' : '') + (track.artist || 'Unknown artist');
+  }
+  if (status.state === 'error') nowPlaying.textContent = status.message;
+  document.getElementById('musicMode').textContent = ({ song: 'Song', album: 'Album → Artist Radio', artist: 'Artist Radio', radio: 'Song Radio' })[music.mode];
+  const duration = status.duration || track?.duration || 0;
+  musicPosition.max = String(Math.max(1, duration));
+  if (document.activeElement !== musicPosition) musicPosition.value = String(status.position || 0);
+  musicPosition.disabled = music.waiting || !duration;
+  document.getElementById('musicTime').textContent = `${formatElapsed(status.position || 0)} / ${formatElapsed(duration)}`;
+  for (const row of listEl.querySelectorAll('[data-music-id]')) row.classList.toggle('active', row.dataset.musicId === track?.id);
+  updateActiveHighlight();
+}
+
+musicToggleBtn.addEventListener('click', () => setMusicVisible(!musicVisible));
+musicSearch.addEventListener('input', () => { clearTimeout(musicSearchTimer); musicSearchTimer = setTimeout(() => { if (musicVisible) void renderMusic(); }, 150); });
+document.getElementById('musicRescan').addEventListener('click', async () => {
+  try { setMusicStatus(await window.wavedeck.scanMusic()); if (musicVisible) await renderMusic(); }
+  catch (error) { musicStatus.textContent = error.message; }
+});
+musicPosition.addEventListener('change', () => { void window.wavedeck.seekMusic(Number(musicPosition.value)).catch(error => { nowPlaying.textContent = error.message; }); });
+window.wavedeck.onMusicChanged(status => { setMusicStatus(status); if (musicVisible && !status.scanning) queueRender(); });
+// Browsing radio/recordings does not interrupt music; choosing a source does.
+for (const button of [searchSectionToggleBtn, presetSectionToggleBtn, favoritesOnlyToggleBtn, mostPlayedSectionToggleBtn]) {
+  button.addEventListener('click', () => { if (musicVisible) setMusicVisible(false); }, { capture: true });
 }
 
 function setNotepadOpen(open, { focus = false } = {}) {
@@ -643,6 +752,7 @@ async function renderRecordings() {
 }
 
 async function renderAll() {
+  if (musicVisible) { await renderMusic(); return; }
   if (recordingsSectionVisible) {
     await renderRecordings();
     return;
@@ -1286,6 +1396,7 @@ window.addEventListener("beforeunload", () => {
 });
 
 window.wavedeck.onMetadata((metadata) => {
+  if (currentPlayerStatus?.currentMusic) return;
   if (metadata) nowPlaying.textContent = metadata;
 });
 
@@ -1323,6 +1434,7 @@ window.wavedeck.onPlayerStatus((status) => {
     nowPlaying.textContent = "Connecting…";
   }
   updateExpandedStationInfo(status);
+  showMusicPlayback(status);
 });
 
 window.wavedeck.onSidebarState(setSidebarUi);
@@ -1386,6 +1498,7 @@ window.wavedeck.onWarning((warning) => {
     else if (status?.mediaState === "playing") {
       nowPlaying.textContent = status?.state === "connecting" ? "Connecting…" : (status.message || "Playing");
     } else nowPlaying.textContent = "Warming up the airwaves...";
+    showMusicPlayback(status);
   } catch (error) {
     nowPlaying.textContent = `Playback unavailable: ${error.message}`;
   }

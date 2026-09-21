@@ -1,3 +1,4 @@
+const { normalize, compilation } = require('./music-tags');
 function sortByName(a, b) {
   return String(a?.name ?? "").localeCompare(String(b?.name ?? ""), undefined, {
     sensitivity: "base"
@@ -68,6 +69,10 @@ class MediaController {
     this.currentStation = null;
     this.currentRecording = null;
     this.mediaState = "stopped";
+    this.music = null;
+    this.musicGeneration = 0;
+    this.musicRetry = null;
+    this.musicBusy = false;
   }
 
   getCurrentStation() {
@@ -83,7 +88,8 @@ class MediaController {
       ...playerStatus,
       mediaState: this.mediaState,
       currentStation: this.getCurrentStation(),
-      currentRecording: publicRecording(this.currentRecording)
+      currentRecording: publicRecording(this.currentRecording),
+      currentMusic: this.music ? { track: this.music.current, mode: this.music.mode, waiting: this.music.waiting } : null
     };
   }
 
@@ -107,6 +113,7 @@ class MediaController {
   }
 
   async playStation(station) {
+    this.clearMusic();
     const nextStation = publicStation(station);
     const stationChanged = this.currentStation && (
       String(this.currentStation.id) !== String(nextStation.id) ||
@@ -143,6 +150,7 @@ class MediaController {
   }
 
   async playRecording(recording) {
+    this.clearMusic();
     const nextRecording = {
       ...publicRecording(recording),
       path: String(recording?.path ?? "")
@@ -180,6 +188,11 @@ class MediaController {
 
   async pause() {
     if (this.mediaState !== "playing") return false;
+    if (this.music) {
+      clearTimeout(this.musicRetry);
+      await this.player.setPaused(true);
+      this.mediaState = 'paused'; this.onStateChanged(this.getStatus()); return true;
+    }
     await this.beforeStop({ reason: "pause", station: this.getCurrentStation() });
     this.mediaState = "paused";
     this.onStateChanged(this.getStatus());
@@ -188,6 +201,7 @@ class MediaController {
   }
 
   async stop() {
+    if (this.music) this.clearMusic();
     await this.beforeStop({ reason: "stop", station: this.getCurrentStation() });
     this.mediaState = "stopped";
     this.onStateChanged(this.getStatus());
@@ -212,6 +226,11 @@ class MediaController {
   }
 
   async play() {
+    if (this.music) {
+      this.mediaState = 'playing';
+      if (this.music.waiting) await this.advanceMusic(); else await this.player.setPaused(false);
+      this.onStateChanged(this.getStatus()); return true;
+    }
     if (this.mediaState === "playing" && this.player.getStatus().playing) return true;
     if (this.currentStation) {
       await this.playStation(this.currentStation);
@@ -234,10 +253,22 @@ class MediaController {
   }
 
   async nextPreset() {
+    if (this.music) return this.advanceMusic();
     return this.#movePreset(1);
   }
 
   async previousPreset() {
+    if (this.music) {
+      if (this.musicBusy) return false;
+      if ((this.player.getStatus().position || 0) > 3) { await this.player.seek(0); return true; }
+      if (this.music.back.length > 1) {
+        this.music.back.pop();
+        const previous = this.music.back.pop();
+        if (this.music.mode === 'album') this.music.queue.unshift(this.music.current.id);
+        return this.loadMusic(previous);
+      }
+      await this.player.seek(0); return true;
+    }
     return this.#movePreset(-1);
   }
 
@@ -256,6 +287,99 @@ class MediaController {
     await this.playStation(presets[targetIndex]);
     return true;
   }
+
+  configureMusic(library, radio) { this.musicLibrary = library; this.musicRadio = radio; }
+
+  clearMusic() {
+    this.musicGeneration++; clearTimeout(this.musicRetry); this.music = null;
+  }
+
+  async playMusic(id, mode = 'song') {
+    if (!['song', 'album', 'artist', 'radio'].includes(mode)) throw new Error('Unknown music mode.');
+    const track = await this.musicLibrary.resolve(id);
+    await this.beforeStop({ reason: 'music-playback', station: this.getCurrentStation() });
+    this.clearMusic();
+    this.currentStation = null; this.currentRecording = null;
+    const album = this.musicLibrary.tracks.filter(t => track.album && normalize(t.album) === normalize(track.album) &&
+      ((compilation(track) && !track.albumArtist) || normalize(t.albumArtist || t.artist) === normalize(track.albumArtist || track.artist)))
+      .sort((a, b) => a.disc - b.disc || a.track - b.track || a.relativePath.localeCompare(b.relativePath));
+    if (mode === 'album' && !album.length) album.push(track);
+    this.music = { seed: track, mode, current: null, queue: mode === 'album' ? album.map(t => t.id) : [], back: [], failed: new Set(), waiting: false };
+    this.onStationChanged(null);
+    return this.loadMusic(mode === 'album' ? this.music.queue.shift() : id);
+  }
+
+  async loadMusic(id) {
+    const generation = this.musicGeneration;
+    const track = await this.musicLibrary.resolve(id);
+    if (!this.music || generation !== this.musicGeneration) return false;
+    this.music.current = { ...track }; delete this.music.current.path;
+    this.music.waiting = false;
+    this.mediaState = 'playing';
+    await this.player.setStationGain(0);
+    if (!this.music || generation !== this.musicGeneration) return false;
+    await this.player.play(track.path);
+    if (!this.music || generation !== this.musicGeneration) return false;
+    this.music.back.push(id); this.music.back = this.music.back.slice(-100);
+    this.musicRadio.record(track);
+    this.onStateChanged(this.getStatus());
+    return true;
+  }
+
+  async advanceMusic(reason = 'next') {
+    if (!this.music || this.musicBusy) return false;
+    this.musicBusy = true;
+    const generation = this.musicGeneration;
+    clearTimeout(this.musicRetry);
+    try {
+      if (reason === 'error' && this.music.current) this.music.failed.add(this.music.current.id);
+      if (this.music.mode === 'song') { await this.stop(); return true; }
+      while (this.music && generation === this.musicGeneration) {
+        let id = this.music.queue.shift();
+        if (!id && this.music.mode === 'album') this.music.mode = 'artist';
+        if (!id) id = this.musicRadio.choose(this.musicLibrary.tracks, this.music.seed, this.music.mode, this.music.failed)?.id;
+        if (!id) {
+          this.music.waiting = true;
+          await this.player.stop();
+          this.onStateChanged({ ...this.getStatus(), message: 'Waiting for an eligible song. The 120-minute repeat limit is still active.' });
+          this.musicRetry = setTimeout(() => {
+            if (this.music && this.mediaState === 'playing') void this.advanceMusic().catch(error => this.musicError(error));
+          }, 15000);
+          return false;
+        }
+        try { return await this.loadMusic(id); }
+        catch (error) { if (!this.music || generation !== this.musicGeneration) return false; this.music.failed.add(id); }
+      }
+    } finally { this.musicBusy = false; }
+    return false;
+  }
+
+  musicError(error) {
+    if (!this.music) return;
+    clearTimeout(this.musicRetry); this.mediaState = 'paused';
+    this.onStateChanged({ ...this.getStatus(), state: 'error', message: error.message });
+  }
+
+  async handleEnded(event) {
+    if (!this.music || this.mediaState !== 'playing') return;
+    try { await this.advanceMusic(event.reason); } catch (error) { this.musicError(error); }
+  }
 }
 
-module.exports = { MediaController, publicRecording, publicStation, sortByName, sortPresets };
+// Serialize external transport commands (including EOF) across IPC and media keys.
+// Internal calls bind to the original controller, so nested play/stop calls do not deadlock.
+function serializeTransport(controller) {
+  let pending = Promise.resolve();
+  const mutations = new Set(['playStationById', 'playStation', 'playUrl', 'playRecording', 'playMusic',
+    'pause', 'stop', 'play', 'togglePlayPause', 'nextPreset', 'previousPreset', 'handleEnded']);
+  return new Proxy(controller, { get(target, key) {
+    const value = target[key];
+    if (typeof value !== 'function') return value;
+    if (!mutations.has(key)) return value.bind(target);
+    return (...args) => {
+      const result = pending.then(() => value.apply(target, args));
+      pending = result.catch(() => {}); return result;
+    };
+  } });
+}
+module.exports = { MediaController, serializeTransport, publicRecording, publicStation, sortByName, sortPresets };
