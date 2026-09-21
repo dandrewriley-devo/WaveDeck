@@ -2,7 +2,7 @@ const path = require('path');
 const crypto = require('crypto');
 const normalize = (value) => String(value ?? '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 const list = (value) => (Array.isArray(value) ? value : String(value || '').split(/[;|]/)).map(String).map(s => s.trim()).filter(Boolean);
-function extractTrack(metadata, relativePath) {
+function extractTrack(metadata, relativePath, library = 'portable') {
   const c = metadata.common || {};
   const custom = {};
   for (const frames of Object.values(metadata.native || {})) for (const frame of frames) {
@@ -18,7 +18,7 @@ function extractTrack(metadata, relativePath) {
   const title = c.title || path.basename(relativePath, path.extname(relativePath));
   const artist = c.artist || '';
   return {
-    id: crypto.createHash('sha256').update(relativePath).digest('hex'), relativePath,
+    id: crypto.createHash('sha256').update(`${library}\0${relativePath}`).digest('hex'), relativePath, library,
     title, artist, artists: c.artists || list(artist), album: c.album || '', albumArtist: c.albumartist || '',
     year: c.year || c.originalyear || null, genres: c.genre || [], composer: c.composer || [],
     comments: (c.comment || []).map(v => typeof v === 'string' ? v : v.text || ''),

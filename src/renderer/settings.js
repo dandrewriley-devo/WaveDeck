@@ -43,6 +43,10 @@ const installLauncherBtn = document.getElementById("installLauncherBtn");
 const removeLauncherBtn = document.getElementById("removeLauncherBtn");
 const launchInSidebarMode = document.getElementById("launchInSidebarMode");
 const proModeEnabled = document.getElementById("proModeEnabled");
+const proMusicSettings = document.getElementById('proMusicSettings');
+const additionalMusicFolder = document.getElementById('additionalMusicFolder');
+const chooseAdditionalMusicFolderBtn = document.getElementById('chooseAdditionalMusicFolderBtn');
+const clearAdditionalMusicFolderBtn = document.getElementById('clearAdditionalMusicFolderBtn');
 const sidebarStartupHint = document.getElementById("sidebarStartupHint");
 const resetListeningBtn = document.getElementById("resetListeningBtn");
 const platform = window.wavedeck.platform;
@@ -61,6 +65,14 @@ let reloadQueued = false;
 let initialized = false;
 let pendingEditId = "";
 let activeSubgroupRename = null;
+
+function renderProMusicSettings(preferences) {
+  const proEnabled = preferences?.proModeEnabled === true;
+  const folder = String(preferences?.additionalMusicFolder || '');
+  proMusicSettings.hidden = !proEnabled;
+  additionalMusicFolder.value = folder;
+  clearAdditionalMusicFolderBtn.disabled = !folder;
+}
 
 function element(tag, className, text) {
   const node = document.createElement(tag);
@@ -170,6 +182,7 @@ async function loadUiPreferences() {
   try {
     const preferences = await window.wavedeck.getUiPreferences();
     proModeEnabled.checked = preferences?.proModeEnabled === true;
+    renderProMusicSettings(preferences);
     if (sidebarPlatform) launchInSidebarMode.checked = preferences?.launchInSidebarMode === true;
   } catch (error) {
     proModeEnabled.checked = false;
@@ -870,6 +883,7 @@ proModeEnabled.addEventListener("change", async () => {
   try {
     const preferences = await window.wavedeck.setProModeEnabled(requested);
     proModeEnabled.checked = preferences?.proModeEnabled === true;
+    renderProMusicSettings(preferences);
     setStatus(
       statusInterface,
       proModeEnabled.checked
@@ -881,6 +895,30 @@ proModeEnabled.addEventListener("change", async () => {
     setStatus(statusInterface, `Could not change modes: ${error.message}`, false);
   } finally {
     proModeEnabled.disabled = false;
+  }
+});
+
+chooseAdditionalMusicFolderBtn.addEventListener('click', async () => {
+  chooseAdditionalMusicFolderBtn.disabled = true;
+  try {
+    const folder = await window.wavedeck.chooseAdditionalMusicFolder();
+    if (!folder) return;
+    renderProMusicSettings(await window.wavedeck.setAdditionalMusicFolder(folder));
+    setStatus(statusInterface, 'Additional music folder saved. Use Music’s Rescan button when you want to index it.');
+  } catch (error) {
+    setStatus(statusInterface, `Could not save the music folder: ${error.message}`, false);
+  } finally {
+    chooseAdditionalMusicFolderBtn.disabled = false;
+  }
+});
+
+clearAdditionalMusicFolderBtn.addEventListener('click', async () => {
+  clearAdditionalMusicFolderBtn.disabled = true;
+  try {
+    renderProMusicSettings(await window.wavedeck.setAdditionalMusicFolder(''));
+    setStatus(statusInterface, 'Additional music folder removed.');
+  } catch (error) {
+    setStatus(statusInterface, `Could not remove the music folder: ${error.message}`, false);
   }
 });
 
@@ -921,6 +959,7 @@ window.wavedeck.onEditStationRequested(requestStationEdit);
 window.wavedeck.onWarning((warning) => setStatus(statusStations, warning, false));
 window.wavedeck.onUiPreferencesChanged((preferences) => {
   proModeEnabled.checked = preferences?.proModeEnabled === true;
+  renderProMusicSettings(preferences);
   if (sidebarPlatform) launchInSidebarMode.checked = preferences?.launchInSidebarMode === true;
 });
 

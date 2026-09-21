@@ -49,6 +49,12 @@ async function run() {
     await fs.rename(file, path.join(musicDir, 'renamed.mp3'));
     await library.rescan(); assert.equal(library.tracks.length, 1); assert.match(library.tracks[0].relativePath, /renamed/);
     await fs.unlink(path.join(musicDir, 'renamed.mp3')); await library.rescan(); assert.equal(library.tracks.length, 0);
+    const externalDir = path.join(temp, 'Elsewhere');
+    const externalFile = path.join(externalDir, 'external.mp3');
+    await fs.mkdir(externalDir, { recursive: true }); await fs.writeFile(externalFile, fixture());
+    await library.setAdditionalMusicFolder(externalDir); await library.rescan();
+    assert.equal(library.tracks.length, 1); assert.equal(library.tracks[0].library, 'additional');
+    assert.equal((await library.resolve(library.tracks[0].id)).path, externalFile);
     const tag = extractTrack({ common: { rating: [{ rating: 0.8 }] }, native: {} }, 'fallback.mp3');
     assert.equal(tag.title, 'fallback'); assert.equal(tag.rating, 8);
     assert.equal(radioArtist(track('x', { albumArtist: 'Various Artists', artist: 'Solo' })), 'Solo');

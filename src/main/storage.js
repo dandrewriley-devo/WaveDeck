@@ -234,6 +234,9 @@ function validatePreferences(value) {
   }
   const parsedUpdatedAt = Date.parse(String(value?.lastLibraryUpdate ?? ""));
   const rawSettingsBounds = value?.settingsWindowBounds;
+  const additionalMusicFolder = typeof value?.additionalMusicFolder === "string"
+    ? value.additionalMusicFolder.trim()
+    : "";
   const settingsWindowBounds = rawSettingsBounds && typeof rawSettingsBounds === "object" && !Array.isArray(rawSettingsBounds) &&
     ["x", "y", "width", "height"].every((key) => Number.isFinite(Number(rawSettingsBounds[key])))
     ? {
@@ -250,6 +253,7 @@ function validatePreferences(value) {
       ? value.downloadNewStations
       : true,
     proModeEnabled: value?.proModeEnabled === true,
+    additionalMusicFolder,
     launchInSidebarMode: value?.launchInSidebarMode === true,
     settingsWindowBounds,
     lastLibraryUpdate: Number.isFinite(parsedUpdatedAt) ? new Date(parsedUpdatedAt).toISOString() : "",
@@ -423,6 +427,7 @@ class PortableStorage {
     const preferences = this.readPreferences();
     return {
       proModeEnabled: preferences.proModeEnabled,
+      additionalMusicFolder: preferences.additionalMusicFolder,
       launchInSidebarMode: preferences.launchInSidebarMode,
       settingsWindowBounds: preferences.settingsWindowBounds
         ? { ...preferences.settingsWindowBounds }
@@ -444,6 +449,13 @@ class PortableStorage {
   setProModeEnabled(enabled) {
     const preferences = this.readPreferences();
     preferences.proModeEnabled = Boolean(enabled);
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences();
+  }
+
+  setAdditionalMusicFolder(folder) {
+    const preferences = this.readPreferences();
+    preferences.additionalMusicFolder = typeof folder === "string" ? folder.trim() : "";
     this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
     return this.getUiPreferences();
   }

@@ -3,9 +3,10 @@ const fs = require('fs/promises');
 const path = require('path');
 const { extractTrack, normalize } = require('./music-tags');
 let db, parseFile, scanning = null;
-const root = path.join(path.dirname(workerData.dataDir), 'Music');
+const portableRoot = path.join(path.dirname(workerData.dataDir), 'Music');
+let additionalMusicFolder = String(workerData.additionalMusicFolder || '').trim();
 const dbPath = path.join(workerData.dataDir, 'music.sqlite');
-let status = { scanning: false, count: 0, checked: 0, errors: 0, folder: root, message: '' };
+let status = { scanning: false, count: 0, checked: 0, errors: 0, folder: portableRoot, message: '' };
 const rows = (sql, params = []) => {
   const statement = db.prepare(sql);
   try { statement.bind(params); const result = []; while (statement.step()) result.push(statement.getAsObject()); return result; }
@@ -21,39 +22,50 @@ async function scan() {
   scanning = (async () => {
     status = { ...status, scanning: true, checked: 0, errors: 0, message: '' }; emit();
     try {
-      await fs.mkdir(root, { recursive: true });
+      await fs.mkdir(portableRoot, { recursive: true });
       const seen = new Set();
-      let complete = true;
-      async function walk(directory) {
+      const completeRoots = new Set();
+      const roots = [{ id: 'portable', folder: portableRoot }];
+      if (additionalMusicFolder && path.resolve(additionalMusicFolder) !== path.resolve(portableRoot)) {
+        roots.push({ id: 'additional', folder: additionalMusicFolder });
+      }
+      async function walk(directory, root) {
         let entries;
         try { entries = await fs.readdir(directory, { withFileTypes: true }); }
-        catch { complete = false; status.errors++; return; }
+        catch { status.errors++; return false; }
         for (const entry of entries) {
           const file = path.join(directory, entry.name);
-          if (entry.isDirectory()) { await walk(file); continue; }
-          // Do not follow symlinks outside the portable music tree.
+          if (entry.isDirectory()) { if (!await walk(file, root)) return false; continue; }
+          // Do not follow symlinks outside a selected music tree.
           if (!entry.isFile() || !/\.mp3$/i.test(entry.name)) continue;
-          const relative = path.relative(root, file).split(path.sep).join('/');
-          seen.add(relative);
+          const relative = path.relative(root.folder, file).split(path.sep).join('/');
+          const key = `${root.id}:${relative}`;
+          seen.add(key);
           try {
             const stat = await fs.stat(file);
-            const old = rows('SELECT size, mtime FROM tracks WHERE path = ?', [relative])[0];
+            const old = rows('SELECT size, mtime FROM tracks WHERE path = ?', [key])[0];
             if (!old || old.size !== stat.size || old.mtime !== stat.mtimeMs) {
               const metadata = await parseFile(file, { skipCovers: true, duration: true });
-              const track = extractTrack(metadata, relative);
+              const track = extractTrack(metadata, relative, root.id);
               const search = normalize([track.title, track.artist, track.albumArtist, track.album, track.year,
                 ...track.genres, ...track.composer, ...track.comments, track.track, track.disc, relative].join(' '));
               db.run('INSERT OR REPLACE INTO tracks VALUES (?, ?, ?, ?, ?, ?)',
-                [relative, track.id, stat.size, stat.mtimeMs, JSON.stringify(track), search]);
+                [key, track.id, stat.size, stat.mtimeMs, JSON.stringify(track), search]);
             }
           } catch { status.errors++; }
           status.checked++;
           if (status.checked % 100 === 0) emit();
         }
+        return true;
       }
-      await walk(root);
-      if (complete) for (const row of rows('SELECT path FROM tracks')) {
-        if (!seen.has(row.path)) db.run('DELETE FROM tracks WHERE path = ?', [row.path]);
+      for (const root of roots) {
+        if (await walk(root.folder, root)) completeRoots.add(root.id);
+      }
+      for (const row of rows('SELECT path FROM tracks')) {
+        const library = /^(portable|additional):/.test(String(row.path))
+          ? String(row.path).split(':', 1)[0]
+          : 'portable';
+        if (completeRoots.has(library) && !seen.has(row.path)) db.run('DELETE FROM tracks WHERE path = ?', [row.path]);
       }
       await persist();
       status.count = rows('SELECT COUNT(*) AS n FROM tracks')[0].n;
@@ -83,6 +95,13 @@ parentPort.on('message', async ({ id, method, args = [] }) => {
     let value;
     if (method === 'scan') value = await scan();
     else if (method === 'status') value = status;
+    else if (method === 'set-roots') {
+      additionalMusicFolder = String(args[0] || '').trim();
+      db.run("DELETE FROM tracks WHERE path LIKE 'additional:%'");
+      await persist();
+      status.count = rows('SELECT COUNT(*) AS n FROM tracks')[0].n;
+      value = status;
+    }
     else if (method === 'all') value = rows('SELECT json FROM tracks').map(r => JSON.parse(r.json));
     else if (method === 'search') {
       const words = normalize(args[0]).slice(0, 500).split(/\s+/).filter(Boolean);

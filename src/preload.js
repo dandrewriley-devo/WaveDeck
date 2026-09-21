@@ -52,6 +52,8 @@ contextBridge.exposeInMainWorld("wavedeck", {
   getUiPreferences: () => ipcRenderer.invoke("ui:get-preferences"),
   setLaunchInSidebarMode: (enabled) => ipcRenderer.invoke("ui:set-launch-in-sidebar", enabled),
   setProModeEnabled: (enabled) => ipcRenderer.invoke("ui:set-pro-mode", enabled),
+  chooseAdditionalMusicFolder: () => ipcRenderer.invoke('ui:choose-additional-music-folder'),
+  setAdditionalMusicFolder: (folder) => ipcRenderer.invoke('ui:set-additional-music-folder', folder),
   onUiPreferencesChanged: (callback) => subscribe("ui:preferences-changed", callback),
 
   exportLibrary: () => ipcRenderer.invoke("library:export"),

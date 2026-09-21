@@ -143,6 +143,28 @@ main{
   align-self:flex-start;
 }
 
+.pro-music-settings{
+  border-top:1px solid #343434;
+  margin-top:2px;
+  padding-top:12px;
+}
+
+.pro-music-settings-title{
+  font-size:13px;
+  font-weight:600;
+  margin-bottom:7px;
+}
+
+.pro-music-settings-title span{ color:var(--muted); font-weight:400; }
+
+.pro-music-settings-row{
+  display:flex;
+  gap:8px;
+  margin-bottom:7px;
+}
+
+.pro-music-settings-row .input{ flex:1; min-width:0; }
+
 .panel-help{
   border-top:1px solid #343434;
   margin-top:4px;

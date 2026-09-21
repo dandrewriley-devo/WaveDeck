@@ -60,6 +60,15 @@
             <span class="toggle-switch" aria-hidden="true"></span>
             <span>Enable Pro Mode</span>
           </label>
+          <div id="proMusicSettings" class="pro-music-settings" hidden>
+            <div class="pro-music-settings-title">Additional Music Folder <span>(optional)</span></div>
+            <div class="pro-music-settings-row">
+              <input id="additionalMusicFolder" class="input" type="text" readonly placeholder="Portable Music folder only" />
+              <button id="chooseAdditionalMusicFolderBtn" class="btn" type="button">Choose Folder…</button>
+              <button id="clearAdditionalMusicFolderBtn" class="btn" type="button">Remove</button>
+            </div>
+            <div class="hint">WaveDeck always includes the portable <b>Music</b> folder beside <b>Data</b>. This adds one other folder to Music search and playback. Files and tags are never changed. Choose a folder, then use Music’s <b>Rescan</b> button when you’re ready to index it.</div>
+          </div>
           <div class="hint mt-6">
             Stream recordings are saved as continuous MP3 files in the portable
             <b>Recordings</b> folder beside <b>Data</b>. Recording is currently available on Linux.

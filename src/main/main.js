@@ -741,6 +741,23 @@ function installIpcHandlers() {
     sendToAll("ui:preferences-changed", preferences);
     return preferences;
   });
+  ipcMain.handle('ui:choose-additional-music-folder', async () => {
+    const result = await dialog.showOpenDialog(settingsWindow || mainWindow, {
+      title: 'Choose Additional Music Folder', properties: ['openDirectory', 'createDirectory']
+    });
+    return result.canceled ? '' : (result.filePaths[0] || '');
+  });
+  ipcMain.handle('ui:set-additional-music-folder', async (_event, folder) => {
+    const selected = String(folder || '').trim();
+    if (selected) {
+      const stat = await fs.promises.stat(selected);
+      if (!stat.isDirectory()) throw new Error('Choose a folder containing MP3 files.');
+    }
+    const preferences = storage.setAdditionalMusicFolder(selected);
+    await musicLibrary?.setAdditionalMusicFolder(preferences.additionalMusicFolder);
+    sendToAll('ui:preferences-changed', preferences);
+    return preferences;
+  });
 
   // Retain the original channels for older renderer bundles and portable data
   // created before the preference became available on Windows.
@@ -963,9 +980,9 @@ if (!hasSingleInstanceLock) {
       beforeStop: () => recorder?.stop()
     }));
 
-    musicLibrary = new MusicLibrary({ dataDir: getDataDir(), onStatus: status => sendToMain('music:changed', status) });
+    musicLibrary = new MusicLibrary({ dataDir: getDataDir(), additionalMusicFolder: storage.getUiPreferences().additionalMusicFolder, onStatus: status => sendToMain('music:changed', status) });
     mediaController.configureMusic(musicLibrary, new MusicRadio({ dataDir: getDataDir() }));
-    if (storage.getUiPreferences().proModeEnabled) void musicLibrary.enable().catch(error => sendToMain('app:warning', error.message));
+    if (storage.getUiPreferences().proModeEnabled) void musicLibrary.enable({ scanOnEnable: true }).catch(error => sendToMain('app:warning', error.message));
 
     listeningHistory = new ListeningHistory({
       storage,

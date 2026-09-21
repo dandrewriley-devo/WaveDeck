@@ -2,13 +2,14 @@ const { Worker } = require('worker_threads');
 const fs = require('fs/promises');
 const path = require('path');
 class MusicLibrary {
-  constructor({ dataDir, onStatus = () => {} }) {
+  constructor({ dataDir, onStatus = () => {}, additionalMusicFolder = '' }) {
     this.dataDir = dataDir; this.onStatus = onStatus; this.pending = new Map(); this.sequence = 0;
-    this.tracks = []; this.enabled = false; this.worker = null; this.timer = null;
+    this.tracks = []; this.enabled = false; this.worker = null;
+    this.additionalMusicFolder = additionalMusicFolder;
   }
   startWorker() {
     if (this.worker) return;
-    this.worker = new Worker(path.join(__dirname, 'music-worker.js'), { workerData: { dataDir: this.dataDir } });
+    this.worker = new Worker(path.join(__dirname, 'music-worker.js'), { workerData: { dataDir: this.dataDir, additionalMusicFolder: this.additionalMusicFolder } });
     this.worker.on('message', message => {
       if (message.event === 'status') { this.onStatus(message.value); return; }
       const pending = this.pending.get(message.id);
@@ -31,17 +32,22 @@ class MusicLibrary {
       this.worker.postMessage({ id, method, args });
     });
   }
-  async enable() {
+  async enable({ scanOnEnable = false } = {}) {
     if (this.enabled) return this.initializing;
     this.enabled = true;
     this.initializing = this.call('all').then(tracks => { this.tracks = tracks; }).catch(error => { this.enabled = false; throw error; });
     await this.initializing;
     if (!this.enabled) return;
-    void this.rescan().catch(error => this.onStatus({ message: error.message }));
-    this.timer = setInterval(() => { if (this.enabled) void this.rescan().catch(() => {}); }, 60000);
-    this.timer.unref();
+    if (scanOnEnable) void this.rescan().catch(error => this.onStatus({ message: error.message }));
   }
-  disable() { this.enabled = false; clearInterval(this.timer); }
+  disable() { this.enabled = false; }
+  async setAdditionalMusicFolder(folder) {
+    this.additionalMusicFolder = String(folder || '').trim();
+    if (this.worker) {
+      await this.call('set-roots', this.additionalMusicFolder);
+      this.tracks = await this.call('all');
+    }
+  }
   async rescan() {
     const status = await this.call('scan'); this.tracks = await this.call('all'); this.onStatus(status); return status;
   }
@@ -49,7 +55,9 @@ class MusicLibrary {
     let track = this.tracks.find(t => t.id === id);
     if (!track) { this.tracks = await this.call('all'); track = this.tracks.find(t => t.id === id); }
     if (!track) throw new Error('That song is no longer indexed. Rescan Music.');
-    const root = await fs.realpath(path.join(path.dirname(this.dataDir), 'Music'));
+    const rootPath = track.library === 'additional' ? this.additionalMusicFolder : path.join(path.dirname(this.dataDir), 'Music');
+    if (!rootPath) throw new Error('The additional music folder is no longer selected.');
+    const root = await fs.realpath(rootPath);
     const file = await fs.realpath(path.join(root, track.relativePath));
     const relative = path.relative(root, file);
     if (relative.startsWith('..') || path.isAbsolute(relative) || !/\.mp3$/i.test(file)) throw new Error('Song is outside Music.');
