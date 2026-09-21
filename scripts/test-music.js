@@ -4,7 +4,7 @@ const os = require('os');
 const path = require('path');
 const crypto = require('crypto');
 const { MusicLibrary } = require('../src/main/music-library');
-const { MusicRadio, weight, COOLDOWN } = require('../src/main/music-radio');
+const { MusicRadio, weight, COOLDOWN, RULE_FILES } = require('../src/main/music-radio');
 const { extractTrack, radioArtist } = require('../src/main/music-tags');
 const { MediaController, serializeTransport } = require('../src/main/media-controller');
 
@@ -64,6 +64,8 @@ async function run() {
     let seed = 42;
     const random = () => { seed = (Math.imul(1664525, seed) + 1013904223) >>> 0; return seed / 4294967296; };
     const radio = new MusicRadio({ dataDir, now: () => now, random });
+    assert.equal(await fs.readFile(path.join(dataDir, RULE_FILES.artist), 'utf8').then(JSON.parse).then(value => value.repeatCooldownMinutes), 120);
+    assert.match(await fs.readFile(path.join(dataDir, 'music-radio-rules-reference.txt'), 'utf8'), /Artist Radio/);
     const catalog = Array.from({ length: 150 }, (_, i) => track(String(i), { artist: `Artist ${i % 20}`, artists: [`Artist ${i % 20}`] }));
     const low = track('low', { rating: 2 });
     assert.equal(weight(low, catalog[0], 'artist', [], now), 0);
@@ -77,6 +79,19 @@ async function run() {
     }
     assert(seen.size > 100, 'deep cuts should get airtime');
     assert.notDeepEqual(sequence.slice(0, 40), sequence.slice(40, 80));
+    const editableDir = path.join(temp, 'editable-rules');
+    const editableRadio = new MusicRadio({ dataDir: editableDir, now: () => now, random });
+    const editableRules = JSON.parse(await fs.readFile(path.join(editableDir, RULE_FILES.artist), 'utf8'));
+    editableRules.sameArtistWeight = 15;
+    editableRules.repeatCooldownMinutes = 1;
+    await fs.writeFile(path.join(editableDir, RULE_FILES.artist), JSON.stringify(editableRules));
+    assert(editableRadio.choose(catalog, catalog[0], 'artist'));
+    assert.equal(editableRadio.rules.artist.sameArtistWeight, 15);
+    assert.equal(editableRadio.rules.artist.repeatCooldownMinutes, 120, 'repeat protection cannot be tuned below two hours');
+    await fs.writeFile(path.join(editableDir, RULE_FILES.radio), '{not valid json');
+    const previousWarning = console.warn; console.warn = () => {};
+    try { assert(editableRadio.choose(catalog, catalog[0], 'radio'), 'invalid rules must fall back safely'); }
+    finally { console.warn = previousWarning; }
     const reloaded = new MusicRadio({ dataDir, now: () => now });
     assert.equal(weight(catalog.find(t => t.id === sequence.at(-1)), catalog[0], 'radio', reloaded.history, now), 0);
     const tiny = new MusicRadio({ dataDir: path.join(temp, 'tiny'), now: () => now });

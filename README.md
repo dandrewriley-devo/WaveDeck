@@ -51,12 +51,18 @@ Enable Pro Mode in Settings, then use the Music toolbar button. WaveDeck creates
 It reads tags without ever modifying the music files, keeping its portable search index
 and radio-session history in `Data`.
 
-Search by song, artist, album, genre, year, composer, comments, filename, or path. A
-song can be played directly, an album plays in disc/track order and then continues as
-Artist Radio, and Artist/Song Radio continue indefinitely. Radio uses the collection's
+Search by song, artist, album, genre, year, composer, comments, filename, or path. An
+album plays in disc/track order and then continues as Artist Radio, while Artist/Song
+Radio continue indefinitely. Radio uses the collection's
 existing tags, modestly favors favorites and higher-rated tracks, excludes one-star
 tracks, strongly downweights two-star tracks, and never automatically repeats a song
 within 120 minutes. It does not use album artwork or ReplayGain.
+
+Artist and Song Radio can be tuned without editing the application. WaveDeck creates
+`artist-radio-rules.json`, `song-radio-rules.json`, and a plain-English
+`music-radio-rules-reference.txt` in `Data`. Edit either JSON file and save; its new
+rules apply before the next radio selection. Invalid settings use built-in defaults,
+and the 120-minute repeat minimum cannot be reduced.
 
 ## Build the portable Windows EXE
 
