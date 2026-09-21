@@ -858,10 +858,10 @@ html, body{
 .music-summary { cursor: pointer; display:block; list-style:none; }
 .music-summary::-webkit-details-marker{ display:none; }
 .music-summary::marker{ content:""; }
-.music-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 10px 0; }
+.music-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; margin: 10px 0 0; }
+.music-actions .recording-action{ font-size:11px; padding:6px 3px; white-space:nowrap; }
 .music-empty-state{ color:var(--muted); font-size:12px; margin:16px 10px; text-align:center; }
-#musicTransport { padding: 5px 12px; font-size: 11px; }
-#musicPosition { width: 100%; }
+#musicContext { background:#151515; border-top:1px solid #202020; color:#b8b8b8; font-size:11px; padding:6px 12px; }
 .toolbar { flex-wrap: nowrap; }
 .toolbar button { flex: 0 1 34px; min-width: 0; }
-#musicTransport, #musicPanel { flex-shrink: 0; }
+#musicContext, #musicPanel { flex-shrink: 0; }

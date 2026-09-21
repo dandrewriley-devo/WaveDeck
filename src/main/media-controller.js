@@ -1,4 +1,4 @@
-const { normalize, compilation } = require('./music-tags');
+const { normalize, compilation, radioArtist } = require('./music-tags');
 function sortByName(a, b) {
   return String(a?.name ?? "").localeCompare(String(b?.name ?? ""), undefined, {
     sensitivity: "base"
@@ -51,6 +51,14 @@ function publicRecording(recording) {
   };
 }
 
+function musicContextLabel(music) {
+  const seed = music?.seed || music?.current || {};
+  if (music?.mode === 'album') return seed.album ? `${seed.album} Radio` : 'Album Radio';
+  if (music?.mode === 'artist') return `${radioArtist(seed) || seed.artist || 'Artist'} Radio`;
+  if (music?.mode === 'radio') return seed.title ? `${seed.title} Radio` : 'Song Radio';
+  return seed.title || 'Song';
+}
+
 class MediaController {
   constructor({
     player,
@@ -89,7 +97,12 @@ class MediaController {
       mediaState: this.mediaState,
       currentStation: this.getCurrentStation(),
       currentRecording: publicRecording(this.currentRecording),
-      currentMusic: this.music ? { track: this.music.current, mode: this.music.mode, waiting: this.music.waiting } : null
+      currentMusic: this.music ? {
+        track: this.music.current,
+        mode: this.music.mode,
+        label: musicContextLabel(this.music),
+        waiting: this.music.waiting
+      } : null
     };
   }
 

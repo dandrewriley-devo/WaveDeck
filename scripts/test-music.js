@@ -92,14 +92,17 @@ async function run() {
     const controller = serializeTransport(new MediaController({ player, getStations: () => [{ id: 's', url: 'https://example.org', name: 'Radio', preset: true }] }));
     controller.configureMusic(fakeLibrary, new MusicRadio({ dataDir: path.join(temp, 'playback'), now: () => now }));
     await controller.playMusic('2', 'album'); assert.equal(controller.getStatus().currentMusic.track.id, '1');
+    assert.equal(controller.getStatus().currentMusic.label, 'Album Radio');
     await controller.pause(); assert.deepEqual(calls.at(-1), ['pause', true]);
     await controller.play(); assert.deepEqual(calls.at(-1), ['pause', false]);
     await controller.handleEnded({ reason: 'eof' }); assert.equal(controller.getStatus().currentMusic.track.id, '2');
     await controller.handleEnded({ reason: 'eof' }); assert.equal(controller.getStatus().currentMusic.mode, 'artist');
     assert.equal(controller.getStatus().currentMusic.track.id, '3');
+    assert.equal(controller.getStatus().currentMusic.label, 'Artist Radio');
     await controller.handleEnded({ reason: 'eof' }); assert.equal(controller.getStatus().currentMusic.waiting, true);
     await controller.stop(); assert.equal(controller.getStatus().currentMusic, null);
     await controller.playMusic('1', 'radio'); assert.equal(controller.getStatus().currentMusic.track.id, '1', 'explicit seed overrides cooldown');
+    assert.equal(controller.getStatus().currentMusic.label, '1 Radio');
     await controller.playStationById('s'); assert.equal(controller.getStatus().currentMusic, null);
     await controller.handleEnded({ reason: 'eof' }); assert.equal(controller.getCurrentStation().id, 's');
     await Promise.all([controller.playMusic('1', 'song'), controller.playStationById('s')]); assert.equal(controller.getCurrentStation().id, 's');

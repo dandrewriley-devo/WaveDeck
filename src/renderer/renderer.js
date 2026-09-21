@@ -32,7 +32,8 @@ const musicPanel = document.getElementById('musicPanel');
 const musicSearch = document.getElementById('musicSearch');
 const clearMusicSearchBtn = document.getElementById('clearMusicSearchBtn');
 const musicStatus = document.getElementById('musicStatus');
-const musicPosition = document.getElementById('musicPosition');
+const musicContext = document.getElementById('musicContext');
+const musicContextLabel = document.getElementById('musicContextLabel');
 let musicVisible = false;
 let musicSearchTimer;
 let musicRenderSequence = 0;
@@ -346,7 +347,7 @@ async function renderMusic() {
         [track.artist || 'Unknown artist', track.album, track.year].filter(Boolean).join(' • ')));
       row.append(summary);
       const actions = element('div', 'music-actions');
-      for (const [mode, label] of [['song', 'Play Song'], ['album', 'Play Album'], ['artist', 'Artist Radio'], ['radio', 'Song Radio']]) {
+      for (const [mode, label] of [['radio', 'Song Radio'], ['artist', 'Artist Radio'], ['album', 'Play Album']]) {
         const button = element('button', 'recording-action', label);
         button.type = 'button';
         button.addEventListener('click', async () => {
@@ -357,7 +358,7 @@ async function renderMusic() {
         });
         actions.append(button);
       }
-      row.append(actions, element('div', 'recording-details', track.relativePath));
+      row.append(actions);
       listEl.append(row);
     }
     if (result.total > result.tracks.length && query.trim()) listEl.append(element('div', 'placeholder', 'Showing the first 200 matches. Refine your search for more.'));
@@ -367,7 +368,7 @@ async function renderMusic() {
 function showMusicPlayback(status) {
   const music = status?.currentMusic;
   const active = Boolean(music && status.mediaState !== 'stopped');
-  document.getElementById('musicTransport').hidden = !active;
+  musicContext.hidden = !active;
   previousPresetBtn.title = active ? 'Previous song' : 'Previous Preset';
   nextPresetBtn.title = active ? 'Next song' : 'Next Preset';
   previousPresetBtn.setAttribute('aria-label', previousPresetBtn.title);
@@ -381,12 +382,7 @@ function showMusicPlayback(status) {
       (status.mediaState === 'paused' ? 'Paused — ' : '') + (track.artist || 'Unknown artist');
   }
   if (status.state === 'error') nowPlaying.textContent = status.message;
-  document.getElementById('musicMode').textContent = ({ song: 'Song', album: 'Album → Artist Radio', artist: 'Artist Radio', radio: 'Song Radio' })[music.mode];
-  const duration = status.duration || track?.duration || 0;
-  musicPosition.max = String(Math.max(1, duration));
-  if (document.activeElement !== musicPosition) musicPosition.value = String(status.position || 0);
-  musicPosition.disabled = music.waiting || !duration;
-  document.getElementById('musicTime').textContent = `${formatElapsed(status.position || 0)} / ${formatElapsed(duration)}`;
+  musicContextLabel.textContent = music.label || 'Music';
   for (const row of listEl.querySelectorAll('[data-music-id]')) row.classList.toggle('active', row.dataset.musicId === track?.id);
   updateActiveHighlight();
 }
@@ -414,7 +410,6 @@ document.getElementById('musicRescan').addEventListener('click', async () => {
   try { setMusicStatus(await window.wavedeck.scanMusic()); if (musicVisible) await renderMusic(); }
   catch (error) { musicStatus.textContent = error.message; }
 });
-musicPosition.addEventListener('change', () => { void window.wavedeck.seekMusic(Number(musicPosition.value)).catch(error => { nowPlaying.textContent = error.message; }); });
 window.wavedeck.onMusicChanged(status => { setMusicStatus(status); if (musicVisible && !status.scanning) queueRender(); });
 // Browsing radio/recordings does not interrupt music; choosing a source does.
 for (const button of [searchSectionToggleBtn, presetSectionToggleBtn, favoritesOnlyToggleBtn, mostPlayedSectionToggleBtn]) {
