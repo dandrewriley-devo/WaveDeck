@@ -146,7 +146,11 @@
     </section>
 
     <section id="musicPanel" class="station-search-panel" aria-label="Local music search" hidden>
-      <input id="musicSearch" class="station-search-input" type="search" placeholder="Search your music…" aria-label="Search local music" autocomplete="off">
+      <div class="station-search-field">
+        <input id="musicSearch" class="station-search-input" type="search" placeholder="Search your music…" aria-label="Search local music" autocomplete="off">
+        <button id="clearMusicSearchBtn" class="station-search-clear" type="button"
+                aria-label="Clear music search" title="Clear search" hidden>×</button>
+      </div>
       <div class="music-library-status"><span id="musicStatus" role="status"></span><button id="musicRescan" type="button">Rescan</button></div>
     </section>
     <section id="musicTransport" aria-label="Song progress" hidden>

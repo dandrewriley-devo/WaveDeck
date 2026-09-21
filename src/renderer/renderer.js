@@ -30,6 +30,7 @@ const platform = window.wavedeck.platform;
 const musicToggleBtn = document.getElementById('musicToggleBtn');
 const musicPanel = document.getElementById('musicPanel');
 const musicSearch = document.getElementById('musicSearch');
+const clearMusicSearchBtn = document.getElementById('clearMusicSearchBtn');
 const musicStatus = document.getElementById('musicStatus');
 const musicPosition = document.getElementById('musicPosition');
 let musicVisible = false;
@@ -326,17 +327,20 @@ function setMusicStatus(status) {
 async function renderMusic() {
   const sequence = ++musicRenderSequence;
   const query = musicSearch.value;
+  const openMusicIds = new Set([...listEl.querySelectorAll('details.music-row[open]')]
+    .map(row => row.dataset.musicId));
   try {
     const result = await window.wavedeck.searchMusic(query);
     if (!musicVisible || sequence !== musicRenderSequence || query !== musicSearch.value) return;
     listEl.replaceChildren();
-    listEl.append(createSectionTitle('Music', query.trim() ? `${result.total} matches` : 'Search your collection'));
+    listEl.append(createSectionTitle('Music', query.trim() ? `${result.total} matches` : ''));
     if (!query.trim()) {
-      listEl.append(element('div', 'placeholder', 'Search by song, artist, album, genre, or year. Add MP3 files to Music beside your Data folder.'));
+      listEl.append(element('div', 'music-empty-state', 'Search to begin'));
     } else if (!result.tracks.length) listEl.append(element('div', 'placeholder', 'No matching songs.'));
     for (const track of result.tracks) {
       const row = element('details', 'music-row');
       row.dataset.musicId = track.id;
+      row.open = openMusicIds.has(track.id);
       const summary = element('summary', 'music-summary');
       summary.append(element('div', 'recording-name', track.title), element('div', 'recording-details',
         [track.artist || 'Unknown artist', track.album, track.year].filter(Boolean).join(' • ')));
@@ -388,7 +392,24 @@ function showMusicPlayback(status) {
 }
 
 musicToggleBtn.addEventListener('click', () => setMusicVisible(!musicVisible));
-musicSearch.addEventListener('input', () => { clearTimeout(musicSearchTimer); musicSearchTimer = setTimeout(() => { if (musicVisible) void renderMusic(); }, 150); });
+function clearMusicSearch({ focus = true } = {}) {
+  clearTimeout(musicSearchTimer);
+  musicSearch.value = '';
+  clearMusicSearchBtn.hidden = true;
+  if (focus) musicSearch.focus();
+  if (musicVisible) void renderMusic();
+}
+musicSearch.addEventListener('input', () => {
+  clearMusicSearchBtn.hidden = !musicSearch.value;
+  clearTimeout(musicSearchTimer);
+  musicSearchTimer = setTimeout(() => { if (musicVisible) void renderMusic(); }, 150);
+});
+musicSearch.addEventListener('keydown', event => {
+  if (event.key !== 'Escape' || !musicSearch.value) return;
+  event.preventDefault();
+  clearMusicSearch();
+});
+clearMusicSearchBtn.addEventListener('click', () => clearMusicSearch());
 document.getElementById('musicRescan').addEventListener('click', async () => {
   try { setMusicStatus(await window.wavedeck.scanMusic()); if (musicVisible) await renderMusic(); }
   catch (error) { musicStatus.textContent = error.message; }

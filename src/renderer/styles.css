@@ -842,10 +842,24 @@ html, body{
 /* Local music uses the same narrow sidebar footprint as station playback. */
 .music-library-status { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; font-size: 11px; }
 .music-library-status button, .music-actions button { cursor: pointer; }
+#musicRescan {
+  background:#202020;
+  border:1px solid #303030;
+  border-radius:4px;
+  color:#aaa;
+  font-size:11px;
+  padding:4px 7px;
+}
+#musicRescan:hover,
+#musicRescan:focus-visible{ background:#292929; border-color:#454545; color:#d0d0d0; }
+#musicRescan:disabled{ color:#666; cursor:default; }
 .music-row { margin: 5px 0; padding: 8px; border: 1px solid #5556; border-radius: 5px; overflow-wrap: anywhere; }
 .music-row.active { border-color: #d29d48; }
-.music-summary { cursor: pointer; }
+.music-summary { cursor: pointer; display:block; list-style:none; }
+.music-summary::-webkit-details-marker{ display:none; }
+.music-summary::marker{ content:""; }
 .music-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 10px 0; }
+.music-empty-state{ color:var(--muted); font-size:12px; margin:16px 10px; text-align:center; }
 #musicTransport { padding: 5px 12px; font-size: 11px; }
 #musicPosition { width: 100%; }
 .toolbar { flex-wrap: nowrap; }
