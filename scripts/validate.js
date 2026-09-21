@@ -1139,6 +1139,14 @@ assert.ok(settingsHtml.includes('id="downloadNewStations"'));
 assert.ok(settingsHtml.includes('id="launchInSidebarMode"'));
 assert.ok(settingsHtml.includes('id="proModeEnabled"'));
 assert.ok(settingsHtml.includes('id="proMusicSettings"'));
+assert.ok(settingsHtml.includes('data-tab="advanced">Advanced</button>'));
+assert.ok(settingsHtml.indexOf('data-tab="groups"') < settingsHtml.indexOf('data-tab="advanced"'));
+assert.ok(settingsHtml.indexOf('data-tab="advanced"') < settingsHtml.indexOf('data-tab="about"'));
+assert.ok(settingsHtml.includes('id="tab-advanced"'));
+assert.ok(settingsHtml.includes('Enable Advanced Features'));
+assert.ok(settingsHtml.includes('id="radioBasicControls"'));
+assert.ok(settingsHtml.includes('id="radioAdvancedControls"'));
+assert.ok(settingsHtml.includes('id="resetAllRadioRules"'));
 assert.ok(settingsHtml.includes('id="chooseAdditionalMusicFolderBtn"'));
 assert.ok(settingsHtml.includes("WaveDeck_Library.json"));
 assert.ok(settingsHtml.indexOf('id="stationEditorHome"') < settingsHtml.indexOf('class="listening-history-bar"'));
@@ -1335,6 +1343,11 @@ assert.ok(settingsSource.includes('platform === "linux" || platform === "win32"'
 assert.ok(settingsSource.includes('platform === "linux" ? loadLauncherStatus()'));
 assert.ok(settingsSource.includes("setProModeEnabled(requested)"));
 assert.ok(settingsSource.includes("loadUiPreferences()"));
+assert.ok(settingsSource.includes("getMusicRules()"));
+assert.ok(settingsSource.includes("setMusicRule(activeRadioMode"));
+assert.ok(settingsSource.includes("resetMusicRules(activeRadioMode)"));
+assert.ok(mainSource.includes("music:rules:get"));
+assert.ok(mainSource.includes("music:rules:reset-all"));
 
 const windowsBuild = JSON.parse(fs.readFileSync(path.join(root, "electron-builder.windows.json"), "utf8"));
 assert.strictEqual(windowsBuild.win.artifactName, "WaveDeck.exe");
@@ -1981,7 +1994,7 @@ assert.strictEqual(resolveFfmpegExecutable(), path.join(root, ".cache", "wavedec
 }
 
 validateMediaControls().then(() => {
-  console.log(`WaveDeck validation passed: v${packageJson.version} Stream Recording Update, Simple/Pro Mode, portable data, and packaging verified.`);
+  console.log(`WaveDeck validation passed: v${packageJson.version} Stream Recording Update, Simple/Advanced Features, portable data, and packaging verified.`);
 }).catch((error) => {
   console.error(error);
   process.exitCode = 1;

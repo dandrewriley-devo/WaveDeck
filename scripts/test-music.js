@@ -88,6 +88,13 @@ async function run() {
     assert(editableRadio.choose(catalog, catalog[0], 'artist'));
     assert.equal(editableRadio.rules.artist.sameArtistWeight, 15);
     assert.equal(editableRadio.rules.artist.repeatCooldownMinutes, 120, 'repeat protection cannot be tuned below two hours');
+    const editableSchema = editableRadio.getRules();
+    assert.equal(editableSchema.schema.artist.sameArtistWeight.max, 10000);
+    assert.equal(editableRadio.setRule('artist', 'sameArtistWeight', 10000).artist.sameArtistWeight, 10000);
+    assert.equal(editableRadio.setRule('artist', 'repeatCooldownMinutes', 1).artist.repeatCooldownMinutes, 120);
+    assert.equal(editableRadio.resetRule('artist', 'sameArtistWeight').artist.sameArtistWeight, 7);
+    assert.equal(editableRadio.setRule('radio', 'genreWeight', 100).radio.genreWeight, 100);
+    assert.equal(editableRadio.resetRules('radio').radio.genreWeight, 5);
     await fs.writeFile(path.join(editableDir, RULE_FILES.radio), '{not valid json');
     const previousWarning = console.warn; console.warn = () => {};
     try { assert(editableRadio.choose(catalog, catalog[0], 'radio'), 'invalid rules must fall back safely'); }

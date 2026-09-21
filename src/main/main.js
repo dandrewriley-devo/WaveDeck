@@ -82,6 +82,7 @@ let storage = null;
 let player = null;
 let recordingLibrary = null;
 let musicLibrary = null;
+let musicRadio = null;
 let recordingProbeExecutable = "";
 let mediaController = null;
 let recorder = null;
@@ -724,7 +725,7 @@ function installIpcHandlers() {
   });
   ipcMain.handle("ui:set-pro-mode", async (_event, enabled) => {
     if (!enabled && recorder?.isRecording()) {
-      throw new Error("Stop the current recording before turning Pro Mode off.");
+      throw new Error("Stop the current recording before turning Advanced Features off.");
     }
     const preferences = storage.setProModeEnabled(enabled);
     if (!preferences.proModeEnabled) {
@@ -759,6 +760,28 @@ function installIpcHandlers() {
     return preferences;
   });
 
+  const requireAdvancedFeatures = () => {
+    if (!storage.getUiPreferences().proModeEnabled) {
+      throw new Error('Enable Advanced Features in Settings before changing Music radio tuning.');
+    }
+  };
+  ipcMain.handle('music:rules:get', () => {
+    requireAdvancedFeatures();
+    return musicRadio.getRules();
+  });
+  ipcMain.handle('music:rules:set', (_event, mode, key, value) => {
+    requireAdvancedFeatures();
+    return musicRadio.setRule(String(mode || ''), String(key || ''), value);
+  });
+  ipcMain.handle('music:rules:reset-one', (_event, mode, key) => {
+    requireAdvancedFeatures();
+    return musicRadio.resetRule(String(mode || ''), String(key || ''));
+  });
+  ipcMain.handle('music:rules:reset-all', (_event, mode) => {
+    requireAdvancedFeatures();
+    return musicRadio.resetRules(String(mode || ''));
+  });
+
   // Retain the original channels for older renderer bundles and portable data
   // created before the preference became available on Windows.
   ipcMain.handle("linux-ui:get-preferences", () => storage.getUiPreferences());
@@ -771,7 +794,7 @@ function installIpcHandlers() {
 
   ipcMain.handle("player:status", () => mediaController.getStatus());
   const requireMusic = async () => {
-    if (!storage.getUiPreferences().proModeEnabled) throw new Error('Enable Pro Mode to use Music.');
+    if (!storage.getUiPreferences().proModeEnabled) throw new Error('Enable Advanced Features to use Music.');
     await musicLibrary.enable();
   };
   ipcMain.handle('music:status', async () => { await requireMusic(); return musicLibrary.call('status'); });
@@ -797,7 +820,7 @@ function installIpcHandlers() {
   });
   ipcMain.handle("recording:toggle", async () => {
     if (!storage.getUiPreferences().proModeEnabled) {
-      throw new Error("Turn on Pro Mode in Settings before recording.");
+      throw new Error("Turn on Advanced Features in Settings before recording.");
     }
     if (!recorder?.isAvailable()) {
       throw new Error("Stream recording is available in the Linux edition.");
@@ -813,7 +836,7 @@ function installIpcHandlers() {
   ipcMain.handle("recordings:list", () => recordingLibrary?.list() || []);
   ipcMain.handle("recordings:play", async (_event, recordingId) => {
     if (!storage.getUiPreferences().proModeEnabled) {
-      throw new Error("Turn on Pro Mode in Settings before playing recordings.");
+      throw new Error("Turn on Advanced Features in Settings before playing recordings.");
     }
     const recording = recordingLibrary?.get(recordingId);
     if (!recording) throw new Error("That recording is no longer available.");
@@ -981,7 +1004,8 @@ if (!hasSingleInstanceLock) {
     }));
 
     musicLibrary = new MusicLibrary({ dataDir: getDataDir(), additionalMusicFolder: storage.getUiPreferences().additionalMusicFolder, onStatus: status => sendToMain('music:changed', status) });
-    mediaController.configureMusic(musicLibrary, new MusicRadio({ dataDir: getDataDir() }));
+    musicRadio = new MusicRadio({ dataDir: getDataDir() });
+    mediaController.configureMusic(musicLibrary, musicRadio);
     if (storage.getUiPreferences().proModeEnabled) void musicLibrary.enable({ scanOnEnable: true }).catch(error => sendToMain('app:warning', error.message));
 
     listeningHistory = new ListeningHistory({

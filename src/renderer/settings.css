@@ -165,6 +165,90 @@ main{
 
 .pro-music-settings-row .input{ flex:1; min-width:0; }
 
+.radio-tuning{
+  border-top:1px solid #343434;
+  margin-top:14px;
+  padding-top:14px;
+}
+
+.radio-rule-tabs{
+  display:flex;
+  gap:6px;
+  margin:12px 0 10px;
+}
+
+.radio-rule-tab,
+.radio-advanced-toggle,
+.radio-rule-reset{
+  background:#202020;
+  border:1px solid #414141;
+  color:var(--muted);
+  cursor:pointer;
+  font:inherit;
+}
+
+.radio-rule-tab{
+  font-size:12px;
+  padding:6px 9px;
+}
+
+.radio-rule-tab.active{
+  background:#2c3824;
+  border-color:#6e9148;
+  color:#d8f7b7;
+}
+
+.radio-rule-controls{
+  display:grid;
+  gap:8px;
+}
+
+.radio-rule-control{
+  background:#202020;
+  border:1px solid #343434;
+  padding:9px 10px;
+}
+
+.radio-rule-heading{
+  align-items:center;
+  display:flex;
+  gap:10px;
+  justify-content:space-between;
+}
+
+.radio-rule-name{ font-size:13px; font-weight:600; }
+.radio-rule-description{ margin-top:2px; }
+
+.radio-rule-reset{
+  font-size:11px;
+  padding:3px 6px;
+}
+
+.radio-rule-reset:hover,
+.radio-advanced-toggle:hover{ background:#2b2b2b; color:var(--text); }
+
+.radio-rule-range{
+  align-items:center;
+  display:grid;
+  gap:7px;
+  grid-template-columns:minmax(86px, 1fr) minmax(120px, 3fr) minmax(86px, 1fr);
+  margin-top:7px;
+}
+
+.radio-rule-range input{ accent-color:#82b844; min-width:0; width:100%; }
+.radio-rule-endpoint{ color:var(--muted); font-size:10px; line-height:1.2; }
+.radio-rule-endpoint.right{ text-align:right; }
+.radio-rule-value{ color:#cbe8a9; font-size:11px; margin-top:5px; text-align:center; }
+
+.radio-advanced-toggle{
+  font-size:12px;
+  margin:10px 0 8px;
+  padding:6px 8px;
+}
+
+.radio-advanced-controls{ margin-bottom:10px; }
+.radio-reset-all{ margin-top:3px; }
+
 .panel-help{
   border-top:1px solid #343434;
   margin-top:4px;

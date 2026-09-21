@@ -3,6 +3,7 @@ const panels = new Map([
   ["interface", document.getElementById("tab-interface")],
   ["stations", document.getElementById("tab-stations")],
   ["groups", document.getElementById("tab-groups")],
+  ["advanced", document.getElementById("tab-advanced")],
   ["about", document.getElementById("tab-about")]
 ]);
 
@@ -10,6 +11,7 @@ const statusStations = document.getElementById("status");
 const statusInterface = document.getElementById("statusInterface");
 const statusGroups = document.getElementById("statusGroups");
 const statusImportExport = document.getElementById("statusImportExport");
+const statusAdvanced = document.getElementById("statusAdvanced");
 const stationSearch = document.getElementById("stationSearch");
 const stationGroupFilter = document.getElementById("stationGroupFilter");
 const newStationBtn = document.getElementById("newStationBtn");
@@ -44,9 +46,15 @@ const removeLauncherBtn = document.getElementById("removeLauncherBtn");
 const launchInSidebarMode = document.getElementById("launchInSidebarMode");
 const proModeEnabled = document.getElementById("proModeEnabled");
 const proMusicSettings = document.getElementById('proMusicSettings');
+const advancedFeaturesOff = document.getElementById('advancedFeaturesOff');
 const additionalMusicFolder = document.getElementById('additionalMusicFolder');
 const chooseAdditionalMusicFolderBtn = document.getElementById('chooseAdditionalMusicFolderBtn');
 const clearAdditionalMusicFolderBtn = document.getElementById('clearAdditionalMusicFolderBtn');
+const radioRuleTabs = document.querySelectorAll('.radio-rule-tab');
+const radioBasicControls = document.getElementById('radioBasicControls');
+const radioAdvancedControls = document.getElementById('radioAdvancedControls');
+const showAdvancedRadioSettings = document.getElementById('showAdvancedRadioSettings');
+const resetAllRadioRules = document.getElementById('resetAllRadioRules');
 const sidebarStartupHint = document.getElementById("sidebarStartupHint");
 const resetListeningBtn = document.getElementById("resetListeningBtn");
 const platform = window.wavedeck.platform;
@@ -65,13 +73,168 @@ let reloadQueued = false;
 let initialized = false;
 let pendingEditId = "";
 let activeSubgroupRename = null;
+let radioRules = null;
+let activeRadioMode = 'artist';
+let advancedRadioVisible = false;
+
+const RADIO_BASIC_RULES = ['sameArtistWeight', 'genreWeight', 'favoriteMultiplier', 'unrelatedTrackMultiplier', 'selectionRandomness'];
+const RADIO_RULE_COPY = {
+  repeatCooldownMinutes: ['Song repeat cooldown', 'How long a track must wait before it can return.', 'Two-hour minimum', 'One week'],
+  excludeRatingAtOrBelow: ['Lowest ratings to skip', 'Tracks at or below this rating never play automatically.', 'Let all rated tracks in', 'Skip nearly everything rated'],
+  lowRatingMaximum: ['Low-rating cutoff', 'Ratings at or below this point get the low-rating treatment.', 'Only the lowest ratings', 'Most ratings'],
+  lowRatingMultiplier: ['Low-rating chance', 'How often lower-rated tracks can still make it through.', 'Almost never', 'As often as anything else'],
+  ratingBaseMultiplier: ['Rated-track starting boost', 'The base preference given to tracks above the low-rating cutoff.', 'No starting boost', 'Strong starting boost'],
+  ratingStepMultiplier: ['Per-rating boost', 'How much each higher rating matters.', 'Ratings barely matter', 'Ratings matter a lot'],
+  sameArtistWeight: ['Artist focus', 'How strongly radio stays with the selected artist.', 'Broad mix', 'Almost all selected artist'],
+  featuredArtistWeight: ['Featured-artist match', 'How much featured credits help a track match the station.', 'Ignore featured credits', 'Favor featured credits'],
+  genreWeight: ['Genre match', 'How strongly matching genres guide the next song.', 'Genre-neutral', 'Genre-led'],
+  similarArtistWeight: ['Related-artist match', 'How much related artist tags guide the next song.', 'Ignore related artists', 'Related artists first'],
+  moodWeight: ['Mood match', 'How much matching mood tags guide the next song.', 'Ignore mood', 'Mood-led'],
+  eraWeight: ['Era match', 'How much release year similarity guides the next song.', 'Ignore era', 'Era-led'],
+  eraYearRange: ['Era range', 'How far apart release years may be and still count as similar.', 'Very close years', 'Very broad era'],
+  favoriteMultiplier: ['Favorites boost', 'How much your favorite tracks get a nudge without excluding deeper cuts.', 'No favorite boost', 'Strong favorite boost'],
+  unrelatedTrackMultiplier: ['Outside variety', 'How much unrelated music may enter when matching music is available.', 'Related music only', 'Wide variety'],
+  selectionRandomness: ['Surprise vs. precision', 'Whether selections stay loose and surprising or favor the strongest match.', 'More surprising', 'Most precise'],
+  popularityMaximum: ['Popularity cap', 'The highest popularity value considered for its boost.', 'No popularity boost', 'Very high cap'],
+  popularityDivisor: ['Popularity strength', 'How strongly popularity affects a song once it is considered.', 'Strong popularity boost', 'Light popularity boost'],
+  playCountBoostMaximum: ['Play-count cap', 'The largest boost play count is allowed to add.', 'No play-count boost', 'Large play-count boost'],
+  playCountLogDivisor: ['Play-count strength', 'How strongly play count affects selection below its cap.', 'Strong play-count boost', 'Light play-count boost'],
+  postCooldownMultiplier: ['After-cooldown chance', 'How welcome a song is immediately after its repeat cooldown ends.', 'Still unlikely', 'Back to normal'],
+  recentArtistCount: ['Recent artist memory', 'How many recently played songs are checked to avoid artist clumps.', 'No memory', 'Long memory'],
+  recentArtistMultiplier: ['Recent artist spacing', 'How much a recently heard artist is held back.', 'No spacing', 'Strong spacing'],
+  recentAlbumCount: ['Recent album memory', 'How many recently played songs are checked to avoid album clumps.', 'No memory', 'Long memory'],
+  recentAlbumMultiplier: ['Recent album spacing', 'How much a recently heard album is held back.', 'No spacing', 'Strong spacing'],
+  repeatedTransitionMultiplier: ['Repeated transition spacing', 'How much the same song-to-song handoff is avoided.', 'No spacing', 'Strong spacing']
+};
 
 function renderProMusicSettings(preferences) {
   const proEnabled = preferences?.proModeEnabled === true;
   const folder = String(preferences?.additionalMusicFolder || '');
   proMusicSettings.hidden = !proEnabled;
+  advancedFeaturesOff.hidden = proEnabled;
   additionalMusicFolder.value = folder;
   clearAdditionalMusicFolderBtn.disabled = !folder;
+  if (proEnabled) void loadRadioRules();
+}
+
+function ruleSliderPosition(value, schema) {
+  const min = Number(schema.min || 0); const max = Number(schema.max || 1);
+  const ratio = Math.max(0, Math.min(1, (Number(value) - min) / Math.max(1, max - min)));
+  return Math.round((max >= 1000 ? Math.cbrt(ratio) : ratio) * 1000);
+}
+
+function ruleValueFromSlider(position, schema) {
+  const min = Number(schema.min || 0); const max = Number(schema.max || 1);
+  const ratio = Math.max(0, Math.min(1, Number(position) / 1000));
+  const curved = max >= 1000 ? ratio ** 3 : ratio;
+  const raw = min + curved * (max - min);
+  return Math.round(raw * 100000) / 100000;
+}
+
+function plainRuleValue(key, value, schema) {
+  const min = Number(schema.min || 0); const max = Number(schema.max || 1);
+  const ratio = Math.max(0, Math.min(1, (Number(value) - min) / Math.max(1, max - min)));
+  const copy = RADIO_RULE_COPY[key] || [key, '', 'Low', 'High'];
+  if (key === 'sameArtistWeight') {
+    if (Number(value) <= 0) return 'Broad mix';
+    if (Number(value) < 5) return 'Balanced artist mix';
+    if (Number(value) < 100) return 'Mostly selected artist';
+    return 'Almost all selected artist';
+  }
+  if (key === 'genreWeight') {
+    if (Number(value) <= 0) return 'Genre-neutral';
+    if (Number(value) < 3) return 'Light genre match';
+    if (Number(value) < 20) return 'Balanced genre match';
+    return 'Genre-led';
+  }
+  if (key === 'favoriteMultiplier') {
+    if (Number(value) <= 1) return 'No extra favorite boost';
+    if (Number(value) <= 1.5) return 'Moderate favorite boost';
+    if (Number(value) <= 5) return 'Strong favorite boost';
+    return 'Favorites dominate';
+  }
+  if (key === 'unrelatedTrackMultiplier') {
+    if (Number(value) <= 0) return 'Related music only';
+    if (Number(value) < 0.25) return 'A little outside variety';
+    if (Number(value) <= 1) return 'Balanced outside variety';
+    return 'A lot of outside variety';
+  }
+  if (key === 'selectionRandomness') {
+    if (Number(value) < 0.75) return 'More surprising';
+    if (Number(value) <= 1.5) return 'Balanced';
+    if (Number(value) <= 5) return 'Favors the best matches';
+    return 'Strongly favors the best matches';
+  }
+  if (ratio <= 0.12) return copy[2];
+  if (ratio >= 0.88) return copy[3];
+  return ratio >= 0.55 ? 'High' : 'Balanced';
+}
+
+function makeRadioRuleControl(key, rules, schema) {
+  const copy = RADIO_RULE_COPY[key] || [key, 'Fine-tune this part of radio selection.', 'Low', 'High'];
+  const wrap = element('div', 'radio-rule-control');
+  const heading = element('div', 'radio-rule-heading');
+  const title = element('div', 'radio-rule-name', copy[0]);
+  const reset = element('button', 'radio-rule-reset', 'Reset');
+  reset.type = 'button'; reset.dataset.ruleKey = key;
+  heading.append(title, reset);
+  const description = element('div', 'hint radio-rule-description', copy[1]);
+  const rangeRow = element('div', 'radio-rule-range');
+  const low = element('span', 'radio-rule-endpoint', copy[2]);
+  const input = document.createElement('input');
+  input.type = 'range'; input.min = '0'; input.max = '1000'; input.step = '1'; input.value = String(ruleSliderPosition(rules[key], schema));
+  input.dataset.ruleKey = key;
+  input.setAttribute('aria-label', copy[0]);
+  const high = element('span', 'radio-rule-endpoint right', copy[3]);
+  rangeRow.append(low, input, high);
+  const value = element('div', 'radio-rule-value', plainRuleValue(key, rules[key], schema));
+  input.addEventListener('input', () => {
+    value.textContent = plainRuleValue(key, ruleValueFromSlider(input.value, schema), schema);
+  });
+  input.addEventListener('change', async () => {
+    try {
+      radioRules = await window.wavedeck.setMusicRule(activeRadioMode, key, ruleValueFromSlider(input.value, schema));
+      renderRadioRules();
+      setStatus(statusAdvanced, `${copy[0]} saved.`);
+    } catch (error) { setStatus(statusAdvanced, `Could not save ${copy[0].toLowerCase()}: ${error.message}`, false); }
+  });
+  reset.addEventListener('click', async () => {
+    try {
+      radioRules = await window.wavedeck.resetMusicRule(activeRadioMode, key);
+      renderRadioRules();
+      setStatus(statusAdvanced, `${copy[0]} reset to its default.`);
+    } catch (error) { setStatus(statusAdvanced, `Could not reset ${copy[0].toLowerCase()}: ${error.message}`, false); }
+  });
+  wrap.append(heading, description, rangeRow, value);
+  return wrap;
+}
+
+function renderRadioRules() {
+  if (!radioRules) return;
+  const rules = radioRules[activeRadioMode];
+  const schema = radioRules.schema?.[activeRadioMode] || {};
+  if (!rules || !schema) return;
+  radioRuleTabs.forEach(tab => {
+    const active = tab.dataset.radioMode === activeRadioMode;
+    tab.classList.toggle('active', active); tab.setAttribute('aria-selected', String(active));
+  });
+  radioBasicControls.replaceChildren(...RADIO_BASIC_RULES.map(key => makeRadioRuleControl(key, rules, schema[key])));
+  const advancedKeys = Object.keys(schema).filter(key => !RADIO_BASIC_RULES.includes(key));
+  radioAdvancedControls.replaceChildren(...advancedKeys.map(key => makeRadioRuleControl(key, rules, schema[key])));
+  radioAdvancedControls.hidden = !advancedRadioVisible;
+  showAdvancedRadioSettings.textContent = advancedRadioVisible ? 'Hide advanced settings' : 'Advanced settings';
+  showAdvancedRadioSettings.setAttribute('aria-expanded', String(advancedRadioVisible));
+  resetAllRadioRules.textContent = `Reset all ${activeRadioMode === 'artist' ? 'Artist' : 'Song'} Radio settings`;
+}
+
+async function loadRadioRules() {
+  if (!proModeEnabled.checked) return;
+  try {
+    radioRules = await window.wavedeck.getMusicRules();
+    renderRadioRules();
+  } catch (error) {
+    setStatus(statusAdvanced, `Could not load radio tuning: ${error.message}`, false);
+  }
 }
 
 function element(tag, className, text) {
@@ -885,14 +1048,14 @@ proModeEnabled.addEventListener("change", async () => {
     proModeEnabled.checked = preferences?.proModeEnabled === true;
     renderProMusicSettings(preferences);
     setStatus(
-      statusInterface,
+      statusAdvanced,
       proModeEnabled.checked
-        ? "Pro Mode is on. Advanced controls are now visible in the main window."
-        : "Simple Mode is on. WaveDeck's advanced controls are hidden."
+        ? "Advanced Features are on. Extra controls are now visible in the main window."
+        : "Advanced Features are off. Extra controls are hidden."
     );
   } catch (error) {
     proModeEnabled.checked = !requested;
-    setStatus(statusInterface, `Could not change modes: ${error.message}`, false);
+    setStatus(statusAdvanced, `Could not change Advanced Features: ${error.message}`, false);
   } finally {
     proModeEnabled.disabled = false;
   }
@@ -904,9 +1067,9 @@ chooseAdditionalMusicFolderBtn.addEventListener('click', async () => {
     const folder = await window.wavedeck.chooseAdditionalMusicFolder();
     if (!folder) return;
     renderProMusicSettings(await window.wavedeck.setAdditionalMusicFolder(folder));
-    setStatus(statusInterface, 'Additional music folder saved. Use Music’s Rescan button when you want to index it.');
+    setStatus(statusAdvanced, 'Additional music folder saved. Use Music’s Rescan button when you want to index it.');
   } catch (error) {
-    setStatus(statusInterface, `Could not save the music folder: ${error.message}`, false);
+    setStatus(statusAdvanced, `Could not save the music folder: ${error.message}`, false);
   } finally {
     chooseAdditionalMusicFolderBtn.disabled = false;
   }
@@ -916,9 +1079,33 @@ clearAdditionalMusicFolderBtn.addEventListener('click', async () => {
   clearAdditionalMusicFolderBtn.disabled = true;
   try {
     renderProMusicSettings(await window.wavedeck.setAdditionalMusicFolder(''));
-    setStatus(statusInterface, 'Additional music folder removed.');
+    setStatus(statusAdvanced, 'Additional music folder removed.');
   } catch (error) {
-    setStatus(statusInterface, `Could not remove the music folder: ${error.message}`, false);
+    setStatus(statusAdvanced, `Could not remove the music folder: ${error.message}`, false);
+  }
+});
+
+radioRuleTabs.forEach(tab => tab.addEventListener('click', () => {
+  activeRadioMode = tab.dataset.radioMode === 'artist' ? 'artist' : 'radio';
+  renderRadioRules();
+}));
+
+showAdvancedRadioSettings.addEventListener('click', () => {
+  advancedRadioVisible = !advancedRadioVisible;
+  renderRadioRules();
+});
+
+resetAllRadioRules.addEventListener('click', async () => {
+  const title = activeRadioMode === 'artist' ? 'Artist Radio' : 'Song Radio';
+  resetAllRadioRules.disabled = true;
+  try {
+    radioRules = await window.wavedeck.resetMusicRules(activeRadioMode);
+    renderRadioRules();
+    setStatus(statusAdvanced, `${title} settings reset to their defaults.`);
+  } catch (error) {
+    setStatus(statusAdvanced, `Could not reset ${title} settings: ${error.message}`, false);
+  } finally {
+    resetAllRadioRules.disabled = false;
   }
 });
 

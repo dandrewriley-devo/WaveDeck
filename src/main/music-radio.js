@@ -31,9 +31,10 @@ const COOLDOWN = DEFAULT_RULES.artist.repeatCooldownMinutes * 60 * 1000;
 const RULE_MINIMUMS = { repeatCooldownMinutes: 120, eraYearRange: 1, popularityDivisor: 1, playCountLogDivisor: 1 };
 const RULE_MAXIMUMS = { repeatCooldownMinutes: 10080, selectionRandomness: 10 };
 const RULES_REFERENCE = `WaveDeck Music Radio Rules\n\n` +
+`WaveDeck's Settings → Advanced tab is the normal way to tune Artist Radio and Song Radio. The sliders save these files automatically.\n\n` +
 `artist-radio-rules.json controls Artist Radio.\n` +
 `song-radio-rules.json controls Song Radio.\n\n` +
-`Edit the number after a setting name, save the file, and WaveDeck uses the new value before choosing its next radio song. Invalid files use built-in defaults until fixed.\n\n` +
+`If you edit a file yourself, save it and WaveDeck uses the new value before choosing its next radio song. Invalid files use built-in defaults until fixed.\n\n` +
 `repeatCooldownMinutes: Minimum time before the same song may repeat. WaveDeck will never allow less than 120 minutes.\n` +
 `sameArtistWeight, featuredArtistWeight, genreWeight, similarArtistWeight, moodWeight, eraWeight: Higher values make that connection more important.\n` +
 `eraYearRange: Number of years over which era similarity fades.\n` +
@@ -60,6 +61,16 @@ function validatedRules(value, defaults) {
     }
   }
   return result;
+}
+function ruleSchema(mode) {
+  const defaults = DEFAULT_RULES[mode] || DEFAULT_RULES.radio;
+  return Object.fromEntries(Object.entries(defaults)
+    .filter(([key]) => key !== 'version')
+    .map(([key, defaultValue]) => [key, {
+      defaultValue,
+      min: RULE_MINIMUMS[key] || 0,
+      max: RULE_MAXIMUMS[key] || 10000
+    }]));
 }
 function weight(track, seed, mode, history, now, context = null, rules = DEFAULT_RULES[mode] || DEFAULT_RULES.radio) {
   // 1–2 / 10 = one star; 3–4 / 10 = two stars. Unrated is neutral.
@@ -136,6 +147,47 @@ class MusicRadio {
       }
     }
   }
+  getRules() {
+    this.loadRules();
+    return {
+      artist: clone(this.rules.artist),
+      radio: clone(this.rules.radio),
+      schema: { artist: ruleSchema('artist'), radio: ruleSchema('radio') }
+    };
+  }
+  saveRules(mode, rules) {
+    const selectedMode = Object.prototype.hasOwnProperty.call(RULE_FILES, mode) ? mode : 'radio';
+    const next = validatedRules(rules, DEFAULT_RULES[selectedMode]);
+    const file = path.join(this.dataDir, RULE_FILES[selectedMode]);
+    fs.mkdirSync(this.dataDir, { recursive: true });
+    fs.writeFileSync(file + '.tmp', JSON.stringify(next, null, 2) + '\n');
+    fs.renameSync(file + '.tmp', file);
+    this.rules[selectedMode] = next;
+    this.ruleModified[selectedMode] = fs.statSync(file).mtimeMs;
+    return this.getRules();
+  }
+  setRule(mode, key, value) {
+    const selectedMode = Object.prototype.hasOwnProperty.call(RULE_FILES, mode) ? mode : 'radio';
+    if (!Object.prototype.hasOwnProperty.call(DEFAULT_RULES[selectedMode], key) || key === 'version') {
+      throw new Error('That radio setting is not available.');
+    }
+    const candidate = Number(value);
+    if (!Number.isFinite(candidate)) throw new Error('Choose a valid radio setting value.');
+    this.loadRules();
+    return this.saveRules(selectedMode, { ...this.rules[selectedMode], [key]: candidate });
+  }
+  resetRule(mode, key) {
+    const selectedMode = Object.prototype.hasOwnProperty.call(RULE_FILES, mode) ? mode : 'radio';
+    if (!Object.prototype.hasOwnProperty.call(DEFAULT_RULES[selectedMode], key) || key === 'version') {
+      throw new Error('That radio setting is not available.');
+    }
+    this.loadRules();
+    return this.saveRules(selectedMode, { ...this.rules[selectedMode], [key]: DEFAULT_RULES[selectedMode][key] });
+  }
+  resetRules(mode) {
+    const selectedMode = Object.prototype.hasOwnProperty.call(RULE_FILES, mode) ? mode : 'radio';
+    return this.saveRules(selectedMode, DEFAULT_RULES[selectedMode]);
+  }
   choose(tracks, seed, mode, excluded = new Set()) {
     if (this.error) throw new Error(this.error);
     this.loadRules();
@@ -171,4 +223,4 @@ class MusicRadio {
     return weightedCandidates.at(-1)?.track || null;
   }
 }
-module.exports = { MusicRadio, weight, COOLDOWN, DEFAULT_RULES, RULE_FILES };
+module.exports = { MusicRadio, weight, COOLDOWN, DEFAULT_RULES, RULE_FILES, RULE_MINIMUMS, RULE_MAXIMUMS };

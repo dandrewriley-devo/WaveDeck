@@ -16,6 +16,7 @@
         <button class="tab active" data-tab="interface">General</button>
         <button class="tab" data-tab="stations">Stations</button>
         <button class="tab" data-tab="groups">Groups</button>
+        <button class="tab" data-tab="advanced">Advanced</button>
         <button class="tab" data-tab="about">About</button>
       </div>
     </header>
@@ -41,38 +42,6 @@
           </label>
           <div id="sidebarStartupHint" class="hint mt-6">
             When enabled, WaveDeck automatically reserves the right edge of the desktop at startup.
-          </div>
-        </div>
-        </section>
-
-        <section class="general-card">
-        <div class="general-card-header">
-          <div class="label">WaveDeck Pro</div>
-          <div class="hint">
-            Simple Mode keeps WaveDeck focused on Search, Presets, Sidebar Mode, and Settings.
-            Pro Mode adds Favorites filtering, Your Top Five, the Sidebar Notepad, expanded
-            transport controls, and stream recording.
-          </div>
-        </div>
-        <div class="general-card-body">
-          <label class="preference-toggle" title="Show WaveDeck's advanced controls and features">
-            <input id="proModeEnabled" type="checkbox" />
-            <span class="toggle-switch" aria-hidden="true"></span>
-            <span>Enable Pro Mode</span>
-          </label>
-          <div id="proMusicSettings" class="pro-music-settings" hidden>
-            <div class="pro-music-settings-title">Additional Music Folder <span>(optional)</span></div>
-            <div class="pro-music-settings-row">
-              <input id="additionalMusicFolder" class="input" type="text" readonly placeholder="Portable Music folder only" />
-              <button id="chooseAdditionalMusicFolderBtn" class="btn" type="button">Choose Folder…</button>
-              <button id="clearAdditionalMusicFolderBtn" class="btn" type="button">Remove</button>
-            </div>
-            <div class="hint">WaveDeck always includes the portable <b>Music</b> folder beside <b>Data</b>. This adds one other folder to Music search and playback. Files and tags are never changed. Choose a folder, then use Music’s <b>Rescan</b> button when you’re ready to index it.</div>
-          </div>
-          <div class="hint mt-6">
-            Stream recordings are saved as continuous MP3 files in the portable
-            <b>Recordings</b> folder beside <b>Data</b>. Recording is currently available on Linux.
-            Local MP3s belong in <b>Music</b> beside <b>Data</b>. Use the Music toolbar button to search and play them. Music tags are read-only.
           </div>
         </div>
         </section>
@@ -263,13 +232,61 @@
         <div id="statusGroups" class="status"></div>
       </section>
 
+      <!-- ADVANCED -->
+      <section id="tab-advanced" class="panel hidden">
+        <div class="general-sections">
+          <section class="general-card">
+            <div class="general-card-header">
+              <div class="label">Advanced Features</div>
+              <div class="hint">
+                Advanced Features adds Favorites filtering, Your Top Five, the Sidebar Notepad,
+                expanded transport controls, stream recording, and local Music.
+              </div>
+            </div>
+            <div class="general-card-body">
+              <label class="preference-toggle" title="Show WaveDeck's advanced controls and features">
+                <input id="proModeEnabled" type="checkbox" />
+                <span class="toggle-switch" aria-hidden="true"></span>
+                <span>Enable Advanced Features</span>
+              </label>
+              <div id="advancedFeaturesOff" class="hint mt-6">
+                Turn this on to configure local Music and radio tuning.
+              </div>
+              <div id="proMusicSettings" class="pro-music-settings" hidden>
+                <div class="pro-music-settings-title">Additional Music Folder <span>(optional)</span></div>
+                <div class="pro-music-settings-row">
+                  <input id="additionalMusicFolder" class="input" type="text" readonly placeholder="Portable Music folder only" />
+                  <button id="chooseAdditionalMusicFolderBtn" class="btn" type="button">Choose Folder…</button>
+                  <button id="clearAdditionalMusicFolderBtn" class="btn" type="button">Remove</button>
+                </div>
+                <div class="hint">WaveDeck always includes the portable <b>Music</b> folder beside <b>Data</b>. This adds one other folder to Music search and playback. Files and tags are never changed. Choose a folder, then use Music’s <b>Rescan</b> button when you’re ready to index it.</div>
+
+                <section class="radio-tuning" aria-labelledby="radioTuningTitle">
+                  <div class="pro-music-settings-title" id="radioTuningTitle">Radio Tuning</div>
+                  <div class="hint">Choose how each kind of Music radio balances familiar favorites, related tracks, and variety. Your choices are saved in portable Data and take effect for the next radio pick.</div>
+                  <div class="radio-rule-tabs" role="tablist" aria-label="Radio tuning type">
+                    <button class="radio-rule-tab active" type="button" data-radio-mode="artist">Artist Radio</button>
+                    <button class="radio-rule-tab" type="button" data-radio-mode="radio">Song Radio</button>
+                  </div>
+                  <div id="radioBasicControls" class="radio-rule-controls"></div>
+                  <button id="showAdvancedRadioSettings" class="radio-advanced-toggle" type="button" aria-expanded="false">Advanced settings</button>
+                  <div id="radioAdvancedControls" class="radio-rule-controls radio-advanced-controls" hidden></div>
+                  <button id="resetAllRadioRules" class="btn radio-reset-all" type="button">Reset all Artist Radio settings</button>
+                </section>
+              </div>
+            </div>
+          </section>
+        </div>
+        <div id="statusAdvanced" class="status"></div>
+      </section>
+
       <!-- ABOUT -->
       <section id="tab-about" class="panel hidden">
         <div class="about-intro">
           <img class="about-logo" src="../../assets/logo.png" alt="WaveDeck logo" />
           <div class="about-copy">
             <h2>About WaveDeck</h2>
-            <p class="muted">WaveDeck is a lightweight, portable internet-radio player designed for quick, organized access to streaming stations. It lets you arrange stations into customizable groups and subgroups, create personal Presets and Favorites, search across your station library, track listening history, and adjust individual station volume levels. Pro Mode adds advanced controls including Favorites filtering, Your Top Five, the sidebar notepad, expanded playback controls, and stream recording. WaveDeck keeps its library and personal settings in a portable Data folder, making it easy to carry between computers while preserving your stations and preferences.</p>
+            <p class="muted">WaveDeck is a lightweight, portable internet-radio player designed for quick, organized access to streaming stations. It lets you arrange stations into customizable groups and subgroups, create personal Presets and Favorites, search across your station library, track listening history, and adjust individual station volume levels. Advanced Features adds Favorites filtering, Your Top Five, the sidebar notepad, expanded playback controls, stream recording, and local Music. WaveDeck keeps its library and personal settings in a portable Data folder, making it easy to carry between computers while preserving your stations and preferences.</p>
           </div>
         </div>
 
@@ -279,21 +296,21 @@
 
           <h3>WaveDeck 0.7.0 — Local Music Update</h3>
           <ul>
-            <li>Pro Mode Music button with local MP3 search and read-only tag indexing.</li>
+            <li>Advanced Features Music button with local MP3 search and read-only tag indexing.</li>
             <li>Portable Music folder beside Data; one scan at launch and a manual Rescan button.</li>
             <li>Play Album, continuous Artist Radio and Song Radio.</li>
             <li>Albums flow into Artist Radio. Automatic selections respect a 120-minute repeat limit across restarts.</li>
             <li>Moderate favorites/rating/popularity boosts, deep cuts, and varied transitions.</li>
-            <li>Artist and Song Radio tuning files are editable in the portable Data folder.</li>
+            <li>Artist and Song Radio tuning is available in Settings → Advanced, with basic and advanced sliders plus per-setting resets.</li>
             <li>Song pause/resume and music-aware media keys. No album art or ReplayGain handling.</li>
           </ul>
           <h3>WaveDeck 0.6.7 — Stream Recording & Settings Update</h3>
           <ul>
-            <li>Added Simple Mode and optional Pro Mode, with Simple Mode enabled by default.</li>
-            <li>Added Previous Preset, Play/Pause, Record, Stop, and Next Preset controls in Pro Mode.</li>
+            <li>Added Simple Mode and optional Advanced Features, with Simple Mode enabled by default.</li>
+            <li>Added Previous Preset, Play/Pause, Record, Stop, and Next Preset controls in Advanced Features.</li>
             <li>Added Linux stream recording to continuous MP3 files without automatic song splitting.</li>
             <li>Added the portable <b>Recordings</b> folder beside <b>Data</b>, created automatically on startup.</li>
-            <li>Added a Pro-only Recordings view with search, playback, Show in Folder, and Trash actions.</li>
+            <li>Added an Advanced-only Recordings view with search, playback, Show in Folder, and Trash actions.</li>
             <li>Made recording finish safely when playback stops, the station changes, or WaveDeck closes.</li>
             <li>Kept playback volume, mute, and Station Gain independent from the saved recording.</li>
             <li>Polished the Settings window with a General default tab, grouped settings cards, a consolidated Import / Export section, and clearer version and library-location information.</li>
