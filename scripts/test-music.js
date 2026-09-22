@@ -4,7 +4,7 @@ const os = require('os');
 const path = require('path');
 const crypto = require('crypto');
 const { MusicLibrary } = require('../src/main/music-library');
-const { MusicRadio, weight, COOLDOWN, RULE_FILES } = require('../src/main/music-radio');
+const { MusicRadio, weight, COOLDOWN, RULE_FILES, DEFAULT_RULES } = require('../src/main/music-radio');
 const { extractTrack, radioArtist } = require('../src/main/music-tags');
 const { MediaController, serializeTransport } = require('../src/main/media-controller');
 
@@ -88,14 +88,18 @@ async function run() {
     await fs.writeFile(path.join(editableDir, RULE_FILES.artist), JSON.stringify(editableRules));
     assert(editableRadio.choose(catalog, catalog[0], 'artist'));
     assert.equal(editableRadio.rules.artist.artistFocusPercent, 50, 'legacy Artist Focus migrates to the matching snapped stop');
+    assert.equal(editableRadio.rules.artist.songPopularityPercent, 50, 'legacy popularity settings migrate to the matching snapped stop');
     assert.equal(editableRadio.rules.artist.repeatCooldownMinutes, 120, 'repeat protection cannot be tuned below two hours');
     const editableSchema = editableRadio.getRules();
     assert.deepEqual(editableSchema.schema.artist.artistFocusPercent.stops, [0, 10, 25, 50, 70, 85, 100]);
+    assert.deepEqual(editableSchema.schema.artist.songPopularityPercent.stops, [0, 10, 25, 50, 70, 85, 100]);
+    assert.equal(Object.hasOwn(editableSchema.schema.artist, 'favoriteMultiplier'), false, 'favorites are not used for radio selection');
     assert.equal(editableSchema.schema.artist.recentArtistMultiplier.max, 1);
     assert.equal(editableSchema.schema.artist.recentArtistCount.max, 100);
     assert.equal(editableRadio.setRule('artist', 'artistFocusPercent', 72).artist.artistFocusPercent, 70, 'Artist Focus snaps to one of seven stops');
     assert.equal(editableRadio.setRule('artist', 'repeatCooldownMinutes', 1).artist.repeatCooldownMinutes, 120);
     assert.equal(editableRadio.resetRule('artist', 'artistFocusPercent').artist.artistFocusPercent, 50);
+    assert.equal(editableRadio.setRule('artist', 'songPopularityPercent', 72).artist.songPopularityPercent, 70, 'Song Popularity snaps to one of seven stops');
     assert.equal(editableRadio.setRule('radio', 'genreWeight', 100).radio.genreWeight, 100);
     assert.equal(editableRadio.resetRules('radio').radio.genreWeight, 5);
     const oldSliderRules = JSON.parse(await fs.readFile(path.join(editableDir, RULE_FILES.radio), 'utf8'));
@@ -106,11 +110,17 @@ async function run() {
     oldSliderRules.recentAlbumMultiplier = 9000;
     await fs.writeFile(path.join(editableDir, RULE_FILES.radio), JSON.stringify(oldSliderRules));
     const migratedRadio = new MusicRadio({ dataDir: editableDir, now: () => now, random });
-    assert.equal(migratedRadio.rules.radio.version, 3);
+    assert.equal(migratedRadio.rules.radio.version, 4);
     assert.equal(migratedRadio.rules.radio.recentArtistCount, 3, 'old oversized artist-memory values reset safely');
     assert.equal(migratedRadio.rules.radio.recentArtistMultiplier, 0.18, 'old oversized artist-spacing values reset safely');
     assert.equal(migratedRadio.rules.radio.recentAlbumCount, 5, 'old oversized album-memory values reset safely');
     assert.equal(migratedRadio.rules.radio.recentAlbumMultiplier, 0.5, 'old oversized album-spacing values reset safely');
+    const plainTrack = track('plain');
+    assert.equal(weight({ ...plainTrack, favorite: true }, catalog[0], 'radio', [], now), weight(plainTrack, catalog[0], 'radio', [], now), 'favorites no longer affect radio selection');
+    const popular = track('popular', { popularity: 100 });
+    const unpopular = track('unpopular', { popularity: 0 });
+    assert.equal(weight(popular, catalog[0], 'radio', [], now, null, { ...DEFAULT_RULES.radio, songPopularityPercent: 0 }), weight(unpopular, catalog[0], 'radio', [], now, null, { ...DEFAULT_RULES.radio, songPopularityPercent: 0 }), 'zero Song Popularity ignores Last.fm popularity');
+    assert(weight(popular, catalog[0], 'radio', [], now, null, { ...DEFAULT_RULES.radio, songPopularityPercent: 100 }) > weight(unpopular, catalog[0], 'radio', [], now, null, { ...DEFAULT_RULES.radio, songPopularityPercent: 100 }), 'maximum Song Popularity favors high Last.fm popularity');
     const focusCatalog = [
       ...Array.from({ length: 3 }, (_, index) => track(`seed-${index}`, { artist: 'Seed Artist', artists: ['Seed Artist'], albumArtist: 'Seed Artist', album: `Seed ${index}` })),
       ...Array.from({ length: 10 }, (_, index) => track(`other-${index}`, { artist: `Other ${index}`, artists: [`Other ${index}`], album: `Other ${index}` }))

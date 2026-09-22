@@ -77,7 +77,7 @@ let radioRules = null;
 let activeRadioMode = 'artist';
 let advancedRadioVisible = false;
 
-const RADIO_BASIC_RULES = ['artistFocusPercent', 'genreWeight', 'favoriteMultiplier', 'unrelatedTrackMultiplier', 'selectionRandomness'];
+const RADIO_BASIC_RULES = ['artistFocusPercent', 'genreWeight', 'songPopularityPercent', 'unrelatedTrackMultiplier', 'selectionRandomness'];
 const RADIO_RULE_COPY = {
   repeatCooldownMinutes: { title: 'Song repeat wait', description: 'How long a song has to stay away before it can come back.', low: 'At least two hours', high: 'Up to one week' },
   excludeRatingAtOrBelow: { title: 'Ratings to skip', description: 'Low-rated songs at or below this line will not play on their own.', low: 'Skip fewer songs', high: 'Skip more songs' },
@@ -85,18 +85,16 @@ const RADIO_RULE_COPY = {
   lowRatingMultiplier: { title: 'Chance for low-rated songs', description: 'How often songs below that line can still slip in.', low: 'Almost never', high: 'Like any other song' },
   ratingBaseMultiplier: { title: 'Starting boost for rated songs', description: 'How much a normally rated song gets a head start.', low: 'No head start', high: 'Very large head start' },
   ratingStepMultiplier: { title: 'Extra boost for higher ratings', description: 'How much each step up in rating matters.', low: 'Ratings barely matter', high: 'Ratings matter a lot' },
-  artistFocusPercent: { title: 'Artist Focus', description: 'How often should this station play the seed artist?', low: 'No special preference', high: 'Always', featured: true },
+  artistFocusPercent: { title: 'Artist Focus', description: 'How often should this station play the seed artist?', low: 'No special preference', high: 'Always', tone: 'artist-focus-control' },
   featuredArtistWeight: { title: 'Featured artist match', description: 'How much featured-artist credits help a song fit.', low: 'Ignore featured artists', high: 'Favor featured artists' },
   genreWeight: { title: 'Genre match', description: 'How strongly matching genres guide the next song.', low: 'Genre does not matter', high: 'Genre leads the mix' },
   similarArtistWeight: { title: 'Related artist match', description: 'How much related-artist tags help a song fit.', low: 'Ignore related artists', high: 'Related artists first' },
   moodWeight: { title: 'Mood match', description: 'How much matching mood tags help a song fit.', low: 'Mood does not matter', high: 'Mood leads the mix' },
   eraWeight: { title: 'Release-year match', description: 'How much songs from a similar time period help a song fit.', low: 'Year does not matter', high: 'Year leads the mix' },
   eraYearRange: { title: 'How wide the time period is', description: 'How far apart release years can be and still feel related.', low: 'Very close years', high: 'Very broad time period' },
-  favoriteMultiplier: { title: 'Favorites boost', description: 'How much your favorites get moved toward the front of the line.', low: 'No favorite boost', high: 'Favorites lead the mix' },
+  songPopularityPercent: { title: 'Song Popularity', description: 'How much should song popularity matter?', low: 'Not at all', high: 'As much as possible', tone: 'song-popularity-control' },
   unrelatedTrackMultiplier: { title: 'Outside variety', description: 'How much less-related music can join the mix when good matches exist.', low: 'Related music only', high: 'A wide-open mix' },
   selectionRandomness: { title: 'Surprise versus match', description: 'Whether each pick is more of a surprise or the closest match.', low: 'More surprises', high: 'Closest matches' },
-  popularityMaximum: { title: 'Popularity ceiling', description: 'How much popularity information is allowed to count.', low: 'Ignore popularity', high: 'Use the full popularity range' },
-  popularityDivisor: { title: 'Popularity pull', description: 'How much popular songs are pulled forward.', low: 'Light popularity pull', high: 'Strong popularity pull', reverse: true },
   playCountBoostMaximum: { title: 'Most-played song ceiling', description: 'The biggest extra boost a frequently played song can receive.', low: 'No play-count boost', high: 'Very large play-count boost' },
   playCountLogDivisor: { title: 'Most-played song pull', description: 'How much often-played songs are pulled forward.', low: 'Light play-count pull', high: 'Strong play-count pull', reverse: true },
   postCooldownMultiplier: { title: 'After the repeat wait', description: 'How quickly a song is allowed back into the normal mix once its wait is over.', low: 'Back in normally', high: 'Keep it away longer', reverse: true },
@@ -111,7 +109,7 @@ const RADIO_ADVANCED_GROUPS = [
   { title: 'Keep artists and albums apart', hint: 'Rules that prevent clumps of the same artist or album.', keys: ['recentArtistCount', 'recentArtistMultiplier', 'recentAlbumCount', 'recentAlbumMultiplier'] },
   { title: 'What makes a song fit', hint: 'Extra ways a song can match the station.', keys: ['featuredArtistWeight', 'similarArtistWeight', 'moodWeight', 'eraWeight', 'eraYearRange'] },
   { title: 'Ratings and favorites', hint: 'How ratings shape the mix beyond the basic Favorites boost.', keys: ['excludeRatingAtOrBelow', 'lowRatingMaximum', 'lowRatingMultiplier', 'ratingBaseMultiplier', 'ratingStepMultiplier'] },
-  { title: 'Listening habits', hint: 'How past plays and popularity nudge songs forward.', keys: ['popularityMaximum', 'popularityDivisor', 'playCountBoostMaximum', 'playCountLogDivisor'] }
+  { title: 'Listening habits', hint: 'How your own past plays nudge songs forward.', keys: ['playCountBoostMaximum', 'playCountLogDivisor'] }
 ];
 
 function renderProMusicSettings(preferences) {
@@ -153,19 +151,15 @@ function plainRuleValue(key, value, schema) {
   if (key === 'artistFocusPercent') {
     return ({ 0: 'No special preference', 10: 'Once in a while', 25: 'Every few songs', 50: 'About half the time', 70: 'Most songs', 85: 'Nearly every song', 100: 'Always' })[Number(value)] || 'About half the time';
   }
+  if (key === 'songPopularityPercent') {
+    return ({ 0: 'Not at all', 10: 'Only a little', 25: 'A modest amount', 50: 'A balanced amount', 70: 'Quite a bit', 85: 'A lot', 100: 'As much as possible' })[Number(value)] || 'A balanced amount';
+  }
   if (key === 'genreWeight') {
     if (Number(value) <= 0) return 'Genre-neutral';
     if (Number(value) < 2) return 'A little genre match';
     if (Number(value) < 5) return 'Light genre match';
     if (Number(value) < 20) return 'Balanced genre match';
     return 'Genre-led';
-  }
-  if (key === 'favoriteMultiplier') {
-    if (Number(value) <= 1) return 'No extra favorite boost';
-    if (Number(value) <= 1.15) return 'Tiny favorite boost';
-    if (Number(value) <= 1.5) return 'Moderate favorite boost';
-    if (Number(value) <= 5) return 'Strong favorite boost';
-    return 'Favorites dominate';
   }
   if (key === 'unrelatedTrackMultiplier') {
     if (Number(value) <= 0) return 'Related music only';
@@ -194,7 +188,7 @@ function plainRuleValue(key, value, schema) {
 function makeRadioRuleControl(key, rules, schema) {
   const copy = ruleCopy(key);
   const wrap = element('div', 'radio-rule-control');
-  if (copy.featured) wrap.classList.add('artist-focus-control');
+  if (copy.tone) wrap.classList.add(copy.tone);
   const heading = element('div', 'radio-rule-heading');
   const title = element('div', 'radio-rule-name', copy.title);
   const reset = element('button', 'radio-rule-reset', 'Reset');

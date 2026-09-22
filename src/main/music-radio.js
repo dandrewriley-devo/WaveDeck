@@ -5,23 +5,23 @@ const RULE_FILES = { artist: 'artist-radio-rules.json', radio: 'song-radio-rules
 const RULES_REFERENCE_FILE = 'music-radio-rules-reference.txt';
 const DEFAULT_RULES = {
   artist: {
-    version: 3, repeatCooldownMinutes: 120, excludeRatingAtOrBelow: 2, lowRatingMaximum: 4,
+    version: 4, repeatCooldownMinutes: 120, excludeRatingAtOrBelow: 2, lowRatingMaximum: 4,
     lowRatingMultiplier: 0.08, ratingBaseMultiplier: 0.8, ratingStepMultiplier: 0.08,
     artistFocusPercent: 50, featuredArtistWeight: 4, genreWeight: 5, similarArtistWeight: 6,
-    moodWeight: 2, eraWeight: 2, eraYearRange: 10, favoriteMultiplier: 1.25,
+    moodWeight: 2, eraWeight: 2, eraYearRange: 10, songPopularityPercent: 50,
     unrelatedTrackMultiplier: 0, selectionRandomness: 1,
-    popularityMaximum: 100, popularityDivisor: 250, playCountBoostMaximum: 0.15,
+    playCountBoostMaximum: 0.15,
     playCountLogDivisor: 40, postCooldownMultiplier: 0.55, recentArtistCount: 3,
     recentArtistMultiplier: 0.18, recentAlbumCount: 5, recentAlbumMultiplier: 0.5,
     repeatedTransitionMultiplier: 0.02
   },
   radio: {
-    version: 3, repeatCooldownMinutes: 120, excludeRatingAtOrBelow: 2, lowRatingMaximum: 4,
+    version: 4, repeatCooldownMinutes: 120, excludeRatingAtOrBelow: 2, lowRatingMaximum: 4,
     lowRatingMultiplier: 0.08, ratingBaseMultiplier: 0.8, ratingStepMultiplier: 0.08,
     artistFocusPercent: 50, featuredArtistWeight: 4, genreWeight: 5, similarArtistWeight: 6,
-    moodWeight: 2, eraWeight: 2, eraYearRange: 10, favoriteMultiplier: 1.25,
+    moodWeight: 2, eraWeight: 2, eraYearRange: 10, songPopularityPercent: 50,
     unrelatedTrackMultiplier: 0, selectionRandomness: 1,
-    popularityMaximum: 100, popularityDivisor: 250, playCountBoostMaximum: 0.15,
+    playCountBoostMaximum: 0.15,
     playCountLogDivisor: 40, postCooldownMultiplier: 0.55, recentArtistCount: 3,
     recentArtistMultiplier: 0.18, recentAlbumCount: 5, recentAlbumMultiplier: 0.5,
     repeatedTransitionMultiplier: 0.02
@@ -29,6 +29,7 @@ const DEFAULT_RULES = {
 };
 const COOLDOWN = DEFAULT_RULES.artist.repeatCooldownMinutes * 60 * 1000;
 const ARTIST_FOCUS_STOPS = [0, 10, 25, 50, 70, 85, 100];
+const SONG_POPULARITY_STOPS = [0, 10, 25, 50, 70, 85, 100];
 // These are the actual, safe working ranges for each rule.  Do not use a
 // catch-all maximum: several rules are multipliers where a large number means
 // the opposite of the plain-English slider label (for example artist spacing).
@@ -46,11 +47,9 @@ const RULE_SPECS = {
   moodWeight: { min: 0, max: 10000 },
   eraWeight: { min: 0, max: 10000 },
   eraYearRange: { min: 1, max: 1000, integer: true },
-  favoriteMultiplier: { min: 0, max: 10000 },
+  songPopularityPercent: { min: 0, max: 100, integer: true, stops: SONG_POPULARITY_STOPS },
   unrelatedTrackMultiplier: { min: 0, max: 1 },
   selectionRandomness: { min: 0, max: 10 },
-  popularityMaximum: { min: 0, max: 10000 },
-  popularityDivisor: { min: 1, max: 10000 },
   playCountBoostMaximum: { min: 0, max: 10 },
   playCountLogDivisor: { min: 1, max: 10000 },
   postCooldownMultiplier: { min: 0, max: 1 },
@@ -76,13 +75,14 @@ const RULES_REFERENCE = `WaveDeck Music Radio Rules\n\n` +
 `repeatCooldownMinutes (120–10080): Minimum wait before the same song can return.\n` +
 `artistFocusPercent (0, 10, 25, 50, 70, 85, 100): How often radio tries to play the seed artist. At 100, it always chooses an eligible seed-artist track and falls back to related music only when none is available.\n` +
 `featuredArtistWeight, genreWeight, similarArtistWeight, moodWeight, eraWeight (0–10000): Higher values make that connection matter more.\n` +
+`songPopularityPercent (0, 10, 25, 50, 70, 85, 100): How much the Last.fm 0–100 song-popularity score matters. Missing popularity data is neutral.\n` +
 `eraYearRange (1–1000): How far apart release years may be and still feel like the same era.\n` +
 `unrelatedTrackMultiplier (0–1): 0 stays with related music when available; 1 lets unrelated music compete normally.\n` +
 `selectionRandomness (0–10): Lower values make picks more surprising; higher values favor the strongest matches.\n` +
 `excludeRatingAtOrBelow and lowRatingMaximum (0–10): Decide which low ratings are skipped or made rare.\n` +
 `lowRatingMultiplier, postCooldownMultiplier, recentArtistMultiplier, recentAlbumMultiplier, repeatedTransitionMultiplier (0–1): 0 is the strongest hold-back; 1 is no extra hold-back.\n` +
 `recentArtistCount and recentAlbumCount (0–100): How far back radio looks when preventing clumps.\n` +
-`ratingBaseMultiplier, ratingStepMultiplier, favoriteMultiplier, popularityMaximum, popularityDivisor, playCountBoostMaximum, playCountLogDivisor: Fine-tune preference and listening-history boosts.\n`;
+`ratingBaseMultiplier, ratingStepMultiplier, playCountBoostMaximum, playCountLogDivisor: Fine-tune rating and listening-history boosts.\n`;
 const matches = (a, b) => Boolean(a && b && normalize(a) === normalize(b));
 const overlaps = (a = [], b = []) => a.some(x => b.some(y => matches(x, y)));
 const clone = value => JSON.parse(JSON.stringify(value));
@@ -99,11 +99,21 @@ function legacyArtistFocus(value) {
 function nearestArtistFocusStop(value) {
   return ARTIST_FOCUS_STOPS.reduce((nearest, stop) => Math.abs(stop - value) < Math.abs(nearest - value) ? stop : nearest, ARTIST_FOCUS_STOPS[0]);
 }
+function legacySongPopularity(value) {
+  const maximum = Math.max(0, Number(value?.popularityMaximum) || 0);
+  const divisor = Math.max(1, Number(value?.popularityDivisor) || 1);
+  const oldMaximumBoost = Math.min(maximum, 100) / divisor;
+  return SONG_POPULARITY_STOPS.reduce((nearest, stop) => Math.abs(stop - oldMaximumBoost * 100) < Math.abs(nearest - oldMaximumBoost * 100) ? stop : nearest, SONG_POPULARITY_STOPS[0]);
+}
+function nearestSongPopularityStop(value) {
+  return SONG_POPULARITY_STOPS.reduce((nearest, stop) => Math.abs(stop - value) < Math.abs(nearest - value) ? stop : nearest, SONG_POPULARITY_STOPS[0]);
+}
 function validatedRules(value, defaults) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return clone(defaults);
   const result = clone(defaults);
   const oldVersion = Number(value.version) || 1;
   if (oldVersion < 3) result.artistFocusPercent = legacyArtistFocus(value);
+  if (oldVersion < 4) result.songPopularityPercent = legacySongPopularity(value);
   for (const [key, fallback] of Object.entries(defaults)) {
     if (key === 'version') continue;
     const candidate = Number(value[key]);
@@ -115,7 +125,8 @@ function validatedRules(value, defaults) {
       if (oldVersion < 2 && LEGACY_BROKEN_SLIDERS.has(key) && candidate > spec.max) continue;
       const bounded = Math.min(spec.max, Math.max(spec.min, candidate));
       const rounded = spec.integer ? Math.round(bounded) : bounded;
-      result[key] = key === 'artistFocusPercent' ? nearestArtistFocusStop(rounded) : rounded;
+      result[key] = key === 'artistFocusPercent' ? nearestArtistFocusStop(rounded)
+        : key === 'songPopularityPercent' ? nearestSongPopularityStop(rounded) : rounded;
     }
   }
   return result;
@@ -142,8 +153,8 @@ function weight(track, seed, mode, history, now, context = null, rules = DEFAULT
   if (seed.year && track.year) score += Math.max(0, rules.eraWeight - Math.abs(seed.year - track.year) / rules.eraYearRange);
   // Bounded preference boosts preserve room for deep cuts and unrated songs.
   score *= track.rating === null ? 1 : track.rating <= rules.lowRatingMaximum ? rules.lowRatingMultiplier : rules.ratingBaseMultiplier + track.rating * rules.ratingStepMultiplier;
-  if (track.favorite) score *= rules.favoriteMultiplier;
-  score *= 1 + Math.min(rules.popularityMaximum, Math.max(0, track.popularity || 0)) / rules.popularityDivisor;
+  const popularity = Math.min(100, Math.max(0, track.popularity || 0));
+  score *= 1 + (popularity / 100) * (rules.songPopularityPercent / 100);
   score *= 1 + Math.min(rules.playCountBoostMaximum, Math.log1p(Math.max(0, track.playCount || 0)) / rules.playCountLogDivisor);
   if (last) score *= rules.postCooldownMultiplier; // Fresh tracks stay attractive even after the cooldown expires.
   if (history.slice(0, rules.recentArtistCount).some(h => matches(h.artist, track.artist))) score *= rules.recentArtistMultiplier;
@@ -298,4 +309,4 @@ class MusicRadio {
     return weightedCandidates.at(-1)?.track || null;
   }
 }
-module.exports = { MusicRadio, weight, COOLDOWN, DEFAULT_RULES, RULE_FILES, RULE_MINIMUMS, RULE_MAXIMUMS, RULE_SPECS, ARTIST_FOCUS_STOPS };
+module.exports = { MusicRadio, weight, COOLDOWN, DEFAULT_RULES, RULE_FILES, RULE_MINIMUMS, RULE_MAXIMUMS, RULE_SPECS, ARTIST_FOCUS_STOPS, SONG_POPULARITY_STOPS };

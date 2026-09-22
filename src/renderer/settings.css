@@ -219,6 +219,14 @@ main{
 .artist-focus-control .radio-rule-range input{ accent-color:#68a9df; }
 .artist-focus-control .radio-rule-value{ color:#a9d4f5; }
 
+.song-popularity-control{
+  background:#29251e;
+  border-color:#76613b;
+}
+.song-popularity-control .radio-rule-name{ color:#f0d498; }
+.song-popularity-control .radio-rule-range input{ accent-color:#d5a64e; }
+.song-popularity-control .radio-rule-value{ color:#f0d498; }
+
 .radio-rule-heading{
   align-items:center;
   display:flex;
