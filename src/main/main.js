@@ -74,10 +74,16 @@ const SETTINGS_DEFAULT_WIDTH = 1100;
 const SETTINGS_DEFAULT_HEIGHT = 800;
 const SETTINGS_MIN_WIDTH = 700;
 const SETTINGS_MIN_HEIGHT = 500;
+const RADIO_LOG_DEFAULT_WIDTH = 860;
+const RADIO_LOG_DEFAULT_HEIGHT = 700;
+const RADIO_LOG_MIN_WIDTH = 560;
+const RADIO_LOG_MIN_HEIGHT = 400;
+const RADIO_LOG_SHORTCUT = "CommandOrControl+Alt+Shift+L";
 const DISPLAY_VERSION = require("../../package.json").wavedeckVersion || app.getVersion();
 
 let mainWindow = null;
 let settingsWindow = null;
+let radioLogWindow = null;
 let storage = null;
 let player = null;
 let recordingLibrary = null;
@@ -195,6 +201,12 @@ function sendToAll(channel, payload) {
   sendToMain(channel, payload);
   if (settingsWindow && !settingsWindow.isDestroyed()) {
     settingsWindow.webContents.send(channel, payload);
+  }
+}
+
+function sendToRadioLog(decision) {
+  if (radioLogWindow && !radioLogWindow.isDestroyed()) {
+    radioLogWindow.webContents.send("music:debug-decision", decision);
   }
 }
 
@@ -385,6 +397,42 @@ function openSettingsWindow(stationId = "") {
     });
   }
   settingsWindow.loadFile(path.join(__dirname, "..", "renderer", "settings.html"));
+}
+
+function openRadioLogWindow() {
+  if (radioLogWindow && !radioLogWindow.isDestroyed()) {
+    radioLogWindow.show();
+    radioLogWindow.focus();
+    return;
+  }
+  const display = mainWindow && !mainWindow.isDestroyed()
+    ? screen.getDisplayMatching(mainWindow.getBounds())
+    : screen.getPrimaryDisplay();
+  const savedBounds = storage.getUiPreferences().radioLogWindowBounds;
+  const targetDisplay = savedBounds ? screen.getDisplayMatching(savedBounds) : display;
+  const geometry = constrainBoundsToDisplay(targetDisplay, savedBounds || calculateCenteredBounds(
+    display, RADIO_LOG_DEFAULT_WIDTH, RADIO_LOG_DEFAULT_HEIGHT
+  ), { minWidth: RADIO_LOG_MIN_WIDTH, minHeight: RADIO_LOG_MIN_HEIGHT });
+  radioLogWindow = createSecureWindow({
+    ...geometry,
+    minWidth: Math.min(RADIO_LOG_MIN_WIDTH, geometry.width),
+    minHeight: Math.min(RADIO_LOG_MIN_HEIGHT, geometry.height),
+    resizable: true,
+    title: "WaveDeck Live Radio Log"
+  });
+  radioLogWindow.on("close", () => {
+    if (!radioLogWindow || radioLogWindow.isDestroyed()) return;
+    try {
+      const bounds = radioLogWindow.isMaximized()
+        ? radioLogWindow.getNormalBounds()
+        : radioLogWindow.getBounds();
+      storage.setRadioLogWindowBounds(bounds);
+    } catch (error) {
+      console.warn(`Could not remember the Live Radio Log position: ${error.message}`);
+    }
+  });
+  radioLogWindow.on("closed", () => { radioLogWindow = null; });
+  radioLogWindow.loadFile(path.join(__dirname, "..", "renderer", "radio-log.html"));
 }
 
 function getSidebarState() {
@@ -781,6 +829,7 @@ function installIpcHandlers() {
     requireAdvancedFeatures();
     return musicRadio.resetRules(String(mode || ''));
   });
+  ipcMain.handle('music:debug:get-last-decision', () => musicRadio?.getLastDecision() || null);
 
   // Retain the original channels for older renderer bundles and portable data
   // created before the preference became available on Windows.
@@ -1004,7 +1053,7 @@ if (!hasSingleInstanceLock) {
     }));
 
     musicLibrary = new MusicLibrary({ dataDir: getDataDir(), additionalMusicFolder: storage.getUiPreferences().additionalMusicFolder, onStatus: status => sendToMain('music:changed', status) });
-    musicRadio = new MusicRadio({ dataDir: getDataDir() });
+    musicRadio = new MusicRadio({ dataDir: getDataDir(), onDecision: sendToRadioLog });
     mediaController.configureMusic(musicLibrary, musicRadio);
     if (storage.getUiPreferences().proModeEnabled) void musicLibrary.enable({ scanOnEnable: true }).catch(error => sendToMain('app:warning', error.message));
 
@@ -1039,6 +1088,9 @@ if (!hasSingleInstanceLock) {
     }
 
     installIpcHandlers();
+    if (!globalShortcut.register(RADIO_LOG_SHORTCUT, openRadioLogWindow)) {
+      console.warn("WaveDeck could not register the Live Radio Log shortcut.");
+    }
     const supportsStartupSidebar = process.platform === "linux" || process.platform === "win32";
     const launchInSidebarMode = supportsStartupSidebar &&
       storage.getUiPreferences().launchInSidebarMode === true;
@@ -1085,6 +1137,7 @@ function finishShutdown() {
   if (mediaKeyReclaimTimer) clearInterval(mediaKeyReclaimTimer);
   mediaKeyReclaimTimer = null;
   mediaKeyReclaimEnabled = false;
+  try { globalShortcut.unregister(RADIO_LOG_SHORTCUT); } catch {}
   listeningHistory?.close();
   platformMediaKeys?.close();
   mprisService?.close();

@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.7.1");
-assert.strictEqual(packageJson.wavedeckVersion, "0.7.1");
+assert.strictEqual(packageJson.version, "0.7.2");
+assert.strictEqual(packageJson.wavedeckVersion, "0.7.2");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -330,6 +330,7 @@ try {
     additionalMusicFolder: "",
     launchInSidebarMode: false,
     settingsWindowBounds: null,
+    radioLogWindowBounds: null,
     lastLibraryUpdate: "",
     deletedOfficialStationIds: []
   });
@@ -338,7 +339,8 @@ try {
     proModeEnabled: false,
     additionalMusicFolder: "",
     launchInSidebarMode: false,
-    settingsWindowBounds: null
+    settingsWindowBounds: null,
+    radioLogWindowBounds: null
   });
   assert.deepStrictEqual(storage.getUiPreferences(), storage.getLinuxUiPreferences());
   assert.strictEqual(storage.setLaunchInSidebarMode(true).launchInSidebarMode, true);
@@ -350,13 +352,20 @@ try {
     width: 1120,
     height: 841
   });
+  assert.deepStrictEqual(storage.setRadioLogWindowBounds({ x: 13.6, y: 22.5, width: 863.8, height: 699.6 }), {
+    x: 14,
+    y: 23,
+    width: 864,
+    height: 700
+  });
   const uiPreferenceReload = new PortableStorage({ dataDir, defaultsDir });
   uiPreferenceReload.initialize();
   assert.deepStrictEqual(uiPreferenceReload.getLinuxUiPreferences(), {
     proModeEnabled: true,
     additionalMusicFolder: "/mnt/music",
     launchInSidebarMode: true,
-    settingsWindowBounds: { x: 2100, y: 41, width: 1120, height: 841 }
+    settingsWindowBounds: { x: 2100, y: 41, width: 1120, height: 841 },
+    radioLogWindowBounds: { x: 14, y: 23, width: 864, height: 700 }
   });
 
   const changed = storage.readStations();

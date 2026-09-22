@@ -234,6 +234,7 @@ function validatePreferences(value) {
   }
   const parsedUpdatedAt = Date.parse(String(value?.lastLibraryUpdate ?? ""));
   const rawSettingsBounds = value?.settingsWindowBounds;
+  const rawRadioLogBounds = value?.radioLogWindowBounds;
   const additionalMusicFolder = typeof value?.additionalMusicFolder === "string"
     ? value.additionalMusicFolder.trim()
     : "";
@@ -246,6 +247,15 @@ function validatePreferences(value) {
         height: Math.max(1, Math.round(Number(rawSettingsBounds.height)))
       }
     : null;
+  const radioLogWindowBounds = rawRadioLogBounds && typeof rawRadioLogBounds === "object" && !Array.isArray(rawRadioLogBounds) &&
+    ["x", "y", "width", "height"].every((key) => Number.isFinite(Number(rawRadioLogBounds[key])))
+    ? {
+        x: Math.round(Number(rawRadioLogBounds.x)),
+        y: Math.round(Number(rawRadioLogBounds.y)),
+        width: Math.max(1, Math.round(Number(rawRadioLogBounds.width))),
+        height: Math.max(1, Math.round(Number(rawRadioLogBounds.height)))
+      }
+    : null;
   return {
     version: 1,
     stations,
@@ -256,6 +266,7 @@ function validatePreferences(value) {
     additionalMusicFolder,
     launchInSidebarMode: value?.launchInSidebarMode === true,
     settingsWindowBounds,
+    radioLogWindowBounds,
     lastLibraryUpdate: Number.isFinite(parsedUpdatedAt) ? new Date(parsedUpdatedAt).toISOString() : "",
     deletedOfficialStationIds
   };
@@ -431,6 +442,9 @@ class PortableStorage {
       launchInSidebarMode: preferences.launchInSidebarMode,
       settingsWindowBounds: preferences.settingsWindowBounds
         ? { ...preferences.settingsWindowBounds }
+        : null,
+      radioLogWindowBounds: preferences.radioLogWindowBounds
+        ? { ...preferences.radioLogWindowBounds }
         : null
     };
   }
@@ -465,6 +479,13 @@ class PortableStorage {
     preferences.settingsWindowBounds = bounds;
     this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
     return this.getUiPreferences().settingsWindowBounds;
+  }
+
+  setRadioLogWindowBounds(bounds) {
+    const preferences = this.readPreferences();
+    preferences.radioLogWindowBounds = bounds;
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences().radioLogWindowBounds;
   }
 
   setStationGain(stationId, value) {

@@ -121,6 +121,28 @@ async function run() {
     const unpopular = track('unpopular', { popularity: 0 });
     assert.equal(weight(popular, catalog[0], 'radio', [], now, null, { ...DEFAULT_RULES.radio, songPopularityPercent: 0 }), weight(unpopular, catalog[0], 'radio', [], now, null, { ...DEFAULT_RULES.radio, songPopularityPercent: 0 }), 'zero Song Popularity ignores Last.fm popularity');
     assert(weight(popular, catalog[0], 'radio', [], now, null, { ...DEFAULT_RULES.radio, songPopularityPercent: 100 }) > weight(unpopular, catalog[0], 'radio', [], now, null, { ...DEFAULT_RULES.radio, songPopularityPercent: 100 }), 'maximum Song Popularity favors high Last.fm popularity');
+    const loggedDecisions = [];
+    const diagnosticRadio = new MusicRadio({
+      dataDir: path.join(temp, 'diagnostic-radio'),
+      now: () => now,
+      random: () => 0.25,
+      onDecision: (decision) => loggedDecisions.push(decision)
+    });
+    const diagnosticPick = diagnosticRadio.choose([
+      track('diagnostic-seed', { artist: 'Seed Artist', artists: ['Seed Artist'], popularity: 25 }),
+      track('diagnostic-popular', { artist: 'Other Artist', artists: ['Other Artist'], popularity: 95 }),
+      track('diagnostic-missing', { artist: 'Another Artist', artists: ['Another Artist'], popularity: null }),
+      track('diagnostic-low', { artist: 'Low Artist', artists: ['Low Artist'], rating: 2 })
+    ], track('diagnostic-seed', { artist: 'Seed Artist', artists: ['Seed Artist'] }), 'radio');
+    assert(diagnosticPick, 'radio diagnostics retain normal song selection');
+    const decision = diagnosticRadio.getLastDecision();
+    assert.equal(loggedDecisions.length, 1, 'radio diagnostics publish each automatic selection');
+    assert.equal(decision.mode, 'radio');
+    assert.equal(decision.counts.totalTracks, 4);
+    assert.equal(decision.counts.skippedForRating, 1);
+    assert.equal(decision.selected.title, diagnosticPick.title);
+    assert.equal(typeof decision.selected.popularity === 'number' || decision.selected.popularity === null, true);
+    assert.ok(Array.isArray(decision.selected.multipliers));
     const focusCatalog = [
       ...Array.from({ length: 3 }, (_, index) => track(`seed-${index}`, { artist: 'Seed Artist', artists: ['Seed Artist'], albumArtist: 'Seed Artist', album: `Seed ${index}` })),
       ...Array.from({ length: 10 }, (_, index) => track(`other-${index}`, { artist: `Other ${index}`, artists: [`Other ${index}`], album: `Other ${index}` }))

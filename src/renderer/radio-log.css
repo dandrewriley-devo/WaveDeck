@@ -1,0 +1,28 @@
+:root { --bg:#171717; --panel:#222; --line:#3a3a3a; --text:#e7e7e7; --muted:#aaa; --accent:#9ac44b; --soft:#2a3340; }
+* { box-sizing:border-box; }
+html, body { margin:0; min-height:100%; background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,sans-serif; }
+.wrap { max-width:1100px; margin:0 auto; padding:18px; }
+header { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; border-bottom:1px solid var(--line); padding-bottom:14px; }
+h1 { margin:0; font-size:20px; }
+p { margin:5px 0 0; color:var(--muted); font-size:13px; }
+button { background:#292929; color:var(--text); border:1px solid #484848; padding:7px 12px; cursor:pointer; }
+button:hover { background:#343434; }
+.empty { border:1px dashed #484848; color:var(--muted); display:flex; flex-direction:column; gap:5px; margin-top:18px; padding:22px; }
+.empty b { color:var(--text); }
+#entries { display:flex; flex-direction:column; gap:14px; margin-top:16px; }
+.entry { background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--accent); }
+.entry-head { align-items:baseline; background:#202020; border-bottom:1px solid var(--line); display:flex; gap:10px; justify-content:space-between; padding:10px 12px; }
+.entry-head b { color:#dfeec0; }
+.time, .muted { color:var(--muted); font-size:12px; }
+.entry-body { display:grid; gap:12px; padding:12px; }
+.track { font-size:16px; }
+.track span { color:var(--muted); font-size:13px; }
+.grid { display:grid; gap:10px; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); }
+.box { background:#1b1b1b; border:1px solid #303030; padding:9px; }
+.box b, .section-title { color:#cddcaa; display:block; font-size:12px; margin-bottom:4px; text-transform:uppercase; letter-spacing:.03em; }
+.settings { color:#c6d8e9; font-size:13px; }
+.details { display:grid; gap:5px; font-size:13px; }
+.details div { border-bottom:1px solid #303030; padding-bottom:4px; }
+.details div:last-child { border-bottom:0; padding-bottom:0; }
+.reason { background:var(--soft); border-left:3px solid #7894b4; color:#d9e6f2; padding:9px; font-size:13px; }
+@media (max-width:600px) { .wrap { padding:12px; } .entry-head { align-items:flex-start; flex-direction:column; gap:3px; } }

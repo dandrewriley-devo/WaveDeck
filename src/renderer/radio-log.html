@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'" />
+  <title>WaveDeck Live Radio Log</title>
+  <link rel="stylesheet" href="./radio-log.css" />
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <div>
+        <h1>Live Radio Log</h1>
+        <p>Shows the real selection details whenever Artist Radio or Song Radio picks its next track.</p>
+      </div>
+      <button id="clearLog" type="button">Clear</button>
+    </header>
+    <section id="empty" class="empty">
+      <b>Waiting for the next radio pick</b>
+      <span>Start Artist Radio or Song Radio, then skip or let a song finish.</span>
+    </section>
+    <section id="entries" aria-live="polite"></section>
+  </main>
+  <script src="./radio-log.js"></script>
+</body>
+</html>
