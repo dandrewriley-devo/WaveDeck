@@ -30,6 +30,14 @@ function addDetails(parent, title, items, fallback) {
   parent.append(section);
 }
 
+function varietyLabel(value) {
+  return ({ 0: 'Doesn’t matter', 1: 'Balanced', 2: 'Maximum variety' })[Number(value)] || 'Balanced';
+}
+
+function yearRangeLabel(value) {
+  return ({ 0: 'Same year', 5: 'Within 5 years', 10: 'Within 10 years', 20: 'Within 20 years', 10000: 'Year doesn’t matter' })[Number(value)] || 'Within 10 years';
+}
+
 function renderDecision(decision, { prepend = true } = {}) {
   if (!decision?.selected) return;
   empty.hidden = true;
@@ -57,13 +65,17 @@ function renderDecision(decision, { prepend = true } = {}) {
   ]);
   addBox(grid, 'Last.fm popularity', [
     selected.popularity === null || selected.popularity === undefined ? 'Missing — treated as neutral' : `${selected.popularity}/100`,
-    `Song Popularity setting: ${decision.settings?.songPopularityPercent ?? 0}%`,
-    `Rating: ${selected.rating === null || selected.rating === undefined ? 'Unrated' : `${selected.rating}/10`} · Plays: ${selected.playCount || 0}`
+    `Song Popularity setting: ${decision.settings?.songPopularityPercent ?? 0}%`
+  ]);
+  addBox(grid, 'Radio controls', [
+    `Artist Variety: ${varietyLabel(decision.settings?.artistVariety)}`,
+    `Album Variety: ${varietyLabel(decision.settings?.albumVariety)}`,
+    `${yearRangeLabel(decision.settings?.releaseYearRange)} · ${Number(decision.settings?.repeatCooldownMinutes || 0) / 60} hour repeat wait`
   ]);
   addBox(grid, 'Candidates', [
     `${decision.counts?.totalTracks ?? 0} total · ${decision.counts?.eligible ?? 0} eligible`,
     `${decision.counts?.related ?? 0} related · ${decision.counts?.finalPool ?? 0} in final pool`,
-    `Skipped: ${decision.counts?.skippedForRating ?? 0} rating, ${decision.counts?.skippedForCooldown ?? 0} repeat wait`
+    `Skipped: ${decision.counts?.skippedForCooldown ?? 0} repeat wait, ${decision.counts?.skippedForHandoff ?? 0} repeated handoff`
   ]);
   body.append(grid);
   const additions = (selected.additions || []).map(item => `${item.label}: +${number(item.amount)}`);

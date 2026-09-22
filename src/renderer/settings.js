@@ -52,8 +52,6 @@ const chooseAdditionalMusicFolderBtn = document.getElementById('chooseAdditional
 const clearAdditionalMusicFolderBtn = document.getElementById('clearAdditionalMusicFolderBtn');
 const radioRuleTabs = document.querySelectorAll('.radio-rule-tab');
 const radioBasicControls = document.getElementById('radioBasicControls');
-const radioAdvancedControls = document.getElementById('radioAdvancedControls');
-const showAdvancedRadioSettings = document.getElementById('showAdvancedRadioSettings');
 const resetAllRadioRules = document.getElementById('resetAllRadioRules');
 const sidebarStartupHint = document.getElementById("sidebarStartupHint");
 const resetListeningBtn = document.getElementById("resetListeningBtn");
@@ -75,42 +73,22 @@ let pendingEditId = "";
 let activeSubgroupRename = null;
 let radioRules = null;
 let activeRadioMode = 'artist';
-let advancedRadioVisible = false;
 
-const RADIO_BASIC_RULES = ['artistFocusPercent', 'genreWeight', 'songPopularityPercent', 'unrelatedTrackMultiplier', 'selectionRandomness'];
+const RADIO_BASIC_RULES = [
+  'artistFocusPercent', 'genreWeight', 'songPopularityPercent', 'artistVariety', 'albumVariety',
+  'releaseYearRange', 'unrelatedTrackMultiplier', 'selectionRandomness', 'repeatCooldownMinutes'
+];
 const RADIO_RULE_COPY = {
-  repeatCooldownMinutes: { title: 'Song repeat wait', description: 'How long a song has to stay away before it can come back.', low: 'At least two hours', high: 'Up to one week' },
-  excludeRatingAtOrBelow: { title: 'Ratings to skip', description: 'Low-rated songs at or below this line will not play on their own.', low: 'Skip fewer songs', high: 'Skip more songs' },
-  lowRatingMaximum: { title: 'Low-rating line', description: 'Songs at or below this line get the low-rating treatment.', low: 'Only the very lowest', high: 'Most rated songs' },
-  lowRatingMultiplier: { title: 'Chance for low-rated songs', description: 'How often songs below that line can still slip in.', low: 'Almost never', high: 'Like any other song' },
-  ratingBaseMultiplier: { title: 'Starting boost for rated songs', description: 'How much a normally rated song gets a head start.', low: 'No head start', high: 'Very large head start' },
-  ratingStepMultiplier: { title: 'Extra boost for higher ratings', description: 'How much each step up in rating matters.', low: 'Ratings barely matter', high: 'Ratings matter a lot' },
-  artistFocusPercent: { title: 'Artist Focus', description: 'How often should this station play the seed artist?', low: 'No special preference', high: 'Always', tone: 'artist-focus-control' },
-  featuredArtistWeight: { title: 'Featured artist match', description: 'How much featured-artist credits help a song fit.', low: 'Ignore featured artists', high: 'Favor featured artists' },
+  artistFocusPercent: { title: 'Artist Focus', description: 'How often should this station play the seed artist?', low: 'No special preference', high: 'Always' },
   genreWeight: { title: 'Genre match', description: 'How strongly matching genres guide the next song.', low: 'Genre does not matter', high: 'Genre leads the mix' },
-  similarArtistWeight: { title: 'Related artist match', description: 'How much related-artist tags help a song fit.', low: 'Ignore related artists', high: 'Related artists first' },
-  moodWeight: { title: 'Mood match', description: 'How much matching mood tags help a song fit.', low: 'Mood does not matter', high: 'Mood leads the mix' },
-  eraWeight: { title: 'Release-year match', description: 'How much songs from a similar time period help a song fit.', low: 'Year does not matter', high: 'Year leads the mix' },
-  eraYearRange: { title: 'How wide the time period is', description: 'How far apart release years can be and still feel related.', low: 'Very close years', high: 'Very broad time period' },
-  songPopularityPercent: { title: 'Song Popularity', description: 'How much should song popularity matter?', low: 'Not at all', high: 'As much as possible', tone: 'song-popularity-control' },
+  songPopularityPercent: { title: 'Song Popularity', description: 'How much should song popularity matter?', low: 'Not at all', high: 'As much as possible' },
+  artistVariety: { title: 'Artist Variety', description: 'How much should WaveDeck spread out artists other than the seed artist?', low: 'Doesn’t matter', high: 'Maximum variety' },
+  albumVariety: { title: 'Album Variety', description: 'How much should WaveDeck spread out tracks from the same album?', low: 'Doesn’t matter', high: 'Maximum variety' },
+  releaseYearRange: { title: 'Release-Year Range', description: 'How close should songs be in release year?', low: 'Same year', high: 'Year doesn’t matter' },
   unrelatedTrackMultiplier: { title: 'Outside variety', description: 'How much less-related music can join the mix when good matches exist.', low: 'Related music only', high: 'A wide-open mix' },
   selectionRandomness: { title: 'Surprise versus match', description: 'Whether each pick is more of a surprise or the closest match.', low: 'More surprises', high: 'Closest matches' },
-  playCountBoostMaximum: { title: 'Most-played song ceiling', description: 'The biggest extra boost a frequently played song can receive.', low: 'No play-count boost', high: 'Very large play-count boost' },
-  playCountLogDivisor: { title: 'Most-played song pull', description: 'How much often-played songs are pulled forward.', low: 'Light play-count pull', high: 'Strong play-count pull', reverse: true },
-  postCooldownMultiplier: { title: 'After the repeat wait', description: 'How quickly a song is allowed back into the normal mix once its wait is over.', low: 'Back in normally', high: 'Keep it away longer', reverse: true },
-  recentArtistCount: { title: 'Remember recent artists', description: 'How far back radio looks to keep one artist from bunching up.', low: 'Do not look back', high: 'Look back a long way' },
-  recentArtistMultiplier: { title: 'Keep recent artists apart', description: 'How strongly radio avoids an artist you just heard.', low: 'No extra spacing', high: 'Strong spacing', reverse: true },
-  recentAlbumCount: { title: 'Remember recent albums', description: 'How far back radio looks to keep one album from bunching up.', low: 'Do not look back', high: 'Look back a long way' },
-  recentAlbumMultiplier: { title: 'Keep recent albums apart', description: 'How strongly radio avoids an album you just heard.', low: 'No extra spacing', high: 'Strong spacing', reverse: true },
-  repeatedTransitionMultiplier: { title: 'Avoid the same handoff', description: 'How strongly radio avoids following one song with the same next song again.', low: 'Allow familiar handoffs', high: 'Strongly avoid repeats', reverse: true }
+  repeatCooldownMinutes: { title: 'Song Repeat Wait', description: 'How long before the exact same song can come back.', low: '2 hours', high: '24 hours' }
 };
-const RADIO_ADVANCED_GROUPS = [
-  { title: 'Keep the rotation fresh', hint: 'Rules that stop songs and familiar song-to-song handoffs from coming back too soon.', keys: ['repeatCooldownMinutes', 'postCooldownMultiplier', 'repeatedTransitionMultiplier'] },
-  { title: 'Keep artists and albums apart', hint: 'Rules that prevent clumps of the same artist or album.', keys: ['recentArtistCount', 'recentArtistMultiplier', 'recentAlbumCount', 'recentAlbumMultiplier'] },
-  { title: 'What makes a song fit', hint: 'Extra ways a song can match the station.', keys: ['featuredArtistWeight', 'similarArtistWeight', 'moodWeight', 'eraWeight', 'eraYearRange'] },
-  { title: 'Ratings and favorites', hint: 'How ratings shape the mix beyond the basic Favorites boost.', keys: ['excludeRatingAtOrBelow', 'lowRatingMaximum', 'lowRatingMultiplier', 'ratingBaseMultiplier', 'ratingStepMultiplier'] },
-  { title: 'Listening habits', hint: 'How your own past plays nudge songs forward.', keys: ['playCountBoostMaximum', 'playCountLogDivisor'] }
-];
 
 function renderProMusicSettings(preferences) {
   const proEnabled = preferences?.proModeEnabled === true;
@@ -154,6 +132,16 @@ function plainRuleValue(key, value, schema) {
   if (key === 'songPopularityPercent') {
     return ({ 0: 'Not at all', 10: 'Only a little', 25: 'A modest amount', 50: 'A balanced amount', 70: 'Quite a bit', 85: 'A lot', 100: 'As much as possible' })[Number(value)] || 'A balanced amount';
   }
+  if (key === 'artistVariety' || key === 'albumVariety') {
+    return ({ 0: 'Doesn’t matter', 1: 'Balanced', 2: 'Maximum variety' })[Number(value)] || 'Balanced';
+  }
+  if (key === 'releaseYearRange') {
+    return ({ 0: 'Same year', 5: 'Within 5 years', 10: 'Within 10 years', 20: 'Within 20 years', 10000: 'Year doesn’t matter' })[Number(value)] || 'Within 10 years';
+  }
+  if (key === 'repeatCooldownMinutes') {
+    const hours = Number(value) / 60;
+    return `${hours} hour${hours === 1 ? '' : 's'}`;
+  }
   if (key === 'genreWeight') {
     if (Number(value) <= 0) return 'Genre-neutral';
     if (Number(value) < 2) return 'A little genre match';
@@ -188,7 +176,6 @@ function plainRuleValue(key, value, schema) {
 function makeRadioRuleControl(key, rules, schema) {
   const copy = ruleCopy(key);
   const wrap = element('div', 'radio-rule-control');
-  if (copy.tone) wrap.classList.add(copy.tone);
   const heading = element('div', 'radio-rule-heading');
   const title = element('div', 'radio-rule-name', copy.title);
   const reset = element('button', 'radio-rule-reset', 'Reset');
@@ -235,18 +222,6 @@ function renderRadioRules() {
     tab.classList.toggle('active', active); tab.setAttribute('aria-selected', String(active));
   });
   radioBasicControls.replaceChildren(...RADIO_BASIC_RULES.map(key => makeRadioRuleControl(key, rules, schema[key])));
-  const advancedGroups = RADIO_ADVANCED_GROUPS.map(group => {
-    const available = group.keys.filter(key => schema[key] && !RADIO_BASIC_RULES.includes(key));
-    if (!available.length) return null;
-    const wrap = element('section', 'radio-rule-group');
-    wrap.append(element('div', 'radio-rule-group-title', group.title), element('div', 'hint radio-rule-group-hint', group.hint));
-    wrap.append(...available.map(key => makeRadioRuleControl(key, rules, schema[key])));
-    return wrap;
-  }).filter(Boolean);
-  radioAdvancedControls.replaceChildren(...advancedGroups);
-  radioAdvancedControls.hidden = !advancedRadioVisible;
-  showAdvancedRadioSettings.textContent = advancedRadioVisible ? 'Hide advanced settings' : 'Advanced settings';
-  showAdvancedRadioSettings.setAttribute('aria-expanded', String(advancedRadioVisible));
   resetAllRadioRules.textContent = `Reset all ${activeRadioMode === 'artist' ? 'Artist' : 'Song'} Radio settings`;
 }
 
@@ -1113,10 +1088,6 @@ radioRuleTabs.forEach(tab => tab.addEventListener('click', () => {
   renderRadioRules();
 }));
 
-showAdvancedRadioSettings.addEventListener('click', () => {
-  advancedRadioVisible = !advancedRadioVisible;
-  renderRadioRules();
-});
 
 resetAllRadioRules.addEventListener('click', async () => {
   const title = activeRadioMode === 'artist' ? 'Artist Radio' : 'Song Radio';

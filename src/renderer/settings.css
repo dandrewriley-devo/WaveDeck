@@ -178,7 +178,6 @@ main{
 }
 
 .radio-rule-tab,
-.radio-advanced-toggle,
 .radio-rule-reset{
   background:#202020;
   border:1px solid #414141;
@@ -204,28 +203,13 @@ main{
 }
 
 .radio-rule-control{
-  background:#202020;
-  border:1px solid #343434;
+  background:#20252c;
+  border:1px solid #425d78;
   padding:9px 10px;
 }
-
-/* The first percentage-based control. Its blue tint makes it easy to spot
-   while the rest of the tuning controls remain green. */
-.artist-focus-control{
-  background:#20252c;
-  border-color:#425d78;
-}
-.artist-focus-control .radio-rule-name{ color:#c1ddf5; }
-.artist-focus-control .radio-rule-range input{ accent-color:#68a9df; }
-.artist-focus-control .radio-rule-value{ color:#a9d4f5; }
-
-.song-popularity-control{
-  background:#29251e;
-  border-color:#76613b;
-}
-.song-popularity-control .radio-rule-name{ color:#f0d498; }
-.song-popularity-control .radio-rule-range input{ accent-color:#d5a64e; }
-.song-popularity-control .radio-rule-value{ color:#f0d498; }
+.radio-rule-control .radio-rule-name{ color:#c1ddf5; }
+.radio-rule-control .radio-rule-range input{ accent-color:#68a9df; }
+.radio-rule-control .radio-rule-value{ color:#a9d4f5; }
 
 .radio-rule-heading{
   align-items:center;
@@ -242,8 +226,7 @@ main{
   padding:3px 6px;
 }
 
-.radio-rule-reset:hover,
-.radio-advanced-toggle:hover{ background:#2b2b2b; color:var(--text); }
+.radio-rule-reset:hover{ background:#2b2b2b; color:var(--text); }
 
 .radio-rule-range{
   align-items:center;
@@ -253,25 +236,10 @@ main{
   margin-top:7px;
 }
 
-.radio-rule-range input{ accent-color:#82b844; min-width:0; width:100%; }
+.radio-rule-range input{ accent-color:#68a9df; min-width:0; width:100%; }
 .radio-rule-endpoint{ color:var(--muted); font-size:10px; line-height:1.2; }
 .radio-rule-endpoint.right{ text-align:right; }
-.radio-rule-value{ color:#cbe8a9; font-size:11px; margin-top:5px; text-align:center; }
-
-.radio-advanced-toggle{
-  font-size:12px;
-  margin:10px 0 8px;
-  padding:6px 8px;
-}
-
-.radio-advanced-controls{ margin-bottom:10px; }
-.radio-rule-group{
-  display:grid;
-  gap:8px;
-  margin:2px 0 14px;
-}
-.radio-rule-group-title{ color:#d8f7b7; font-size:13px; font-weight:600; }
-.radio-rule-group-hint{ margin-top:-3px; }
+.radio-rule-value{ color:#a9d4f5; font-size:11px; margin-top:5px; text-align:center; }
 .radio-reset-all{ margin-top:3px; }
 
 .panel-help{

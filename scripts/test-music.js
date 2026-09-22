@@ -68,13 +68,12 @@ async function run() {
     assert.match(await fs.readFile(path.join(dataDir, 'music-radio-rules-reference.txt'), 'utf8'), /Artist Radio/);
     const catalog = Array.from({ length: 150 }, (_, i) => track(String(i), { artist: `Artist ${i % 20}`, artists: [`Artist ${i % 20}`] }));
     const low = track('low', { rating: 2 });
-    assert.equal(weight(low, catalog[0], 'artist', [], now), 0);
-    assert(weight(track('rare', { rating: 4 }), catalog[0], 'artist', [], now) < weight(track('normal'), catalog[0], 'artist', [], now) / 5);
+    assert.equal(weight(low, catalog[0], 'artist', [], now), weight(track('normal'), catalog[0], 'artist', [], now), 'ratings do not affect radio selection');
     const seen = new Map(); const sequence = [];
     for (let i = 0; i < 1200; i++) {
-      const picked = radio.choose([...catalog, low], catalog[0], 'radio'); assert(picked);
+      const picked = radio.choose(catalog, catalog[0], 'radio'); assert(picked);
       if (seen.has(picked.songKey)) assert(now - seen.get(picked.songKey) >= COOLDOWN);
-      assert.notEqual(picked.id, 'low'); seen.set(picked.songKey, now); sequence.push(picked.id);
+      seen.set(picked.songKey, now); sequence.push(picked.id);
       radio.record(picked); now += 180000;
     }
     assert(seen.size > 100, 'deep cuts should get airtime');
@@ -90,37 +89,55 @@ async function run() {
     assert.equal(editableRadio.rules.artist.artistFocusPercent, 50, 'legacy Artist Focus migrates to the matching snapped stop');
     assert.equal(editableRadio.rules.artist.songPopularityPercent, 50, 'legacy popularity settings migrate to the matching snapped stop');
     assert.equal(editableRadio.rules.artist.repeatCooldownMinutes, 120, 'repeat protection cannot be tuned below two hours');
+    assert.equal(editableRadio.rules.artist.artistVariety, 1, 'legacy artist spacing migrates to Balanced Artist Variety');
+    assert.equal(editableRadio.rules.artist.albumVariety, 1, 'legacy album spacing migrates to Balanced Album Variety');
+    assert.equal(editableRadio.rules.artist.releaseYearRange, 10, 'legacy release-year tuning migrates to Within 10 years');
     const editableSchema = editableRadio.getRules();
     assert.deepEqual(editableSchema.schema.artist.artistFocusPercent.stops, [0, 10, 25, 50, 70, 85, 100]);
     assert.deepEqual(editableSchema.schema.artist.songPopularityPercent.stops, [0, 10, 25, 50, 70, 85, 100]);
+    assert.deepEqual(editableSchema.schema.artist.artistVariety.stops, [0, 1, 2]);
+    assert.deepEqual(editableSchema.schema.artist.albumVariety.stops, [0, 1, 2]);
+    assert.deepEqual(editableSchema.schema.artist.releaseYearRange.stops, [0, 5, 10, 20, 10000]);
+    assert.deepEqual(editableSchema.schema.artist.repeatCooldownMinutes.stops, [120, 180, 240, 360, 480, 720, 960, 1440]);
     assert.equal(Object.hasOwn(editableSchema.schema.artist, 'favoriteMultiplier'), false, 'favorites are not used for radio selection');
-    assert.equal(editableSchema.schema.artist.recentArtistMultiplier.max, 1);
-    assert.equal(editableSchema.schema.artist.recentArtistCount.max, 100);
+    assert.equal(Object.hasOwn(editableSchema.schema.artist, 'moodWeight'), false, 'mood tags are not used for radio selection');
+    assert.equal(Object.hasOwn(editableSchema.schema.artist, 'playCountBoostMaximum'), false, 'play count is not used for radio selection');
     assert.equal(editableRadio.setRule('artist', 'artistFocusPercent', 72).artist.artistFocusPercent, 70, 'Artist Focus snaps to one of seven stops');
     assert.equal(editableRadio.setRule('artist', 'repeatCooldownMinutes', 1).artist.repeatCooldownMinutes, 120);
+    assert.equal(editableRadio.setRule('artist', 'repeatCooldownMinutes', 1100).artist.repeatCooldownMinutes, 960, 'repeat wait snaps to a clear stop');
     assert.equal(editableRadio.resetRule('artist', 'artistFocusPercent').artist.artistFocusPercent, 50);
     assert.equal(editableRadio.setRule('artist', 'songPopularityPercent', 72).artist.songPopularityPercent, 70, 'Song Popularity snaps to one of seven stops');
+    assert.equal(editableRadio.setRule('artist', 'artistVariety', 2).artist.artistVariety, 2);
+    assert.equal(editableRadio.setRule('artist', 'albumVariety', 2).artist.albumVariety, 2);
+    assert.equal(editableRadio.setRule('artist', 'releaseYearRange', 13).artist.releaseYearRange, 10);
     assert.equal(editableRadio.setRule('radio', 'genreWeight', 100).radio.genreWeight, 100);
     assert.equal(editableRadio.resetRules('radio').radio.genreWeight, 5);
-    const oldSliderRules = JSON.parse(await fs.readFile(path.join(editableDir, RULE_FILES.radio), 'utf8'));
-    oldSliderRules.version = 1;
-    oldSliderRules.recentArtistCount = 9000;
-    oldSliderRules.recentArtistMultiplier = 9000;
-    oldSliderRules.recentAlbumCount = 9000;
-    oldSliderRules.recentAlbumMultiplier = 9000;
-    await fs.writeFile(path.join(editableDir, RULE_FILES.radio), JSON.stringify(oldSliderRules));
-    const migratedRadio = new MusicRadio({ dataDir: editableDir, now: () => now, random });
-    assert.equal(migratedRadio.rules.radio.version, 4);
-    assert.equal(migratedRadio.rules.radio.recentArtistCount, 3, 'old oversized artist-memory values reset safely');
-    assert.equal(migratedRadio.rules.radio.recentArtistMultiplier, 0.18, 'old oversized artist-spacing values reset safely');
-    assert.equal(migratedRadio.rules.radio.recentAlbumCount, 5, 'old oversized album-memory values reset safely');
-    assert.equal(migratedRadio.rules.radio.recentAlbumMultiplier, 0.5, 'old oversized album-spacing values reset safely');
+    assert.equal(editableRadio.rules.artist.version, 5);
     const plainTrack = track('plain');
     assert.equal(weight({ ...plainTrack, favorite: true }, catalog[0], 'radio', [], now), weight(plainTrack, catalog[0], 'radio', [], now), 'favorites no longer affect radio selection');
+    assert.equal(weight({ ...plainTrack, moods: ['Happy'] }, { ...catalog[0], moods: ['Happy'] }, 'radio', [], now), weight(plainTrack, catalog[0], 'radio', [], now), 'mood tags do not affect radio selection');
+    assert.equal(weight({ ...plainTrack, playCount: 5000 }, catalog[0], 'radio', [], now), weight(plainTrack, catalog[0], 'radio', [], now), 'play count does not affect radio selection');
     const popular = track('popular', { popularity: 100 });
     const unpopular = track('unpopular', { popularity: 0 });
     assert.equal(weight(popular, catalog[0], 'radio', [], now, null, { ...DEFAULT_RULES.radio, songPopularityPercent: 0 }), weight(unpopular, catalog[0], 'radio', [], now, null, { ...DEFAULT_RULES.radio, songPopularityPercent: 0 }), 'zero Song Popularity ignores Last.fm popularity');
     assert(weight(popular, catalog[0], 'radio', [], now, null, { ...DEFAULT_RULES.radio, songPopularityPercent: 100 }) > weight(unpopular, catalog[0], 'radio', [], now, null, { ...DEFAULT_RULES.radio, songPopularityPercent: 100 }), 'maximum Song Popularity favors high Last.fm popularity');
+    const seedArtist = track('seed-credit', { artist: 'Seed Artist', artists: ['Seed Artist'], albumArtist: 'Seed Artist' });
+    const creditedSeed = track('featured-credit', { artist: 'Guest Artist', artists: ['Guest Artist', 'Seed Artist'], album: 'Guest Album' });
+    const otherArtist = track('other-credit', { artist: 'Other Artist', artists: ['Other Artist'], album: 'Other Album' });
+    const creditedRadio = new MusicRadio({ dataDir: path.join(temp, 'credited-seed'), now: () => now, random: () => 0.1 });
+    creditedRadio.setRule('artist', 'artistFocusPercent', 100);
+    assert.equal(creditedRadio.choose([creditedSeed, otherArtist], seedArtist, 'artist').id, creditedSeed.id, 'a credited seed artist counts as the seed artist');
+    const recentGuest = [{ key: 'past-guest', artist: 'Guest Artist', album: 'Past Album', at: now - 1 }];
+    const guestTrack = track('guest-variety', { artist: 'Guest Artist', artists: ['Guest Artist'], album: 'New Album' });
+    assert(weight(guestTrack, seedArtist, 'radio', recentGuest, now, null, { ...DEFAULT_RULES.radio, artistVariety: 2 }) <
+      weight(guestTrack, seedArtist, 'radio', recentGuest, now, null, { ...DEFAULT_RULES.radio, artistVariety: 0 }), 'Maximum Artist Variety holds back recently heard non-seed artists');
+    const sameAlbum = track('album-variety', { artist: 'Another Artist', artists: ['Another Artist'], album: 'Past Album' });
+    assert(weight(sameAlbum, seedArtist, 'radio', recentGuest, now, null, { ...DEFAULT_RULES.radio, albumVariety: 2 }) <
+      weight(sameAlbum, seedArtist, 'radio', recentGuest, now, null, { ...DEFAULT_RULES.radio, albumVariety: 0 }), 'Maximum Album Variety holds back recently heard albums');
+    const sameYear = track('same-year', { year: 1986 });
+    const outsideYear = track('outside-year', { year: 1995 });
+    assert(weight(sameYear, catalog[0], 'radio', [], now, null, { ...DEFAULT_RULES.radio, releaseYearRange: 5 }) >
+      weight(outsideYear, catalog[0], 'radio', [], now, null, { ...DEFAULT_RULES.radio, releaseYearRange: 5 }), 'Release-Year Range favors songs within the selected range');
     const loggedDecisions = [];
     const diagnosticRadio = new MusicRadio({
       dataDir: path.join(temp, 'diagnostic-radio'),
@@ -139,10 +156,25 @@ async function run() {
     assert.equal(loggedDecisions.length, 1, 'radio diagnostics publish each automatic selection');
     assert.equal(decision.mode, 'radio');
     assert.equal(decision.counts.totalTracks, 4);
-    assert.equal(decision.counts.skippedForRating, 1);
+    assert.equal(decision.counts.skippedForCooldown, 0);
+    assert.equal(decision.counts.eligible, 4, 'ratings do not exclude a track from radio');
+    assert.equal(decision.settings.artistVariety, 1);
     assert.equal(decision.selected.title, diagnosticPick.title);
     assert.equal(typeof decision.selected.popularity === 'number' || decision.selected.popularity === null, true);
     assert.ok(Array.isArray(decision.selected.multipliers));
+    const handoffRadio = new MusicRadio({ dataDir: path.join(temp, 'handoff'), now: () => now, random: () => 0.1 });
+    const firstC = track('handoff-c-old', { songKey: 'C', artist: 'Seed Artist', artists: ['Seed Artist'] });
+    const repeatedB = track('handoff-b', { songKey: 'B', artist: 'Other Artist', artists: ['Other Artist'] });
+    const currentC = track('handoff-c-current', { songKey: 'C', artist: 'Seed Artist', artists: ['Seed Artist'] });
+    handoffRadio.history = [
+      { key: currentC.songKey, artist: currentC.artist, album: currentC.album, at: now },
+      { key: 'M', artist: 'Middle Artist', album: 'Middle Album', at: now - COOLDOWN - 1 },
+      { key: repeatedB.songKey, artist: repeatedB.artist, album: repeatedB.album, at: now - COOLDOWN - 2 },
+      { key: firstC.songKey, artist: firstC.artist, album: firstC.album, at: now - COOLDOWN - 3 }
+    ];
+    const freshD = track('handoff-d', { songKey: 'D', artist: 'Fresh Artist', artists: ['Fresh Artist'] });
+    handoffRadio.setRule('radio', 'artistFocusPercent', 0);
+    assert.equal(handoffRadio.choose([repeatedB, freshD], currentC, 'radio').songKey, 'D', 'a prior C-to-B handoff is skipped when another song is eligible');
     const focusCatalog = [
       ...Array.from({ length: 3 }, (_, index) => track(`seed-${index}`, { artist: 'Seed Artist', artists: ['Seed Artist'], albumArtist: 'Seed Artist', album: `Seed ${index}` })),
       ...Array.from({ length: 10 }, (_, index) => track(`other-${index}`, { artist: `Other ${index}`, artists: [`Other ${index}`], album: `Other ${index}` }))

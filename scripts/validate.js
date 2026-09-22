@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.7.2");
-assert.strictEqual(packageJson.wavedeckVersion, "0.7.2");
+assert.strictEqual(packageJson.version, "0.7.3");
+assert.strictEqual(packageJson.wavedeckVersion, "0.7.3");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -1155,7 +1155,8 @@ assert.ok(settingsHtml.indexOf('data-tab="advanced"') < settingsHtml.indexOf('da
 assert.ok(settingsHtml.includes('id="tab-advanced"'));
 assert.ok(settingsHtml.includes('Enable Advanced Features'));
 assert.ok(settingsHtml.includes('id="radioBasicControls"'));
-assert.ok(settingsHtml.includes('id="radioAdvancedControls"'));
+assert.ok(!settingsHtml.includes('id="radioAdvancedControls"'));
+assert.ok(!settingsHtml.includes('id="showAdvancedRadioSettings"'));
 assert.ok(settingsHtml.includes('id="resetAllRadioRules"'));
 assert.ok(settingsHtml.includes('id="chooseAdditionalMusicFolderBtn"'));
 assert.ok(settingsHtml.includes("WaveDeck_Library.json"));
@@ -1170,6 +1171,16 @@ assert.ok(settingsHtml.includes('id="st_has_preroll"'));
 assert.ok(settingsHtml.includes("WaveDeck 0.6.7 — Stream Recording & Settings Update"));
 assert.ok(settingsHtml.includes("native Sidebar Mode"));
 assert.ok(settingsHtml.includes("Changelog"));
+for (const control of [
+  'artistFocusPercent', 'genreWeight', 'songPopularityPercent', 'artistVariety', 'albumVariety',
+  'releaseYearRange', 'unrelatedTrackMultiplier', 'selectionRandomness', 'repeatCooldownMinutes'
+]) {
+  assert.ok(settingsRendererSource.includes(`'${control}'`), `Radio tuning should include ${control}`);
+}
+assert.ok(!settingsRendererSource.includes('RADIO_ADVANCED_GROUPS'));
+assert.ok(!settingsRendererSource.includes('featuredArtistWeight'));
+assert.ok(!settingsRendererSource.includes('moodWeight'));
+assert.ok(!settingsRendererSource.includes('playCountBoostMaximum'));
 const settingsStyles = fs.readFileSync(path.join(root, "src", "renderer", "settings.css"), "utf8");
 assert.ok(settingsStyles.includes("position: sticky"));
 assert.ok(settingsStyles.includes("overflow: auto"));

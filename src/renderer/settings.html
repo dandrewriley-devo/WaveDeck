@@ -25,7 +25,7 @@
       <!-- INTERFACE -->
       <section id="tab-interface" class="panel hidden">
         <div class="general-meta">
-          <b>WaveDeck version <span id="aboutVersion">0.7.2</span></b>
+          <b>WaveDeck version <span id="aboutVersion">0.7.3</span></b>
           <span>Station library: <span id="aboutDataDir">Data</span></span>
         </div>
         <div class="general-sections">
@@ -263,14 +263,12 @@
 
                 <section class="radio-tuning" aria-labelledby="radioTuningTitle">
                   <div class="pro-music-settings-title" id="radioTuningTitle">Radio Tuning</div>
-                  <div class="hint">Choose how each kind of Music radio balances familiar favorites, related tracks, and variety. Your choices are saved in portable Data and take effect for the next radio pick.</div>
+                  <div class="hint">Choose how each kind of Music radio balances matching music and variety. Your choices are saved in portable Data and take effect for the next radio pick.</div>
                   <div class="radio-rule-tabs" role="tablist" aria-label="Radio tuning type">
                     <button class="radio-rule-tab active" type="button" data-radio-mode="artist">Artist Radio</button>
                     <button class="radio-rule-tab" type="button" data-radio-mode="radio">Song Radio</button>
                   </div>
                   <div id="radioBasicControls" class="radio-rule-controls"></div>
-                  <button id="showAdvancedRadioSettings" class="radio-advanced-toggle" type="button" aria-expanded="false">Advanced settings</button>
-                  <div id="radioAdvancedControls" class="radio-rule-controls radio-advanced-controls" hidden></div>
                   <button id="resetAllRadioRules" class="btn radio-reset-all" type="button">Reset all Artist Radio settings</button>
                 </section>
               </div>
@@ -294,6 +292,14 @@
         <div class="changelog">
           <h2>Changelog</h2>
 
+          <h3>WaveDeck 0.7.3 — Simplified Music Radio</h3>
+          <ul>
+            <li>Reduced Music Radio to nine clear, always-visible controls, all using the same blue slider treatment.</li>
+            <li>Added Artist Variety, Album Variety, and Release-Year Range; simplified Song Repeat Wait to 2–24 hours.</li>
+            <li>Removed rating, favorite, play-count, mood, and featured-artist influence from Music Radio.</li>
+            <li>Hard-coded balanced Last.fm related-artist matching, a gentle post-repeat holdback, and strict repeated-handoff avoidance.</li>
+          </ul>
+
           <h3>WaveDeck 0.7.2 — Live Radio Log</h3>
           <ul>
             <li>Added a hidden Live Radio Log: press <b>Ctrl + Alt + Shift + L</b> to open it.</li>
@@ -307,7 +313,7 @@
             <li>Portable Music folder beside Data; one scan at launch and a manual Rescan button.</li>
             <li>Play Album, continuous Artist Radio and Song Radio.</li>
             <li>Albums flow into Artist Radio. Automatic selections respect a 120-minute repeat limit across restarts.</li>
-            <li>Moderate favorites/rating/popularity boosts, deep cuts, and varied transitions.</li>
+            <li>Flexible song selection, deep cuts, and varied transitions.</li>
             <li>Artist and Song Radio tuning is available in Settings → Advanced, with basic and advanced sliders plus per-setting resets.</li>
             <li>Song pause/resume and music-aware media keys. No album art or ReplayGain handling.</li>
           </ul>
