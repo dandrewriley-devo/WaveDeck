@@ -155,6 +155,7 @@ assert.ok(packageJson.scripts["prepare:linux-recorder"].includes("prepare-linux-
 assert.ok(packageJson.scripts.start.includes("prepare:linux-recorder"));
 assert.ok(packageJson.scripts["dist:linux"].includes("prepare:linux-recorder"));
 assert.ok(!packageJson.build.asarUnpack);
+assert.ok(packageJson.build.files.includes("!node_modules/usocket{,/**/*}"), "Linux packages must exclude the incompatible optional usocket module");
 assert.deepStrictEqual(packageJson.build.extraResources, [
   {
     from: ".cache/wavedeck-tools/linux/ffmpeg",

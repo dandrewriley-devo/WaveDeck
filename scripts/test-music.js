@@ -90,11 +90,26 @@ async function run() {
     assert.equal(editableRadio.rules.artist.repeatCooldownMinutes, 120, 'repeat protection cannot be tuned below two hours');
     const editableSchema = editableRadio.getRules();
     assert.equal(editableSchema.schema.artist.sameArtistWeight.max, 10000);
+    assert.equal(editableSchema.schema.artist.recentArtistMultiplier.max, 1);
+    assert.equal(editableSchema.schema.artist.recentArtistCount.max, 100);
     assert.equal(editableRadio.setRule('artist', 'sameArtistWeight', 10000).artist.sameArtistWeight, 10000);
     assert.equal(editableRadio.setRule('artist', 'repeatCooldownMinutes', 1).artist.repeatCooldownMinutes, 120);
     assert.equal(editableRadio.resetRule('artist', 'sameArtistWeight').artist.sameArtistWeight, 7);
     assert.equal(editableRadio.setRule('radio', 'genreWeight', 100).radio.genreWeight, 100);
     assert.equal(editableRadio.resetRules('radio').radio.genreWeight, 5);
+    const oldSliderRules = JSON.parse(await fs.readFile(path.join(editableDir, RULE_FILES.radio), 'utf8'));
+    oldSliderRules.version = 1;
+    oldSliderRules.recentArtistCount = 9000;
+    oldSliderRules.recentArtistMultiplier = 9000;
+    oldSliderRules.recentAlbumCount = 9000;
+    oldSliderRules.recentAlbumMultiplier = 9000;
+    await fs.writeFile(path.join(editableDir, RULE_FILES.radio), JSON.stringify(oldSliderRules));
+    const migratedRadio = new MusicRadio({ dataDir: editableDir, now: () => now, random });
+    assert.equal(migratedRadio.rules.radio.version, 2);
+    assert.equal(migratedRadio.rules.radio.recentArtistCount, 3, 'old oversized artist-memory values reset safely');
+    assert.equal(migratedRadio.rules.radio.recentArtistMultiplier, 0.18, 'old oversized artist-spacing values reset safely');
+    assert.equal(migratedRadio.rules.radio.recentAlbumCount, 5, 'old oversized album-memory values reset safely');
+    assert.equal(migratedRadio.rules.radio.recentAlbumMultiplier, 0.5, 'old oversized album-spacing values reset safely');
     await fs.writeFile(path.join(editableDir, RULE_FILES.radio), '{not valid json');
     const previousWarning = console.warn; console.warn = () => {};
     try { assert(editableRadio.choose(catalog, catalog[0], 'radio'), 'invalid rules must fall back safely'); }

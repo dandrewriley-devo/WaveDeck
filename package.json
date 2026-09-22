@@ -29,7 +29,8 @@
       "build/**/*",
       "defaults/**/*",
       "src/**/*",
-      "package.json"
+      "package.json",
+      "!node_modules/usocket{,/**/*}"
     ],
     "extraResources": [
       {

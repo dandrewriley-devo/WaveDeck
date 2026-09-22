@@ -247,6 +247,13 @@ main{
 }
 
 .radio-advanced-controls{ margin-bottom:10px; }
+.radio-rule-group{
+  display:grid;
+  gap:8px;
+  margin:2px 0 14px;
+}
+.radio-rule-group-title{ color:#d8f7b7; font-size:13px; font-weight:600; }
+.radio-rule-group-hint{ margin-top:-3px; }
 .radio-reset-all{ margin-top:3px; }
 
 .panel-help{

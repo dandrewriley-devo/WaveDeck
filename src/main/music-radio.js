@@ -5,7 +5,7 @@ const RULE_FILES = { artist: 'artist-radio-rules.json', radio: 'song-radio-rules
 const RULES_REFERENCE_FILE = 'music-radio-rules-reference.txt';
 const DEFAULT_RULES = {
   artist: {
-    version: 1, repeatCooldownMinutes: 120, excludeRatingAtOrBelow: 2, lowRatingMaximum: 4,
+    version: 2, repeatCooldownMinutes: 120, excludeRatingAtOrBelow: 2, lowRatingMaximum: 4,
     lowRatingMultiplier: 0.08, ratingBaseMultiplier: 0.8, ratingStepMultiplier: 0.08,
     sameArtistWeight: 7, featuredArtistWeight: 4, genreWeight: 5, similarArtistWeight: 6,
     moodWeight: 2, eraWeight: 2, eraYearRange: 10, favoriteMultiplier: 1.25,
@@ -16,7 +16,7 @@ const DEFAULT_RULES = {
     repeatedTransitionMultiplier: 0.02
   },
   radio: {
-    version: 1, repeatCooldownMinutes: 120, excludeRatingAtOrBelow: 2, lowRatingMaximum: 4,
+    version: 2, repeatCooldownMinutes: 120, excludeRatingAtOrBelow: 2, lowRatingMaximum: 4,
     lowRatingMultiplier: 0.08, ratingBaseMultiplier: 0.8, ratingStepMultiplier: 0.08,
     sameArtistWeight: 7, featuredArtistWeight: 4, genreWeight: 5, similarArtistWeight: 6,
     moodWeight: 2, eraWeight: 2, eraYearRange: 10, favoriteMultiplier: 1.25,
@@ -28,36 +28,77 @@ const DEFAULT_RULES = {
   }
 };
 const COOLDOWN = DEFAULT_RULES.artist.repeatCooldownMinutes * 60 * 1000;
-const RULE_MINIMUMS = { repeatCooldownMinutes: 120, eraYearRange: 1, popularityDivisor: 1, playCountLogDivisor: 1 };
-const RULE_MAXIMUMS = { repeatCooldownMinutes: 10080, selectionRandomness: 10 };
+// These are the actual, safe working ranges for each rule.  Do not use a
+// catch-all maximum: several rules are multipliers where a large number means
+// the opposite of the plain-English slider label (for example artist spacing).
+const RULE_SPECS = {
+  repeatCooldownMinutes: { min: 120, max: 10080, integer: true },
+  excludeRatingAtOrBelow: { min: 0, max: 10, integer: true },
+  lowRatingMaximum: { min: 0, max: 10, integer: true },
+  lowRatingMultiplier: { min: 0, max: 1 },
+  ratingBaseMultiplier: { min: 0, max: 10000 },
+  ratingStepMultiplier: { min: 0, max: 10000 },
+  sameArtistWeight: { min: 0, max: 10000 },
+  featuredArtistWeight: { min: 0, max: 10000 },
+  genreWeight: { min: 0, max: 10000 },
+  similarArtistWeight: { min: 0, max: 10000 },
+  moodWeight: { min: 0, max: 10000 },
+  eraWeight: { min: 0, max: 10000 },
+  eraYearRange: { min: 1, max: 1000, integer: true },
+  favoriteMultiplier: { min: 0, max: 10000 },
+  unrelatedTrackMultiplier: { min: 0, max: 1 },
+  selectionRandomness: { min: 0, max: 10 },
+  popularityMaximum: { min: 0, max: 10000 },
+  popularityDivisor: { min: 1, max: 10000 },
+  playCountBoostMaximum: { min: 0, max: 10 },
+  playCountLogDivisor: { min: 1, max: 10000 },
+  postCooldownMultiplier: { min: 0, max: 1 },
+  recentArtistCount: { min: 0, max: 100, integer: true },
+  recentArtistMultiplier: { min: 0, max: 1 },
+  recentAlbumCount: { min: 0, max: 100, integer: true },
+  recentAlbumMultiplier: { min: 0, max: 1 },
+  repeatedTransitionMultiplier: { min: 0, max: 1 }
+};
+const RULE_MINIMUMS = Object.fromEntries(Object.entries(RULE_SPECS).map(([key, spec]) => [key, spec.min]));
+const RULE_MAXIMUMS = Object.fromEntries(Object.entries(RULE_SPECS).map(([key, spec]) => [key, spec.max]));
+const LEGACY_BROKEN_SLIDERS = new Set([
+  'lowRatingMultiplier', 'unrelatedTrackMultiplier', 'postCooldownMultiplier',
+  'recentArtistCount', 'recentArtistMultiplier', 'recentAlbumCount',
+  'recentAlbumMultiplier', 'repeatedTransitionMultiplier'
+]);
 const RULES_REFERENCE = `WaveDeck Music Radio Rules\n\n` +
 `WaveDeck's Settings → Advanced tab is the normal way to tune Artist Radio and Song Radio. The sliders save these files automatically.\n\n` +
 `artist-radio-rules.json controls Artist Radio.\n` +
 `song-radio-rules.json controls Song Radio.\n\n` +
 `If you edit a file yourself, save it and WaveDeck uses the new value before choosing its next radio song. Invalid files use built-in defaults until fixed.\n\n` +
-`repeatCooldownMinutes: Minimum time before the same song may repeat. WaveDeck will never allow less than 120 minutes.\n` +
-`sameArtistWeight, featuredArtistWeight, genreWeight, similarArtistWeight, moodWeight, eraWeight: Higher values make that connection more important.\n` +
-`eraYearRange: Number of years over which era similarity fades.\n` +
-`unrelatedTrackMultiplier: 0 keeps selection inside the related pool whenever possible. A value between 0 and 1 allows a smaller amount of unrelated variety.\n` +
-`selectionRandomness: 1 uses the normal weighted balance. Lower values flatten the weights for more surprise; higher values favor the strongest matches.\n` +
-`excludeRatingAtOrBelow: Tracks at or below this 1-10 rating are not selected automatically.\n` +
-`lowRatingMaximum and lowRatingMultiplier: Make lower-rated tracks rare without excluding them.\n` +
-`ratingBaseMultiplier and ratingStepMultiplier: Control the boost for ratings above lowRatingMaximum.\n` +
-`favoriteMultiplier, popularityMaximum, popularityDivisor, playCountBoostMaximum, playCountLogDivisor: Tune preference and popularity boosts.\n` +
-`postCooldownMultiplier: Keeps a song less likely even after its cooldown ends.\n` +
-`recentArtistCount/recentArtistMultiplier and recentAlbumCount/recentAlbumMultiplier: Discourage artist and album clustering.\n` +
-`repeatedTransitionMultiplier: Discourages the same song-to-song transition from recurring.\n`;
+`The Settings sliders are the recommended way to tune radio. They use safe limits and plain-English labels.\n\n` +
+`repeatCooldownMinutes (120–10080): Minimum wait before the same song can return.\n` +
+`sameArtistWeight, featuredArtistWeight, genreWeight, similarArtistWeight, moodWeight, eraWeight (0–10000): Higher values make that connection matter more.\n` +
+`eraYearRange (1–1000): How far apart release years may be and still feel like the same era.\n` +
+`unrelatedTrackMultiplier (0–1): 0 stays with related music when available; 1 lets unrelated music compete normally.\n` +
+`selectionRandomness (0–10): Lower values make picks more surprising; higher values favor the strongest matches.\n` +
+`excludeRatingAtOrBelow and lowRatingMaximum (0–10): Decide which low ratings are skipped or made rare.\n` +
+`lowRatingMultiplier, postCooldownMultiplier, recentArtistMultiplier, recentAlbumMultiplier, repeatedTransitionMultiplier (0–1): 0 is the strongest hold-back; 1 is no extra hold-back.\n` +
+`recentArtistCount and recentAlbumCount (0–100): How far back radio looks when preventing clumps.\n` +
+`ratingBaseMultiplier, ratingStepMultiplier, favoriteMultiplier, popularityMaximum, popularityDivisor, playCountBoostMaximum, playCountLogDivisor: Fine-tune preference and listening-history boosts.\n`;
 const matches = (a, b) => Boolean(a && b && normalize(a) === normalize(b));
 const overlaps = (a = [], b = []) => a.some(x => b.some(y => matches(x, y)));
 const clone = value => JSON.parse(JSON.stringify(value));
 function validatedRules(value, defaults) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return clone(defaults);
   const result = clone(defaults);
+  const oldVersion = Number(value.version) || 1;
   for (const [key, fallback] of Object.entries(defaults)) {
     if (key === 'version') continue;
     const candidate = Number(value[key]);
-    if (Number.isFinite(candidate) && candidate >= 0) {
-      result[key] = Math.min(RULE_MAXIMUMS[key] || 10000, Math.max(RULE_MINIMUMS[key] || 0, candidate));
+    const spec = RULE_SPECS[key];
+    if (Number.isFinite(candidate)) {
+      // Version 1 exposed several 0–1 multipliers and small memory counts as
+      // 0–10000 sliders. Reset only those impossible old values, rather than
+      // turning "strong spacing" into "no spacing" by merely clamping to 1.
+      if (oldVersion < 2 && LEGACY_BROKEN_SLIDERS.has(key) && candidate > spec.max) continue;
+      const bounded = Math.min(spec.max, Math.max(spec.min, candidate));
+      result[key] = spec.integer ? Math.round(bounded) : bounded;
     }
   }
   return result;
@@ -68,8 +109,7 @@ function ruleSchema(mode) {
     .filter(([key]) => key !== 'version')
     .map(([key, defaultValue]) => [key, {
       defaultValue,
-      min: RULE_MINIMUMS[key] || 0,
-      max: RULE_MAXIMUMS[key] || 10000
+      ...RULE_SPECS[key]
     }]));
 }
 function weight(track, seed, mode, history, now, context = null, rules = DEFAULT_RULES[mode] || DEFAULT_RULES.radio) {
@@ -122,7 +162,7 @@ class MusicRadio {
     try {
       fs.mkdirSync(this.dataDir, { recursive: true });
       const reference = path.join(this.dataDir, RULES_REFERENCE_FILE);
-      if (!fs.existsSync(reference)) fs.writeFileSync(reference, RULES_REFERENCE);
+      if (!fs.existsSync(reference) || fs.readFileSync(reference, 'utf8') !== RULES_REFERENCE) fs.writeFileSync(reference, RULES_REFERENCE);
     } catch (error) {
       console.warn(`WaveDeck could not create ${RULES_REFERENCE_FILE}. ${error.message}`);
     }
@@ -138,7 +178,13 @@ class MusicRadio {
           stat = fs.statSync(file);
         }
         if (!force && stat.mtimeMs === this.ruleModified[mode]) continue;
-        this.rules[mode] = validatedRules(JSON.parse(fs.readFileSync(file, 'utf8')), DEFAULT_RULES[mode]);
+        const saved = JSON.parse(fs.readFileSync(file, 'utf8'));
+        this.rules[mode] = validatedRules(saved, DEFAULT_RULES[mode]);
+        if (JSON.stringify(saved) !== JSON.stringify(this.rules[mode])) {
+          fs.writeFileSync(file + '.tmp', JSON.stringify(this.rules[mode], null, 2) + '\n');
+          fs.renameSync(file + '.tmp', file);
+          stat = fs.statSync(file);
+        }
         this.ruleModified[mode] = stat.mtimeMs;
       } catch (error) {
         this.rules[mode] = clone(DEFAULT_RULES[mode]);
@@ -223,4 +269,4 @@ class MusicRadio {
     return weightedCandidates.at(-1)?.track || null;
   }
 }
-module.exports = { MusicRadio, weight, COOLDOWN, DEFAULT_RULES, RULE_FILES, RULE_MINIMUMS, RULE_MAXIMUMS };
+module.exports = { MusicRadio, weight, COOLDOWN, DEFAULT_RULES, RULE_FILES, RULE_MINIMUMS, RULE_MAXIMUMS, RULE_SPECS };
