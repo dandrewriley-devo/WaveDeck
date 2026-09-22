@@ -209,6 +209,16 @@ main{
   padding:9px 10px;
 }
 
+/* The first percentage-based control. Its blue tint makes it easy to spot
+   while the rest of the tuning controls remain green. */
+.artist-focus-control{
+  background:#20252c;
+  border-color:#425d78;
+}
+.artist-focus-control .radio-rule-name{ color:#c1ddf5; }
+.artist-focus-control .radio-rule-range input{ accent-color:#68a9df; }
+.artist-focus-control .radio-rule-value{ color:#a9d4f5; }
+
 .radio-rule-heading{
   align-items:center;
   display:flex;

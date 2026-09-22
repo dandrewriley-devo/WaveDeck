@@ -82,19 +82,20 @@ async function run() {
     const editableDir = path.join(temp, 'editable-rules');
     const editableRadio = new MusicRadio({ dataDir: editableDir, now: () => now, random });
     const editableRules = JSON.parse(await fs.readFile(path.join(editableDir, RULE_FILES.artist), 'utf8'));
+    editableRules.version = 2;
     editableRules.sameArtistWeight = 15;
     editableRules.repeatCooldownMinutes = 1;
     await fs.writeFile(path.join(editableDir, RULE_FILES.artist), JSON.stringify(editableRules));
     assert(editableRadio.choose(catalog, catalog[0], 'artist'));
-    assert.equal(editableRadio.rules.artist.sameArtistWeight, 15);
+    assert.equal(editableRadio.rules.artist.artistFocusPercent, 50, 'legacy Artist Focus migrates to the matching snapped stop');
     assert.equal(editableRadio.rules.artist.repeatCooldownMinutes, 120, 'repeat protection cannot be tuned below two hours');
     const editableSchema = editableRadio.getRules();
-    assert.equal(editableSchema.schema.artist.sameArtistWeight.max, 10000);
+    assert.deepEqual(editableSchema.schema.artist.artistFocusPercent.stops, [0, 10, 25, 50, 70, 85, 100]);
     assert.equal(editableSchema.schema.artist.recentArtistMultiplier.max, 1);
     assert.equal(editableSchema.schema.artist.recentArtistCount.max, 100);
-    assert.equal(editableRadio.setRule('artist', 'sameArtistWeight', 10000).artist.sameArtistWeight, 10000);
+    assert.equal(editableRadio.setRule('artist', 'artistFocusPercent', 72).artist.artistFocusPercent, 70, 'Artist Focus snaps to one of seven stops');
     assert.equal(editableRadio.setRule('artist', 'repeatCooldownMinutes', 1).artist.repeatCooldownMinutes, 120);
-    assert.equal(editableRadio.resetRule('artist', 'sameArtistWeight').artist.sameArtistWeight, 7);
+    assert.equal(editableRadio.resetRule('artist', 'artistFocusPercent').artist.artistFocusPercent, 50);
     assert.equal(editableRadio.setRule('radio', 'genreWeight', 100).radio.genreWeight, 100);
     assert.equal(editableRadio.resetRules('radio').radio.genreWeight, 5);
     const oldSliderRules = JSON.parse(await fs.readFile(path.join(editableDir, RULE_FILES.radio), 'utf8'));
@@ -105,11 +106,23 @@ async function run() {
     oldSliderRules.recentAlbumMultiplier = 9000;
     await fs.writeFile(path.join(editableDir, RULE_FILES.radio), JSON.stringify(oldSliderRules));
     const migratedRadio = new MusicRadio({ dataDir: editableDir, now: () => now, random });
-    assert.equal(migratedRadio.rules.radio.version, 2);
+    assert.equal(migratedRadio.rules.radio.version, 3);
     assert.equal(migratedRadio.rules.radio.recentArtistCount, 3, 'old oversized artist-memory values reset safely');
     assert.equal(migratedRadio.rules.radio.recentArtistMultiplier, 0.18, 'old oversized artist-spacing values reset safely');
     assert.equal(migratedRadio.rules.radio.recentAlbumCount, 5, 'old oversized album-memory values reset safely');
     assert.equal(migratedRadio.rules.radio.recentAlbumMultiplier, 0.5, 'old oversized album-spacing values reset safely');
+    const focusCatalog = [
+      ...Array.from({ length: 3 }, (_, index) => track(`seed-${index}`, { artist: 'Seed Artist', artists: ['Seed Artist'], albumArtist: 'Seed Artist', album: `Seed ${index}` })),
+      ...Array.from({ length: 10 }, (_, index) => track(`other-${index}`, { artist: `Other ${index}`, artists: [`Other ${index}`], album: `Other ${index}` }))
+    ];
+    const always = new MusicRadio({ dataDir: path.join(temp, 'always-focus'), now: () => now, random: () => 0.9 });
+    always.setRule('artist', 'artistFocusPercent', 100);
+    for (let index = 0; index < 3; index += 1) {
+      const picked = always.choose(focusCatalog, focusCatalog[0], 'artist');
+      assert.equal(picked.artist, 'Seed Artist', 'Always chooses the seed artist while one is eligible');
+      always.record(picked); now += 60000;
+    }
+    assert.notEqual(always.choose(focusCatalog, focusCatalog[0], 'artist').artist, 'Seed Artist', 'Always falls back when every seed track is in cooldown');
     await fs.writeFile(path.join(editableDir, RULE_FILES.radio), '{not valid json');
     const previousWarning = console.warn; console.warn = () => {};
     try { assert(editableRadio.choose(catalog, catalog[0], 'radio'), 'invalid rules must fall back safely'); }

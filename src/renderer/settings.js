@@ -77,7 +77,7 @@ let radioRules = null;
 let activeRadioMode = 'artist';
 let advancedRadioVisible = false;
 
-const RADIO_BASIC_RULES = ['sameArtistWeight', 'genreWeight', 'favoriteMultiplier', 'unrelatedTrackMultiplier', 'selectionRandomness'];
+const RADIO_BASIC_RULES = ['artistFocusPercent', 'genreWeight', 'favoriteMultiplier', 'unrelatedTrackMultiplier', 'selectionRandomness'];
 const RADIO_RULE_COPY = {
   repeatCooldownMinutes: { title: 'Song repeat wait', description: 'How long a song has to stay away before it can come back.', low: 'At least two hours', high: 'Up to one week' },
   excludeRatingAtOrBelow: { title: 'Ratings to skip', description: 'Low-rated songs at or below this line will not play on their own.', low: 'Skip fewer songs', high: 'Skip more songs' },
@@ -85,7 +85,7 @@ const RADIO_RULE_COPY = {
   lowRatingMultiplier: { title: 'Chance for low-rated songs', description: 'How often songs below that line can still slip in.', low: 'Almost never', high: 'Like any other song' },
   ratingBaseMultiplier: { title: 'Starting boost for rated songs', description: 'How much a normally rated song gets a head start.', low: 'No head start', high: 'Very large head start' },
   ratingStepMultiplier: { title: 'Extra boost for higher ratings', description: 'How much each step up in rating matters.', low: 'Ratings barely matter', high: 'Ratings matter a lot' },
-  sameArtistWeight: { title: 'Artist focus', description: 'How strongly radio stays with the artist that started it.', low: 'Broad mix', high: 'Almost all selected artist' },
+  artistFocusPercent: { title: 'Artist Focus', description: 'How often should this station play the seed artist?', low: 'No special preference', high: 'Always', featured: true },
   featuredArtistWeight: { title: 'Featured artist match', description: 'How much featured-artist credits help a song fit.', low: 'Ignore featured artists', high: 'Favor featured artists' },
   genreWeight: { title: 'Genre match', description: 'How strongly matching genres guide the next song.', low: 'Genre does not matter', high: 'Genre leads the mix' },
   similarArtistWeight: { title: 'Related artist match', description: 'How much related-artist tags help a song fit.', low: 'Ignore related artists', high: 'Related artists first' },
@@ -127,6 +127,9 @@ function renderProMusicSettings(preferences) {
 function ruleCopy(key) { return RADIO_RULE_COPY[key] || { title: key, description: 'Fine-tune this part of radio selection.', low: 'Less', high: 'More' }; }
 
 function ruleSliderPosition(key, value, schema) {
+  if (Array.isArray(schema.stops)) {
+    return schema.stops.reduce((best, stop, index) => Math.abs(stop - value) < Math.abs(schema.stops[best] - value) ? index : best, 0);
+  }
   const min = Number(schema.min || 0); const max = Number(schema.max || 1);
   const ratio = Math.max(0, Math.min(1, (Number(value) - min) / Math.max(1, max - min)));
   const position = (max >= 1000 ? Math.cbrt(ratio) : ratio) * 1000;
@@ -134,6 +137,7 @@ function ruleSliderPosition(key, value, schema) {
 }
 
 function ruleValueFromSlider(key, position, schema) {
+  if (Array.isArray(schema.stops)) return schema.stops[Math.max(0, Math.min(schema.stops.length - 1, Number(position)))];
   const min = Number(schema.min || 0); const max = Number(schema.max || 1);
   const visualRatio = Math.max(0, Math.min(1, Number(position) / 1000));
   const ratio = ruleCopy(key).reverse ? 1 - visualRatio : visualRatio;
@@ -146,13 +150,8 @@ function plainRuleValue(key, value, schema) {
   const min = Number(schema.min || 0); const max = Number(schema.max || 1);
   const ratio = Math.max(0, Math.min(1, (Number(value) - min) / Math.max(1, max - min)));
   const copy = ruleCopy(key);
-  if (key === 'sameArtistWeight') {
-    if (Number(value) <= 0) return 'Broad mix';
-    if (Number(value) < 3) return 'A little selected artist';
-    if (Number(value) < 7) return 'Balanced artist mix';
-    if (Number(value) < 25) return 'Often selected artist';
-    if (Number(value) < 100) return 'Mostly selected artist';
-    return 'Almost all selected artist';
+  if (key === 'artistFocusPercent') {
+    return ({ 0: 'No special preference', 10: 'Once in a while', 25: 'Every few songs', 50: 'About half the time', 70: 'Most songs', 85: 'Nearly every song', 100: 'Always' })[Number(value)] || 'About half the time';
   }
   if (key === 'genreWeight') {
     if (Number(value) <= 0) return 'Genre-neutral';
@@ -195,6 +194,7 @@ function plainRuleValue(key, value, schema) {
 function makeRadioRuleControl(key, rules, schema) {
   const copy = ruleCopy(key);
   const wrap = element('div', 'radio-rule-control');
+  if (copy.featured) wrap.classList.add('artist-focus-control');
   const heading = element('div', 'radio-rule-heading');
   const title = element('div', 'radio-rule-name', copy.title);
   const reset = element('button', 'radio-rule-reset', 'Reset');
@@ -204,7 +204,7 @@ function makeRadioRuleControl(key, rules, schema) {
   const rangeRow = element('div', 'radio-rule-range');
   const low = element('span', 'radio-rule-endpoint', copy.low);
   const input = document.createElement('input');
-  input.type = 'range'; input.min = '0'; input.max = '1000'; input.step = '1'; input.value = String(ruleSliderPosition(key, rules[key], schema));
+  input.type = 'range'; input.min = '0'; input.max = String(Array.isArray(schema.stops) ? schema.stops.length - 1 : 1000); input.step = '1'; input.value = String(ruleSliderPosition(key, rules[key], schema));
   input.dataset.ruleKey = key;
   input.setAttribute('aria-label', copy.title);
   const high = element('span', 'radio-rule-endpoint right', copy.high);
