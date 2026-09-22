@@ -373,10 +373,33 @@ class MusicRadio {
       return remaining < 0;
     }) || weightedCandidates.at(-1) || null;
     const selected = picked?.track || null;
+    const diagnosticCandidate = candidate => ({
+      title: String(candidate.track?.title || ''),
+      artist: String(candidate.track?.artist || ''),
+      album: String(candidate.track?.album || ''),
+      year: Number(candidate.track?.year) || null,
+      genres: Array.isArray(candidate.track?.genres) ? candidate.track.genres.slice(0, 8).map(String) : [],
+      popularity: candidate.popularity ?? null,
+      scoreBeforeRandomness: candidate.baseScore,
+      scoreAfterRandomness: candidate.score,
+      additions: candidate.additions,
+      multipliers: candidate.multipliers
+    });
+    const rankedCandidates = [...weightedCandidates]
+      .sort((a, b) => b.score - a.score || b.baseScore - a.baseScore)
+      .slice(0, 8);
+    const selectedRank = selected
+      ? [...weightedCandidates].sort((a, b) => b.score - a.score || b.baseScore - a.baseScore)
+        .findIndex(candidate => candidate.track === selected) + 1
+      : null;
     this.#rememberDecision({
       at: new Date(now).toISOString(),
       mode,
-      seed: { title: String(seed?.title || ''), artist: String(seed?.artist || ''), album: String(seed?.album || '') },
+      seed: {
+        title: String(seed?.title || ''), artist: String(seed?.artist || ''), album: String(seed?.album || ''),
+        year: Number(seed?.year) || null,
+        genres: Array.isArray(seed?.genres) ? seed.genres.slice(0, 8).map(String) : []
+      },
       settings: {
         artistFocusPercent: rules.artistFocusPercent,
         genreWeight: rules.genreWeight,
@@ -403,12 +426,22 @@ class MusicRadio {
       selectionRoll,
       selected: selected ? {
         title: String(selected.title || ''), artist: String(selected.artist || ''), album: String(selected.album || ''),
+        year: Number(selected.year) || null,
+        genres: Array.isArray(selected.genres) ? selected.genres.slice(0, 8).map(String) : [],
         popularity: picked.popularity,
         scoreBeforeRandomness: picked.baseScore,
         scoreAfterRandomness: picked.score,
         additions: picked.additions,
         multipliers: picked.multipliers
       } : null,
+      diagnostics: {
+        recentHistory: this.history.slice(0, 12).map(entry => ({
+          artist: String(entry.artist || ''), album: String(entry.album || ''), at: new Date(entry.at).toISOString()
+        })),
+        selectedRank,
+        totalWeightedScore,
+        topFinalCandidates: rankedCandidates.map(diagnosticCandidate)
+      },
       reason: selected ? `${artistFocusOutcome}; picked from ${weightedCandidates.length} eligible track${weightedCandidates.length === 1 ? '' : 's'}.` : 'No eligible song is available yet.'
     });
     return selected;

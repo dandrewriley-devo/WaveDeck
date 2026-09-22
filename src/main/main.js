@@ -84,6 +84,8 @@ const DISPLAY_VERSION = require("../../package.json").wavedeckVersion || app.get
 let mainWindow = null;
 let settingsWindow = null;
 let radioLogWindow = null;
+const radioDiagnosticSession = [];
+const RADIO_DIAGNOSTIC_LIMIT = 3000;
 let storage = null;
 let player = null;
 let recordingLibrary = null;
@@ -205,6 +207,10 @@ function sendToAll(channel, payload) {
 }
 
 function sendToRadioLog(decision) {
+  if (decision?.selected) {
+    radioDiagnosticSession.push(decision);
+    if (radioDiagnosticSession.length > RADIO_DIAGNOSTIC_LIMIT) radioDiagnosticSession.shift();
+  }
   if (radioLogWindow && !radioLogWindow.isDestroyed()) {
     radioLogWindow.webContents.send("music:debug-decision", decision);
   }
@@ -830,6 +836,26 @@ function installIpcHandlers() {
     return musicRadio.resetRules(String(mode || ''));
   });
   ipcMain.handle('music:debug:get-last-decision', () => musicRadio?.getLastDecision() || null);
+  ipcMain.handle('music:debug:save-log', async () => {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const defaultPath = path.join(getDataDir(), `WaveDeck_Radio_Diagnostics_${timestamp}.json`);
+    const result = await dialog.showSaveDialog(radioLogWindow || mainWindow, {
+      title: 'Save Radio Diagnostics',
+      defaultPath,
+      filters: [{ name: 'JSON diagnostic log', extensions: ['json'] }]
+    });
+    if (result.canceled || !result.filePath) return { canceled: true, count: radioDiagnosticSession.length };
+    const diagnostics = {
+      format: 'WaveDeck Radio Diagnostics',
+      schemaVersion: 1,
+      appVersion: DISPLAY_VERSION,
+      exportedAt: new Date().toISOString(),
+      selectionCount: radioDiagnosticSession.length,
+      selections: radioDiagnosticSession
+    };
+    await fs.promises.writeFile(result.filePath, JSON.stringify(diagnostics, null, 2) + '\n', 'utf8');
+    return { canceled: false, count: radioDiagnosticSession.length, filePath: result.filePath };
+  });
 
   // Retain the original channels for older renderer bundles and portable data
   // created before the preference became available on Windows.

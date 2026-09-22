@@ -7,6 +7,8 @@ h1 { margin:0; font-size:20px; }
 p { margin:5px 0 0; color:var(--muted); font-size:13px; }
 button { background:#292929; color:var(--text); border:1px solid #484848; padding:7px 12px; cursor:pointer; }
 button:hover { background:#343434; }
+.actions { display:flex; gap:8px; }
+.save-status { color:var(--muted); font-size:12px; min-height:18px; padding-top:8px; text-align:right; }
 .empty { border:1px dashed #484848; color:var(--muted); display:flex; flex-direction:column; gap:5px; margin-top:18px; padding:22px; }
 .empty b { color:var(--text); }
 #entries { display:flex; flex-direction:column; gap:14px; margin-top:16px; }

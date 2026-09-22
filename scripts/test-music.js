@@ -162,6 +162,11 @@ async function run() {
     assert.equal(decision.selected.title, diagnosticPick.title);
     assert.equal(typeof decision.selected.popularity === 'number' || decision.selected.popularity === null, true);
     assert.ok(Array.isArray(decision.selected.multipliers));
+    assert.ok(Array.isArray(decision.selected.genres));
+    assert.ok(Array.isArray(decision.diagnostics.recentHistory));
+    assert.ok(Array.isArray(decision.diagnostics.topFinalCandidates));
+    assert.ok(decision.diagnostics.topFinalCandidates.length <= 8);
+    assert.equal(Object.hasOwn(decision.diagnostics.topFinalCandidates[0], 'path'), false, 'diagnostics never include music file paths');
     const handoffRadio = new MusicRadio({ dataDir: path.join(temp, 'handoff'), now: () => now, random: () => 0.1 });
     const firstC = track('handoff-c-old', { songKey: 'C', artist: 'Seed Artist', artists: ['Seed Artist'] });
     const repeatedB = track('handoff-b', { songKey: 'B', artist: 'Other Artist', artists: ['Other Artist'] });

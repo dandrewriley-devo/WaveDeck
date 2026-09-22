@@ -19,6 +19,7 @@ contextBridge.exposeInMainWorld("wavedeck", {
   resetMusicRule: (mode, key) => ipcRenderer.invoke('music:rules:reset-one', mode, key),
   resetMusicRules: mode => ipcRenderer.invoke('music:rules:reset-all', mode),
   getMusicDebugLog: () => ipcRenderer.invoke('music:debug:get-last-decision'),
+  saveMusicDebugLog: () => ipcRenderer.invoke('music:debug:save-log'),
   onMusicDebugLog: callback => subscribe('music:debug-decision', callback),
   onMusicChanged: callback => subscribe('music:changed', callback),
   getStations: () => ipcRenderer.invoke("stations:get"),

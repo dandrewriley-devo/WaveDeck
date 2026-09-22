@@ -1,6 +1,8 @@
 const entries = document.getElementById('entries');
 const empty = document.getElementById('empty');
 const clearLog = document.getElementById('clearLog');
+const saveLog = document.getElementById('saveLog');
+const saveStatus = document.getElementById('saveStatus');
 const MAX_ENTRIES = 60;
 
 function element(tag, text = '', className = '') {
@@ -92,6 +94,23 @@ function renderDecision(decision, { prepend = true } = {}) {
 clearLog.addEventListener('click', () => {
   entries.replaceChildren();
   empty.hidden = false;
+});
+
+saveLog.addEventListener('click', async () => {
+  saveStatus.textContent = '';
+  saveLog.disabled = true;
+  try {
+    const result = await window.wavedeck.saveMusicDebugLog();
+    if (result?.canceled) {
+      saveStatus.textContent = 'Save cancelled.';
+    } else {
+      saveStatus.textContent = `Saved ${result?.count || 0} radio selections for diagnosis.`;
+    }
+  } catch (error) {
+    saveStatus.textContent = `Could not save the diagnostic log: ${error?.message || 'Unknown error'}`;
+  } finally {
+    saveLog.disabled = false;
+  }
 });
 
 window.wavedeck.onMusicDebugLog((decision) => renderDecision(decision));

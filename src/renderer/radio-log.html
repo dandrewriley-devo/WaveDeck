@@ -14,8 +14,12 @@
         <h1>Live Radio Log</h1>
         <p>Shows the real selection details whenever Artist Radio or Song Radio picks its next track.</p>
       </div>
-      <button id="clearLog" type="button">Clear</button>
+      <div class="actions">
+        <button id="saveLog" type="button">Save Log…</button>
+        <button id="clearLog" type="button">Clear</button>
+      </div>
     </header>
+    <div id="saveStatus" class="save-status" role="status"></div>
     <section id="empty" class="empty">
       <b>Waiting for the next radio pick</b>
       <span>Start Artist Radio or Song Radio, then skip or let a song finish.</span>
