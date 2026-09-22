@@ -67,12 +67,14 @@ function renderDecision(decision, { prepend = true } = {}) {
   ]);
   addBox(grid, 'Last.fm popularity', [
     selected.popularity === null || selected.popularity === undefined ? 'Missing — treated as neutral' : `${selected.popularity}/100`,
-    `Song Popularity setting: ${decision.settings?.songPopularityPercent ?? 0}%`
+    `Song Popularity setting: ${decision.settings?.songPopularityPercent ?? 0}%`,
+    selected.popularitySource === 'lastfm' ? 'Fresh Last.fm data' : 'Existing tag data'
   ]);
   addBox(grid, 'Radio controls', [
     `Artist Variety: ${varietyLabel(decision.settings?.artistVariety)}`,
     `Album Variety: ${varietyLabel(decision.settings?.albumVariety)}`,
-    `${yearRangeLabel(decision.settings?.releaseYearRange)} · ${Number(decision.settings?.repeatCooldownMinutes || 0) / 60} hour repeat wait`
+    `${yearRangeLabel(decision.settings?.releaseYearRange)} · ${Number(decision.settings?.repeatCooldownMinutes || 0) / 60} hour repeat wait`,
+    `Outside Variety: ${decision.outsideVariety?.targetPercent ?? 0}% · ${decision.outsideVariety?.lane || 'related'} lane`
   ]);
   addBox(grid, 'Candidates', [
     `${decision.counts?.totalTracks ?? 0} total · ${decision.counts?.eligible ?? 0} eligible`,
@@ -85,7 +87,7 @@ function renderDecision(decision, { prepend = true } = {}) {
   const multipliers = (selected.multipliers || []).map(item => `${item.label}: ×${number(item.value, 3)}${item.source ? ` (${item.source})` : ''}`);
   multipliers.push(`Score: ${number(selected.scoreBeforeRandomness, 3)} → ${number(selected.scoreAfterRandomness, 3)} after surprise/match setting`);
   addDetails(body, 'Score adjustments', multipliers, 'No score adjustments recorded.');
-  body.append(element('div', decision.reason || 'A track was selected.', 'reason'));
+  body.append(element('div', `${decision.reason || 'A track was selected.'} Trigger: ${decision.selectionTrigger || 'next'}.`, 'reason'));
   entry.append(body);
   if (prepend) entries.prepend(entry); else entries.append(entry);
   while (entries.children.length > MAX_ENTRIES) entries.lastElementChild.remove();

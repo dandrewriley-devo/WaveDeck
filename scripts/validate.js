@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.7.4");
-assert.strictEqual(packageJson.wavedeckVersion, "0.7.4");
+assert.strictEqual(packageJson.version, "0.7.5");
+assert.strictEqual(packageJson.wavedeckVersion, "0.7.5");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -328,6 +328,8 @@ try {
     downloadNewStations: true,
     proModeEnabled: false,
     additionalMusicFolder: "",
+    lastFmEnabled: false,
+    lastFmApiKey: "",
     launchInSidebarMode: false,
     settingsWindowBounds: null,
     radioLogWindowBounds: null,
@@ -338,6 +340,8 @@ try {
   assert.deepStrictEqual(storage.getLinuxUiPreferences(), {
     proModeEnabled: false,
     additionalMusicFolder: "",
+    lastFmEnabled: false,
+    lastFmApiKey: "",
     launchInSidebarMode: false,
     settingsWindowBounds: null,
     radioLogWindowBounds: null
@@ -346,6 +350,7 @@ try {
   assert.strictEqual(storage.setLaunchInSidebarMode(true).launchInSidebarMode, true);
   assert.strictEqual(storage.setProModeEnabled(true).proModeEnabled, true);
   assert.strictEqual(storage.setAdditionalMusicFolder("/mnt/music").additionalMusicFolder, "/mnt/music");
+  assert.strictEqual(storage.setLastFmSettings({ enabled: true, apiKey: 'test-key' }).lastFmEnabled, true);
   assert.deepStrictEqual(storage.setSettingsWindowBounds({ x: 2100.4, y: 40.6, width: 1120.2, height: 840.8 }), {
     x: 2100,
     y: 41,
@@ -363,6 +368,8 @@ try {
   assert.deepStrictEqual(uiPreferenceReload.getLinuxUiPreferences(), {
     proModeEnabled: true,
     additionalMusicFolder: "/mnt/music",
+    lastFmEnabled: true,
+    lastFmApiKey: "test-key",
     launchInSidebarMode: true,
     settingsWindowBounds: { x: 2100, y: 41, width: 1120, height: 841 },
     radioLogWindowBounds: { x: 14, y: 23, width: 864, height: 700 }
@@ -1159,6 +1166,9 @@ assert.ok(!settingsHtml.includes('id="radioAdvancedControls"'));
 assert.ok(!settingsHtml.includes('id="showAdvancedRadioSettings"'));
 assert.ok(settingsHtml.includes('id="resetAllRadioRules"'));
 assert.ok(settingsHtml.includes('id="chooseAdditionalMusicFolderBtn"'));
+assert.ok(settingsHtml.includes('id="lastFmEnabled"'));
+assert.ok(settingsHtml.includes('id="lastFmApiKey"'));
+assert.ok(settingsHtml.includes('Ctrl + Alt + Shift + F'));
 assert.ok(settingsHtml.includes("WaveDeck_Library.json"));
 assert.ok(settingsHtml.indexOf('id="stationEditorHome"') < settingsHtml.indexOf('class="listening-history-bar"'));
 assert.ok(settingsHtml.includes('id="resetListeningBtn"'));
@@ -1196,6 +1206,9 @@ assert.ok(mainSource.includes("screen.getDisplayMatching(mainWindow.getBounds())
 assert.ok(mainSource.includes("calculateBottomRightBounds"));
 assert.ok(mainSource.includes("calculateCenteredBounds"));
 assert.ok(mainSource.includes("constrainBoundsToDisplay"));
+assert.ok(mainSource.includes("LASTFM_REFRESH_SHORTCUT"));
+assert.ok(mainSource.includes("music:lastfm:queue-full"));
+assert.ok(fs.existsSync(path.join(root, 'src', 'main', 'lastfm-enricher.js')));
 assert.ok(!mainSource.includes("calculateSidebarLayout"));
 assert.ok(!mainSource.includes("setReservedSpace"));
 assert.ok(mainSource.includes('type: sidebar && process.platform === "linux" ? "dock" : undefined'));

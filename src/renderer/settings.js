@@ -50,6 +50,11 @@ const advancedFeaturesOff = document.getElementById('advancedFeaturesOff');
 const additionalMusicFolder = document.getElementById('additionalMusicFolder');
 const chooseAdditionalMusicFolderBtn = document.getElementById('chooseAdditionalMusicFolderBtn');
 const clearAdditionalMusicFolderBtn = document.getElementById('clearAdditionalMusicFolderBtn');
+const lastFmEnabled = document.getElementById('lastFmEnabled');
+const lastFmDetails = document.getElementById('lastFmDetails');
+const lastFmApiKey = document.getElementById('lastFmApiKey');
+const testLastFmBtn = document.getElementById('testLastFmBtn');
+const lastFmStatus = document.getElementById('lastFmStatus');
 const radioRuleTabs = document.querySelectorAll('.radio-rule-tab');
 const radioBasicControls = document.getElementById('radioBasicControls');
 const resetAllRadioRules = document.getElementById('resetAllRadioRules');
@@ -85,7 +90,7 @@ const RADIO_RULE_COPY = {
   artistVariety: { title: 'Artist Variety', description: 'How much should WaveDeck spread out artists other than the seed artist?', low: 'Doesn’t matter', high: 'Maximum variety' },
   albumVariety: { title: 'Album Variety', description: 'How much should WaveDeck spread out tracks from the same album?', low: 'Doesn’t matter', high: 'Maximum variety' },
   releaseYearRange: { title: 'Release-Year Range', description: 'How close should songs be in release year?', low: 'Same year', high: 'Year doesn’t matter' },
-  unrelatedTrackMultiplier: { title: 'Outside variety', description: 'How much less-related music can join the mix when good matches exist.', low: 'Related music only', high: 'A wide-open mix' },
+  unrelatedTrackMultiplier: { title: 'Outside Variety', description: 'How often should music outside the related mix get a turn?', low: 'Related music only', high: 'A wide-open mix' },
   selectionRandomness: { title: 'Surprise versus match', description: 'Whether each pick is more of a surprise or the closest match.', low: 'More surprises', high: 'Closest matches' },
   repeatCooldownMinutes: { title: 'Song Repeat Wait', description: 'How long before the exact same song can come back.', low: '2 hours', high: '24 hours' }
 };
@@ -97,7 +102,25 @@ function renderProMusicSettings(preferences) {
   advancedFeaturesOff.hidden = proEnabled;
   additionalMusicFolder.value = folder;
   clearAdditionalMusicFolderBtn.disabled = !folder;
+  lastFmEnabled.checked = preferences?.lastFmEnabled === true;
+  lastFmApiKey.value = String(preferences?.lastFmApiKey || '');
+  lastFmDetails.hidden = !lastFmEnabled.checked;
+  if (proEnabled) void loadLastFmStatus();
   if (proEnabled) void loadRadioRules();
+}
+
+function renderLastFmStatus(status) {
+  if (!status) return;
+  if (!status.enabled) { lastFmStatus.textContent = 'Last.fm music data is off.'; return; }
+  if (!status.configured) { lastFmStatus.textContent = 'Add a Last.fm API key to begin refreshing music data.'; return; }
+  const total = Number(status.tracksTotal || 0);
+  const current = Number(status.tracksCurrent || 0);
+  const queued = Number(status.queuedAlbums || 0);
+  lastFmStatus.textContent = `Last.fm: ${current.toLocaleString()} of ${total.toLocaleString()} tracks current${queued ? ` · ${queued.toLocaleString()} albums queued` : ''}${status.message ? ` · ${status.message}` : ''}`;
+}
+
+async function loadLastFmStatus() {
+  try { renderLastFmStatus(await window.wavedeck.getLastFmStatus()); } catch {}
 }
 
 function ruleCopy(key) { return RADIO_RULE_COPY[key] || { title: key, description: 'Fine-tune this part of radio selection.', low: 'Less', high: 'More' }; }
@@ -1083,6 +1106,35 @@ clearAdditionalMusicFolderBtn.addEventListener('click', async () => {
   }
 });
 
+lastFmEnabled.addEventListener('change', async () => {
+  lastFmEnabled.disabled = true;
+  try {
+    const preferences = await window.wavedeck.setLastFmSettings({ enabled: lastFmEnabled.checked, apiKey: lastFmApiKey.value });
+    renderProMusicSettings(preferences);
+    setStatus(statusAdvanced, lastFmEnabled.checked ? 'Last.fm music-data refresh is on.' : 'Last.fm music-data refresh is off.');
+  } catch (error) {
+    lastFmEnabled.checked = !lastFmEnabled.checked;
+    setStatus(statusAdvanced, `Could not save Last.fm settings: ${error.message}`, false);
+  } finally { lastFmEnabled.disabled = false; }
+});
+
+lastFmApiKey.addEventListener('change', async () => {
+  try {
+    const preferences = await window.wavedeck.setLastFmSettings({ enabled: lastFmEnabled.checked, apiKey: lastFmApiKey.value });
+    renderProMusicSettings(preferences);
+    setStatus(statusAdvanced, 'Last.fm API key saved.');
+  } catch (error) { setStatus(statusAdvanced, `Could not save the Last.fm API key: ${error.message}`, false); }
+});
+
+testLastFmBtn.addEventListener('click', async () => {
+  testLastFmBtn.disabled = true;
+  try {
+    renderLastFmStatus(await window.wavedeck.testLastFm());
+    setStatus(statusAdvanced, 'Last.fm background refresh is ready.');
+  } catch (error) { setStatus(statusAdvanced, `Last.fm connection could not start: ${error.message}`, false); }
+  finally { testLastFmBtn.disabled = false; }
+});
+
 radioRuleTabs.forEach(tab => tab.addEventListener('click', () => {
   activeRadioMode = tab.dataset.radioMode === 'artist' ? 'artist' : 'radio';
   renderRadioRules();
@@ -1143,6 +1195,7 @@ window.wavedeck.onUiPreferencesChanged((preferences) => {
   renderProMusicSettings(preferences);
   if (sidebarPlatform) launchInSidebarMode.checked = preferences?.launchInSidebarMode === true;
 });
+window.wavedeck.onLastFmChanged(renderLastFmStatus);
 
 (async function initialize() {
   showTab(document.querySelector(".tab.active")?.dataset.tab || "interface");

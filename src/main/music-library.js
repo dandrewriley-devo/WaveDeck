@@ -51,6 +51,32 @@ class MusicLibrary {
   async rescan() {
     const status = await this.call('scan'); this.tracks = await this.call('all'); this.onStatus(status); return status;
   }
+  async getLastFmStatus() { return this.call('lastfm:status'); }
+  async queueLastFmAlbum(id) { return this.call('lastfm:queue-album', id); }
+  async queueFullLastFmRefresh() { return this.call('lastfm:queue-full'); }
+  async nextLastFmAlbum() { return this.call('lastfm:next'); }
+  async updateLastFmTrack(value) { return this.call('lastfm:update-track', value); }
+  async updateLastFmArtist(value) { return this.call('lastfm:update-artist', value); }
+  async completeLastFmAlbum(key) { return this.call('lastfm:complete', key); }
+  applyLastFmTrack(value) {
+    const index = this.tracks.findIndex(track => track.id === value?.id);
+    if (index < 0) return;
+    const current = this.tracks[index];
+    this.tracks[index] = {
+      ...current,
+      popularity: Number.isFinite(Number(value.popularity)) ? Number(value.popularity) : current.popularity,
+      genres: [...new Set([...(current.genres || []), ...(value.tags || [])])],
+      lastFm: { source: 'lastfm', status: value.status, updatedAt: value.updatedAt || '', listeners: value.listeners || 0, playCount: value.playCount || 0, popularity: value.popularity }
+    };
+  }
+  applyLastFmArtist(value) {
+    const key = String(value?.artist || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+    for (let index = 0; index < this.tracks.length; index++) {
+      const track = this.tracks[index];
+      if (!(track.artists || [track.artist]).some(artist => String(artist).normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim() === key)) continue;
+      this.tracks[index] = { ...track, similarArtists: [...new Set([...(track.similarArtists || []), ...(value.similarArtists || [])])] };
+    }
+  }
   async resolve(id) {
     let track = this.tracks.find(t => t.id === id);
     if (!track) { this.tracks = await this.call('all'); track = this.tracks.find(t => t.id === id); }

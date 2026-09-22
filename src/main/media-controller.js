@@ -301,7 +301,10 @@ class MediaController {
     return true;
   }
 
-  configureMusic(library, radio) { this.musicLibrary = library; this.musicRadio = radio; }
+  configureMusic(library, radio, onMusicTrack = () => {}) {
+    this.musicLibrary = library; this.musicRadio = radio;
+    this.onMusicTrack = typeof onMusicTrack === 'function' ? onMusicTrack : () => {};
+  }
 
   clearMusic() {
     this.musicGeneration++; clearTimeout(this.musicRetry); this.music = null;
@@ -335,6 +338,7 @@ class MediaController {
     if (!this.music || generation !== this.musicGeneration) return false;
     this.music.back.push(id); this.music.back = this.music.back.slice(-100);
     this.musicRadio.record(track);
+    try { this.onMusicTrack(track); } catch {}
     this.onStateChanged(this.getStatus());
     return true;
   }
@@ -350,7 +354,7 @@ class MediaController {
       while (this.music && generation === this.musicGeneration) {
         let id = this.music.queue.shift();
         if (!id && this.music.mode === 'album') this.music.mode = 'artist';
-        if (!id) id = this.musicRadio.choose(this.musicLibrary.tracks, this.music.seed, this.music.mode, this.music.failed)?.id;
+        if (!id) id = this.musicRadio.choose(this.musicLibrary.tracks, this.music.seed, this.music.mode, this.music.failed, reason)?.id;
         if (!id) {
           this.music.waiting = true;
           await this.player.stop();

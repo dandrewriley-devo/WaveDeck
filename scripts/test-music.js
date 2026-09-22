@@ -7,6 +7,7 @@ const { MusicLibrary } = require('../src/main/music-library');
 const { MusicRadio, weight, COOLDOWN, RULE_FILES, DEFAULT_RULES } = require('../src/main/music-radio');
 const { extractTrack, radioArtist } = require('../src/main/music-tags');
 const { MediaController, serializeTransport } = require('../src/main/media-controller');
+const { LastFmEnricher, popularityScore } = require('../src/main/lastfm-enricher');
 
 function fixture() {
   const frame = (id, value) => {
@@ -46,6 +47,41 @@ async function run() {
     assert.equal((await library.resolve(library.tracks[0].id)).path, file);
     assert.equal(await digest(), before, 'scanning must not change MP3 bytes');
     assert.equal((await fs.readFile(path.join(dataDir, 'music.sqlite'))).subarray(0,15).toString(), 'SQLite format 3');
+    const indexedTrack = library.tracks[0];
+    await library.updateLastFmTrack({ id: indexedTrack.id, artist: 'Artist', title: 'Test Song', albumKey: 'artist\\nalbum', listeners: 100000, playCount: 500000, popularity: 71, tags: ['Alternative Rock'], updatedAt: new Date().toISOString(), lastAttemptAt: new Date().toISOString(), retryAfter: '', status: 'matched' });
+    await library.updateLastFmArtist({ artist: 'Artist', similarArtists: ['Similar Artist'], updatedAt: new Date().toISOString(), lastAttemptAt: new Date().toISOString(), retryAfter: '', status: 'matched' });
+    await library.completeLastFmAlbum('artist\\nalbum');
+    library.tracks = await library.call('all');
+    assert.equal(library.tracks[0].popularity, 71, 'Last.fm popularity overrides imported tag popularity in the portable index');
+    assert.ok(library.tracks[0].genres.includes('Alternative Rock'));
+    assert.ok(library.tracks[0].similarArtists.includes('Similar Artist'));
+    assert.equal((await library.getLastFmStatus()).tracksMatched, 1);
+    assert.equal(popularityScore(0), 0);
+    assert(popularityScore(100_000) > popularityScore(1_000), 'Last.fm popularity uses a useful logarithmic range');
+    assert(popularityScore(100_000) < 100, 'Last.fm popularity does not flatten ordinary popular songs to 100');
+    const lastFmCalls = []; const savedLastFmTracks = []; const savedLastFmArtists = []; const completedLastFmAlbums = [];
+    const lastFmLibrary = {
+      enabled: true, worker: {},
+      getLastFmStatus: async () => ({ tracksTotal: 2, tracksCurrent: savedLastFmTracks.length, tracksMatched: savedLastFmTracks.length, queuedAlbums: 1 }),
+      nextLastFmAlbum: async () => ({ albumKey: 'artist\\nalbum', queued: true, force: false, tracks: [track('lastfm-track')], artists: ['Artist'] }),
+      updateLastFmTrack: async value => savedLastFmTracks.push(value), updateLastFmArtist: async value => savedLastFmArtists.push(value),
+      applyLastFmTrack: () => {}, applyLastFmArtist: () => {}, completeLastFmAlbum: async key => completedLastFmAlbums.push(key)
+    };
+    const enricher = new LastFmEnricher({
+      library: lastFmLibrary, getPreferences: () => ({ lastFmEnabled: true, lastFmApiKey: 'key' }), requestIntervalMs: 0,
+      fetchImpl: async url => {
+        lastFmCalls.push(url);
+        return { ok: true, json: async () => url.includes('track.getInfo')
+          ? { track: { listeners: '100000', playcount: '500000', toptags: { tag: [{ name: 'Rock' }] } } }
+          : { similarartists: { artist: [{ name: 'Similar Artist' }] } } };
+      }
+    });
+    await enricher.tick(); enricher.stop();
+    assert.equal(savedLastFmTracks[0].popularity, popularityScore(100000));
+    assert.deepEqual(savedLastFmTracks[0].tags, ['Rock']);
+    assert.deepEqual(savedLastFmArtists[0].similarArtists, ['Similar Artist']);
+    assert.equal(completedLastFmAlbums[0], 'artist\\nalbum');
+    assert(lastFmCalls.every(url => url.includes('api_key=key')), 'Last.fm requests include the configured API key');
     await fs.rename(file, path.join(musicDir, 'renamed.mp3'));
     await library.rescan(); assert.equal(library.tracks.length, 1); assert.match(library.tracks[0].relativePath, /renamed/);
     await fs.unlink(path.join(musicDir, 'renamed.mp3')); await library.rescan(); assert.equal(library.tracks.length, 0);
@@ -111,6 +147,15 @@ async function run() {
     assert.equal(editableRadio.setRule('artist', 'albumVariety', 2).artist.albumVariety, 2);
     assert.equal(editableRadio.setRule('artist', 'releaseYearRange', 13).artist.releaseYearRange, 10);
     assert.equal(editableRadio.setRule('radio', 'genreWeight', 100).radio.genreWeight, 100);
+    const laneSeed = track('lane-seed', { artist: 'Seed', artists: ['Seed'], genres: ['Rock'] });
+    const laneRelated = track('lane-related', { artist: 'Related', artists: ['Related'], genres: ['Rock'] });
+    const laneOutside = track('lane-outside', { artist: 'Outside', artists: ['Outside'], genres: ['Jazz'] });
+    const laneRadio = new MusicRadio({ dataDir: path.join(temp, 'lane-radio'), now: () => now, random: () => 0.25 });
+    laneRadio.setRule('radio', 'artistFocusPercent', 0);
+    laneRadio.setRule('radio', 'unrelatedTrackMultiplier', 1);
+    assert.equal(laneRadio.choose([laneRelated, laneOutside], laneSeed, 'radio').id, laneOutside.id, 'maximum Outside Variety chooses the outside lane');
+    laneRadio.setRule('radio', 'unrelatedTrackMultiplier', 0);
+    assert.equal(laneRadio.choose([laneRelated, laneOutside], laneSeed, 'radio').id, laneRelated.id, 'zero Outside Variety chooses the related lane');
     assert.equal(editableRadio.resetRules('radio').radio.genreWeight, 5);
     assert.equal(editableRadio.rules.artist.version, 5);
     const plainTrack = track('plain');

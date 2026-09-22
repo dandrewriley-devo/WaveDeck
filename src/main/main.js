@@ -20,6 +20,7 @@ const { copyLegacyData } = require("./data-migration");
 const { RecordingLibrary } = require("./recording-library");
 const { MusicLibrary } = require('./music-library');
 const { MusicRadio } = require('./music-radio');
+const { LastFmEnricher } = require('./lastfm-enricher');
 const {
   getLauncherStatus,
   installLauncher,
@@ -79,6 +80,7 @@ const RADIO_LOG_DEFAULT_HEIGHT = 700;
 const RADIO_LOG_MIN_WIDTH = 560;
 const RADIO_LOG_MIN_HEIGHT = 400;
 const RADIO_LOG_SHORTCUT = "CommandOrControl+Alt+Shift+L";
+const LASTFM_REFRESH_SHORTCUT = "CommandOrControl+Alt+Shift+F";
 const DISPLAY_VERSION = require("../../package.json").wavedeckVersion || app.getVersion();
 
 let mainWindow = null;
@@ -91,6 +93,7 @@ let player = null;
 let recordingLibrary = null;
 let musicLibrary = null;
 let musicRadio = null;
+let lastFmEnricher = null;
 let recordingProbeExecutable = "";
 let mediaController = null;
 let recorder = null;
@@ -215,6 +218,8 @@ function sendToRadioLog(decision) {
     radioLogWindow.webContents.send("music:debug-decision", decision);
   }
 }
+
+function sendLastFmStatus(status) { sendToAll('music:lastfm-changed', status); }
 
 function broadcastPlayerStatus(status = player?.getStatus()) {
   const combinedStatus = mediaController ? mediaController.getStatus(status) : status;
@@ -792,7 +797,7 @@ function installIpcHandlers() {
       };
       sendToAll("sections:state-changed", { ...sectionVisibility });
     }
-    if (preferences.proModeEnabled) void musicLibrary.enable().catch(error => sendToMain('app:warning', error.message));
+    if (preferences.proModeEnabled) void musicLibrary.enable().then(() => lastFmEnricher?.configure()).catch(error => sendToMain('app:warning', error.message));
     sendToAll("ui:preferences-changed", preferences);
     return preferences;
   });
@@ -812,6 +817,26 @@ function installIpcHandlers() {
     await musicLibrary?.setAdditionalMusicFolder(preferences.additionalMusicFolder);
     sendToAll('ui:preferences-changed', preferences);
     return preferences;
+  });
+  ipcMain.handle('music:lastfm:get-status', async () => {
+    requireAdvancedFeatures();
+    return lastFmEnricher?.refreshStatus() || { enabled: false, configured: false };
+  });
+  ipcMain.handle('music:lastfm:set-settings', async (_event, settings) => {
+    requireAdvancedFeatures();
+    const preferences = storage.setLastFmSettings(settings || {});
+    lastFmEnricher?.configure();
+    sendToAll('ui:preferences-changed', preferences);
+    return preferences;
+  });
+  ipcMain.handle('music:lastfm:test', async () => {
+    requireAdvancedFeatures();
+    return lastFmEnricher?.testConnection();
+  });
+  ipcMain.handle('music:lastfm:queue-full', async () => {
+    requireAdvancedFeatures();
+    await musicLibrary.enable();
+    return lastFmEnricher.queueFullRefresh();
   });
 
   const requireAdvancedFeatures = () => {
@@ -847,7 +872,7 @@ function installIpcHandlers() {
     if (result.canceled || !result.filePath) return { canceled: true, count: radioDiagnosticSession.length };
     const diagnostics = {
       format: 'WaveDeck Radio Diagnostics',
-      schemaVersion: 1,
+      schemaVersion: 2,
       appVersion: DISPLAY_VERSION,
       exportedAt: new Date().toISOString(),
       selectionCount: radioDiagnosticSession.length,
@@ -871,6 +896,7 @@ function installIpcHandlers() {
   const requireMusic = async () => {
     if (!storage.getUiPreferences().proModeEnabled) throw new Error('Enable Advanced Features to use Music.');
     await musicLibrary.enable();
+    lastFmEnricher?.configure();
   };
   ipcMain.handle('music:status', async () => { await requireMusic(); return musicLibrary.call('status'); });
   ipcMain.handle('music:search', async (_event, query) => { await requireMusic(); return musicLibrary.call('search', String(query || '')); });
@@ -1080,8 +1106,15 @@ if (!hasSingleInstanceLock) {
 
     musicLibrary = new MusicLibrary({ dataDir: getDataDir(), additionalMusicFolder: storage.getUiPreferences().additionalMusicFolder, onStatus: status => sendToMain('music:changed', status) });
     musicRadio = new MusicRadio({ dataDir: getDataDir(), onDecision: sendToRadioLog });
-    mediaController.configureMusic(musicLibrary, musicRadio);
-    if (storage.getUiPreferences().proModeEnabled) void musicLibrary.enable({ scanOnEnable: true }).catch(error => sendToMain('app:warning', error.message));
+    lastFmEnricher = new LastFmEnricher({
+      library: musicLibrary,
+      getPreferences: () => storage.getUiPreferences(),
+      fetchImpl: (...args) => net.fetch(...args),
+      onStatus: sendLastFmStatus
+    });
+    mediaController.configureMusic(musicLibrary, musicRadio, track => { void lastFmEnricher.queueAlbum(track.id); });
+    lastFmEnricher.configure();
+    if (storage.getUiPreferences().proModeEnabled) void musicLibrary.enable({ scanOnEnable: true }).then(() => lastFmEnricher.configure()).catch(error => sendToMain('app:warning', error.message));
 
     listeningHistory = new ListeningHistory({
       storage,
@@ -1116,6 +1149,17 @@ if (!hasSingleInstanceLock) {
     installIpcHandlers();
     if (!globalShortcut.register(RADIO_LOG_SHORTCUT, openRadioLogWindow)) {
       console.warn("WaveDeck could not register the Live Radio Log shortcut.");
+    }
+    if (!globalShortcut.register(LASTFM_REFRESH_SHORTCUT, () => {
+      void (async () => {
+        try {
+          await musicLibrary?.enable();
+          const status = await lastFmEnricher?.queueFullRefresh();
+          sendToMain('app:warning', `Full Last.fm refresh queued: ${status?.tracksCurrent || 0} of ${status?.tracksTotal || 0} tracks currently up to date.`);
+        } catch (error) { sendToMain('app:warning', error.message); }
+      })();
+    })) {
+      console.warn("WaveDeck could not register the Last.fm refresh shortcut.");
     }
     const supportsStartupSidebar = process.platform === "linux" || process.platform === "win32";
     const launchInSidebarMode = supportsStartupSidebar &&
@@ -1164,6 +1208,8 @@ function finishShutdown() {
   mediaKeyReclaimTimer = null;
   mediaKeyReclaimEnabled = false;
   try { globalShortcut.unregister(RADIO_LOG_SHORTCUT); } catch {}
+  try { globalShortcut.unregister(LASTFM_REFRESH_SHORTCUT); } catch {}
+  lastFmEnricher?.stop();
   listeningHistory?.close();
   platformMediaKeys?.close();
   mprisService?.close();

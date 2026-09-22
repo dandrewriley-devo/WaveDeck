@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const { normalize, radioArtist } = require('./music-tags');
 const RULE_FILES = { artist: 'artist-radio-rules.json', radio: 'song-radio-rules.json' };
 const RULES_REFERENCE_FILE = 'music-radio-rules-reference.txt';
@@ -24,6 +25,7 @@ const REPEAT_WAIT_STOPS = [120, 180, 240, 360, 480, 720, 960, 1440];
 const RELATED_ARTIST_WEIGHT = 6;
 const RELEASE_YEAR_WEIGHT = 2;
 const POST_COOLDOWN_MULTIPLIER = 0.75;
+const HANDOFF_MEMORY_MS = 30 * 24 * 60 * 60 * 1000;
 const VARIETY_RULES = {
   artist: [
     { memory: 0, multiplier: 1 },
@@ -62,7 +64,7 @@ const RULES_REFERENCE = `WaveDeck Music Radio Rules\n\n` +
 `artistVariety (0, 1, 2): How strongly radio keeps non-seed artists from bunching up.\n` +
 `albumVariety (0, 1, 2): How strongly radio keeps albums from bunching up.\n` +
 `releaseYearRange (same year, 5, 10, or 20 years, or no limit): How close a song's release year should be to the seed.\n` +
-`unrelatedTrackMultiplier (0–1): 0 stays with related music when available; 1 lets unrelated music compete normally.\n` +
+`unrelatedTrackMultiplier (0–1): The share of picks that may come from outside the related mix when both choices are available. 0 stays with related music; 1 always chooses outside music.\n` +
 `selectionRandomness (0–10): Lower values make picks more surprising; higher values favor the strongest matches.\n\n` +
 `Ratings, favorites, play counts, mood tags, and featured-artist bonuses are not used. Last.fm related-artist matching, a gentle post-cooldown holdback, and strict repeated-handoff avoidance are built in.\n`;
 const matches = (a, b) => Boolean(a && b && normalize(a) === normalize(b));
@@ -301,7 +303,7 @@ class MusicRadio {
     this.lastDecision = clone(decision);
     try { this.onDecision(this.getLastDecision()); } catch (error) { console.warn(`WaveDeck could not publish a radio log entry. ${error.message}`); }
   }
-  choose(tracks, seed, mode, excluded = new Set()) {
+  choose(tracks, seed, mode, excluded = new Set(), selectionTrigger = 'next') {
     if (this.error) throw new Error(this.error);
     this.loadRules();
     const rules = this.rules[mode] || this.rules.radio;
@@ -311,7 +313,7 @@ class MusicRadio {
       if (!context.last.has(h.key)) context.last.set(h.key, h);
       // History runs newest to oldest. If an older copy of the current song
       // was followed by a track, that track is a handoff we should avoid now.
-      if (i > 0 && h.key === this.history[0]?.key) context.successors.add(this.history[i - 1].key);
+      if (i > 0 && now - h.at <= HANDOFF_MEMORY_MS && h.key === this.history[0]?.key) context.successors.add(this.history[i - 1].key);
     });
     const availableTracks = tracks.filter(t => !excluded.has(t.id));
     const scored = availableTracks.map(track => ({ track, ...scoreTrack(track, seed, mode, this.history, now, context, rules) }));
@@ -325,17 +327,7 @@ class MusicRadio {
     const related = candidates.filter(({ track }) => isSeedArtistTrack(track, seedArtist) ||
       overlaps(track.genres, seed.genres) || overlaps(track.artists, seed.artists) ||
       overlaps(seed.similarArtists, [track.artist]) || overlaps(track.similarArtists, [seedArtist]));
-    // Unrelated tracks must not overwhelm a smaller relevant pool by sheer count.
-    // Broaden only after the available related pool is exhausted by cooldowns.
     const relatedCount = related.length;
-    if (related.length) {
-      if (rules.unrelatedTrackMultiplier > 0) {
-        const relatedIds = new Set(related.map(candidate => candidate.track.id));
-        candidates = candidates.map(candidate => relatedIds.has(candidate.track.id)
-          ? candidate
-          : { ...candidate, score: candidate.score * rules.unrelatedTrackMultiplier }).filter(candidate => candidate.score > 0);
-      } else candidates = related;
-    }
     const seedCandidates = candidates.filter(c => isSeedArtistTrack(c.track, seedArtist));
     const otherCandidates = candidates.filter(c => !isSeedArtistTrack(c.track, seedArtist));
     // Artist Focus is intentionally a direct target rather than another
@@ -343,17 +335,21 @@ class MusicRadio {
     // none survive repeat protection, related music resumes normally.
     let artistFocusOutcome = 'No seed-artist preference';
     let artistFocusRoll = null;
+    let artistFocusUsed = false;
     if (seedCandidates.length && rules.artistFocusPercent > 0) {
       if (rules.artistFocusPercent >= 100) {
         candidates = seedCandidates;
+        artistFocusUsed = true;
         artistFocusOutcome = 'Seed artist required (Always)';
       } else if (!otherCandidates.length) {
         candidates = seedCandidates;
+        artistFocusUsed = true;
         artistFocusOutcome = 'Seed artist used (no other eligible choice)';
       } else {
         artistFocusRoll = this.random();
         if (artistFocusRoll < rules.artistFocusPercent / 100) {
           candidates = seedCandidates;
+          artistFocusUsed = true;
           artistFocusOutcome = 'Seed artist chosen by Artist Focus';
         } else {
           candidates = otherCandidates;
@@ -363,6 +359,18 @@ class MusicRadio {
     } else {
       if (!seedCandidates.length && rules.artistFocusPercent > 0) artistFocusOutcome = 'No eligible seed-artist track; used related music';
     }
+    const relatedIds = new Set(related.map(candidate => candidate.track.id));
+    const laneCandidates = candidates;
+    const relatedLane = laneCandidates.filter(candidate => relatedIds.has(candidate.track.id));
+    const outsideLane = laneCandidates.filter(candidate => !relatedIds.has(candidate.track.id));
+    let lane = artistFocusUsed ? 'seed-artist' : 'related';
+    let outsideRoll = null;
+    if (!artistFocusUsed && relatedLane.length && outsideLane.length) {
+      outsideRoll = this.random();
+      if (outsideRoll < rules.unrelatedTrackMultiplier) { candidates = outsideLane; lane = 'outside'; }
+      else { candidates = relatedLane; lane = 'related'; }
+    } else if (!artistFocusUsed && outsideLane.length && !relatedLane.length) { candidates = outsideLane; lane = 'outside'; }
+    else if (!artistFocusUsed) { candidates = relatedLane; lane = 'related'; }
     const selectionExponent = rules.selectionRandomness;
     const weightedCandidates = candidates.map(candidate => ({ ...candidate, baseScore: candidate.score, score: candidate.score ** selectionExponent }));
     const totalWeightedScore = weightedCandidates.reduce((sum, c) => sum + c.score, 0);
@@ -374,12 +382,15 @@ class MusicRadio {
     }) || weightedCandidates.at(-1) || null;
     const selected = picked?.track || null;
     const diagnosticCandidate = candidate => ({
+      diagnosticId: crypto.createHash('sha256').update(String(candidate.track?.songKey || candidate.track?.id || '')).digest('hex').slice(0, 16),
       title: String(candidate.track?.title || ''),
       artist: String(candidate.track?.artist || ''),
       album: String(candidate.track?.album || ''),
       year: Number(candidate.track?.year) || null,
       genres: Array.isArray(candidate.track?.genres) ? candidate.track.genres.slice(0, 8).map(String) : [],
       popularity: candidate.popularity ?? null,
+      popularitySource: candidate.track?.lastFm?.source || 'tag',
+      popularityUpdatedAt: candidate.track?.lastFm?.updatedAt || '',
       scoreBeforeRandomness: candidate.baseScore,
       scoreAfterRandomness: candidate.score,
       additions: candidate.additions,
@@ -392,10 +403,13 @@ class MusicRadio {
       ? [...weightedCandidates].sort((a, b) => b.score - a.score || b.baseScore - a.baseScore)
         .findIndex(candidate => candidate.track === selected) + 1
       : null;
+    const laneWeight = items => items.reduce((sum, candidate) => sum + (candidate.score ** selectionExponent), 0);
     this.#rememberDecision({
       at: new Date(now).toISOString(),
       mode,
+      selectionTrigger,
       seed: {
+        diagnosticId: crypto.createHash('sha256').update(String(seed?.songKey || seed?.id || '')).digest('hex').slice(0, 16),
         title: String(seed?.title || ''), artist: String(seed?.artist || ''), album: String(seed?.album || ''),
         year: Number(seed?.year) || null,
         genres: Array.isArray(seed?.genres) ? seed.genres.slice(0, 8).map(String) : []
@@ -420,15 +434,20 @@ class MusicRadio {
         related: relatedCount,
         seedArtist: seedCandidates.length,
         otherArtists: otherCandidates.length,
-        finalPool: weightedCandidates.length
+        finalPool: weightedCandidates.length,
+        relatedLane: relatedLane.length,
+        outsideLane: outsideLane.length
       },
       artistFocus: { seedArtist, targetPercent: rules.artistFocusPercent, roll: artistFocusRoll, outcome: artistFocusOutcome },
+      outsideVariety: { targetPercent: Math.round(rules.unrelatedTrackMultiplier * 100), roll: outsideRoll, lane },
       selectionRoll,
       selected: selected ? {
+        diagnosticId: crypto.createHash('sha256').update(String(selected.songKey || selected.id || '')).digest('hex').slice(0, 16),
         title: String(selected.title || ''), artist: String(selected.artist || ''), album: String(selected.album || ''),
         year: Number(selected.year) || null,
         genres: Array.isArray(selected.genres) ? selected.genres.slice(0, 8).map(String) : [],
         popularity: picked.popularity,
+        popularitySource: selected.lastFm?.source || 'tag', popularityUpdatedAt: selected.lastFm?.updatedAt || '',
         scoreBeforeRandomness: picked.baseScore,
         scoreAfterRandomness: picked.score,
         additions: picked.additions,
@@ -436,10 +455,23 @@ class MusicRadio {
       } : null,
       diagnostics: {
         recentHistory: this.history.slice(0, 12).map(entry => ({
+          diagnosticId: crypto.createHash('sha256').update(String(entry.key || '')).digest('hex').slice(0, 16),
           artist: String(entry.artist || ''), album: String(entry.album || ''), at: new Date(entry.at).toISOString()
         })),
         selectedRank,
         totalWeightedScore,
+        lanes: {
+          seedArtist: { candidates: seedCandidates.length, weightedScore: laneWeight(seedCandidates) },
+          related: { candidates: relatedLane.length, weightedScore: laneWeight(relatedLane) },
+          outside: { candidates: outsideLane.length, weightedScore: laneWeight(outsideLane) },
+          chosen: lane
+        },
+        popularity: {
+          selectedSource: selected?.lastFm?.source || 'tag',
+          selectedUpdatedAt: selected?.lastFm?.updatedAt || '',
+          finalPoolLastFm: weightedCandidates.filter(candidate => candidate.track?.lastFm?.source === 'lastfm').length,
+          finalPoolTag: weightedCandidates.filter(candidate => candidate.track?.lastFm?.source === 'tag').length
+        },
         topFinalCandidates: rankedCandidates.map(diagnosticCandidate)
       },
       reason: selected ? `${artistFocusOutcome}; picked from ${weightedCandidates.length} eligible track${weightedCandidates.length === 1 ? '' : 's'}.` : 'No eligible song is available yet.'
@@ -447,4 +479,4 @@ class MusicRadio {
     return selected;
   }
 }
-module.exports = { MusicRadio, weight, scoreTrack, COOLDOWN, DEFAULT_RULES, RULE_FILES, RULE_MINIMUMS, RULE_MAXIMUMS, RULE_SPECS, ARTIST_FOCUS_STOPS, SONG_POPULARITY_STOPS };
+module.exports = { MusicRadio, weight, scoreTrack, COOLDOWN, HANDOFF_MEMORY_MS, DEFAULT_RULES, RULE_FILES, RULE_MINIMUMS, RULE_MAXIMUMS, RULE_SPECS, ARTIST_FOCUS_STOPS, SONG_POPULARITY_STOPS };

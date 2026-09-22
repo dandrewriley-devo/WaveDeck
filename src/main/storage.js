@@ -238,6 +238,7 @@ function validatePreferences(value) {
   const additionalMusicFolder = typeof value?.additionalMusicFolder === "string"
     ? value.additionalMusicFolder.trim()
     : "";
+  const lastFmApiKey = typeof value?.lastFmApiKey === 'string' ? value.lastFmApiKey.trim().slice(0, 160) : '';
   const settingsWindowBounds = rawSettingsBounds && typeof rawSettingsBounds === "object" && !Array.isArray(rawSettingsBounds) &&
     ["x", "y", "width", "height"].every((key) => Number.isFinite(Number(rawSettingsBounds[key])))
     ? {
@@ -264,6 +265,8 @@ function validatePreferences(value) {
       : true,
     proModeEnabled: value?.proModeEnabled === true,
     additionalMusicFolder,
+    lastFmEnabled: value?.lastFmEnabled === true,
+    lastFmApiKey,
     launchInSidebarMode: value?.launchInSidebarMode === true,
     settingsWindowBounds,
     radioLogWindowBounds,
@@ -439,6 +442,8 @@ class PortableStorage {
     return {
       proModeEnabled: preferences.proModeEnabled,
       additionalMusicFolder: preferences.additionalMusicFolder,
+      lastFmEnabled: preferences.lastFmEnabled,
+      lastFmApiKey: preferences.lastFmApiKey,
       launchInSidebarMode: preferences.launchInSidebarMode,
       settingsWindowBounds: preferences.settingsWindowBounds
         ? { ...preferences.settingsWindowBounds }
@@ -470,6 +475,14 @@ class PortableStorage {
   setAdditionalMusicFolder(folder) {
     const preferences = this.readPreferences();
     preferences.additionalMusicFolder = typeof folder === "string" ? folder.trim() : "";
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences();
+  }
+
+  setLastFmSettings({ enabled, apiKey }) {
+    const preferences = this.readPreferences();
+    preferences.lastFmEnabled = Boolean(enabled);
+    preferences.lastFmApiKey = typeof apiKey === 'string' ? apiKey.trim().slice(0, 160) : preferences.lastFmApiKey;
     this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
     return this.getUiPreferences();
   }

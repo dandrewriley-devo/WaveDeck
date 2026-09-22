@@ -25,7 +25,7 @@
       <!-- INTERFACE -->
       <section id="tab-interface" class="panel hidden">
         <div class="general-meta">
-          <b>WaveDeck version <span id="aboutVersion">0.7.4</span></b>
+          <b>WaveDeck version <span id="aboutVersion">0.7.5</span></b>
           <span>Station library: <span id="aboutDataDir">Data</span></span>
         </div>
         <div class="general-sections">
@@ -271,6 +271,24 @@
                   <div id="radioBasicControls" class="radio-rule-controls"></div>
                   <button id="resetAllRadioRules" class="btn radio-reset-all" type="button">Reset all Artist Radio settings</button>
                 </section>
+
+                <section class="lastfm-settings" aria-labelledby="lastFmTitle">
+                  <div class="pro-music-settings-title" id="lastFmTitle">Last.fm Music Data</div>
+                  <label class="preference-toggle">
+                    <input id="lastFmEnabled" type="checkbox" />
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                    <span>Improve Music Data with Last.fm</span>
+                  </label>
+                  <div class="hint">Refreshes song popularity, genre tags, and related artists in WaveDeck’s own portable database. Your MP3 files and tags are never changed.</div>
+                  <div id="lastFmDetails" class="lastfm-details" hidden>
+                    <div class="pro-music-settings-row">
+                      <input id="lastFmApiKey" class="input" type="password" autocomplete="off" spellcheck="false" placeholder="Last.fm API key" />
+                      <button id="testLastFmBtn" class="btn" type="button">Test Connection</button>
+                    </div>
+                    <div class="hint">WaveDeck checks missing or six-month-old data slowly in the background. Press <b>Ctrl + Alt + Shift + F</b> to quietly queue a full refresh.</div>
+                    <div id="lastFmStatus" class="lastfm-status">Last.fm is ready when you are.</div>
+                  </div>
+                </section>
               </div>
             </div>
           </section>
@@ -291,6 +309,13 @@
         <div class="about-divider"></div>
         <div class="changelog">
           <h2>Changelog</h2>
+
+          <h3>WaveDeck 0.7.5 — Last.fm Music Data</h3>
+          <ul>
+            <li>Added optional, background Last.fm refreshes for song popularity, tags, and related artists. Music files remain read-only.</li>
+            <li>Added the secret <b>Ctrl + Alt + Shift + F</b> shortcut to queue a throttled full-library refresh.</li>
+            <li>Made Outside Variety choose a real related-versus-outside lane, and limited repeated song-to-song handoff memory to 30 days.</li>
+          </ul>
 
           <h3>WaveDeck 0.7.4 — Exportable Radio Diagnostics</h3>
           <ul>
