@@ -20,8 +20,7 @@ html, body{
 .wrap{
   display:flex;
   flex-direction:column;
-  height:100%;
-  overflow:hidden;
+  min-height:100%;
   padding:16px;
 }
 
@@ -71,7 +70,6 @@ h1{
 .panel{
   border: 1px solid var(--border);
   background: var(--panel);
-  min-height:100%;
   padding: 14px;
   width:100%;
 }
@@ -80,15 +78,12 @@ h1{
 [hidden]{ display:none !important; }
 
 main{
-  flex:1;
-  min-height:0;
+  flex:none;
 }
 
 #tab-stations{
   display:flex;
   flex-direction:column;
-  min-height:0;
-  overflow:auto;
 }
 
 #tab-stations > #status:empty{
