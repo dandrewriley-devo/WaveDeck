@@ -5,6 +5,7 @@ const { extractTrack, normalize } = require('./music-tags');
 let db, parseFile, scanning = null;
 let lastFmWrites = 0;
 const SIX_MONTHS_MS = 183 * 24 * 60 * 60 * 1000;
+const FULL_REFRESH_RECHECK_MS = 7 * 24 * 60 * 60 * 1000;
 const portableRoot = path.join(path.dirname(workerData.dataDir), 'Music');
 let additionalMusicFolder = String(workerData.additionalMusicFolder || '').trim();
 const dbPath = path.join(workerData.dataDir, 'music.sqlite');
@@ -60,6 +61,10 @@ function lastFmNeedsRefresh(entry, now = Date.now(), force = false) {
   if (lastFmCurrent(entry, now)) return false;
   const retryAt = Date.parse(entry?.retry_after || '');
   return !Number.isFinite(retryAt) || retryAt <= now;
+}
+function lastFmNeedsFullRefresh(entry, now = Date.now()) {
+  const checkedAt = Date.parse(entry?.last_attempt_at || entry?.updated_at || '');
+  return !Number.isFinite(checkedAt) || checkedAt <= now - FULL_REFRESH_RECHECK_MS;
 }
 async function persistLastFm(force = false) {
   if (!force && lastFmWrites % 10 !== 0) return;
@@ -191,10 +196,18 @@ parentPort.on('message', async ({ id, method, args = [] }) => {
       db.run('INSERT OR REPLACE INTO lastfm_jobs VALUES (?, ?, ?, ?)', [albumKey(track), 100, 0, new Date().toISOString()]);
       await persist(); value = true;
     } else if (method === 'lastfm:queue-full') {
-      const now = new Date().toISOString();
+      const now = Date.now();
+      const queuedAt = new Date(now).toISOString();
+      const tracks = storedTracks();
+      const maps = lastFmMaps();
       db.run('BEGIN TRANSACTION');
       try {
-        for (const key of new Set(storedTracks().map(albumKey))) db.run('INSERT OR REPLACE INTO lastfm_jobs VALUES (?, ?, ?, ?)', [key, 10, 1, now]);
+        // This is a catch-up sweep, not a needless restart. Albums whose tracks
+        // were checked within the past week are left alone.
+        for (const key of new Set(tracks.map(albumKey))) {
+          const albumNeedsRefresh = tracks.some(track => albumKey(track) === key && lastFmNeedsFullRefresh(maps.tracks.get(track.id), now));
+          if (albumNeedsRefresh) db.run('INSERT OR REPLACE INTO lastfm_jobs VALUES (?, ?, ?, ?)', [key, 10, 2, queuedAt]);
+        }
         db.run('COMMIT');
       } catch (error) { db.run('ROLLBACK'); throw error; }
       await persist(); value = true;
@@ -202,7 +215,9 @@ parentPort.on('message', async ({ id, method, args = [] }) => {
       const maps = lastFmMaps(); const tracks = storedTracks(); const now = Date.now();
       const job = rows('SELECT * FROM lastfm_jobs ORDER BY priority DESC, queued_at ASC LIMIT 1')[0];
       let key = job?.album_key || '';
-      let force = Boolean(job?.force);
+      const refreshMode = Number(job?.force) || 0;
+      const force = refreshMode === 1;
+      const fullRefresh = refreshMode === 2;
       if (!key) {
         const candidate = tracks.find(track => lastFmNeedsRefresh(maps.tracks.get(track.id), now));
         if (!candidate) { value = null; parentPort.postMessage({ id, value }); return; }
@@ -212,9 +227,11 @@ parentPort.on('message', async ({ id, method, args = [] }) => {
       const artists = merge(...album.map(track => track.artists || [track.artist]));
       value = {
         albumKey: key, force, queued: Boolean(job),
-        tracks: album.filter(track => lastFmNeedsRefresh(maps.tracks.get(track.id), now, force)),
-        // A full manual refresh forces every track, but artist data is shared by
-        // many albums; do not ask Last.fm for the same artist over and over.
+        tracks: album.filter(track => fullRefresh
+          ? lastFmNeedsFullRefresh(maps.tracks.get(track.id), now)
+          : lastFmNeedsRefresh(maps.tracks.get(track.id), now, force)),
+        // Artist data is shared by many albums, so do not ask Last.fm for the
+        // same artist over and over during a library sweep.
         artists: artists.filter(artist => lastFmNeedsRefresh(maps.artists.get(normalize(artist)), now))
       };
     } else if (method === 'lastfm:update-track') {

@@ -25,7 +25,7 @@
       <!-- INTERFACE -->
       <section id="tab-interface" class="panel hidden">
         <div class="general-meta">
-          <b>WaveDeck version <span id="aboutVersion">0.7.6</span></b>
+          <b>WaveDeck version <span id="aboutVersion">0.7.7</span></b>
           <span>Station library: <span id="aboutDataDir">Data</span></span>
         </div>
         <div class="general-sections">
@@ -285,7 +285,7 @@
                       <input id="lastFmApiKey" class="input" type="password" autocomplete="off" spellcheck="false" placeholder="Last.fm API key" />
                       <button id="testLastFmBtn" class="btn" type="button">Test Connection</button>
                     </div>
-                    <div class="hint">WaveDeck checks missing or six-month-old data slowly in the background. Press <b>Ctrl + Alt + Shift + F</b> to quietly queue a full refresh.</div>
+                    <div class="hint">WaveDeck checks missing or six-month-old data slowly in the background. Press <b>Ctrl + Alt + Shift + F</b> to queue a catch-up refresh; songs checked within the past week are skipped.</div>
                     <div id="lastFmStatus" class="lastfm-status">Last.fm is ready when you are.</div>
                   </div>
                 </section>
@@ -309,6 +309,11 @@
         <div class="about-divider"></div>
         <div class="changelog">
           <h2>Changelog</h2>
+
+          <h3>WaveDeck 0.7.7 — Smarter Last.fm Catch-Up</h3>
+          <ul>
+            <li>The full-library Last.fm shortcut now skips songs checked within the past week instead of starting those over.</li>
+          </ul>
 
           <h3>WaveDeck 0.7.6 — Settings Scrolling Fix</h3>
           <ul>

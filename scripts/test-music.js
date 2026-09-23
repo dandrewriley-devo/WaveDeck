@@ -56,6 +56,13 @@ async function run() {
     assert.ok(library.tracks[0].genres.includes('Alternative Rock'));
     assert.ok(library.tracks[0].similarArtists.includes('Similar Artist'));
     assert.equal((await library.getLastFmStatus()).tracksMatched, 1);
+    await library.queueFullLastFmRefresh();
+    assert.equal((await library.getLastFmStatus()).queuedAlbums, 0, 'full refresh skips tracks checked within the past week');
+    await library.updateLastFmTrack({ id: indexedTrack.id, artist: 'Artist', title: 'Test Song', albumKey: 'artist\\nalbum', listeners: 100000, playCount: 500000, popularity: 71, tags: ['Alternative Rock'], updatedAt: new Date().toISOString(), lastAttemptAt: new Date(Date.now() - (8 * 24 * 60 * 60 * 1000)).toISOString(), retryAfter: '', status: 'matched' });
+    await library.queueFullLastFmRefresh();
+    const fullRefreshBatch = await library.nextLastFmAlbum();
+    assert.equal(fullRefreshBatch.tracks.length, 1, 'full refresh includes tracks checked more than a week ago');
+    await library.completeLastFmAlbum(fullRefreshBatch.albumKey);
     assert.equal(popularityScore(0), 0);
     assert(popularityScore(100_000) > popularityScore(1_000), 'Last.fm popularity uses a useful logarithmic range');
     assert(popularityScore(100_000) < 100, 'Last.fm popularity does not flatten ordinary popular songs to 100');
