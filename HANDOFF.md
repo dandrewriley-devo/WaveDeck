@@ -178,6 +178,26 @@ Diagnostic file: `WaveDeck_Radio_Diagnostics_2026-09-23T10-46-47-201Z.json`
 
 The next useful controlled experiment is Song Radio with Song Popularity around 50%, keeping other settings unchanged, followed by another diagnostic export. However, do not make code changes solely from this recommendation.
 
+## Recent GitHub connector history
+
+On September 21, 2026, GitHub connector write access was verified without changing `main`:
+
+- Branch `codex-connector-test` was created from `main` at `9099ac9`.
+- `CONNECTOR_TEST.txt` was added with exactly: `GitHub write test - 2026-09-21`.
+- The test branch commit was `3830e074792a21ac775b5ac5b2e3eb953997e409`.
+- No pull request was opened and `main` was unchanged by the connector test.
+
+The Advanced Features update originally existed locally as `5c7bd3e` (`Rename Pro mode and add radio tuning controls`). Because the local history had diverged from GitHub's then-current `main`, the change was replayed cleanly on top of remote `main` rather than force-pushing. The resulting published commit was `f497502938307c3015d2115fa0d27ed32135404d`. `npm test` passed before publication, and the remote tree was verified to match the tested replay.
+
+The reliable GitHub publishing path is therefore:
+
+1. Fetch the current remote `main` and do not trust a stale local branch.
+2. Reapply or reconstruct only the intended change on top of the current remote tree.
+3. Run `npm test` when source code changes are involved.
+4. Create the tree and commit through the GitHub API connector.
+5. Update `main` with `force: false`.
+6. Fetch `main` again and verify the resulting commit, message, and tree.
+
 ## Publishing workflow
 
 Normal `git push` may fail because the local workspace does not have GitHub credentials. The reliable publishing path is the GitHub API connector:
