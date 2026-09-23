@@ -71,8 +71,7 @@ h1{
 .panel{
   border: 1px solid var(--border);
   background: var(--panel);
-  height:100%;
-  overflow:auto;
+  min-height:100%;
   padding: 14px;
   width:100%;
 }
@@ -83,6 +82,7 @@ h1{
 main{
   flex:1;
   min-height:0;
+  overflow:auto;
 }
 
 #tab-stations{
