@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.7.13");
-assert.strictEqual(packageJson.wavedeckVersion, "0.7.13");
+assert.strictEqual(packageJson.version, "0.7.14");
+assert.strictEqual(packageJson.wavedeckVersion, "0.7.14");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -427,7 +427,7 @@ try {
   assert.strictEqual(exportedLibrary.stations[0].gainDb, undefined);
   const reloadedStorage = new PortableStorage({ dataDir, defaultsDir });
   reloadedStorage.initialize();
-  assert.deepStrictEqual(reloadedStorage.readListeningHistory(), { version: 1, stations: {}, recentStationIds: [] });
+  assert.deepStrictEqual(reloadedStorage.readListeningHistory(), { version: 2, stations: {}, recentStationIds: [], recentLocalStations: [] });
   reloadedStorage.writeListeningHistory({
     version: 1,
     stations: { alpha: { seconds: 325, lastListenedAt: "2026-09-02T00:00:00.000Z" } },
@@ -435,6 +435,11 @@ try {
   });
   assert.strictEqual(reloadedStorage.readListeningHistory().stations.alpha.seconds, 325);
   assert.deepStrictEqual(reloadedStorage.readListeningHistory().recentStationIds, ["alpha", "beta", ...Array.from({ length: 8 }, (_, index) => `station-${index}`)]);
+  reloadedStorage.writeListeningHistory({
+    version: 2, stations: {}, recentStationIds: [],
+    recentLocalStations: [{ mode: 'radio', seedId: 'comfortably-numb', label: 'Comfortably Numb Radio', title: 'Comfortably Numb', artist: 'Pink Floyd' }]
+  });
+  assert.deepStrictEqual(reloadedStorage.readListeningHistory().recentLocalStations.map(station => station.key), ['radio:comfortably-numb']);
 
   const subgroupStations = reloadedStorage.readStations();
   const subgroupGroup = subgroupStations[0].group;
@@ -754,6 +759,16 @@ assert.ok(historyWrites.length >= 2);
 assert.ok(historyChanges.length >= 2);
 assert.deepStrictEqual(listeningHistory.reset().stations, {});
 assert.deepStrictEqual(listeningHistory.getStats().recentStationIds, ["alpha"]);
+listeningHistory.handleStatus({
+  state: "playing", playing: true, mediaState: "playing", currentStation: null,
+  currentMusic: { mode: "radio", label: "Comfortably Numb Radio", seed: { id: "seed-1", title: "Comfortably Numb", artist: "Pink Floyd", album: "The Wall" } }
+});
+assert.deepStrictEqual(listeningHistory.getStats().recentLocalStations.map(station => station.key), ["radio:seed-1"]);
+listeningHistory.handleStatus({
+  state: "playing", playing: true, mediaState: "playing", currentStation: null,
+  currentMusic: { mode: "artist", label: "Pink Floyd Radio", seed: { id: "seed-2", title: "Wish You Were Here", artist: "Pink Floyd" } }
+});
+assert.deepStrictEqual(listeningHistory.getStats().recentLocalStations.map(station => station.key), ["artist:seed-2", "radio:seed-1"]);
 listeningHistory.close();
 
 let indieTime = 0;
@@ -1177,13 +1192,12 @@ assert.ok(settingsHtml.indexOf('data-tab="localmusic"') < settingsHtml.indexOf('
 assert.ok(settingsHtml.includes('id="tab-localmusic"'));
 assert.ok(settingsHtml.includes('WaveDeck 0.7.x — Bug Fixes'));
 assert.ok(!settingsHtml.includes('WaveDeck 0.7.9 —'));
-assert.ok(settingsRendererSource.includes("title: 'Ratings Matter'"));
 assert.ok(settingsHtml.includes('Enable Advanced Features'));
-assert.ok(settingsHtml.includes('id="radioBasicControls"'));
+assert.ok(settingsHtml.includes('id="localRadioTitle"'));
+assert.ok(settingsHtml.includes('WaveDeck uses Last.fm only when it adds a meaningful connection'));
 assert.ok(settingsHtml.includes('id="lastFmProgress"'));
-assert.ok(!settingsHtml.includes('id="radioAdvancedControls"'));
-assert.ok(!settingsHtml.includes('id="showAdvancedRadioSettings"'));
-assert.ok(settingsHtml.includes('id="resetAllRadioRules"'));
+assert.ok(!settingsHtml.includes('radio-rule-tab'));
+assert.ok(!settingsHtml.includes('id="resetAllRadioRules"'));
 assert.ok(settingsHtml.includes('id="chooseAdditionalMusicFolderBtn"'));
 assert.ok(settingsHtml.includes('id="lastFmEnabled"'));
 assert.ok(settingsHtml.includes('id="lastFmApiKey"'));
@@ -1200,12 +1214,8 @@ assert.ok(settingsHtml.includes('id="st_has_preroll"'));
 assert.ok(settingsHtml.includes("WaveDeck 0.6.7 — Stream Recording & Settings Update"));
 assert.ok(settingsHtml.includes("native Sidebar Mode"));
 assert.ok(settingsHtml.includes("Changelog"));
-for (const control of [
-  'artistFocusPercent', 'genreWeight', 'songPopularityPercent', 'artistVariety', 'albumVariety',
-  'releaseYearRange', 'selectionRandomness', 'repeatCooldownMinutes', 'ratingInfluence'
-]) {
-  assert.ok(settingsRendererSource.includes(`'${control}'`), `Radio tuning should include ${control}`);
-}
+assert.ok(!settingsRendererSource.includes('artistFocusPercent'));
+assert.ok(!settingsRendererSource.includes('ratingInfluence'));
 assert.ok(!settingsRendererSource.includes('unrelatedTrackMultiplier'));
 assert.ok(!settingsHtml.includes('id="outsideVariety"'));
 assert.ok(!settingsRendererSource.includes('outsideVariety'));
@@ -1378,8 +1388,8 @@ assert.ok(rendererSource.includes("toggleRecording"));
 assert.ok(rendererSource.includes("previousPreset"));
 assert.ok(rendererSource.includes("nextPreset"));
 assert.ok(rendererSource.includes("clearMusicSearch"));
-assert.ok(rendererSource.includes("Recently Played Stations"));
-assert.ok(rendererSource.includes("recentStationIds"));
+assert.ok(rendererSource.includes("Recently Played Local Stations"));
+assert.ok(rendererSource.includes("recentLocalStations"));
 assert.ok(rendererSource.includes("details.music-row[open]"));
 assert.ok(rendererSource.includes("['radio', 'Song Radio'], ['artist', 'Artist Radio'], ['album', 'Play Album']"));
 assert.ok(!rendererSource.includes("Play Song"));
@@ -1405,11 +1415,8 @@ assert.ok(settingsSource.includes('platform === "linux" || platform === "win32"'
 assert.ok(settingsSource.includes('platform === "linux" ? loadLauncherStatus()'));
 assert.ok(settingsSource.includes("setProModeEnabled(requested)"));
 assert.ok(settingsSource.includes("loadUiPreferences()"));
-assert.ok(settingsSource.includes("getMusicRules()"));
-assert.ok(settingsSource.includes("setMusicRule(activeRadioMode"));
-assert.ok(settingsSource.includes("resetMusicRules(activeRadioMode)"));
-assert.ok(mainSource.includes("music:rules:get"));
-assert.ok(mainSource.includes("music:rules:reset-all"));
+assert.ok(!mainSource.includes("music:rules:get"));
+assert.ok(!mainSource.includes("music:rules:reset-all"));
 
 const windowsBuild = JSON.parse(fs.readFileSync(path.join(root, "electron-builder.windows.json"), "utf8"));
 assert.strictEqual(windowsBuild.win.artifactName, "WaveDeck.exe");

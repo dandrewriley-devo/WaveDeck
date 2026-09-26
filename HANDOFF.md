@@ -6,8 +6,8 @@ This file is an internal continuity reference for future WaveDeck work. It recor
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `main`
-- Current published version: **0.7.13**
-- Current release: 0.7.13 — context-aware toolbars and saved Streaming layout state.
+- Current published version: **0.7.14**
+- Current release: 0.7.14 — automatic Local Radio, Local Station history, and Local Music layout refinement.
 - Previous release commit: `2437af4f1bb585408af111338f8de5a8d44563ec` — five-stop radio tuning, acceptable-pool selection, read-only rating influence, and Last.fm progress bar.
 - 0.7.10 commit: `d2a2a0243165d40e832fa4dbc87f69a71db624c1` — recent stations, Settings relocation, and read-only MP3 rating support.
 - Previous relevant commit: `79fdea48f1f7eff3b71e611625a18e8485c0d689` — project handoff and connector history.
@@ -48,27 +48,13 @@ WaveDeck includes:
 
 Album art and ReplayGain are intentionally not part of the current feature set.
 
-## Current radio settings
+## Current Local Radio policy
 
-The Settings → Local Music tab exposes nine radio controls per mode. Every control has exactly five discrete stops:
+Local Radio is automatic: there are no listener tuning sliders. Song Radio prioritizes the seed album and seed artist; Artist Radio stays anchored to its seed artist. Shared credited artists, useful Last.fm similar-artist links, and specific shared tags can extend either station. Broad tags such as Rock, Pop, Country, or Jazz are never enough by themselves, so a song like “Comfortably Numb” cannot jump to “The Devil Went Down to Georgia” merely because both carry Rock.
 
-| Control | Five stops |
-|---|---|
-| Artist Focus | 0%, 25%, 50%, 75%, 100% |
-| Genre Match | 0, 1, 5, 10, 20 |
-| Song Popularity | 0%, 25%, 50%, 75%, 100% |
-| Artist Variety | Off, Light, Balanced, Strong, Maximum |
-| Album Variety | Off, Light, Balanced, Strong, Maximum |
-| Release-Year Range | Same year, 5, 10, 20 years, no limit |
-| Surprise versus Match | 0, 0.5, 1, 3, 10 |
-| Song Repeat Wait | 2, 4, 8, 16, 24 hours |
-| Ratings Matter | Off, Gentle, Moderate, Strong, Dominant |
+Last.fm is optional and only used when it creates a meaningful connection. Existing MP3 ratings are copied into the local index without modifying files; a rating is a gentle tie-breaker for an already credible song, while unrated songs remain neutral and eligible. When no credible candidate is available, Local Radio waits. Exact songs observe a fixed two-hour repeat wait.
 
-Outside Variety has been removed. Radio eligibility is limited to the seed artist, a shared credited artist, a shared genre/tag, or a Last.fm similar-artist relationship. If this acceptable pool is empty after repeat and handoff rules, radio waits instead of choosing an unrelated track. Diagnostics record each selected candidate's eligibility reasons and count candidates excluded for relevance.
-
-Ratings Matter affects read-only MP3 rating tags: higher star ratings receive increasingly strong selection weight as the setting rises. Unrated tracks remain eligible and neutral at every level, including Dominant. Radio does not require or write a rating tag. The rules schema is version 7 and migrates existing settings to the five-stop controls.
-
-Artist Focus remains a direct pool choice: at 100%, eligible seed-artist songs are selected whenever available; otherwise other acceptable candidates can play. Repeated A→B handoff protection remembers relevant transitions for 30 days, and a gentle post-repeat holdback remains after the configured repeat cooldown.
+Recently played Local Stations are stored separately from Streaming Stations and appear in Local Music immediately when an Artist Radio or Song Radio station starts. A recent Local Station replays its original seed and station type.
 
 ## Recently shipped and deferred work
 
@@ -77,6 +63,8 @@ WaveDeck 0.7.11 adds a visual Last.fm progress bar showing current tracks out of
 WaveDeck 0.7.12 replaces the old combined toolbar with Streaming and Local Music tabs, a context toolbar, a separate playback-controls row, and an always-visible search row for the selected section. The volume slider has its own full-width row beneath the player art. Sidebar Mode stays at the far right of the context toolbar without an active highlight. The Notepad UI, IPC bridge, storage methods, and automatic file creation are removed; an existing `notepad.txt` is left untouched but ignored.
 
 WaveDeck 0.7.13 fixes the context-toolbar visibility rule so Local Music library status and rescan controls are hidden on Streaming. Presets now default to hidden, station groups/subgroups default to expanded, and their display/collapse states persist in portable preferences across restarts. Local Music Rescan uses an icon-only button with an accessible label.
+
+WaveDeck 0.7.14 rebuilds Local Radio around relationship-first eligibility and automatic scoring. It removes the slider UI and rule IPCs, uses Last.fm only as an optional quality signal, and logs the selected candidate’s qualifying relationship. Local Music now lists recently played Local Stations (not Streaming Stations), moves the active Local Station label beneath search, and puts the unboxed rescan icon before the song count.
 
 Contextual thumbs-up/thumbs-down feedback remains deferred. The new playback row reserves disabled thumbs buttons so their position can be tested, but they do not record votes yet. A later vote should mean “fits or does not fit this Local Radio seed,” not a global song like/dislike. Store votes against the seed/candidate pair in portable Data, allow changing a vote, and do not infer votes from skips.
 

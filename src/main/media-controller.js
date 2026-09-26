@@ -99,6 +99,7 @@ class MediaController {
       currentRecording: publicRecording(this.currentRecording),
       currentMusic: this.music ? {
         track: this.music.current,
+        seed: (() => { const seed = { ...this.music.seed }; delete seed.path; return seed; })(),
         mode: this.music.mode,
         label: musicContextLabel(this.music),
         waiting: this.music.waiting

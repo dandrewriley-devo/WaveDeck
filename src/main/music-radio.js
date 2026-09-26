@@ -2,513 +2,100 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { normalize, radioArtist } = require('./music-tags');
-const RULE_FILES = { artist: 'artist-radio-rules.json', radio: 'song-radio-rules.json' };
-const RULES_REFERENCE_FILE = 'music-radio-rules-reference.txt';
-const DEFAULT_RULES = {
-  artist: {
-    version: 7, repeatCooldownMinutes: 120, artistFocusPercent: 50, genreWeight: 5, ratingInfluence: 0,
-    songPopularityPercent: 50, artistVariety: 2, albumVariety: 2, releaseYearRange: 10,
-    selectionRandomness: 1
-  },
-  radio: {
-    version: 7, repeatCooldownMinutes: 120, artistFocusPercent: 50, genreWeight: 5, ratingInfluence: 0,
-    songPopularityPercent: 50, artistVariety: 2, albumVariety: 2, releaseYearRange: 10,
-    selectionRandomness: 1
-  }
-};
-const COOLDOWN = DEFAULT_RULES.artist.repeatCooldownMinutes * 60 * 1000;
-const ARTIST_FOCUS_STOPS = [0, 25, 50, 75, 100];
-const SONG_POPULARITY_STOPS = [0, 25, 50, 75, 100];
-const GENRE_WEIGHT_STOPS = [0, 1, 5, 10, 20];
-const VARIETY_STOPS = [0, 1, 2, 3, 4];
-const RELEASE_YEAR_STOPS = [0, 5, 10, 20, 10000];
-const REPEAT_WAIT_STOPS = [120, 240, 480, 960, 1440];
-const SELECTION_RANDOMNESS_STOPS = [0, 0.5, 1, 3, 10];
-const RATING_INFLUENCE_STOPS = [0, 1, 2, 3, 4];
-const RATING_MULTIPLIERS = [
-  [1, 1, 1, 1, 1, 1],
-  [0.25, 0.4, 0.7, 1, 1.25, 1.5],
-  [0.03, 0.08, 0.2, 0.65, 1.5, 3],
-  [0.005, 0.015, 0.08, 0.45, 2, 5],
-  [0.001, 0.002, 0.02, 0.2, 3, 10]
-];
-const RELATED_ARTIST_WEIGHT = 6;
-const RELEASE_YEAR_WEIGHT = 2;
-const POST_COOLDOWN_MULTIPLIER = 0.75;
-const HANDOFF_MEMORY_MS = 30 * 24 * 60 * 60 * 1000;
-const VARIETY_RULES = {
-  artist: [
-    { memory: 0, multiplier: 1 },
-    { memory: 2, multiplier: 0.75 },
-    { memory: 4, multiplier: 0.35 },
-    { memory: 7, multiplier: 0.15 },
-    { memory: 10, multiplier: 0.05 }
-  ],
-  album: [
-    { memory: 0, multiplier: 1 },
-    { memory: 3, multiplier: 0.75 },
-    { memory: 5, multiplier: 0.5 },
-    { memory: 8, multiplier: 0.25 },
-    { memory: 12, multiplier: 0.1 }
-  ]
-};
-const RULE_SPECS = {
-  repeatCooldownMinutes: { min: 120, max: 1440, integer: true, stops: REPEAT_WAIT_STOPS },
-  artistFocusPercent: { min: 0, max: 100, integer: true, stops: ARTIST_FOCUS_STOPS },
-  genreWeight: { min: 0, max: 20, integer: true, stops: GENRE_WEIGHT_STOPS },
-  songPopularityPercent: { min: 0, max: 100, integer: true, stops: SONG_POPULARITY_STOPS },
-  artistVariety: { min: 0, max: 4, integer: true, stops: VARIETY_STOPS },
-  albumVariety: { min: 0, max: 4, integer: true, stops: VARIETY_STOPS },
-  releaseYearRange: { min: 0, max: 10000, integer: true, stops: RELEASE_YEAR_STOPS },
-  selectionRandomness: { min: 0, max: 10, stops: SELECTION_RANDOMNESS_STOPS },
-  ratingInfluence: { min: 0, max: 4, integer: true, stops: RATING_INFLUENCE_STOPS }
-};
-const RULE_MINIMUMS = Object.fromEntries(Object.entries(RULE_SPECS).map(([key, spec]) => [key, spec.min]));
-const RULE_MAXIMUMS = Object.fromEntries(Object.entries(RULE_SPECS).map(([key, spec]) => [key, spec.max]));
-const RULES_REFERENCE = `WaveDeck Music Radio Rules\n\n` +
-`WaveDeck's Settings → Local Music tab is the normal way to tune Artist Radio and Song Radio. The sliders save these files automatically.\n\n` +
-`artist-radio-rules.json controls Artist Radio.\n` +
-`song-radio-rules.json controls Song Radio.\n\n` +
-`If you edit a file yourself, save it and WaveDeck uses the new value before choosing its next radio song. Invalid files use built-in defaults until fixed.\n\n` +
-`The Settings sliders are the recommended way to tune radio.\n\n` +
-`repeatCooldownMinutes (2, 4, 8, 16, or 24 hours): Minimum wait before the same song can return.\n` +
-`artistFocusPercent (0, 25, 50, 75, 100): How often radio tries to play the seed artist. At 100, it always chooses an eligible seed-artist track and falls back to other acceptable related music only when none is available.\n` +
-`genreWeight (0, 1, 5, 10, 20): How strongly matching genre tags matter among acceptable songs.\n` +
-`songPopularityPercent (0, 25, 50, 75, 100): How much the Last.fm 0–100 song-popularity score matters. Missing popularity data is neutral.\n` +
-`artistVariety (Off, Light, Balanced, Strong, Maximum): How strongly radio keeps non-seed artists from bunching up.\n` +
-`albumVariety (Off, Light, Balanced, Strong, Maximum): How strongly radio keeps albums from bunching up.\n` +
-`releaseYearRange (same year, 5, 10, or 20 years, or no limit): How close a song's release year should be to the seed.\n` +
-`selectionRandomness (0, 0.5, 1, 3, 10): Lower values make picks more surprising; higher values favor the strongest matches.\n\n` +
-`ratingInfluence (Off, Gentle, Moderate, Strong, Dominant): How strongly read-only MP3 ratings guide radio. Unrated songs remain neutral; at Moderate, one-star songs are extremely unlikely and two-star songs are rare.\n\n` +
-`Candidates must share the seed artist, a credited artist, a genre/tag, or a Last.fm similar-artist relationship. Radio does not fall back to unrelated songs when this acceptable pool is empty.\n\n` +
-`Favorites, play counts, mood tags, and featured-artist bonuses are not used. Last.fm related-artist matching, a gentle post-cooldown holdback, and strict repeated-handoff avoidance are built in.\n`;
+
+// Local Radio is automatic. These are safeguards, not listener tuning controls.
+const COOLDOWN = 120 * 60 * 1000;
+const COMMON_TAGS = new Set(['rock', 'pop', 'country', 'jazz', 'blues', 'folk', 'metal', 'indie', 'dance', 'electronic', 'hip hop', 'hip-hop', 'rap', 'r&b', 'rnb', 'classical', 'soundtrack', 'alternative', 'soul', 'music']);
+
 const matches = (a, b) => Boolean(a && b && normalize(a) === normalize(b));
-const overlaps = (a = [], b = []) => a.some(x => b.some(y => matches(x, y)));
-const clone = value => JSON.parse(JSON.stringify(value));
-function legacyArtistFocus(value) {
-  const oldWeight = Number(value?.sameArtistWeight);
-  if (!Number.isFinite(oldWeight) || oldWeight <= 0) return 0;
-  if (oldWeight < 3) return 10;
-  if (oldWeight < 7) return 25;
-  if (oldWeight < 25) return 50;
-  if (oldWeight < 100) return 70;
-  if (oldWeight < 1000) return 85;
-  return 100;
-}
-function nearestArtistFocusStop(value) {
-  return ARTIST_FOCUS_STOPS.reduce((nearest, stop) => Math.abs(stop - value) < Math.abs(nearest - value) ? stop : nearest, ARTIST_FOCUS_STOPS[0]);
-}
-function legacySongPopularity(value) {
-  const maximum = Math.max(0, Number(value?.popularityMaximum) || 0);
-  const divisor = Math.max(1, Number(value?.popularityDivisor) || 1);
-  const oldMaximumBoost = Math.min(maximum, 100) / divisor;
-  return SONG_POPULARITY_STOPS.reduce((nearest, stop) => Math.abs(stop - oldMaximumBoost * 100) < Math.abs(nearest - oldMaximumBoost * 100) ? stop : nearest, SONG_POPULARITY_STOPS[0]);
-}
-function nearestSongPopularityStop(value) {
-  return SONG_POPULARITY_STOPS.reduce((nearest, stop) => Math.abs(stop - value) < Math.abs(nearest - value) ? stop : nearest, SONG_POPULARITY_STOPS[0]);
-}
-function nearestStop(value, stops) {
-  return stops.reduce((nearest, stop) => Math.abs(stop - value) < Math.abs(nearest - value) ? stop : nearest, stops[0]);
-}
-function legacyVariety(value, countKey, multiplierKey) {
-  const count = Number(value?.[countKey]);
-  const multiplier = Number(value?.[multiplierKey]);
-  if ((Number.isFinite(count) && count <= 0) || (Number.isFinite(multiplier) && multiplier >= 1)) return 0;
-  if ((Number.isFinite(count) && count >= 7) || (Number.isFinite(multiplier) && multiplier <= 0.1)) return 2;
-  return 1;
-}
-function legacyReleaseYearRange(value) {
-  if (Number(value?.eraWeight) <= 0) return 10000;
-  return nearestStop(Number(value?.eraYearRange) || 10, RELEASE_YEAR_STOPS.slice(0, -1));
-}
-function validatedRules(value, defaults) {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return clone(defaults);
-  const result = clone(defaults);
-  const oldVersion = Number(value.version) || 1;
-  if (oldVersion < 3) result.artistFocusPercent = legacyArtistFocus(value);
-  if (oldVersion < 4) result.songPopularityPercent = legacySongPopularity(value);
-  if (oldVersion < 5) {
-    result.artistVariety = legacyVariety(value, 'recentArtistCount', 'recentArtistMultiplier');
-    result.albumVariety = legacyVariety(value, 'recentAlbumCount', 'recentAlbumMultiplier');
-    result.releaseYearRange = legacyReleaseYearRange(value);
-  }
-  if (oldVersion < 7) {
-    result.artistVariety = Math.min(4, Math.max(0, Math.round(Number(result.artistVariety) * 2)));
-    result.albumVariety = Math.min(4, Math.max(0, Math.round(Number(result.albumVariety) * 2)));
-  }
-  for (const [key, fallback] of Object.entries(defaults)) {
-    if (key === 'version') continue;
-    const candidate = Number(value[key]);
-    const spec = RULE_SPECS[key];
-    if (Number.isFinite(candidate)) {
-      const migrated = oldVersion < 7 && (key === 'artistVariety' || key === 'albumVariety') ? candidate * 2 : candidate;
-      const bounded = Math.min(spec.max, Math.max(spec.min, migrated));
-      const rounded = spec.integer ? Math.round(bounded) : bounded;
-      result[key] = key === 'artistFocusPercent' ? nearestArtistFocusStop(rounded)
-        : key === 'songPopularityPercent' ? nearestSongPopularityStop(rounded)
-          : spec.stops ? nearestStop(rounded, spec.stops) : rounded;
-    }
+const artistList = track => Array.isArray(track?.artists) && track.artists.length ? track.artists : [track?.artist];
+const overlaps = (left = [], right = []) => left.some(a => right.some(b => matches(a, b)));
+const stableId = track => crypto.createHash('sha256').update(String(track?.songKey || track?.id || '')).digest('hex').slice(0, 16);
+
+function specificSharedTags(left = [], right = []) {
+  const result = [];
+  for (const tag of left) {
+    const key = normalize(tag);
+    if (!key || COMMON_TAGS.has(key) || !right.some(other => matches(tag, other))) continue;
+    if (!result.some(other => matches(other, tag))) result.push(String(tag));
   }
   return result;
 }
-function ruleSchema(mode) {
-  const defaults = DEFAULT_RULES[mode] || DEFAULT_RULES.radio;
-  return Object.fromEntries(Object.entries(defaults)
-    .filter(([key]) => key !== 'version')
-    .map(([key, defaultValue]) => [key, {
-      defaultValue,
-      ...RULE_SPECS[key]
-    }]));
+function isSeedArtistTrack(track, seedArtist) { return overlaps(artistList(track), [seedArtist]); }
+function sameAlbum(track, seed) {
+  return Boolean(track?.album && seed?.album && matches(track.album, seed.album) && matches(track.albumArtist || track.artist, seed.albumArtist || seed.artist));
 }
-function seedArtistForMode(seed, mode) {
-  return mode === 'artist' ? radioArtist(seed) : seed?.artist;
+function relationship(track, seed, mode) {
+  const seedArtist = mode === 'artist' ? radioArtist(seed) : seed?.artist;
+  const seedArtists = artistList(seed);
+  const reasons = []; let strength = 0;
+  if (mode === 'radio' && sameAlbum(track, seed)) { reasons.push('same album'); strength = 100; }
+  if (isSeedArtistTrack(track, seedArtist)) { reasons.push('seed artist'); strength = Math.max(strength, 88); }
+  else if (overlaps(artistList(track), seedArtists)) { reasons.push('shared credited artist'); strength = Math.max(strength, 72); }
+  if (overlaps(seed?.similarArtists || [], [track?.artist]) || overlaps(track?.similarArtists || [], [seedArtist])) { reasons.push('Last.fm similar artist'); strength = Math.max(strength, 62); }
+  const tags = specificSharedTags(track?.genres || [], seed?.genres || []);
+  if (tags.length) { reasons.push(`specific shared tag${tags.length === 1 ? '' : 's'}: ${tags.slice(0, 2).join(', ')}`); strength = Math.max(strength, 28 + Math.min(16, tags.length * 8)); }
+  return { seedArtist, reasons, strength, tags };
 }
-function isSeedArtistTrack(track, seedArtist) {
-  return matches(track?.artist, seedArtist) || overlaps(track?.artists || [track?.artist], [seedArtist]);
+function recentPenalty(track, seedArtist, history) {
+  const recent = history.slice(0, 8); let multiplier = 1; const notes = [];
+  if (!isSeedArtistTrack(track, seedArtist) && recent.slice(0, 3).some(item => matches(item.artist, track.artist))) { multiplier *= 0.2; notes.push('artist heard very recently'); }
+  if (track.album && recent.slice(0, 2).some(item => matches(item.album, track.album))) { multiplier *= 0.35; notes.push('album heard very recently'); }
+  return { multiplier, notes };
 }
-function acceptableMatchReasons(track, seed, seedArtist) {
-  const reasons = [];
-  if (isSeedArtistTrack(track, seedArtist)) reasons.push('seed artist');
-  if (overlaps(track?.artists || [track?.artist], seed?.artists || [seed?.artist])) reasons.push('shared credited artist');
-  if (overlaps(seed?.similarArtists || [], [track?.artist]) || overlaps(track?.similarArtists || [], [seedArtist])) {
-    reasons.push('Last.fm similar artist');
-  }
-  if (overlaps(track?.genres || [], seed?.genres || [])) reasons.push('shared genre/tag');
-  return [...new Set(reasons)];
+function ratingMultiplier(track) {
+  const raw = track?.ratingStars ?? (Number.isFinite(Number(track?.rating)) ? Number(track.rating) / 2 : NaN);
+  const rating = Number(raw);
+  if (!Number.isFinite(rating)) return { value: 1, note: 'unrated (neutral)' };
+  return { value: Math.max(0.55, Math.min(1.3, 0.7 + rating * 0.12)), note: `${Math.round(rating * 10) / 10}/5 MP3 rating` };
 }
-function scoreTrack(track, seed, mode, history, now, context = null, rules = DEFAULT_RULES[mode] || DEFAULT_RULES.radio) {
-  const last = context ? context.last.get(track.songKey) : history.find(h => h.key === track.songKey);
-  if (last && now - last.at < rules.repeatCooldownMinutes * 60 * 1000) {
-    return { score: 0, excluded: 'cooldown', additions: [], multipliers: [] };
-  }
-  let score = 1;
-  const additions = [];
-  const multipliers = [];
-  const seedArtist = seedArtistForMode(seed, mode);
-  if (overlaps(track.genres, seed.genres)) {
-    score += rules.genreWeight;
-    additions.push({ label: 'Genre match', amount: rules.genreWeight });
-  }
-  if (overlaps(track.similarArtists, [seedArtist]) || overlaps(seed.similarArtists, [track.artist])) {
-    score += RELATED_ARTIST_WEIGHT;
-    additions.push({ label: 'Related artist match', amount: RELATED_ARTIST_WEIGHT });
-  }
-  const yearDifference = seed.year && track.year ? Math.abs(seed.year - track.year) : null;
-  if (yearDifference !== null && rules.releaseYearRange < 10000 && yearDifference <= rules.releaseYearRange) {
-    const amount = rules.releaseYearRange === 0
-      ? RELEASE_YEAR_WEIGHT
-      : RELEASE_YEAR_WEIGHT * (1 - yearDifference / (rules.releaseYearRange + 1));
-    score += amount;
-    additions.push({ label: 'Release-year range match', amount });
-  }
-  const rawPopularity = track.popularity;
-  const parsedPopularity = Number(rawPopularity);
-  const popularity = rawPopularity === null || rawPopularity === undefined || rawPopularity === "" || !Number.isFinite(parsedPopularity)
-    ? null
-    : Math.min(100, Math.max(0, parsedPopularity));
-  const popularityMultiplier = 1 + ((popularity || 0) / 100) * (rules.songPopularityPercent / 100);
-  score *= popularityMultiplier;
-  multipliers.push({ label: 'Song Popularity', value: popularityMultiplier, source: popularity === null ? 'Last.fm score missing' : `${popularity}/100` });
-  const rawRating = track.ratingStars ?? (track.rating === null || track.rating === undefined ? null : Number(track.rating) / 2);
-  const rating = Number.isFinite(Number(rawRating)) && rawRating !== null ? Math.max(0, Math.min(5, Number(rawRating))) : null;
-  const influence = Math.max(0, Math.min(4, Math.round(Number(rules.ratingInfluence) || 0)));
-  let ratingMultiplier = 1;
-  if (rating !== null && influence > 0) {
-    const lower = Math.floor(rating);
-    const upper = Math.min(5, lower + 1);
-    const fraction = rating - lower;
-    const table = RATING_MULTIPLIERS[influence];
-    ratingMultiplier = table[lower] * (1 - fraction) + table[upper] * fraction;
-    score *= ratingMultiplier;
-  }
-  multipliers.push({ label: 'MP3 Rating', value: ratingMultiplier, source: rating === null ? 'No rating; neutral' : `${rating}/5 stars${track.ratingSource ? ` (${track.ratingSource})` : ''}` });
-  if (last) {
-    score *= POST_COOLDOWN_MULTIPLIER;
-    multipliers.push({ label: 'After repeat wait', value: POST_COOLDOWN_MULTIPLIER, source: 'Heard before' });
-  }
-  const artistVariety = VARIETY_RULES.artist[rules.artistVariety] || VARIETY_RULES.artist[1];
-  if (!isSeedArtistTrack(track, seedArtist) && artistVariety.memory > 0 &&
-    history.slice(0, artistVariety.memory).some(h => matches(h.artist, track.artist))) {
-    score *= artistVariety.multiplier;
-    multipliers.push({ label: 'Artist Variety', value: artistVariety.multiplier });
-  }
-  const albumVariety = VARIETY_RULES.album[rules.albumVariety] || VARIETY_RULES.album[1];
-  if (albumVariety.memory > 0 && history.slice(0, albumVariety.memory).some(h => h.album && matches(h.album, track.album))) {
-    score *= albumVariety.multiplier;
-    multipliers.push({ label: 'Album Variety', value: albumVariety.multiplier });
-  }
-  return { score, excluded: '', additions, multipliers, popularity, repeatedHandoff: Boolean(context?.successors.has(track.songKey)) };
+function scoreTrack(track, seed, mode, history = [], now = Date.now(), context = null) {
+  const last = context?.last?.get(track.songKey) || history.find(item => item.key === track.songKey);
+  const relation = relationship(track, seed, mode);
+  if (last && now - last.at < COOLDOWN) return { score: 0, excluded: 'cooldown', relationship: relation, additions: [], multipliers: [] };
+  if (!relation.strength) return { score: 0, excluded: 'no credible relationship', relationship: relation, additions: [], multipliers: [] };
+  let score = relation.strength;
+  const additions = [{ label: relation.reasons[0], amount: relation.strength }]; const multipliers = [];
+  const recent = recentPenalty(track, relation.seedArtist, history); score *= recent.multiplier;
+  if (recent.multiplier !== 1) multipliers.push({ label: 'Variety protection', value: recent.multiplier, source: recent.notes.join('; ') });
+  const rating = ratingMultiplier(track); score *= rating.value; multipliers.push({ label: 'MP3 rating', value: rating.value, source: rating.note });
+  const popularity = Number(track?.popularity);
+  if (Number.isFinite(popularity)) { const value = 1 + Math.max(0, Math.min(100, popularity)) / 500; score *= value; multipliers.push({ label: 'Last.fm popularity', value, source: `${Math.round(popularity)}/100` }); }
+  const recentSeed = history.slice(0, mode === 'artist' ? 3 : 4).some(item => matches(item.artist, relation.seedArtist));
+  if (isSeedArtistTrack(track, relation.seedArtist) && !recentSeed) { score *= 1.8; multipliers.push({ label: 'Seed anchor', value: 1.8, source: 'returning to the seed artist' }); }
+  if (last) { score *= 0.7; multipliers.push({ label: 'Previously heard', value: 0.7, source: 'past the repeat wait' }); }
+  return { score, excluded: '', relationship: relation, additions, multipliers, popularity: Number.isFinite(popularity) ? popularity : null };
 }
-function weight(track, seed, mode, history, now, context = null, rules = DEFAULT_RULES[mode] || DEFAULT_RULES.radio) {
-  return scoreTrack(track, seed, mode, history, now, context, rules).score;
-}
+function weight(track, seed, mode, history, now, context) { return scoreTrack(track, seed, mode, history, now, context).score; }
+
 class MusicRadio {
   constructor({ dataDir, random = Math.random, now = Date.now, onDecision = () => {} }) {
-    this.file = path.join(dataDir, 'music-history.json'); this.dataDir = dataDir; this.random = random; this.now = now;
-    this.onDecision = typeof onDecision === 'function' ? onDecision : () => {};
-    this.history = []; this.error = '';
-    this.lastDecision = null;
-    this.rules = { artist: clone(DEFAULT_RULES.artist), radio: clone(DEFAULT_RULES.radio) };
-    this.ruleModified = { artist: -1, radio: -1 };
-    this.loadRules(true);
-    try {
-      const parsed = JSON.parse(fs.readFileSync(this.file, 'utf8'));
-      if (Array.isArray(parsed)) this.history = parsed.filter(h => typeof h.key === 'string' && Number.isFinite(h.at)).slice(0, 5000);
-    } catch (error) { if (error.code !== 'ENOENT') this.error = 'Music history could not be read; automatic radio is disabled to preserve repeat protection.'; }
+    this.file = path.join(dataDir, 'music-history.json'); this.random = random; this.now = now; this.onDecision = onDecision;
+    this.history = []; this.error = ''; this.lastDecision = null;
+    try { const saved = JSON.parse(fs.readFileSync(this.file, 'utf8')); if (Array.isArray(saved)) this.history = saved.filter(item => typeof item?.key === 'string' && Number.isFinite(item?.at)).slice(0, 5000); }
+    catch (error) { if (error.code !== 'ENOENT') this.error = 'Music history could not be read; Local Radio is paused to protect repeat history.'; }
   }
+  getLastDecision() { return this.lastDecision ? JSON.parse(JSON.stringify(this.lastDecision)) : null; }
   record(track) {
-    this.history.unshift({ key: track.songKey, artist: track.artist, album: track.album, at: this.now() });
-    this.history = this.history.slice(0, 5000);
-    try {
-      fs.mkdirSync(path.dirname(this.file), { recursive: true });
-      fs.writeFileSync(this.file + '.tmp', JSON.stringify(this.history));
-      fs.renameSync(this.file + '.tmp', this.file);
-    } catch { this.error = 'Music history could not be saved; check that Data is writable.'; }
-  }
-  loadRules(force = false) {
-    try {
-      fs.mkdirSync(this.dataDir, { recursive: true });
-      const reference = path.join(this.dataDir, RULES_REFERENCE_FILE);
-      if (!fs.existsSync(reference) || fs.readFileSync(reference, 'utf8') !== RULES_REFERENCE) fs.writeFileSync(reference, RULES_REFERENCE);
-    } catch (error) {
-      console.warn(`WaveDeck could not create ${RULES_REFERENCE_FILE}. ${error.message}`);
-    }
-    for (const mode of Object.keys(RULE_FILES)) {
-      const file = path.join(this.dataDir, RULE_FILES[mode]);
-      try {
-        fs.mkdirSync(this.dataDir, { recursive: true });
-        let stat;
-        try { stat = fs.statSync(file); }
-        catch (error) {
-          if (error.code !== 'ENOENT') throw error;
-          fs.writeFileSync(file, JSON.stringify(DEFAULT_RULES[mode], null, 2) + '\n');
-          stat = fs.statSync(file);
-        }
-        if (!force && stat.mtimeMs === this.ruleModified[mode]) continue;
-        const saved = JSON.parse(fs.readFileSync(file, 'utf8'));
-        this.rules[mode] = validatedRules(saved, DEFAULT_RULES[mode]);
-        if (JSON.stringify(saved) !== JSON.stringify(this.rules[mode])) {
-          fs.writeFileSync(file + '.tmp', JSON.stringify(this.rules[mode], null, 2) + '\n');
-          fs.renameSync(file + '.tmp', file);
-          stat = fs.statSync(file);
-        }
-        this.ruleModified[mode] = stat.mtimeMs;
-      } catch (error) {
-        this.rules[mode] = clone(DEFAULT_RULES[mode]);
-        this.ruleModified[mode] = -1;
-        console.warn(`WaveDeck could not read ${RULE_FILES[mode]}; using built-in defaults. ${error.message}`);
-      }
-    }
-  }
-  getRules() {
-    this.loadRules();
-    return {
-      artist: clone(this.rules.artist),
-      radio: clone(this.rules.radio),
-      schema: { artist: ruleSchema('artist'), radio: ruleSchema('radio') }
-    };
-  }
-  saveRules(mode, rules) {
-    const selectedMode = Object.prototype.hasOwnProperty.call(RULE_FILES, mode) ? mode : 'radio';
-    const next = validatedRules(rules, DEFAULT_RULES[selectedMode]);
-    const file = path.join(this.dataDir, RULE_FILES[selectedMode]);
-    fs.mkdirSync(this.dataDir, { recursive: true });
-    fs.writeFileSync(file + '.tmp', JSON.stringify(next, null, 2) + '\n');
-    fs.renameSync(file + '.tmp', file);
-    this.rules[selectedMode] = next;
-    this.ruleModified[selectedMode] = fs.statSync(file).mtimeMs;
-    return this.getRules();
-  }
-  setRule(mode, key, value) {
-    const selectedMode = Object.prototype.hasOwnProperty.call(RULE_FILES, mode) ? mode : 'radio';
-    if (!Object.prototype.hasOwnProperty.call(DEFAULT_RULES[selectedMode], key) || key === 'version') {
-      throw new Error('That radio setting is not available.');
-    }
-    const candidate = Number(value);
-    if (!Number.isFinite(candidate)) throw new Error('Choose a valid radio setting value.');
-    this.loadRules();
-    return this.saveRules(selectedMode, { ...this.rules[selectedMode], [key]: candidate });
-  }
-  resetRule(mode, key) {
-    const selectedMode = Object.prototype.hasOwnProperty.call(RULE_FILES, mode) ? mode : 'radio';
-    if (!Object.prototype.hasOwnProperty.call(DEFAULT_RULES[selectedMode], key) || key === 'version') {
-      throw new Error('That radio setting is not available.');
-    }
-    this.loadRules();
-    return this.saveRules(selectedMode, { ...this.rules[selectedMode], [key]: DEFAULT_RULES[selectedMode][key] });
-  }
-  resetRules(mode) {
-    const selectedMode = Object.prototype.hasOwnProperty.call(RULE_FILES, mode) ? mode : 'radio';
-    return this.saveRules(selectedMode, DEFAULT_RULES[selectedMode]);
-  }
-  getLastDecision() { return this.lastDecision ? clone(this.lastDecision) : null; }
-  #rememberDecision(decision) {
-    this.lastDecision = clone(decision);
-    try { this.onDecision(this.getLastDecision()); } catch (error) { console.warn(`WaveDeck could not publish a radio log entry. ${error.message}`); }
+    this.history.unshift({ key: track.songKey, artist: track.artist, album: track.album, at: this.now() }); this.history = this.history.slice(0, 5000);
+    try { fs.mkdirSync(path.dirname(this.file), { recursive: true }); fs.writeFileSync(this.file + '.tmp', JSON.stringify(this.history)); fs.renameSync(this.file + '.tmp', this.file); }
+    catch { this.error = 'Music history could not be saved; check that Data is writable.'; }
   }
   choose(tracks, seed, mode, excluded = new Set(), selectionTrigger = 'next') {
     if (this.error) throw new Error(this.error);
-    this.loadRules();
-    const rules = this.rules[mode] || this.rules.radio;
-    const now = this.now();
-    const context = { last: new Map(), successors: new Set() };
-    this.history.forEach((h, i) => {
-      if (!context.last.has(h.key)) context.last.set(h.key, h);
-      // History runs newest to oldest. If an older copy of the current song
-      // was followed by a track, that track is a handoff we should avoid now.
-      if (i > 0 && now - h.at <= HANDOFF_MEMORY_MS && h.key === this.history[0]?.key) context.successors.add(this.history[i - 1].key);
-    });
-    const availableTracks = tracks.filter(t => !excluded.has(t.id));
-    const scored = availableTracks.map(track => ({ track, ...scoreTrack(track, seed, mode, this.history, now, context, rules) }));
-    const cooldownExcluded = scored.filter(candidate => candidate.excluded === 'cooldown').length;
-    let eligibleCandidates = scored.filter(candidate => candidate.score > 0);
-    const freshHandoffs = eligibleCandidates.filter(candidate => !candidate.repeatedHandoff);
-    const handoffExcluded = freshHandoffs.length ? eligibleCandidates.length - freshHandoffs.length : 0;
-    if (freshHandoffs.length) eligibleCandidates = freshHandoffs;
-    const eligibleBeforeRelated = eligibleCandidates.length;
-    const seedArtist = seedArtistForMode(seed, mode);
-    let candidates = eligibleCandidates.map(candidate => ({
-      ...candidate,
-      eligibilityReasons: acceptableMatchReasons(candidate.track, seed, seedArtist)
-    })).filter(candidate => candidate.eligibilityReasons.length > 0);
-    const unrelatedExcluded = eligibleBeforeRelated - candidates.length;
-    const relatedCount = candidates.length;
-    const seedCandidates = candidates.filter(c => isSeedArtistTrack(c.track, seedArtist));
-    const otherCandidates = candidates.filter(c => !isSeedArtistTrack(c.track, seedArtist));
-    // Artist Focus is intentionally a direct target rather than another
-    // arbitrary score bonus. At 100, seed tracks are a hard preference; if
-    // none survive repeat protection, related music resumes normally.
-    let artistFocusOutcome = 'No seed-artist preference';
-    let artistFocusRoll = null;
-    let artistFocusUsed = false;
-    if (seedCandidates.length && rules.artistFocusPercent > 0) {
-      if (rules.artistFocusPercent >= 100) {
-        candidates = seedCandidates;
-        artistFocusUsed = true;
-        artistFocusOutcome = 'Seed artist required (Always)';
-      } else if (!otherCandidates.length) {
-        candidates = seedCandidates;
-        artistFocusUsed = true;
-        artistFocusOutcome = 'Seed artist used (no other eligible choice)';
-      } else {
-        artistFocusRoll = this.random();
-        if (artistFocusRoll < rules.artistFocusPercent / 100) {
-          candidates = seedCandidates;
-          artistFocusUsed = true;
-          artistFocusOutcome = 'Seed artist chosen by Artist Focus';
-        } else {
-          candidates = otherCandidates;
-          artistFocusOutcome = 'Another artist chosen by Artist Focus';
-        }
-      }
-    } else {
-      if (!seedCandidates.length && rules.artistFocusPercent > 0) artistFocusOutcome = 'No eligible seed-artist track; used related music';
-    }
-    const selectionExponent = rules.selectionRandomness;
-    const weightedCandidates = candidates.map(candidate => ({ ...candidate, baseScore: candidate.score, score: candidate.score ** selectionExponent }));
-    const totalWeightedScore = weightedCandidates.reduce((sum, c) => sum + c.score, 0);
-    const selectionRoll = this.random();
-    let remaining = selectionRoll * totalWeightedScore;
-    const picked = weightedCandidates.find(candidate => {
-      remaining -= candidate.score;
-      return remaining < 0;
-    }) || weightedCandidates.at(-1) || null;
+    const now = this.now(); const context = { last: new Map() };
+    this.history.forEach(item => { if (!context.last.has(item.key)) context.last.set(item.key, item); });
+    const scored = tracks.filter(track => !excluded.has(track.id)).map(track => ({ track, ...scoreTrack(track, seed, mode, this.history, now, context) }));
+    const cooldownExcluded = scored.filter(item => item.excluded === 'cooldown').length;
+    const candidates = scored.filter(item => item.score > 0); const credibleCount = candidates.length;
+    let remaining = this.random() * candidates.reduce((sum, item) => sum + item.score, 0);
+    const picked = candidates.find(item => (remaining -= item.score) < 0) || candidates.at(-1) || null;
     const selected = picked?.track || null;
-    const diagnosticCandidate = candidate => ({
-      diagnosticId: crypto.createHash('sha256').update(String(candidate.track?.songKey || candidate.track?.id || '')).digest('hex').slice(0, 16),
-      title: String(candidate.track?.title || ''),
-      artist: String(candidate.track?.artist || ''),
-      album: String(candidate.track?.album || ''),
-      year: Number(candidate.track?.year) || null,
-      genres: Array.isArray(candidate.track?.genres) ? candidate.track.genres.slice(0, 8).map(String) : [],
-      eligibilityReasons: candidate.eligibilityReasons || [],
-      popularity: candidate.popularity ?? null,
-      popularitySource: candidate.track?.lastFm?.source || 'tag',
-      popularityUpdatedAt: candidate.track?.lastFm?.updatedAt || '',
-      scoreBeforeRandomness: candidate.baseScore,
-      scoreAfterRandomness: candidate.score,
-      additions: candidate.additions,
-      multipliers: candidate.multipliers
-    });
-    const rankedCandidates = [...weightedCandidates]
-      .sort((a, b) => b.score - a.score || b.baseScore - a.baseScore)
-      .slice(0, 8);
-    const selectedRank = selected
-      ? [...weightedCandidates].sort((a, b) => b.score - a.score || b.baseScore - a.baseScore)
-        .findIndex(candidate => candidate.track === selected) + 1
-      : null;
-    const laneWeight = items => items.reduce((sum, candidate) => sum + (candidate.score ** selectionExponent), 0);
-    this.#rememberDecision({
-      at: new Date(now).toISOString(),
-      mode,
-      selectionTrigger,
-      seed: {
-        diagnosticId: crypto.createHash('sha256').update(String(seed?.songKey || seed?.id || '')).digest('hex').slice(0, 16),
-        title: String(seed?.title || ''), artist: String(seed?.artist || ''), album: String(seed?.album || ''),
-        year: Number(seed?.year) || null,
-        genres: Array.isArray(seed?.genres) ? seed.genres.slice(0, 8).map(String) : []
-      },
-      settings: {
-        artistFocusPercent: rules.artistFocusPercent,
-        genreWeight: rules.genreWeight,
-        songPopularityPercent: rules.songPopularityPercent,
-        ratingInfluence: rules.ratingInfluence,
-        artistVariety: rules.artistVariety,
-        albumVariety: rules.albumVariety,
-        releaseYearRange: rules.releaseYearRange,
-        repeatCooldownMinutes: rules.repeatCooldownMinutes,
-        selectionRandomness: rules.selectionRandomness
-      },
-      counts: {
-        totalTracks: tracks.length,
-        skippedByPlaybackError: excluded.size,
-        skippedForCooldown: cooldownExcluded,
-        skippedForHandoff: handoffExcluded,
-        eligible: eligibleBeforeRelated,
-        related: relatedCount,
-        excludedForRelevance: unrelatedExcluded,
-        seedArtist: seedCandidates.length,
-        otherArtists: otherCandidates.length,
-        finalPool: weightedCandidates.length
-      },
-      artistFocus: { seedArtist, targetPercent: rules.artistFocusPercent, roll: artistFocusRoll, outcome: artistFocusOutcome },
-      selectionRoll,
-      selected: selected ? {
-        diagnosticId: crypto.createHash('sha256').update(String(selected.songKey || selected.id || '')).digest('hex').slice(0, 16),
-        title: String(selected.title || ''), artist: String(selected.artist || ''), album: String(selected.album || ''),
-        year: Number(selected.year) || null,
-        genres: Array.isArray(selected.genres) ? selected.genres.slice(0, 8).map(String) : [],
-        eligibilityReasons: picked.eligibilityReasons || [],
-        popularity: picked.popularity,
-        popularitySource: selected.lastFm?.source || 'tag', popularityUpdatedAt: selected.lastFm?.updatedAt || '',
-        scoreBeforeRandomness: picked.baseScore,
-        scoreAfterRandomness: picked.score,
-        additions: picked.additions,
-        multipliers: picked.multipliers
-      } : null,
-      diagnostics: {
-        recentHistory: this.history.slice(0, 12).map(entry => ({
-          diagnosticId: crypto.createHash('sha256').update(String(entry.key || '')).digest('hex').slice(0, 16),
-          artist: String(entry.artist || ''), album: String(entry.album || ''), at: new Date(entry.at).toISOString()
-        })),
-        selectedRank,
-        totalWeightedScore,
-        acceptablePool: { candidates: candidates.length, weightedScore: laneWeight(candidates) },
-        popularity: {
-          selectedSource: selected?.lastFm?.source || 'tag',
-          selectedUpdatedAt: selected?.lastFm?.updatedAt || '',
-          finalPoolLastFm: weightedCandidates.filter(candidate => candidate.track?.lastFm?.source === 'lastfm').length,
-          finalPoolTag: weightedCandidates.filter(candidate => candidate.track?.lastFm?.source === 'tag').length
-        },
-        topFinalCandidates: rankedCandidates.map(diagnosticCandidate)
-      },
-      reason: selected
-        ? `${artistFocusOutcome}; picked from ${weightedCandidates.length} acceptable track${weightedCandidates.length === 1 ? '' : 's'}.`
-        : candidates.length
-          ? 'No acceptable song is currently available after repeat and handoff rules.'
-          : 'No acceptable related songs were found for this seed.'
-    });
+    const diagnostic = item => ({ diagnosticId: stableId(item.track), title: item.track.title, artist: item.track.artist, album: item.track.album, eligibilityReasons: item.relationship.reasons, score: item.score, additions: item.additions, multipliers: item.multipliers, popularity: item.popularity, tags: item.relationship.tags });
+    const ranked = [...candidates].sort((a, b) => b.score - a.score).slice(0, 8);
+    this.lastDecision = { at: new Date(now).toISOString(), mode, selectionTrigger, seed: { diagnosticId: stableId(seed), title: seed?.title || '', artist: seed?.artist || '', album: seed?.album || '', genres: seed?.genres || [] }, policy: 'automatic-local-radio-v1', counts: { totalTracks: tracks.length, skippedByPlaybackError: excluded.size, skippedForCooldown: cooldownExcluded, credible: credibleCount, finalPool: candidates.length }, selected: selected ? diagnostic(picked) : null, diagnostics: { topFinalCandidates: ranked.map(diagnostic), recentHistory: this.history.slice(0, 12).map(item => ({ diagnosticId: stableId({ songKey: item.key }), artist: item.artist, album: item.album, at: new Date(item.at).toISOString() })) }, reason: selected ? `Picked from ${candidates.length} credible Local Radio candidates.` : 'No credible Local Radio song is currently available; waiting rather than making a poor leap.' };
+    try { this.onDecision(this.getLastDecision()); } catch {}
     return selected;
   }
 }
-module.exports = { MusicRadio, weight, scoreTrack, COOLDOWN, HANDOFF_MEMORY_MS, DEFAULT_RULES, RULE_FILES, RULE_MINIMUMS, RULE_MAXIMUMS, RULE_SPECS, ARTIST_FOCUS_STOPS, SONG_POPULARITY_STOPS, RATING_INFLUENCE_STOPS };
+module.exports = { MusicRadio, weight, scoreTrack, COOLDOWN };

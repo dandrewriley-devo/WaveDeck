@@ -336,21 +336,21 @@ async function renderMusic() {
     listEl.replaceChildren();
     listEl.append(createSectionTitle('Music', query.trim() ? `${result.total} matches` : ''));
     if (!query.trim()) {
-      const [history, stationList] = await Promise.all([
-        window.wavedeck.getListeningHistory(), window.wavedeck.getStations()
-      ]);
+      const history = await window.wavedeck.getListeningHistory();
       if (!musicVisible || sequence !== musicRenderSequence || query !== musicSearch.value) return;
-      const byId = new Map((Array.isArray(stationList) ? stationList : []).map(station => [station.id, station]));
-      const recent = (history?.recentStationIds || []).map(id => byId.get(id)).filter(Boolean).slice(0, 10);
-      if (!recent.length) listEl.append(element('div', 'music-empty-state', 'Search for local music, or play a station to start your recent list.'));
+      const recent = Array.isArray(history?.recentLocalStations) ? history.recentLocalStations.slice(0, 10) : [];
+      if (!recent.length) listEl.append(element('div', 'music-empty-state', 'Search for local music, or start a Local Station to see it here.'));
       else {
-        listEl.append(createSectionTitle('Recently Played Stations', 'Most recent first'));
+        listEl.append(createSectionTitle('Recently Played Local Stations', 'Most recent first'));
         for (const station of recent) {
-          const button = element('button', 'recording-action recent-station', station.name || 'Unnamed station');
+          const label = station.label || (station.mode === 'artist'
+            ? `${station.artist || 'Artist'} Radio`
+            : `${station.title || 'Song'} Radio`);
+          const button = element('button', 'recording-action recent-station', label);
           button.type = 'button';
           button.addEventListener('click', async () => {
             button.disabled = true;
-            try { await window.wavedeck.playStation(station.id); }
+            try { await window.wavedeck.playMusic(station.seedId, station.mode); }
             catch (error) { musicStatus.textContent = error.message; }
             finally { button.disabled = false; }
           });
@@ -388,7 +388,7 @@ async function renderMusic() {
 function showMusicPlayback(status) {
   const music = status?.currentMusic;
   const active = Boolean(music && status.mediaState !== 'stopped');
-  musicContext.hidden = !active;
+  musicContext.hidden = !active || !['artist', 'radio'].includes(music.mode);
   previousPresetBtn.title = active ? 'Previous song' : 'Previous Preset';
   nextPresetBtn.title = active ? 'Next song' : 'Next Preset';
   previousPresetBtn.setAttribute('aria-label', previousPresetBtn.title);

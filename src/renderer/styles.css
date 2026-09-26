@@ -282,12 +282,12 @@ html, body{
 }
 
 .toolbar #musicRescan {
-  background: #202020;
-  border: 1px solid #303030;
-  border-radius: 4px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
   color: #aaa;
   height: 24px;
-  margin-left: auto;
+  margin-left: 0;
   padding: 3px;
   width: 28px;
 }
@@ -296,7 +296,7 @@ html, body{
   width: 16px;
 }
 .toolbar #musicRescan:hover,
-.toolbar #musicRescan:focus-visible { background:#292929; border-color:#454545; color:#d0d0d0; }
+.toolbar #musicRescan:focus-visible { background:transparent; border-color:transparent; color:#d0d0d0; }
 
 .transport {
   flex: 0 0 40px;
@@ -886,15 +886,15 @@ html, body{
 .music-library-status { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; font-size: 11px; }
 .music-library-status button, .music-actions button { cursor: pointer; }
 #musicRescan {
-  background:#202020;
-  border:1px solid #303030;
-  border-radius:4px;
+  background:transparent;
+  border:0;
+  border-radius:0;
   color:#aaa;
   font-size:11px;
   padding:4px 7px;
 }
 #musicRescan:hover,
-#musicRescan:focus-visible{ background:#292929; border-color:#454545; color:#d0d0d0; }
+#musicRescan:focus-visible{ background:transparent; border-color:transparent; color:#d0d0d0; }
 #musicRescan:disabled{ color:#666; cursor:default; }
 .music-row { margin: 5px 0; padding: 8px; border: 1px solid #5556; border-radius: 5px; overflow-wrap: anywhere; }
 .music-row.active { border-color: #d29d48; }
@@ -905,6 +905,9 @@ html, body{
 .music-actions .recording-action{ font-size:11px; padding:6px 3px; white-space:nowrap; }
 .music-empty-state{ color:var(--muted); font-size:12px; margin:16px 10px; text-align:center; }
 #musicContext { background:#151515; border-top:1px solid #202020; color:#b8b8b8; font-size:11px; padding:6px 12px; }
+.music-station-context { display:flex; gap:7px; min-width:0; }
+.music-station-context-label { color:#777; flex:0 0 auto; text-transform:uppercase; }
+.music-station-context #musicContextLabel { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .toolbar { flex-wrap: nowrap; }
 .toolbar button { flex: 0 1 34px; min-width: 0; }
-#musicContext, #musicPanel { flex-shrink: 0; }
+#musicPanel { flex-shrink: 0; }

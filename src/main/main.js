@@ -830,25 +830,9 @@ function installIpcHandlers() {
 
   const requireAdvancedFeatures = () => {
     if (!storage.getUiPreferences().proModeEnabled) {
-      throw new Error('Enable Advanced Features in Settings before changing Music radio tuning.');
+      throw new Error('Enable Advanced Features in Settings before using Local Music.');
     }
   };
-  ipcMain.handle('music:rules:get', () => {
-    requireAdvancedFeatures();
-    return musicRadio.getRules();
-  });
-  ipcMain.handle('music:rules:set', (_event, mode, key, value) => {
-    requireAdvancedFeatures();
-    return musicRadio.setRule(String(mode || ''), String(key || ''), value);
-  });
-  ipcMain.handle('music:rules:reset-one', (_event, mode, key) => {
-    requireAdvancedFeatures();
-    return musicRadio.resetRule(String(mode || ''), String(key || ''));
-  });
-  ipcMain.handle('music:rules:reset-all', (_event, mode) => {
-    requireAdvancedFeatures();
-    return musicRadio.resetRules(String(mode || ''));
-  });
   ipcMain.handle('music:debug:get-last-decision', () => musicRadio?.getLastDecision() || null);
   ipcMain.handle('music:debug:save-log', async () => {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');

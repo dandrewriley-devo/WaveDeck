@@ -32,14 +32,6 @@ function addDetails(parent, title, items, fallback) {
   parent.append(section);
 }
 
-function varietyLabel(value) {
-  return ({ 0: 'Off', 1: 'Light', 2: 'Balanced', 3: 'Strong', 4: 'Maximum' })[Number(value)] || 'Balanced';
-}
-
-function yearRangeLabel(value) {
-  return ({ 0: 'Same year', 5: 'Within 5 years', 10: 'Within 10 years', 20: 'Within 20 years', 10000: 'Year doesn’t matter' })[Number(value)] || 'Within 10 years';
-}
-
 function renderDecision(decision, { prepend = true } = {}) {
   if (!decision?.selected) return;
   empty.hidden = true;
@@ -60,25 +52,25 @@ function renderDecision(decision, { prepend = true } = {}) {
     `${decision.seed?.title || 'Unknown song'} — ${decision.seed?.artist || 'Unknown artist'}`,
     decision.seed?.album || 'No album'
   ]);
-  addBox(grid, 'Artist Focus', [
-    `${decision.artistFocus?.targetPercent ?? 0}% target`,
-    decision.artistFocus?.outcome || 'No outcome recorded',
-    decision.artistFocus?.roll === null || decision.artistFocus?.roll === undefined ? 'No random focus roll needed' : `Focus roll: ${number(decision.artistFocus.roll, 3)}`
+  addBox(grid, 'Local Radio policy', [
+    'Automatic — no tuning controls',
+    'Strong musical links are required',
+    'Poor-fit candidates wait instead of playing'
   ]);
   addBox(grid, 'Last.fm popularity', [
     selected.popularity === null || selected.popularity === undefined ? 'Missing — treated as neutral' : `${selected.popularity}/100`,
-    `Song Popularity setting: ${decision.settings?.songPopularityPercent ?? 0}%`,
-    selected.popularitySource === 'lastfm' ? 'Fresh Last.fm data' : 'Existing tag data'
+    'A small tie-breaker, never an eligibility rule',
+    'Similar artists can provide a meaningful link'
   ]);
-  addBox(grid, 'Radio controls', [
-    `Artist Variety: ${varietyLabel(decision.settings?.artistVariety)}`,
-    `Album Variety: ${varietyLabel(decision.settings?.albumVariety)}`,
-    `${yearRangeLabel(decision.settings?.releaseYearRange)} · ${Number(decision.settings?.repeatCooldownMinutes || 0) / 60} hour repeat wait`,
-    `Ratings Matter: ${['Off', 'Gentle', 'Moderate', 'Strong', 'Dominant'][Number(decision.settings?.ratingInfluence) || 0]}`
+  addBox(grid, 'Selection safeguards', [
+    'Same album, artist, credits, Last.fm, or a specific tag',
+    'Broad tags such as Rock or Country do not qualify alone',
+    'MP3 ratings are read-only and gently influence a credible pick',
+    'Exact-song repeat wait: 2 hours'
   ]);
   addBox(grid, 'Candidates', [
-    `${decision.counts?.totalTracks ?? 0} total · ${decision.counts?.eligible ?? 0} eligible`,
-    `${decision.counts?.related ?? 0} acceptable · ${decision.counts?.excludedForRelevance ?? 0} excluded for poor fit · ${decision.counts?.finalPool ?? 0} in final pool`,
+    `${decision.counts?.totalTracks ?? 0} total · ${decision.counts?.credible ?? 0} credible`,
+    `${decision.counts?.finalPool ?? 0} in the final pool`,
     `Skipped: ${decision.counts?.skippedForCooldown ?? 0} repeat wait, ${decision.counts?.skippedForHandoff ?? 0} repeated handoff`
   ]);
   body.append(grid);
@@ -88,7 +80,7 @@ function renderDecision(decision, { prepend = true } = {}) {
     ...additions
   ], 'It qualified for the acceptable pool through artist or similarity data.');
   const multipliers = (selected.multipliers || []).map(item => `${item.label}: ×${number(item.value, 3)}${item.source ? ` (${item.source})` : ''}`);
-  multipliers.push(`Score: ${number(selected.scoreBeforeRandomness, 3)} → ${number(selected.scoreAfterRandomness, 3)} after surprise/match setting`);
+  multipliers.push(`Final score: ${number(selected.score, 3)}`);
   addDetails(body, 'Score adjustments', multipliers, 'No score adjustments recorded.');
   body.append(element('div', `${decision.reason || 'A track was selected.'} Trigger: ${decision.selectionTrigger || 'next'}.`, 'reason'));
   entry.append(body);

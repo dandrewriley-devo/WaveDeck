@@ -18,6 +18,7 @@ const STARTER_PRESET_NAMES = Object.freeze([
 function validateListeningHistory(value) {
   const source = value && typeof value === "object" && !Array.isArray(value) ? value.stations : null;
   const recentSource = value && typeof value === "object" && !Array.isArray(value) ? value.recentStationIds : null;
+  const localRecentSource = value && typeof value === "object" && !Array.isArray(value) ? value.recentLocalStations : null;
   const stations = {};
   if (source && typeof source === "object" && !Array.isArray(source)) {
     for (const [rawId, rawEntry] of Object.entries(source)) {
@@ -33,7 +34,28 @@ function validateListeningHistory(value) {
   }
   const recentStationIds = [...new Set((Array.isArray(recentSource) ? recentSource : [])
     .map(id => String(id ?? "").trim()).filter(Boolean))].slice(0, 10);
-  return { version: 1, stations, recentStationIds };
+  const seenLocalStations = new Set();
+  const recentLocalStations = [];
+  for (const rawStation of Array.isArray(localRecentSource) ? localRecentSource : []) {
+    if (!rawStation || typeof rawStation !== "object" || Array.isArray(rawStation)) continue;
+    const mode = rawStation.mode === "artist" ? "artist" : rawStation.mode === "radio" ? "radio" : "";
+    const seedId = String(rawStation.seedId ?? "").trim();
+    const key = `${mode}:${seedId}`;
+    if (!mode || !seedId || seenLocalStations.has(key)) continue;
+    seenLocalStations.add(key);
+    recentLocalStations.push({
+      key,
+      mode,
+      seedId,
+      label: String(rawStation.label ?? "").trim().slice(0, 300),
+      title: String(rawStation.title ?? "").trim().slice(0, 300),
+      artist: String(rawStation.artist ?? "").trim().slice(0, 300),
+      album: String(rawStation.album ?? "").trim().slice(0, 300),
+      lastPlayedAt: typeof rawStation.lastPlayedAt === "string" ? rawStation.lastPlayedAt : ""
+    });
+    if (recentLocalStations.length >= 10) break;
+  }
+  return { version: 2, stations, recentStationIds, recentLocalStations };
 }
 
 function lowerKey(value) { return String(value ?? "").trim().toLowerCase(); }

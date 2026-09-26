@@ -25,7 +25,7 @@
       <!-- INTERFACE -->
       <section id="tab-interface" class="panel hidden">
         <div class="general-meta">
-          <b>WaveDeck version <span id="aboutVersion">0.7.13</span></b>
+          <b>WaveDeck version <span id="aboutVersion">0.7.14</span></b>
           <span>Station library: <span id="aboutDataDir">Data</span></span>
         </div>
         <div class="general-sections">
@@ -111,7 +111,7 @@
               <span class="toggle-switch" aria-hidden="true"></span>
               <span>Enable Advanced Features</span>
             </label>
-            <div id="advancedFeaturesOff" class="hint mt-6">Turn this on to configure local Music and radio tuning.</div>
+            <div id="advancedFeaturesOff" class="hint mt-6">Turn this on to configure Local Music and Last.fm music data.</div>
             <div id="proMusicSettings" class="pro-music-settings" hidden>
               <div class="pro-music-settings-title">Additional Music Folder <span>(optional)</span></div>
               <div class="pro-music-settings-row">
@@ -278,15 +278,9 @@
 
       <!-- LOCAL MUSIC -->
       <section id="tab-localmusic" class="panel hidden" hidden>
-        <section class="radio-tuning" aria-labelledby="radioTuningTitle">
-                  <div class="pro-music-settings-title" id="radioTuningTitle">Radio Tuning</div>
-                  <div class="hint">Choose how each kind of Music radio balances matching music, your read-only MP3 ratings, and variety. Your choices are saved in portable Data and take effect for the next radio pick.</div>
-                  <div class="radio-rule-tabs" role="tablist" aria-label="Radio tuning type">
-                    <button class="radio-rule-tab active" type="button" data-radio-mode="artist">Artist Radio</button>
-                    <button class="radio-rule-tab" type="button" data-radio-mode="radio">Song Radio</button>
-                  </div>
-                  <div id="radioBasicControls" class="radio-rule-controls"></div>
-                  <button id="resetAllRadioRules" class="btn radio-reset-all" type="button">Reset all Artist Radio settings</button>
+        <section class="radio-tuning" aria-labelledby="localRadioTitle">
+                  <div class="pro-music-settings-title" id="localRadioTitle">Local Radio</div>
+                  <div class="hint">Artist Radio and Song Radio build themselves from the strongest musical relationships in your library. WaveDeck uses Last.fm only when it adds a meaningful connection, honors your read-only MP3 ratings gently, and waits rather than forcing a poor match.</div>
         </section>
         <div id="statusLocalMusic" class="status"></div>
       </section>
@@ -304,6 +298,15 @@
         <div class="about-divider"></div>
         <div class="changelog">
           <h2>Changelog</h2>
+
+          <h3>WaveDeck 0.7.14 — Automatic Local Radio</h3>
+          <ul>
+            <li>Rebuilds Song Radio and Artist Radio around strong musical relationships instead of tuning sliders.</li>
+            <li>Prefers the seed album and artist, then shared credits, useful Last.fm similarities, and specific shared tags; broad tags alone cannot make a song eligible.</li>
+            <li>Uses Last.fm and read-only MP3 ratings only as helpful signals, and waits when there is no credible next song.</li>
+            <li>Shows recently played Local Stations in Local Music as soon as a generated station starts.</li>
+            <li>Moves the Local Station label below search and places the unboxed rescan icon before the song count.</li>
+          </ul>
 
           <h3>WaveDeck 0.7.13 — Context Toolbar & Saved Layout</h3>
           <ul>

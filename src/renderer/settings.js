@@ -59,9 +59,6 @@ const lastFmStatus = document.getElementById('lastFmStatus');
 const lastFmProgressWrap = document.getElementById('lastFmProgressWrap');
 const lastFmProgress = document.getElementById('lastFmProgress');
 const lastFmProgressLabel = document.getElementById('lastFmProgressLabel');
-const radioRuleTabs = document.querySelectorAll('.radio-rule-tab');
-const radioBasicControls = document.getElementById('radioBasicControls');
-const resetAllRadioRules = document.getElementById('resetAllRadioRules');
 const sidebarStartupHint = document.getElementById("sidebarStartupHint");
 const resetListeningBtn = document.getElementById("resetListeningBtn");
 const platform = window.wavedeck.platform;
@@ -80,24 +77,6 @@ let reloadQueued = false;
 let initialized = false;
 let pendingEditId = "";
 let activeSubgroupRename = null;
-let radioRules = null;
-let activeRadioMode = 'artist';
-
-const RADIO_BASIC_RULES = [
-  'artistFocusPercent', 'genreWeight', 'songPopularityPercent', 'artistVariety', 'albumVariety',
-  'releaseYearRange', 'selectionRandomness', 'repeatCooldownMinutes', 'ratingInfluence'
-];
-const RADIO_RULE_COPY = {
-  artistFocusPercent: { title: 'Artist Focus', description: 'How often should this station play the seed artist?', low: 'No special preference', high: 'Always' },
-  genreWeight: { title: 'Genre match', description: 'How strongly matching genres guide the next song within the acceptable pool.', low: 'Genre-neutral', high: 'Genre-led' },
-  songPopularityPercent: { title: 'Song Popularity', description: 'How much should Last.fm popularity matter?', low: 'Not at all', high: 'As much as possible' },
-  artistVariety: { title: 'Artist Variety', description: 'How much should WaveDeck spread out artists other than the seed artist?', low: 'Doesn’t matter', high: 'Maximum variety' },
-  albumVariety: { title: 'Album Variety', description: 'How much should WaveDeck spread out tracks from the same album?', low: 'Doesn’t matter', high: 'Maximum variety' },
-  releaseYearRange: { title: 'Release-Year Range', description: 'How close should songs be in release year?', low: 'Same year', high: 'Year doesn’t matter' },
-  selectionRandomness: { title: 'Surprise versus match', description: 'Whether each pick is more of a surprise or the closest match.', low: 'More surprises', high: 'Closest matches' },
-  repeatCooldownMinutes: { title: 'Song Repeat Wait', description: 'How long before the exact same song can come back.', low: '2 hours', high: '24 hours' },
-  ratingInfluence: { title: 'Ratings Matter', description: 'How strongly your read-only MP3 ratings guide radio. Unrated songs stay neutral.', low: 'Off', high: 'Dominant' }
-};
 
 function renderProMusicSettings(preferences) {
   const proEnabled = preferences?.proModeEnabled === true;
@@ -113,7 +92,6 @@ function renderProMusicSettings(preferences) {
   lastFmApiKey.value = String(preferences?.lastFmApiKey || '');
   lastFmDetails.hidden = !lastFmEnabled.checked;
   if (proEnabled) void loadLastFmStatus();
-  if (proEnabled) void loadRadioRules();
 }
 
 function renderLastFmStatus(status) {
@@ -136,127 +114,6 @@ function renderLastFmStatus(status) {
 
 async function loadLastFmStatus() {
   try { renderLastFmStatus(await window.wavedeck.getLastFmStatus()); } catch {}
-}
-
-function ruleCopy(key) { return RADIO_RULE_COPY[key] || { title: key, description: 'Fine-tune this part of radio selection.', low: 'Less', high: 'More' }; }
-
-function ruleSliderPosition(key, value, schema) {
-  if (Array.isArray(schema.stops)) {
-    return schema.stops.reduce((best, stop, index) => Math.abs(stop - value) < Math.abs(schema.stops[best] - value) ? index : best, 0);
-  }
-  const min = Number(schema.min || 0); const max = Number(schema.max || 1);
-  const ratio = Math.max(0, Math.min(1, (Number(value) - min) / Math.max(1, max - min)));
-  const position = (max >= 1000 ? Math.cbrt(ratio) : ratio) * 1000;
-  return Math.round(ruleCopy(key).reverse ? 1000 - position : position);
-}
-
-function ruleValueFromSlider(key, position, schema) {
-  if (Array.isArray(schema.stops)) return schema.stops[Math.max(0, Math.min(schema.stops.length - 1, Number(position)))];
-  const min = Number(schema.min || 0); const max = Number(schema.max || 1);
-  const visualRatio = Math.max(0, Math.min(1, Number(position) / 1000));
-  const ratio = ruleCopy(key).reverse ? 1 - visualRatio : visualRatio;
-  const curved = max >= 1000 ? ratio ** 3 : ratio;
-  const raw = min + curved * (max - min);
-  return schema.integer ? Math.round(raw) : Math.round(raw * 100000) / 100000;
-}
-
-function plainRuleValue(key, value, schema) {
-  const min = Number(schema.min || 0); const max = Number(schema.max || 1);
-  const ratio = Math.max(0, Math.min(1, (Number(value) - min) / Math.max(1, max - min)));
-  const copy = ruleCopy(key);
-  if (key === 'ratingInfluence') return ['Off', 'Gentle', 'Moderate', 'Strong', 'Dominant'][Number(value)] || 'Off';
-  if (key === 'artistFocusPercent') {
-    return ({ 0: 'No special preference', 25: 'Every few songs', 50: 'About half the time', 75: 'Most songs', 100: 'Always' })[Number(value)] || 'About half the time';
-  }
-  if (key === 'songPopularityPercent') {
-    return ({ 0: 'Not at all', 25: 'A little', 50: 'A balanced amount', 75: 'Quite a bit', 100: 'As much as possible' })[Number(value)] || 'A balanced amount';
-  }
-  if (key === 'artistVariety' || key === 'albumVariety') {
-    return ({ 0: 'Off', 1: 'Light', 2: 'Balanced', 3: 'Strong', 4: 'Maximum' })[Number(value)] || 'Balanced';
-  }
-  if (key === 'releaseYearRange') {
-    return ({ 0: 'Same year', 5: 'Within 5 years', 10: 'Within 10 years', 20: 'Within 20 years', 10000: 'Year doesn’t matter' })[Number(value)] || 'Within 10 years';
-  }
-  if (key === 'repeatCooldownMinutes') {
-    const hours = Number(value) / 60;
-    return `${hours} hour${hours === 1 ? '' : 's'}`;
-  }
-  if (key === 'genreWeight') {
-    return ({ 0: 'Genre-neutral', 1: 'Light genre influence', 5: 'Balanced genre influence', 10: 'Strong genre influence', 20: 'Genre-led' })[Number(value)] || 'Balanced genre influence';
-  }
-  if (key === 'selectionRandomness') {
-    return ({ 0: 'Very surprising', 0.5: 'More surprising', 1: 'Balanced', 3: 'Favors the best matches', 10: 'Strongly favors the best matches' })[Number(value)] || 'Balanced';
-  }
-  const displayRatio = copy.reverse ? 1 - ratio : ratio;
-  if (displayRatio <= 0.08) return copy.low;
-  if (displayRatio <= 0.25) return `A little more: ${copy.low.toLowerCase()}`;
-  if (displayRatio <= 0.45) return 'A gentle balance';
-  if (displayRatio <= 0.65) return 'A balanced setting';
-  if (displayRatio <= 0.82) return `A lot more: ${copy.high.toLowerCase()}`;
-  if (displayRatio < 0.96) return `Very much: ${copy.high.toLowerCase()}`;
-  return copy.high;
-}
-
-function makeRadioRuleControl(key, rules, schema) {
-  const copy = ruleCopy(key);
-  const wrap = element('div', 'radio-rule-control');
-  const heading = element('div', 'radio-rule-heading');
-  const title = element('div', 'radio-rule-name', copy.title);
-  const reset = element('button', 'radio-rule-reset', 'Reset');
-  reset.type = 'button'; reset.dataset.ruleKey = key;
-  heading.append(title, reset);
-  const description = element('div', 'hint radio-rule-description', copy.description);
-  const rangeRow = element('div', 'radio-rule-range');
-  const low = element('span', 'radio-rule-endpoint', copy.low);
-  const input = document.createElement('input');
-  input.type = 'range'; input.min = '0'; input.max = String(Array.isArray(schema.stops) ? schema.stops.length - 1 : 1000); input.step = '1'; input.value = String(ruleSliderPosition(key, rules[key], schema));
-  input.dataset.ruleKey = key;
-  input.setAttribute('aria-label', copy.title);
-  const high = element('span', 'radio-rule-endpoint right', copy.high);
-  rangeRow.append(low, input, high);
-  const value = element('div', 'radio-rule-value', plainRuleValue(key, rules[key], schema));
-  input.addEventListener('input', () => {
-    value.textContent = plainRuleValue(key, ruleValueFromSlider(key, input.value, schema), schema);
-  });
-  input.addEventListener('change', async () => {
-    try {
-      radioRules = await window.wavedeck.setMusicRule(activeRadioMode, key, ruleValueFromSlider(key, input.value, schema));
-      renderRadioRules();
-      setStatus(statusLocalMusic, `${copy.title} saved.`);
-    } catch (error) { setStatus(statusLocalMusic, `Could not save ${copy.title.toLowerCase()}: ${error.message}`, false); }
-  });
-  reset.addEventListener('click', async () => {
-    try {
-      radioRules = await window.wavedeck.resetMusicRule(activeRadioMode, key);
-      renderRadioRules();
-      setStatus(statusLocalMusic, `${copy.title} reset to its default.`);
-    } catch (error) { setStatus(statusLocalMusic, `Could not reset ${copy.title.toLowerCase()}: ${error.message}`, false); }
-  });
-  wrap.append(heading, description, rangeRow, value);
-  return wrap;
-}
-
-function renderRadioRules() {
-  if (!radioRules) return;
-  const rules = radioRules[activeRadioMode];
-  const schema = radioRules.schema?.[activeRadioMode] || {};
-  if (!rules || !schema) return;
-  radioRuleTabs.forEach(tab => {
-    const active = tab.dataset.radioMode === activeRadioMode;
-    tab.classList.toggle('active', active); tab.setAttribute('aria-selected', String(active));
-  });
-  radioBasicControls.replaceChildren(...RADIO_BASIC_RULES.map(key => makeRadioRuleControl(key, rules, schema[key])));
-  resetAllRadioRules.textContent = `Reset all ${activeRadioMode === 'artist' ? 'Artist' : 'Song'} Radio settings`;
-}
-
-async function loadRadioRules() {
-  if (!proModeEnabled.checked) return;
-  try {
-    radioRules = await window.wavedeck.getMusicRules();
-    renderRadioRules();
-  } catch (error) {
-    setStatus(statusLocalMusic, `Could not load radio tuning: ${error.message}`, false);
-  }
 }
 
 function element(tag, className, text) {
@@ -1134,26 +991,6 @@ testLastFmBtn.addEventListener('click', async () => {
     setStatus(statusInterface, 'Last.fm background refresh is ready.');
   } catch (error) { setStatus(statusInterface, `Last.fm connection could not start: ${error.message}`, false); }
   finally { testLastFmBtn.disabled = false; }
-});
-
-radioRuleTabs.forEach(tab => tab.addEventListener('click', () => {
-  activeRadioMode = tab.dataset.radioMode === 'artist' ? 'artist' : 'radio';
-  renderRadioRules();
-}));
-
-
-resetAllRadioRules.addEventListener('click', async () => {
-  const title = activeRadioMode === 'artist' ? 'Artist Radio' : 'Song Radio';
-  resetAllRadioRules.disabled = true;
-  try {
-    radioRules = await window.wavedeck.resetMusicRules(activeRadioMode);
-    renderRadioRules();
-    setStatus(statusLocalMusic, `${title} settings reset to their defaults.`);
-  } catch (error) {
-    setStatus(statusLocalMusic, `Could not reset ${title} settings: ${error.message}`, false);
-  } finally {
-    resetAllRadioRules.disabled = false;
-  }
 });
 
 async function reloadEverything() {

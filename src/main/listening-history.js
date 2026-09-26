@@ -21,7 +21,26 @@ function cleanListeningHistory(value) {
 
   const recentStationIds = [...new Set((Array.isArray(value?.recentStationIds) ? value.recentStationIds : [])
     .map(id => String(id ?? "").trim()).filter(Boolean))].slice(0, 10);
-  return { version: 1, stations, recentStationIds };
+  const seenLocalStations = new Set();
+  const recentLocalStations = [];
+  for (const rawStation of Array.isArray(value?.recentLocalStations) ? value.recentLocalStations : []) {
+    if (!rawStation || typeof rawStation !== 'object' || Array.isArray(rawStation)) continue;
+    const mode = rawStation.mode === 'artist' ? 'artist' : rawStation.mode === 'radio' ? 'radio' : '';
+    const seedId = String(rawStation.seedId ?? '').trim();
+    const key = `${mode}:${seedId}`;
+    if (!mode || !seedId || seenLocalStations.has(key)) continue;
+    seenLocalStations.add(key);
+    recentLocalStations.push({
+      key, mode, seedId,
+      label: String(rawStation.label ?? '').trim().slice(0, 300),
+      title: String(rawStation.title ?? '').trim().slice(0, 300),
+      artist: String(rawStation.artist ?? '').trim().slice(0, 300),
+      album: String(rawStation.album ?? '').trim().slice(0, 300),
+      lastPlayedAt: typeof rawStation.lastPlayedAt === 'string' ? rawStation.lastPlayedAt : ''
+    });
+    if (recentLocalStations.length >= 10) break;
+  }
+  return { version: 2, stations, recentStationIds, recentLocalStations };
 }
 
 class ListeningHistory {
@@ -43,6 +62,7 @@ class ListeningHistory {
     this.clearTimer = clearTimer;
     this.history = cleanListeningHistory(storage.readListeningHistory());
     this.session = null;
+    this.localStationKey = '';
     this.timer = null;
   }
 
@@ -52,6 +72,18 @@ class ListeningHistory {
   }
 
   handleStatus(status) {
+    const localStation = this.#localStation(status);
+    if (localStation) {
+      this.#finishSession();
+      if (this.localStationKey === localStation.key) return;
+      this.localStationKey = localStation.key;
+      this.history.recentLocalStations = [localStation,
+        ...this.history.recentLocalStations.filter(station => station.key !== localStation.key)].slice(0, 10);
+      this.storage.writeListeningHistory(this.history);
+      this.onChanged(cleanListeningHistory(this.history));
+      return;
+    }
+    this.localStationKey = '';
     const stationId = String(status?.currentStation?.id ?? "").trim();
     const shouldTrack = Boolean(
       stationId &&
@@ -81,7 +113,8 @@ class ListeningHistory {
   reset() {
     const activeStationId = this.session?.stationId || "";
     this.#cancelTimer();
-    this.history = { version: 1, stations: {}, recentStationIds: cleanListeningHistory(this.history).recentStationIds };
+    const cleaned = cleanListeningHistory(this.history);
+    this.history = { version: 2, stations: {}, recentStationIds: cleaned.recentStationIds, recentLocalStations: cleaned.recentLocalStations };
     this.storage.writeListeningHistory(this.history);
     this.session = activeStationId ? {
       stationId: activeStationId,
@@ -141,6 +174,24 @@ class ListeningHistory {
     this.storage.writeListeningHistory(this.history);
     this.onChanged(cleanListeningHistory(this.history));
     return true;
+  }
+
+  #localStation(status) {
+    const music = status?.currentMusic;
+    const mode = music?.mode === 'artist' ? 'artist' : music?.mode === 'radio' ? 'radio' : '';
+    const seed = music?.seed;
+    const seedId = String(seed?.id ?? '').trim();
+    if (!mode || !seedId || status?.mediaState !== 'playing' || status?.state === 'error') return null;
+    return {
+      key: `${mode}:${seedId}`,
+      mode,
+      seedId,
+      label: String(music.label ?? '').trim(),
+      title: String(seed.title ?? '').trim(),
+      artist: String(seed.artist ?? '').trim(),
+      album: String(seed.album ?? '').trim(),
+      lastPlayedAt: new Date(this.now()).toISOString()
+    };
   }
 }
 
