@@ -336,7 +336,27 @@ async function renderMusic() {
     listEl.replaceChildren();
     listEl.append(createSectionTitle('Music', query.trim() ? `${result.total} matches` : ''));
     if (!query.trim()) {
-      listEl.append(element('div', 'music-empty-state', 'Search to begin'));
+      const [history, stationList] = await Promise.all([
+        window.wavedeck.getListeningHistory(), window.wavedeck.getStations()
+      ]);
+      if (!musicVisible || sequence !== musicRenderSequence || query !== musicSearch.value) return;
+      const byId = new Map((Array.isArray(stationList) ? stationList : []).map(station => [station.id, station]));
+      const recent = (history?.recentStationIds || []).map(id => byId.get(id)).filter(Boolean).slice(0, 10);
+      if (!recent.length) listEl.append(element('div', 'music-empty-state', 'Search for local music, or play a station to start your recent list.'));
+      else {
+        listEl.append(createSectionTitle('Recently Played Stations', 'Most recent first'));
+        for (const station of recent) {
+          const button = element('button', 'recording-action recent-station', station.name || 'Unnamed station');
+          button.type = 'button';
+          button.addEventListener('click', async () => {
+            button.disabled = true;
+            try { await window.wavedeck.playStation(station.id); }
+            catch (error) { musicStatus.textContent = error.message; }
+            finally { button.disabled = false; }
+          });
+          listEl.append(button);
+        }
+      }
     } else if (!result.tracks.length) listEl.append(element('div', 'placeholder', 'No matching songs.'));
     for (const track of result.tracks) {
       const row = element('details', 'music-row');
@@ -1457,6 +1477,7 @@ window.wavedeck.onSidebarState(setSidebarUi);
 window.wavedeck.onListeningHistoryChanged((history) => {
   listeningHistory = history || { version: 1, stations: {} };
   if (mostPlayedSectionVisible) queueRender();
+  if (musicVisible && !musicSearch.value.trim()) void renderMusic();
 });
 
 window.wavedeck.onSectionVisibilityChanged(setSectionVisibilityUi);

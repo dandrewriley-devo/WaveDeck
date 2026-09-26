@@ -6,12 +6,12 @@ const RULE_FILES = { artist: 'artist-radio-rules.json', radio: 'song-radio-rules
 const RULES_REFERENCE_FILE = 'music-radio-rules-reference.txt';
 const DEFAULT_RULES = {
   artist: {
-    version: 5, repeatCooldownMinutes: 120, artistFocusPercent: 50, genreWeight: 5,
+    version: 6, repeatCooldownMinutes: 120, artistFocusPercent: 50, genreWeight: 5, ratingInfluence: 0,
     songPopularityPercent: 50, artistVariety: 1, albumVariety: 1, releaseYearRange: 10,
     unrelatedTrackMultiplier: 0, selectionRandomness: 1
   },
   radio: {
-    version: 5, repeatCooldownMinutes: 120, artistFocusPercent: 50, genreWeight: 5,
+    version: 6, repeatCooldownMinutes: 120, artistFocusPercent: 50, genreWeight: 5, ratingInfluence: 0,
     songPopularityPercent: 50, artistVariety: 1, albumVariety: 1, releaseYearRange: 10,
     unrelatedTrackMultiplier: 0, selectionRandomness: 1
   }
@@ -22,6 +22,14 @@ const SONG_POPULARITY_STOPS = [0, 10, 25, 50, 70, 85, 100];
 const VARIETY_STOPS = [0, 1, 2];
 const RELEASE_YEAR_STOPS = [0, 5, 10, 20, 10000];
 const REPEAT_WAIT_STOPS = [120, 180, 240, 360, 480, 720, 960, 1440];
+const RATING_INFLUENCE_STOPS = [0, 1, 2, 3, 4];
+const RATING_MULTIPLIERS = [
+  [1, 1, 1, 1, 1, 1],
+  [0.25, 0.4, 0.7, 1, 1.25, 1.5],
+  [0.03, 0.08, 0.2, 0.65, 1.5, 3],
+  [0.005, 0.015, 0.08, 0.45, 2, 5],
+  [0.001, 0.002, 0.02, 0.2, 3, 10]
+];
 const RELATED_ARTIST_WEIGHT = 6;
 const RELEASE_YEAR_WEIGHT = 2;
 const POST_COOLDOWN_MULTIPLIER = 0.75;
@@ -47,12 +55,13 @@ const RULE_SPECS = {
   albumVariety: { min: 0, max: 2, integer: true, stops: VARIETY_STOPS },
   releaseYearRange: { min: 0, max: 10000, integer: true, stops: RELEASE_YEAR_STOPS },
   unrelatedTrackMultiplier: { min: 0, max: 1 },
-  selectionRandomness: { min: 0, max: 10 }
+  selectionRandomness: { min: 0, max: 10 },
+  ratingInfluence: { min: 0, max: 4, integer: true, stops: RATING_INFLUENCE_STOPS }
 };
 const RULE_MINIMUMS = Object.fromEntries(Object.entries(RULE_SPECS).map(([key, spec]) => [key, spec.min]));
 const RULE_MAXIMUMS = Object.fromEntries(Object.entries(RULE_SPECS).map(([key, spec]) => [key, spec.max]));
 const RULES_REFERENCE = `WaveDeck Music Radio Rules\n\n` +
-`WaveDeck's Settings → Advanced tab is the normal way to tune Artist Radio and Song Radio. The nine sliders save these files automatically.\n\n` +
+`WaveDeck's Settings → Local Music tab is the normal way to tune Artist Radio and Song Radio. The sliders save these files automatically.\n\n` +
 `artist-radio-rules.json controls Artist Radio.\n` +
 `song-radio-rules.json controls Song Radio.\n\n` +
 `If you edit a file yourself, save it and WaveDeck uses the new value before choosing its next radio song. Invalid files use built-in defaults until fixed.\n\n` +
@@ -66,7 +75,8 @@ const RULES_REFERENCE = `WaveDeck Music Radio Rules\n\n` +
 `releaseYearRange (same year, 5, 10, or 20 years, or no limit): How close a song's release year should be to the seed.\n` +
 `unrelatedTrackMultiplier (0–1): The share of picks that may come from outside the related mix when both choices are available. 0 stays with related music; 1 always chooses outside music.\n` +
 `selectionRandomness (0–10): Lower values make picks more surprising; higher values favor the strongest matches.\n\n` +
-`Ratings, favorites, play counts, mood tags, and featured-artist bonuses are not used. Last.fm related-artist matching, a gentle post-cooldown holdback, and strict repeated-handoff avoidance are built in.\n`;
+`ratingInfluence (Off, Gentle, Moderate, Strong, Dominant): How strongly read-only MP3 ratings guide radio. Unrated songs remain neutral; at Moderate, one-star songs are extremely unlikely and two-star songs are rare.\n\n` +
+`Favorites, play counts, mood tags, and featured-artist bonuses are not used. Last.fm related-artist matching, a gentle post-cooldown holdback, and strict repeated-handoff avoidance are built in.\n`;
 const matches = (a, b) => Boolean(a && b && normalize(a) === normalize(b));
 const overlaps = (a = [], b = []) => a.some(x => b.some(y => matches(x, y)));
 const clone = value => JSON.parse(JSON.stringify(value));
@@ -179,6 +189,19 @@ function scoreTrack(track, seed, mode, history, now, context = null, rules = DEF
   const popularityMultiplier = 1 + ((popularity || 0) / 100) * (rules.songPopularityPercent / 100);
   score *= popularityMultiplier;
   multipliers.push({ label: 'Song Popularity', value: popularityMultiplier, source: popularity === null ? 'Last.fm score missing' : `${popularity}/100` });
+  const rawRating = track.ratingStars ?? (track.rating === null || track.rating === undefined ? null : Number(track.rating) / 2);
+  const rating = Number.isFinite(Number(rawRating)) && rawRating !== null ? Math.max(0, Math.min(5, Number(rawRating))) : null;
+  const influence = Math.max(0, Math.min(4, Math.round(Number(rules.ratingInfluence) || 0)));
+  let ratingMultiplier = 1;
+  if (rating !== null && influence > 0) {
+    const lower = Math.floor(rating);
+    const upper = Math.min(5, lower + 1);
+    const fraction = rating - lower;
+    const table = RATING_MULTIPLIERS[influence];
+    ratingMultiplier = table[lower] * (1 - fraction) + table[upper] * fraction;
+    score *= ratingMultiplier;
+  }
+  multipliers.push({ label: 'MP3 Rating', value: ratingMultiplier, source: rating === null ? 'No rating; neutral' : `${rating}/5 stars${track.ratingSource ? ` (${track.ratingSource})` : ''}` });
   if (last) {
     score *= POST_COOLDOWN_MULTIPLIER;
     multipliers.push({ label: 'After repeat wait', value: POST_COOLDOWN_MULTIPLIER, source: 'Heard before' });
@@ -479,4 +502,4 @@ class MusicRadio {
     return selected;
   }
 }
-module.exports = { MusicRadio, weight, scoreTrack, COOLDOWN, HANDOFF_MEMORY_MS, DEFAULT_RULES, RULE_FILES, RULE_MINIMUMS, RULE_MAXIMUMS, RULE_SPECS, ARTIST_FOCUS_STOPS, SONG_POPULARITY_STOPS };
+module.exports = { MusicRadio, weight, scoreTrack, COOLDOWN, HANDOFF_MEMORY_MS, DEFAULT_RULES, RULE_FILES, RULE_MINIMUMS, RULE_MAXIMUMS, RULE_SPECS, ARTIST_FOCUS_STOPS, SONG_POPULARITY_STOPS, RATING_INFLUENCE_STOPS };

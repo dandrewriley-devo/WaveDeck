@@ -3,7 +3,7 @@ const panels = new Map([
   ["interface", document.getElementById("tab-interface")],
   ["stations", document.getElementById("tab-stations")],
   ["groups", document.getElementById("tab-groups")],
-  ["advanced", document.getElementById("tab-advanced")],
+  ["localmusic", document.getElementById("tab-localmusic")],
   ["about", document.getElementById("tab-about")]
 ]);
 
@@ -11,7 +11,8 @@ const statusStations = document.getElementById("status");
 const statusInterface = document.getElementById("statusInterface");
 const statusGroups = document.getElementById("statusGroups");
 const statusImportExport = document.getElementById("statusImportExport");
-const statusAdvanced = document.getElementById("statusAdvanced");
+const statusLocalMusic = document.getElementById("statusLocalMusic");
+const localMusicTab = document.querySelector('[data-tab="localmusic"]');
 const stationSearch = document.getElementById("stationSearch");
 const stationGroupFilter = document.getElementById("stationGroupFilter");
 const newStationBtn = document.getElementById("newStationBtn");
@@ -81,7 +82,7 @@ let activeRadioMode = 'artist';
 
 const RADIO_BASIC_RULES = [
   'artistFocusPercent', 'genreWeight', 'songPopularityPercent', 'artistVariety', 'albumVariety',
-  'releaseYearRange', 'unrelatedTrackMultiplier', 'selectionRandomness', 'repeatCooldownMinutes'
+  'releaseYearRange', 'unrelatedTrackMultiplier', 'selectionRandomness', 'repeatCooldownMinutes', 'ratingInfluence'
 ];
 const RADIO_RULE_COPY = {
   artistFocusPercent: { title: 'Artist Focus', description: 'How often should this station play the seed artist?', low: 'No special preference', high: 'Always' },
@@ -92,7 +93,8 @@ const RADIO_RULE_COPY = {
   releaseYearRange: { title: 'Release-Year Range', description: 'How close should songs be in release year?', low: 'Same year', high: 'Year doesn’t matter' },
   unrelatedTrackMultiplier: { title: 'Outside Variety', description: 'How often should music outside the related mix get a turn?', low: 'Related music only', high: 'A wide-open mix' },
   selectionRandomness: { title: 'Surprise versus match', description: 'Whether each pick is more of a surprise or the closest match.', low: 'More surprises', high: 'Closest matches' },
-  repeatCooldownMinutes: { title: 'Song Repeat Wait', description: 'How long before the exact same song can come back.', low: '2 hours', high: '24 hours' }
+  repeatCooldownMinutes: { title: 'Song Repeat Wait', description: 'How long before the exact same song can come back.', low: '2 hours', high: '24 hours' },
+  ratingInfluence: { title: 'Ratings Matter', description: 'How strongly your read-only MP3 ratings guide radio. Unrated songs stay neutral.', low: 'Off', high: 'Dominant' }
 };
 
 function renderProMusicSettings(preferences) {
@@ -100,6 +102,9 @@ function renderProMusicSettings(preferences) {
   const folder = String(preferences?.additionalMusicFolder || '');
   proMusicSettings.hidden = !proEnabled;
   advancedFeaturesOff.hidden = proEnabled;
+  localMusicTab.hidden = !proEnabled;
+  panels.get('localmusic').hidden = !proEnabled;
+  if (!proEnabled && document.querySelector('.tab.active')?.dataset.tab === 'localmusic') showTab('interface');
   additionalMusicFolder.value = folder;
   clearAdditionalMusicFolderBtn.disabled = !folder;
   lastFmEnabled.checked = preferences?.lastFmEnabled === true;
@@ -149,6 +154,7 @@ function plainRuleValue(key, value, schema) {
   const min = Number(schema.min || 0); const max = Number(schema.max || 1);
   const ratio = Math.max(0, Math.min(1, (Number(value) - min) / Math.max(1, max - min)));
   const copy = ruleCopy(key);
+  if (key === 'ratingInfluence') return ['Off', 'Gentle', 'Moderate', 'Strong', 'Dominant'][Number(value)] || 'Off';
   if (key === 'artistFocusPercent') {
     return ({ 0: 'No special preference', 10: 'Once in a while', 25: 'Every few songs', 50: 'About half the time', 70: 'Most songs', 85: 'Nearly every song', 100: 'Always' })[Number(value)] || 'About half the time';
   }
@@ -221,15 +227,15 @@ function makeRadioRuleControl(key, rules, schema) {
     try {
       radioRules = await window.wavedeck.setMusicRule(activeRadioMode, key, ruleValueFromSlider(key, input.value, schema));
       renderRadioRules();
-      setStatus(statusAdvanced, `${copy.title} saved.`);
-    } catch (error) { setStatus(statusAdvanced, `Could not save ${copy.title.toLowerCase()}: ${error.message}`, false); }
+      setStatus(statusLocalMusic, `${copy.title} saved.`);
+    } catch (error) { setStatus(statusLocalMusic, `Could not save ${copy.title.toLowerCase()}: ${error.message}`, false); }
   });
   reset.addEventListener('click', async () => {
     try {
       radioRules = await window.wavedeck.resetMusicRule(activeRadioMode, key);
       renderRadioRules();
-      setStatus(statusAdvanced, `${copy.title} reset to its default.`);
-    } catch (error) { setStatus(statusAdvanced, `Could not reset ${copy.title.toLowerCase()}: ${error.message}`, false); }
+      setStatus(statusLocalMusic, `${copy.title} reset to its default.`);
+    } catch (error) { setStatus(statusLocalMusic, `Could not reset ${copy.title.toLowerCase()}: ${error.message}`, false); }
   });
   wrap.append(heading, description, rangeRow, value);
   return wrap;
@@ -254,7 +260,7 @@ async function loadRadioRules() {
     radioRules = await window.wavedeck.getMusicRules();
     renderRadioRules();
   } catch (error) {
-    setStatus(statusAdvanced, `Could not load radio tuning: ${error.message}`, false);
+    setStatus(statusLocalMusic, `Could not load radio tuning: ${error.message}`, false);
   }
 }
 
@@ -321,7 +327,7 @@ function setStatus(node, message = "", success = true) {
 }
 
 function showTab(name) {
-  const selected = panels.has(name) ? name : "stations";
+  const selected = panels.has(name) && (name !== 'localmusic' || !localMusicTab.hidden) ? name : (name === 'localmusic' ? 'interface' : 'stations');
   tabs.forEach((tab) => tab.classList.toggle("active", tab.dataset.tab === selected));
   for (const [panelName, panel] of panels) panel.classList.toggle("hidden", panelName !== selected);
 }
@@ -1069,14 +1075,14 @@ proModeEnabled.addEventListener("change", async () => {
     proModeEnabled.checked = preferences?.proModeEnabled === true;
     renderProMusicSettings(preferences);
     setStatus(
-      statusAdvanced,
+      statusInterface,
       proModeEnabled.checked
         ? "Advanced Features are on. Extra controls are now visible in the main window."
         : "Advanced Features are off. Extra controls are hidden."
     );
   } catch (error) {
     proModeEnabled.checked = !requested;
-    setStatus(statusAdvanced, `Could not change Advanced Features: ${error.message}`, false);
+    setStatus(statusInterface, `Could not change Advanced Features: ${error.message}`, false);
   } finally {
     proModeEnabled.disabled = false;
   }
@@ -1088,9 +1094,9 @@ chooseAdditionalMusicFolderBtn.addEventListener('click', async () => {
     const folder = await window.wavedeck.chooseAdditionalMusicFolder();
     if (!folder) return;
     renderProMusicSettings(await window.wavedeck.setAdditionalMusicFolder(folder));
-    setStatus(statusAdvanced, 'Additional music folder saved. Use Music’s Rescan button when you want to index it.');
+    setStatus(statusInterface, 'Additional music folder saved. Use Music’s Rescan button when you want to index it.');
   } catch (error) {
-    setStatus(statusAdvanced, `Could not save the music folder: ${error.message}`, false);
+    setStatus(statusInterface, `Could not save the music folder: ${error.message}`, false);
   } finally {
     chooseAdditionalMusicFolderBtn.disabled = false;
   }
@@ -1100,9 +1106,9 @@ clearAdditionalMusicFolderBtn.addEventListener('click', async () => {
   clearAdditionalMusicFolderBtn.disabled = true;
   try {
     renderProMusicSettings(await window.wavedeck.setAdditionalMusicFolder(''));
-    setStatus(statusAdvanced, 'Additional music folder removed.');
+    setStatus(statusInterface, 'Additional music folder removed.');
   } catch (error) {
-    setStatus(statusAdvanced, `Could not remove the music folder: ${error.message}`, false);
+    setStatus(statusInterface, `Could not remove the music folder: ${error.message}`, false);
   }
 });
 
@@ -1111,10 +1117,10 @@ lastFmEnabled.addEventListener('change', async () => {
   try {
     const preferences = await window.wavedeck.setLastFmSettings({ enabled: lastFmEnabled.checked, apiKey: lastFmApiKey.value });
     renderProMusicSettings(preferences);
-    setStatus(statusAdvanced, lastFmEnabled.checked ? 'Last.fm music-data refresh is on.' : 'Last.fm music-data refresh is off.');
+    setStatus(statusInterface, lastFmEnabled.checked ? 'Last.fm music-data refresh is on.' : 'Last.fm music-data refresh is off.');
   } catch (error) {
     lastFmEnabled.checked = !lastFmEnabled.checked;
-    setStatus(statusAdvanced, `Could not save Last.fm settings: ${error.message}`, false);
+    setStatus(statusInterface, `Could not save Last.fm settings: ${error.message}`, false);
   } finally { lastFmEnabled.disabled = false; }
 });
 
@@ -1122,16 +1128,16 @@ lastFmApiKey.addEventListener('change', async () => {
   try {
     const preferences = await window.wavedeck.setLastFmSettings({ enabled: lastFmEnabled.checked, apiKey: lastFmApiKey.value });
     renderProMusicSettings(preferences);
-    setStatus(statusAdvanced, 'Last.fm API key saved.');
-  } catch (error) { setStatus(statusAdvanced, `Could not save the Last.fm API key: ${error.message}`, false); }
+    setStatus(statusInterface, 'Last.fm API key saved.');
+  } catch (error) { setStatus(statusInterface, `Could not save the Last.fm API key: ${error.message}`, false); }
 });
 
 testLastFmBtn.addEventListener('click', async () => {
   testLastFmBtn.disabled = true;
   try {
     renderLastFmStatus(await window.wavedeck.testLastFm());
-    setStatus(statusAdvanced, 'Last.fm background refresh is ready.');
-  } catch (error) { setStatus(statusAdvanced, `Last.fm connection could not start: ${error.message}`, false); }
+    setStatus(statusInterface, 'Last.fm background refresh is ready.');
+  } catch (error) { setStatus(statusInterface, `Last.fm connection could not start: ${error.message}`, false); }
   finally { testLastFmBtn.disabled = false; }
 });
 
@@ -1147,9 +1153,9 @@ resetAllRadioRules.addEventListener('click', async () => {
   try {
     radioRules = await window.wavedeck.resetMusicRules(activeRadioMode);
     renderRadioRules();
-    setStatus(statusAdvanced, `${title} settings reset to their defaults.`);
+    setStatus(statusLocalMusic, `${title} settings reset to their defaults.`);
   } catch (error) {
-    setStatus(statusAdvanced, `Could not reset ${title} settings: ${error.message}`, false);
+    setStatus(statusLocalMusic, `Could not reset ${title} settings: ${error.message}`, false);
   } finally {
     resetAllRadioRules.disabled = false;
   }

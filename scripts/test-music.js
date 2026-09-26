@@ -99,7 +99,17 @@ async function run() {
     assert.equal(library.tracks.length, 1); assert.equal(library.tracks[0].library, 'additional');
     assert.equal((await library.resolve(library.tracks[0].id)).path, externalFile);
     const tag = extractTrack({ common: { rating: [{ rating: 0.8 }] }, native: {} }, 'fallback.mp3');
-    assert.equal(tag.title, 'fallback'); assert.equal(tag.rating, 8);
+    assert.equal(tag.title, 'fallback'); assert.equal(tag.rating, 8); assert.equal(tag.ratingStars, 4);
+    const popmRating = extractTrack({ common: { rating: [{ rating: 1 }] }, native: {} }, 'popm.mp3');
+    assert.equal(popmRating.ratingStars, 5); assert.equal(popmRating.ratingSource, 'popm');
+    const fmpsRating = extractTrack({ common: {}, native: { 'ID3v2.4': [{ id: 'TXXX:FMPS_RATING', value: '0.6' }] } }, 'fmps.mp3');
+    assert.equal(fmpsRating.ratingStars, 3); assert.equal(fmpsRating.ratingSource, 'fmps_rating');
+    const ampRating = extractTrack({ common: {}, native: { 'ID3v2.4': [
+      { id: 'TXXX:AMP_TRACK_ID', value: '42' }, { id: 'TXXX:RATING', value: '8' }
+    ] } }, 'amp.mp3');
+    assert.equal(ampRating.ratingStars, 4); assert.equal(ampRating.ratingSource, 'amp');
+    const fiveStarRating = extractTrack({ common: {}, native: { 'ID3v2.4': [{ id: 'TXXX:RATING', value: '2' }] } }, 'stars.mp3');
+    assert.equal(fiveStarRating.ratingStars, 2);
     assert.equal(radioArtist(track('x', { albumArtist: 'Various Artists', artist: 'Solo' })), 'Solo');
     assert.equal(radioArtist(track('x', { album: 'Film Soundtrack', albumArtist: 'Studio', artist: 'Solo' })), 'Solo');
 
@@ -111,7 +121,14 @@ async function run() {
     assert.match(await fs.readFile(path.join(dataDir, 'music-radio-rules-reference.txt'), 'utf8'), /Artist Radio/);
     const catalog = Array.from({ length: 150 }, (_, i) => track(String(i), { artist: `Artist ${i % 20}`, artists: [`Artist ${i % 20}`] }));
     const low = track('low', { rating: 2 });
-    assert.equal(weight(low, catalog[0], 'artist', [], now), weight(track('normal'), catalog[0], 'artist', [], now), 'ratings do not affect radio selection');
+    assert.equal(weight(low, catalog[0], 'artist', [], now), weight(track('normal'), catalog[0], 'artist', [], now), 'ratings default to Off');
+    const moderate = { ...DEFAULT_RULES.artist, ratingInfluence: 2 };
+    assert.ok(weight(low, catalog[0], 'artist', [], now, null, moderate) < weight(track('normal'), catalog[0], 'artist', [], now, null, moderate) * 0.1,
+      'one-star MP3 ratings are strongly discouraged at Moderate');
+    assert.ok(weight(track('two-star', { ratingStars: 2 }), catalog[0], 'artist', [], now, null, moderate) <
+      weight(track('normal'), catalog[0], 'artist', [], now, null, moderate), 'two-star MP3 ratings are discouraged at Moderate');
+    assert.equal(weight(track('unrated'), catalog[0], 'artist', [], now, null, moderate),
+      weight(track('normal'), catalog[0], 'artist', [], now, null, moderate), 'unrated tracks remain neutral');
     const seen = new Map(); const sequence = [];
     for (let i = 0; i < 1200; i++) {
       const picked = radio.choose(catalog, catalog[0], 'radio'); assert(picked);
@@ -164,7 +181,7 @@ async function run() {
     laneRadio.setRule('radio', 'unrelatedTrackMultiplier', 0);
     assert.equal(laneRadio.choose([laneRelated, laneOutside], laneSeed, 'radio').id, laneRelated.id, 'zero Outside Variety chooses the related lane');
     assert.equal(editableRadio.resetRules('radio').radio.genreWeight, 5);
-    assert.equal(editableRadio.rules.artist.version, 5);
+    assert.equal(editableRadio.rules.artist.version, 6);
     const plainTrack = track('plain');
     assert.equal(weight({ ...plainTrack, favorite: true }, catalog[0], 'radio', [], now), weight(plainTrack, catalog[0], 'radio', [], now), 'favorites no longer affect radio selection');
     assert.equal(weight({ ...plainTrack, moods: ['Happy'] }, { ...catalog[0], moods: ['Happy'] }, 'radio', [], now), weight(plainTrack, catalog[0], 'radio', [], now), 'mood tags do not affect radio selection');

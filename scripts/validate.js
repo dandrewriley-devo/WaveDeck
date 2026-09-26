@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.7.9");
-assert.strictEqual(packageJson.wavedeckVersion, "0.7.9");
+assert.strictEqual(packageJson.version, "0.7.10");
+assert.strictEqual(packageJson.wavedeckVersion, "0.7.10");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -411,12 +411,14 @@ try {
   const reloadedStorage = new PortableStorage({ dataDir, defaultsDir });
   reloadedStorage.initialize();
   assert.strictEqual(reloadedStorage.readNotepad(), "Call Ben\nOrder filters");
-  assert.deepStrictEqual(reloadedStorage.readListeningHistory(), { version: 1, stations: {} });
+  assert.deepStrictEqual(reloadedStorage.readListeningHistory(), { version: 1, stations: {}, recentStationIds: [] });
   reloadedStorage.writeListeningHistory({
     version: 1,
-    stations: { alpha: { seconds: 325, lastListenedAt: "2026-09-02T00:00:00.000Z" } }
+    stations: { alpha: { seconds: 325, lastListenedAt: "2026-09-02T00:00:00.000Z" } },
+    recentStationIds: ["alpha", "beta", "alpha", ...Array.from({ length: 12 }, (_, index) => `station-${index}`)]
   });
   assert.strictEqual(reloadedStorage.readListeningHistory().stations.alpha.seconds, 325);
+  assert.deepStrictEqual(reloadedStorage.readListeningHistory().recentStationIds, ["alpha", "beta", ...Array.from({ length: 8 }, (_, index) => `station-${index}`)]);
 
   const subgroupStations = reloadedStorage.readStations();
   const subgroupGroup = subgroupStations[0].group;
@@ -721,6 +723,7 @@ const playingAlpha = {
 listeningHistory.handleStatus(playingAlpha);
 historyTime = 29_000;
 assert.deepStrictEqual(listeningHistory.getStats().stations, {});
+assert.deepStrictEqual(listeningHistory.getStats().recentStationIds, ["alpha"]);
 historyTime = 30_000;
 assert.strictEqual(listeningHistory.getStats().stations.alpha.seconds, 30);
 historyTime = 44_500;
@@ -737,6 +740,7 @@ assert.strictEqual(listeningHistory.getStats().stations.alpha.seconds, 44);
 assert.ok(historyWrites.length >= 2);
 assert.ok(historyChanges.length >= 2);
 assert.deepStrictEqual(listeningHistory.reset().stations, {});
+assert.deepStrictEqual(listeningHistory.getStats().recentStationIds, ["alpha"]);
 listeningHistory.close();
 
 let indieTime = 0;
@@ -1156,10 +1160,13 @@ assert.ok(settingsHtml.includes('id="downloadNewStations"'));
 assert.ok(settingsHtml.includes('id="launchInSidebarMode"'));
 assert.ok(settingsHtml.includes('id="proModeEnabled"'));
 assert.ok(settingsHtml.includes('id="proMusicSettings"'));
-assert.ok(settingsHtml.includes('data-tab="advanced">Advanced</button>'));
-assert.ok(settingsHtml.indexOf('data-tab="groups"') < settingsHtml.indexOf('data-tab="advanced"'));
-assert.ok(settingsHtml.indexOf('data-tab="advanced"') < settingsHtml.indexOf('data-tab="about"'));
-assert.ok(settingsHtml.includes('id="tab-advanced"'));
+assert.ok(settingsHtml.includes('data-tab="localmusic" hidden>Local Music</button>'));
+assert.ok(settingsHtml.indexOf('data-tab="groups"') < settingsHtml.indexOf('data-tab="localmusic"'));
+assert.ok(settingsHtml.indexOf('data-tab="localmusic"') < settingsHtml.indexOf('data-tab="about"'));
+assert.ok(settingsHtml.includes('id="tab-localmusic"'));
+assert.ok(settingsHtml.includes('WaveDeck 0.7.x — Bug Fixes'));
+assert.ok(!settingsHtml.includes('WaveDeck 0.7.9 —'));
+assert.ok(settingsRendererSource.includes("title: 'Ratings Matter'"));
 assert.ok(settingsHtml.includes('Enable Advanced Features'));
 assert.ok(settingsHtml.includes('id="radioBasicControls"'));
 assert.ok(!settingsHtml.includes('id="radioAdvancedControls"'));
@@ -1183,7 +1190,7 @@ assert.ok(settingsHtml.includes("native Sidebar Mode"));
 assert.ok(settingsHtml.includes("Changelog"));
 for (const control of [
   'artistFocusPercent', 'genreWeight', 'songPopularityPercent', 'artistVariety', 'albumVariety',
-  'releaseYearRange', 'unrelatedTrackMultiplier', 'selectionRandomness', 'repeatCooldownMinutes'
+  'releaseYearRange', 'unrelatedTrackMultiplier', 'selectionRandomness', 'repeatCooldownMinutes', 'ratingInfluence'
 ]) {
   assert.ok(settingsRendererSource.includes(`'${control}'`), `Radio tuning should include ${control}`);
 }
@@ -1353,7 +1360,8 @@ assert.ok(rendererSource.includes("toggleRecording"));
 assert.ok(rendererSource.includes("previousPreset"));
 assert.ok(rendererSource.includes("nextPreset"));
 assert.ok(rendererSource.includes("clearMusicSearch"));
-assert.ok(rendererSource.includes("Search to begin"));
+assert.ok(rendererSource.includes("Recently Played Stations"));
+assert.ok(rendererSource.includes("recentStationIds"));
 assert.ok(rendererSource.includes("details.music-row[open]"));
 assert.ok(rendererSource.includes("['radio', 'Song Radio'], ['artist', 'Artist Radio'], ['album', 'Play Album']"));
 assert.ok(!rendererSource.includes("Play Song"));

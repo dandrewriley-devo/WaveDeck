@@ -18,6 +18,7 @@ const STARTER_PRESET_NAMES = Object.freeze([
 
 function validateListeningHistory(value) {
   const source = value && typeof value === "object" && !Array.isArray(value) ? value.stations : null;
+  const recentSource = value && typeof value === "object" && !Array.isArray(value) ? value.recentStationIds : null;
   const stations = {};
   if (source && typeof source === "object" && !Array.isArray(source)) {
     for (const [rawId, rawEntry] of Object.entries(source)) {
@@ -31,7 +32,9 @@ function validateListeningHistory(value) {
       };
     }
   }
-  return { version: 1, stations };
+  const recentStationIds = [...new Set((Array.isArray(recentSource) ? recentSource : [])
+    .map(id => String(id ?? "").trim()).filter(Boolean))].slice(0, 10);
+  return { version: 1, stations, recentStationIds };
 }
 
 function lowerKey(value) { return String(value ?? "").trim().toLowerCase(); }

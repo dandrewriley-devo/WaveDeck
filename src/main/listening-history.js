@@ -19,7 +19,9 @@ function cleanListeningHistory(value) {
     }
   }
 
-  return { version: 1, stations };
+  const recentStationIds = [...new Set((Array.isArray(value?.recentStationIds) ? value.recentStationIds : [])
+    .map(id => String(id ?? "").trim()).filter(Boolean))].slice(0, 10);
+  return { version: 1, stations, recentStationIds };
 }
 
 class ListeningHistory {
@@ -64,6 +66,10 @@ class ListeningHistory {
 
     if (this.session?.stationId === stationId) return;
     this.#finishSession();
+    this.history.recentStationIds = [stationId,
+      ...this.history.recentStationIds.filter(id => id !== stationId)].slice(0, 10);
+    this.storage.writeListeningHistory(this.history);
+    this.onChanged(cleanListeningHistory(this.history));
     this.session = {
       stationId,
       startedAt: this.now(),
@@ -75,7 +81,7 @@ class ListeningHistory {
   reset() {
     const activeStationId = this.session?.stationId || "";
     this.#cancelTimer();
-    this.history = { version: 1, stations: {} };
+    this.history = { version: 1, stations: {}, recentStationIds: cleanListeningHistory(this.history).recentStationIds };
     this.storage.writeListeningHistory(this.history);
     this.session = activeStationId ? {
       stationId: activeStationId,

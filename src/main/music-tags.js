@@ -12,9 +12,41 @@ function extractTrack(metadata, relativePath, library = 'portable') {
     const value = keys.map(k => custom[k]).find(v => v !== undefined && v !== '');
     return Number.isFinite(Number(value)) ? Number(value) : null;
   };
-  // AMP uses 1–10; standard POPM is normalized by music-metadata to 0–1.
+  const numeric = value => {
+    if (typeof value === 'number' && Number.isFinite(value)) return value;
+    const parsed = Number(String(value ?? '').trim());
+    return Number.isFinite(parsed) ? parsed : null;
+  };
+  const normalizeRating = (value, format) => {
+    const parsed = numeric(value);
+    if (parsed === null || parsed <= 0) return null;
+    let stars;
+    if (format === 'popm' || format === 'fmps' || (format === 'txxx' && parsed <= 1)) {
+      stars = parsed <= 1 ? parsed * 5 : parsed > 5 ? parsed / 20 : parsed;
+    } else if (format === 'txxx' && parsed > 10) {
+      stars = parsed / 20;
+    } else if (format === 'amp' || parsed > 5) {
+      stars = parsed / 2;
+    } else {
+      stars = parsed;
+    }
+    return Math.max(0, Math.min(5, stars));
+  };
+  const ampRating = numeric(custom.RATING);
+  const txxxRating = numeric(custom.RATING);
+  const fmpsRating = numeric(custom.FMPS_RATING);
   const popm = c.rating?.find(r => Number.isFinite(r.rating))?.rating;
-  const rating = number('RATING') ?? (popm === undefined ? null : Math.max(1, Math.round(popm * 10)));
+  const ratingCandidates = [
+    ampRating !== null && custom.AMP_TRACK_ID ? { value: ampRating, format: 'amp', source: 'amp' } : null,
+    fmpsRating !== null ? { value: fmpsRating, format: 'fmps', source: 'fmps_rating' } : null,
+    txxxRating !== null ? { value: txxxRating, format: 'txxx', source: 'txxx_rating' } : null,
+    popm !== undefined ? { value: popm, format: 'popm', source: 'popm' } : null
+  ].filter(Boolean);
+  const ratingEntry = ratingCandidates.map(entry => ({ ...entry, stars: normalizeRating(entry.value, entry.format) }))
+    .find(entry => entry.stars !== null);
+  const ratingStars = ratingEntry?.stars ?? null;
+  // Preserve the historical 0–10 field for compatibility while ratingStars is the canonical 0–5 value.
+  const rating = ratingStars === null ? null : Math.round(ratingStars * 2);
   const title = c.title || path.basename(relativePath, path.extname(relativePath));
   const artist = c.artist || '';
   return {
@@ -23,7 +55,8 @@ function extractTrack(metadata, relativePath, library = 'portable') {
     year: c.year || c.originalyear || null, genres: c.genre || [], composer: c.composer || [],
     comments: (c.comment || []).map(v => typeof v === 'string' ? v : v.text || ''),
     track: c.track?.no || 0, disc: c.disk?.no || 0, duration: metadata.format?.duration || 0,
-    ampId: String(custom.AMP_TRACK_ID || ''), rating: rating > 0 ? Math.min(10, rating) : null,
+    ampId: String(custom.AMP_TRACK_ID || ''), rating, ratingStars,
+    ratingSource: ratingEntry?.source || '',
     favorite: /^(1|true|yes)$/i.test(String(custom.FAVORITE || '')),
     playCount: number('PLAY_COUNT', 'PLAYCOUNT') || 0, skipCount: number('SKIP_COUNT', 'SKIPCOUNT') || 0,
     lastPlayed: String(custom.LAST_PLAYED || ''),

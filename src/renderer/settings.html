@@ -16,7 +16,7 @@
         <button class="tab active" data-tab="interface">General</button>
         <button class="tab" data-tab="stations">Stations</button>
         <button class="tab" data-tab="groups">Groups</button>
-        <button class="tab" data-tab="advanced">Advanced</button>
+        <button class="tab" data-tab="localmusic" hidden>Local Music</button>
         <button class="tab" data-tab="about">About</button>
       </div>
     </header>
@@ -25,7 +25,7 @@
       <!-- INTERFACE -->
       <section id="tab-interface" class="panel hidden">
         <div class="general-meta">
-          <b>WaveDeck version <span id="aboutVersion">0.7.9</span></b>
+          <b>WaveDeck version <span id="aboutVersion">0.7.10</span></b>
           <span>Station library: <span id="aboutDataDir">Data</span></span>
         </div>
         <div class="general-sections">
@@ -99,6 +99,46 @@
           </div>
         </div>
         </div>
+        </section>
+        <section class="general-card">
+          <div class="general-card-header">
+            <div class="label">Advanced Features</div>
+            <div class="hint">Enable extra controls and local Music features. Related settings appear below when enabled.</div>
+          </div>
+          <div class="general-card-body">
+            <label class="preference-toggle" title="Show WaveDeck's advanced controls and features">
+              <input id="proModeEnabled" type="checkbox" />
+              <span class="toggle-switch" aria-hidden="true"></span>
+              <span>Enable Advanced Features</span>
+            </label>
+            <div id="advancedFeaturesOff" class="hint mt-6">Turn this on to configure local Music and radio tuning.</div>
+            <div id="proMusicSettings" class="pro-music-settings" hidden>
+              <div class="pro-music-settings-title">Additional Music Folder <span>(optional)</span></div>
+              <div class="pro-music-settings-row">
+                <input id="additionalMusicFolder" class="input" type="text" readonly placeholder="Portable Music folder only" />
+                <button id="chooseAdditionalMusicFolderBtn" class="btn" type="button">Choose Folder…</button>
+                <button id="clearAdditionalMusicFolderBtn" class="btn" type="button">Remove</button>
+              </div>
+              <div class="hint">WaveDeck always includes the portable <b>Music</b> folder beside <b>Data</b>. This adds one other folder to Music search and playback. Files and tags are never changed. Choose a folder, then use Music’s <b>Rescan</b> button when you’re ready to index it.</div>
+              <section class="lastfm-settings" aria-labelledby="lastFmTitle">
+                <div class="pro-music-settings-title" id="lastFmTitle">Last.fm Music Data</div>
+                <label class="preference-toggle">
+                  <input id="lastFmEnabled" type="checkbox" />
+                  <span class="toggle-switch" aria-hidden="true"></span>
+                  <span>Improve Music Data with Last.fm</span>
+                </label>
+                <div class="hint">Refreshes song popularity, genre tags, and related artists in WaveDeck’s own portable database. Your MP3 files and tags are never changed.</div>
+                <div id="lastFmDetails" class="lastfm-details" hidden>
+                  <div class="pro-music-settings-row">
+                    <input id="lastFmApiKey" class="input" type="password" autocomplete="off" spellcheck="false" placeholder="Last.fm API key" />
+                    <button id="testLastFmBtn" class="btn" type="button">Test Connection</button>
+                  </div>
+                  <div class="hint">WaveDeck checks missing or six-month-old data slowly in the background. Press <b>Ctrl + Alt + Shift + F</b> to queue a catch-up refresh; songs checked within the past week are skipped.</div>
+                  <div id="lastFmStatus" class="lastfm-status">Last.fm is ready when you are.</div>
+                </div>
+              </section>
+            </div>
+          </div>
         </section>
         </div>
         <div id="statusInterface" class="status"></div>
@@ -232,68 +272,19 @@
         <div id="statusGroups" class="status"></div>
       </section>
 
-      <!-- ADVANCED -->
-      <section id="tab-advanced" class="panel hidden">
-        <div class="general-sections">
-          <section class="general-card">
-            <div class="general-card-header">
-              <div class="label">Advanced Features</div>
-              <div class="hint">
-                Advanced Features adds Favorites filtering, Your Top Five, the Sidebar Notepad,
-                expanded transport controls, stream recording, and local Music.
-              </div>
-            </div>
-            <div class="general-card-body">
-              <label class="preference-toggle" title="Show WaveDeck's advanced controls and features">
-                <input id="proModeEnabled" type="checkbox" />
-                <span class="toggle-switch" aria-hidden="true"></span>
-                <span>Enable Advanced Features</span>
-              </label>
-              <div id="advancedFeaturesOff" class="hint mt-6">
-                Turn this on to configure local Music and radio tuning.
-              </div>
-              <div id="proMusicSettings" class="pro-music-settings" hidden>
-                <div class="pro-music-settings-title">Additional Music Folder <span>(optional)</span></div>
-                <div class="pro-music-settings-row">
-                  <input id="additionalMusicFolder" class="input" type="text" readonly placeholder="Portable Music folder only" />
-                  <button id="chooseAdditionalMusicFolderBtn" class="btn" type="button">Choose Folder…</button>
-                  <button id="clearAdditionalMusicFolderBtn" class="btn" type="button">Remove</button>
-                </div>
-                <div class="hint">WaveDeck always includes the portable <b>Music</b> folder beside <b>Data</b>. This adds one other folder to Music search and playback. Files and tags are never changed. Choose a folder, then use Music’s <b>Rescan</b> button when you’re ready to index it.</div>
-
-                <section class="radio-tuning" aria-labelledby="radioTuningTitle">
+      <!-- LOCAL MUSIC -->
+      <section id="tab-localmusic" class="panel hidden" hidden>
+        <section class="radio-tuning" aria-labelledby="radioTuningTitle">
                   <div class="pro-music-settings-title" id="radioTuningTitle">Radio Tuning</div>
-                  <div class="hint">Choose how each kind of Music radio balances matching music and variety. Your choices are saved in portable Data and take effect for the next radio pick.</div>
+                  <div class="hint">Choose how each kind of Music radio balances matching music, your read-only MP3 ratings, and variety. Your choices are saved in portable Data and take effect for the next radio pick.</div>
                   <div class="radio-rule-tabs" role="tablist" aria-label="Radio tuning type">
                     <button class="radio-rule-tab active" type="button" data-radio-mode="artist">Artist Radio</button>
                     <button class="radio-rule-tab" type="button" data-radio-mode="radio">Song Radio</button>
                   </div>
                   <div id="radioBasicControls" class="radio-rule-controls"></div>
                   <button id="resetAllRadioRules" class="btn radio-reset-all" type="button">Reset all Artist Radio settings</button>
-                </section>
-
-                <section class="lastfm-settings" aria-labelledby="lastFmTitle">
-                  <div class="pro-music-settings-title" id="lastFmTitle">Last.fm Music Data</div>
-                  <label class="preference-toggle">
-                    <input id="lastFmEnabled" type="checkbox" />
-                    <span class="toggle-switch" aria-hidden="true"></span>
-                    <span>Improve Music Data with Last.fm</span>
-                  </label>
-                  <div class="hint">Refreshes song popularity, genre tags, and related artists in WaveDeck’s own portable database. Your MP3 files and tags are never changed.</div>
-                  <div id="lastFmDetails" class="lastfm-details" hidden>
-                    <div class="pro-music-settings-row">
-                      <input id="lastFmApiKey" class="input" type="password" autocomplete="off" spellcheck="false" placeholder="Last.fm API key" />
-                      <button id="testLastFmBtn" class="btn" type="button">Test Connection</button>
-                    </div>
-                    <div class="hint">WaveDeck checks missing or six-month-old data slowly in the background. Press <b>Ctrl + Alt + Shift + F</b> to queue a catch-up refresh; songs checked within the past week are skipped.</div>
-                    <div id="lastFmStatus" class="lastfm-status">Last.fm is ready when you are.</div>
-                  </div>
-                </section>
-              </div>
-            </div>
-          </section>
-        </div>
-        <div id="statusAdvanced" class="status"></div>
+        </section>
+        <div id="statusLocalMusic" class="status"></div>
       </section>
 
       <!-- ABOUT -->
@@ -310,53 +301,18 @@
         <div class="changelog">
           <h2>Changelog</h2>
 
-          <h3>WaveDeck 0.7.9 — Settings Layout Repair</h3>
+          <h3>WaveDeck 0.7.10 — Recent Stations & Ratings-Aware Radio</h3>
           <ul>
-            <li>Fixed Settings content being cut off after removing the nested scrollbar. All tabs now use the window’s single normal scrollbar.</li>
+            <li>Shows the 10 most recently played stations in Music whenever search is empty, with one-click replay.</li>
+            <li>Moves Advanced Features and its folder and Last.fm settings to General; the Local Music tab appears only when enabled.</li>
+            <li>Adds a five-stop MP3 rating influence slider. Ratings are read-only; unrated tracks remain neutral.</li>
           </ul>
 
-          <h3>WaveDeck 0.7.8 — Single Settings Scrollbar</h3>
+          <h3>WaveDeck 0.7.x — Bug Fixes</h3>
           <ul>
-            <li>Removed the remaining nested Settings scrollbar. The window itself now handles scrolling.</li>
+            <li>Refinements and fixes to Settings scrolling, Last.fm catch-up, Music Radio selection, and diagnostics.</li>
           </ul>
 
-          <h3>WaveDeck 0.7.7 — Smarter Last.fm Catch-Up</h3>
-          <ul>
-            <li>The full-library Last.fm shortcut now skips songs checked within the past week instead of starting those over.</li>
-          </ul>
-
-          <h3>WaveDeck 0.7.6 — Settings Scrolling Fix</h3>
-          <ul>
-            <li>Removed the extra scrollbar inside Settings. The window now uses one normal scrollbar for each tab.</li>
-          </ul>
-
-          <h3>WaveDeck 0.7.5 — Last.fm Music Data</h3>
-          <ul>
-            <li>Added optional, background Last.fm refreshes for song popularity, tags, and related artists. Music files remain read-only.</li>
-            <li>Added the secret <b>Ctrl + Alt + Shift + F</b> shortcut to queue a throttled full-library refresh.</li>
-            <li>Made Outside Variety choose a real related-versus-outside lane, and limited repeated song-to-song handoff memory to 30 days.</li>
-          </ul>
-
-          <h3>WaveDeck 0.7.4 — Exportable Radio Diagnostics</h3>
-          <ul>
-            <li>Added <b>Save Log…</b> to the Live Radio Log for sharing a compact radio-selection diagnostic file.</li>
-            <li>The saved file includes radio decisions, controls, recent rotation, and leading alternatives—without song paths or any MP3 changes.</li>
-          </ul>
-
-          <h3>WaveDeck 0.7.3 — Simplified Music Radio</h3>
-          <ul>
-            <li>Reduced Music Radio to nine clear, always-visible controls, all using the same blue slider treatment.</li>
-            <li>Added Artist Variety, Album Variety, and Release-Year Range; simplified Song Repeat Wait to 2–24 hours.</li>
-            <li>Removed rating, favorite, play-count, mood, and featured-artist influence from Music Radio.</li>
-            <li>Hard-coded balanced Last.fm related-artist matching, a gentle post-repeat holdback, and strict repeated-handoff avoidance.</li>
-          </ul>
-
-          <h3>WaveDeck 0.7.2 — Live Radio Log</h3>
-          <ul>
-            <li>Added a hidden Live Radio Log: press <b>Ctrl + Alt + Shift + L</b> to open it.</li>
-            <li>Shows the actual radio choice, Last.fm song-popularity score, candidate counts, Artist Focus result, and score adjustments.</li>
-            <li>Remembers its size and position between launches.</li>
-          </ul>
 
           <h3>WaveDeck 0.7.0 — Local Music Update</h3>
           <ul>
@@ -365,7 +321,7 @@
             <li>Play Album, continuous Artist Radio and Song Radio.</li>
             <li>Albums flow into Artist Radio. Automatic selections respect a 120-minute repeat limit across restarts.</li>
             <li>Flexible song selection, deep cuts, and varied transitions.</li>
-            <li>Artist and Song Radio tuning is available in Settings → Advanced, with basic and advanced sliders plus per-setting resets.</li>
+            <li>Artist and Song Radio tuning is available in Settings → Local Music, with sliders plus per-setting resets.</li>
             <li>Song pause/resume and music-aware media keys. No album art or ReplayGain handling.</li>
           </ul>
           <h3>WaveDeck 0.6.7 — Stream Recording & Settings Update</h3>
