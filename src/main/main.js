@@ -727,16 +727,6 @@ function installIpcHandlers() {
 
   ipcMain.handle("stream:test", (_event, url) => probeStream(url));
 
-  ipcMain.handle("notepad:get", () => storage.readNotepad());
-  ipcMain.handle("notepad:save", (_event, value) => storage.writeNotepad(value));
-  ipcMain.on("notepad:save-immediate", (_event, value) => {
-    try {
-      storage.writeNotepad(value);
-    } catch (error) {
-      console.error(`Could not save WaveDeck notepad: ${error.message}`);
-    }
-  });
-
   ipcMain.handle("listening:get", () => listeningHistory.getStats());
   ipcMain.handle("listening:reset", () => listeningHistory.reset());
   ipcMain.handle("sections:get-state", () => ({ ...sectionVisibility }));

@@ -4,7 +4,6 @@ const path = require("path");
 const LIBRARY_FILE = "library.json";
 const PREFERENCES_FILE = "preferences.json";
 const LEGACY_FILES = ["stations.json", "groups.json", "subgroups.json"];
-const NOTEPAD_FILE = "notepad.txt";
 const LISTENING_HISTORY_FILE = "listening-history.json";
 const STARTER_PRESET_NAMES = Object.freeze([
   "Virgin Radio Classic Rock",
@@ -324,7 +323,6 @@ class PortableStorage {
     if (!fs.existsSync(this.getListeningHistoryPath())) {
       this.#atomicWrite(LISTENING_HISTORY_FILE, validateListeningHistory(null), { createBackup: false });
     }
-    if (!fs.existsSync(this.getNotepadPath())) this.#atomicWriteText(NOTEPAD_FILE, "", { createBackup: false });
   }
 
   assertWritable() {
@@ -336,7 +334,6 @@ class PortableStorage {
 
   getLibraryPath() { return path.join(this.dataDir, LIBRARY_FILE); }
   getPreferencesPath() { return path.join(this.dataDir, PREFERENCES_FILE); }
-  getNotepadPath() { return path.join(this.dataDir, NOTEPAD_FILE); }
   getListeningHistoryPath() { return path.join(this.dataDir, LISTENING_HISTORY_FILE); }
 
   readLibrary() {
@@ -394,18 +391,6 @@ class PortableStorage {
     return saved.subgroups;
   }
 
-  readNotepad() {
-    try { return fs.readFileSync(this.getNotepadPath(), "utf8"); }
-    catch (error) {
-      this.onWarning(`The notepad could not be read: ${error.message}`);
-      return "";
-    }
-  }
-  writeNotepad(value) {
-    const text = String(value ?? "").slice(0, 100000);
-    this.#atomicWriteText(NOTEPAD_FILE, text);
-    return text;
-  }
   readListeningHistory() {
     return this.#readValidated(LISTENING_HISTORY_FILE, validateListeningHistory, validateListeningHistory(null));
   }
@@ -884,21 +869,6 @@ class PortableStorage {
     }
   }
 
-  #atomicWriteText(fileName, text, { createBackup = true } = {}) {
-    const target = path.join(this.dataDir, fileName);
-    const temporary = path.join(this.dataDir, `.${fileName}.${process.pid}.${Date.now()}.tmp`);
-    const backup = path.join(this.backupDir, `${fileName}.bak`);
-    fs.mkdirSync(this.dataDir, { recursive: true });
-    fs.mkdirSync(this.backupDir, { recursive: true });
-    fs.writeFileSync(temporary, text, "utf8");
-    try {
-      if (createBackup && fs.existsSync(target)) fs.copyFileSync(target, backup);
-      fs.renameSync(temporary, target);
-    } catch (error) {
-      try { if (fs.existsSync(temporary)) fs.unlinkSync(temporary); } catch {}
-      throw new Error(`Could not save ${fileName}: ${error.message}`);
-    }
-  }
 }
 
 module.exports = {

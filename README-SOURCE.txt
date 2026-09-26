@@ -36,9 +36,7 @@ been selected yet, Play starts the first favorite.
 
 Version 0.1.9 restores the WaveDeck name throughout the product. The normal
 player opens at the bottom-right of the primary screen while Settings opens
-centered. Sidebar Mode adds an automatically saved plain-text notepad that is
-collapsed by default and occupies 20 percent of the sidebar height when open.
-The footer controls are slightly larger. Existing portable data is copied from
+centered. The footer controls are slightly larger. Existing portable data is copied from
 the previous WaveDeckSB-Data location when found, without deleting the original.
 
 Version 0.1.10 adds a safe Linux application-launcher manager to Settings. It
@@ -130,8 +128,8 @@ WaveDeck also reclaims Cinnamon's media keys every 15 seconds and reconnects to
 the Cinnamon media-key service if that direct integration was interrupted.
 
 Version 0.3.0 introduces the first current portable Windows build. The shared
-player and Settings features remain intact, while Cinnamon Sidebar Mode, its
-notepad button, and the Linux panel-shortcut tab are hidden on Windows. Windows
+player and Settings features remain intact, while Cinnamon Sidebar Mode and the
+Linux panel-shortcut tab are hidden on Windows. Windows
 uses Electron's native global media-key registrations for Play/Pause, Previous,
 Next, and Stop and retries missing registrations every 15 seconds. The portable
 EXE bundles a generic x86-64 mpv playback engine and keeps its Data directory
@@ -188,7 +186,7 @@ when both network methods fail.
 Version 0.6.0 adds a separate universal macOS application package for Apple
 Silicon and Intel Macs. It keeps the normal player, library, search, Presets,
 Favorites, Most Played, Settings, media keys, and silent library updates while
-leaving the Cinnamon-only Sidebar Mode, notepad, and panel tools on Linux. The
+leaving the Cinnamon-only Sidebar Mode and panel tools on Linux. The
 Mac app uses the same adjacent Data folder as the Windows and Linux editions,
 bundles architecture-specific mpv engines, and includes first-launch
 instructions in its ZIP.
@@ -203,8 +201,8 @@ unchanged from version 0.6.0.
 
 Linux version 0.6.0 moves the centered toolbar directly beneath the player and
 keeps both it and the optional Search field outside the scrolling station list.
-Its controls are Search, Presets, Favorites Only, Your Top Five, Notepad,
-Sidebar Mode, and Settings; Presets now uses a bookmark icon and the redundant
+Its controls are Search, Presets, Favorites Only, Your Top Five, Sidebar Mode,
+and Settings; Presets now uses a bookmark icon and the redundant
 toolbar version label is removed. Most Played is renamed Your Top Five and is
 again limited to five stations. Settings can optionally launch WaveDeck in
 Sidebar Mode, opens at a larger 1100-by-800 default, remembers its last size and
@@ -221,8 +219,7 @@ the complete WaveDeck changelog.
 
 Windows version 0.6.5 brings the portable EXE into parity with the Linux
 player. It adds the 0.6.0 and 0.6.5 interface features plus native Windows
-Sidebar Mode, automatic Sidebar startup, and the same collapsible, shared-Data
-Notepad. A small bundled Win32 helper registers WaveDeck with the Windows
+Sidebar Mode and automatic Sidebar startup. A small bundled Win32 helper registers WaveDeck with the Windows
 AppBar API, reserves the right edge of the selected monitor, honors per-monitor
 display scaling, and releases the desktop reservation when Sidebar Mode or
 WaveDeck closes. Linux Applications-menu and panel-shortcut management remains
@@ -272,9 +269,9 @@ interface through dbus-next.
 The Windows portable executable stores its data in Data beside WaveDeck.exe.
 It uses the bundled mpv.exe and Electron global shortcuts for Windows media
 keys. Native Windows Sidebar Mode reserves the right edge of the chosen monitor
-and provides the same collapsible notepad used by Linux Sidebar Mode.
+and provides the same Sidebar Mode behavior used by Linux.
 
 The universal macOS app stores its data in Data beside WaveDeck.app. It bundles
 separate Intel and Apple Silicon mpv engines and registers macOS media keys.
-Sidebar Mode and its notepad are not available on macOS; Linux panel integration
+Sidebar Mode is not available on macOS; Linux panel integration
 remains Linux-only.

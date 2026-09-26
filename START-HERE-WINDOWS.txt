@@ -87,16 +87,13 @@ STATION SHORTCUTS
   - Ctrl+Shift-click: toggle the pre-roll warning.
   - Shift-click: edit the station in Settings.
 
-SIDEBAR MODE AND NOTEPAD
+SIDEBAR MODE
 
 The Sidebar button docks WaveDeck against the right side of the current monitor
 and reserves that part of the Windows desktop. Maximized windows use the space
 beside it. Click the button again to restore WaveDeck's previous floating size
 and position. Settings > Sidebar can make WaveDeck enter Sidebar Mode each time
 it starts.
-
-The Notepad button appears while Sidebar Mode is active. It opens a collapsible,
-automatically saved plain-text notepad. Notes remain in the shared Data folder.
 
 Linux Applications-menu and panel-shortcut management is not available on
 Windows.

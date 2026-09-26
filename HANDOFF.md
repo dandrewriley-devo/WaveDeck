@@ -6,8 +6,9 @@ This file is an internal continuity reference for future WaveDeck work. It recor
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `main`
-- Current published version: **0.7.11**
-- Current release commit: `2437af4f1bb585408af111338f8de5a8d44563ec` — five-stop radio tuning, acceptable-pool selection, read-only rating influence, and Last.fm progress bar.
+- Current published version: **0.7.12**
+- Current release: 0.7.12 — new tabbed player layout and Notepad removal.
+- Previous release commit: `2437af4f1bb585408af111338f8de5a8d44563ec` — five-stop radio tuning, acceptable-pool selection, read-only rating influence, and Last.fm progress bar.
 - 0.7.10 commit: `d2a2a0243165d40e832fa4dbc87f69a71db624c1` — recent stations, Settings relocation, and read-only MP3 rating support.
 - Previous relevant commit: `79fdea48f1f7eff3b71e611625a18e8485c0d689` — project handoff and connector history.
 - Previous relevant commits:
@@ -73,7 +74,9 @@ Artist Focus remains a direct pool choice: at 100%, eligible seed-artist songs a
 
 WaveDeck 0.7.11 adds a visual Last.fm progress bar showing current tracks out of the library total while retaining queued-album and status text. Progress is hidden when Last.fm is off, unconfigured, or the library has no tracks.
 
-Contextual thumbs-up/thumbs-down feedback remains a design discussion, not part of 0.7.11. A vote should mean “fits or does not fit this radio seed,” not a global song like/dislike. If revisited, store votes against the seed/candidate pair in portable Data, allow changing a vote, and do not infer votes from skips. Decide the UI before implementation.
+WaveDeck 0.7.12 replaces the old combined toolbar with Streaming and Local Music tabs, a context toolbar, a separate playback-controls row, and an always-visible search row for the selected section. The volume slider has its own full-width row beneath the player art. Sidebar Mode stays at the far right of the context toolbar without an active highlight. The Notepad UI, IPC bridge, storage methods, and automatic file creation are removed; an existing `notepad.txt` is left untouched but ignored.
+
+Contextual thumbs-up/thumbs-down feedback remains deferred. The new playback row reserves disabled thumbs buttons so their position can be tested, but they do not record votes yet. A later vote should mean “fits or does not fit this Local Radio seed,” not a global song like/dislike. Store votes against the seed/candidate pair in portable Data, allow changing a vote, and do not infer votes from skips.
 
 ## Last.fm integration
 
@@ -191,4 +194,4 @@ Always verify the remote head after publishing. Do not overwrite remote work bas
 
 ## User communication
 
-Andrew prefers direct, informal explanations. He wants explicit confirmation of what changed, what was tested, and the published commit. He does not want updates shipped without saying so. If diagnosing only, do not modify code.
+Andrew prefers direct, informal explanations. He wants explicit confirmation of what changed, what was tested, and the published commit. Do not change or publish anything unless he explicitly says to ship it. Use “Local Music” and “Local Radio” for MP3 features; use “Streaming” and “Streaming Radio” for streams.

@@ -46,10 +46,6 @@ contextBridge.exposeInMainWorld("wavedeck", {
   removeSubgroup: (groupName, subgroupName) => ipcRenderer.invoke("subgroups:remove", groupName, subgroupName),
   onSubgroupsChanged: (callback) => subscribe("subgroups:changed", callback),
 
-  getNotepad: () => ipcRenderer.invoke("notepad:get"),
-  saveNotepad: (value) => ipcRenderer.invoke("notepad:save", value),
-  saveNotepadImmediate: (value) => ipcRenderer.send("notepad:save-immediate", value),
-
   getListeningHistory: () => ipcRenderer.invoke("listening:get"),
   resetListeningHistory: () => ipcRenderer.invoke("listening:reset"),
   onListeningHistoryChanged: (callback) => subscribe("listening:changed", callback),

@@ -8,7 +8,6 @@ const PORTABLE_USER_FILES = [
   "groups.json",
   "subgroups.json",
   "listening-history.json",
-  "notepad.txt"
 ];
 
 function containsUserData(directory) {

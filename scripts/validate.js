@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.7.11");
-assert.strictEqual(packageJson.wavedeckVersion, "0.7.11");
+assert.strictEqual(packageJson.version, "0.7.12");
+assert.strictEqual(packageJson.wavedeckVersion, "0.7.12");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -405,12 +405,8 @@ try {
   assert.strictEqual(exportedLibrary.stations[0].favorite, undefined);
   assert.strictEqual(exportedLibrary.stations[0].preset, undefined);
   assert.strictEqual(exportedLibrary.stations[0].gainDb, undefined);
-  assert.strictEqual(storage.readNotepad(), "");
-  storage.writeNotepad("Call Ben\nOrder filters");
-  assert.strictEqual(storage.readNotepad(), "Call Ben\nOrder filters");
   const reloadedStorage = new PortableStorage({ dataDir, defaultsDir });
   reloadedStorage.initialize();
-  assert.strictEqual(reloadedStorage.readNotepad(), "Call Ben\nOrder filters");
   assert.deepStrictEqual(reloadedStorage.readListeningHistory(), { version: 1, stations: {}, recentStationIds: [] });
   reloadedStorage.writeListeningHistory({
     version: 1,
@@ -608,12 +604,9 @@ try {
   const legacyDir = path.join(testRoot, "WaveDeckSB-Data");
   const legacyStorage = new PortableStorage({ dataDir: legacyDir, defaultsDir });
   legacyStorage.initialize();
-  legacyStorage.writeNotepad("Legacy note remains intact");
   const migratedDir = path.join(testRoot, "Migrated-WaveDeck-Data");
   const migration = copyLegacyData({ legacyDirs: [legacyDir], targetDir: migratedDir });
   assert.ok(migration.copied.length >= 3);
-  assert.strictEqual(fs.readFileSync(path.join(migratedDir, "notepad.txt"), "utf8"), "Legacy note remains intact");
-  assert.strictEqual(fs.readFileSync(path.join(legacyDir, "notepad.txt"), "utf8"), "Legacy note remains intact");
   assert.strictEqual(copyLegacyData({ legacyDirs: [legacyDir], targetDir: migratedDir }).copied.length, 0);
 
   const fakeAppImage = path.join(testRoot, "WaveDeck Portable", "WaveDeck.AppImage");
@@ -1056,32 +1049,31 @@ assert.ok(cinnamonCalls.some((call) => (
 )));
 
 const indexHtml = fs.readFileSync(path.join(root, "src", "renderer", "index.html"), "utf8");
-assert.ok(indexHtml.includes('id="searchSectionToggleBtn"'));
+assert.ok(indexHtml.includes('id="streamingTabBtn"'));
+assert.ok(indexHtml.includes('id="musicToggleBtn"'));
 assert.ok(indexHtml.includes('id="presetSectionToggleBtn"'));
 assert.ok(indexHtml.includes('id="favoritesOnlyToggleBtn"'));
 assert.ok(indexHtml.includes('id="mostPlayedSectionToggleBtn"'));
 assert.ok(indexHtml.includes('id="recordingsSectionToggleBtn"'));
 assert.ok(indexHtml.includes('id="sidebarModeBtn"'));
-assert.ok(indexHtml.includes('id="notepadToggleBtn"'));
-assert.ok(indexHtml.includes('id="notepadPanel"'));
-assert.ok(indexHtml.includes('id="notepadText"'));
+assert.ok(indexHtml.includes('id="localThumbUpBtn"'));
+assert.ok(indexHtml.includes('id="localThumbDownBtn"'));
 assert.ok(indexHtml.includes('id="searchPanel"'));
 assert.ok(indexHtml.includes('id="stationSearchInput"'));
 assert.ok(!indexHtml.includes('id="appVersion"'));
 assert.ok(indexHtml.includes("Warming up the airwaves..."));
-assert.ok(indexHtml.indexOf('id="searchSectionToggleBtn"') < indexHtml.indexOf('id="presetSectionToggleBtn"'));
+assert.ok(indexHtml.indexOf('id="streamingTabBtn"') < indexHtml.indexOf('id="presetSectionToggleBtn"'));
 assert.ok(indexHtml.indexOf('id="presetSectionToggleBtn"') < indexHtml.indexOf('id="favoritesOnlyToggleBtn"'));
 assert.ok(indexHtml.indexOf('id="favoritesOnlyToggleBtn"') < indexHtml.indexOf('id="mostPlayedSectionToggleBtn"'));
 assert.ok(indexHtml.indexOf('id="mostPlayedSectionToggleBtn"') < indexHtml.indexOf('id="recordingsSectionToggleBtn"'));
-assert.ok(indexHtml.indexOf('id="recordingsSectionToggleBtn"') < indexHtml.indexOf('id="notepadToggleBtn"'));
 assert.ok(indexHtml.indexOf('id="mostPlayedSectionToggleBtn"') < indexHtml.indexOf('id="sidebarModeBtn"'));
-assert.ok(indexHtml.indexOf('id="mostPlayedSectionToggleBtn"') < indexHtml.indexOf('id="notepadToggleBtn"'));
-assert.ok(indexHtml.indexOf('id="notepadToggleBtn"') < indexHtml.indexOf('id="sidebarModeBtn"'));
-assert.ok(indexHtml.indexOf('id="sidebarModeBtn"') < indexHtml.indexOf('id="openSettingsBtn"'));
-assert.ok(indexHtml.indexOf('class="toolbar"') < indexHtml.indexOf('id="searchPanel"'));
+assert.ok(indexHtml.indexOf('id="openSettingsBtn"') < indexHtml.indexOf('class="toolbar"'));
+assert.ok(indexHtml.indexOf('id="sidebarModeBtn"') < indexHtml.indexOf('id="localThumbUpBtn"'));
+assert.ok(indexHtml.indexOf('class="transport"') < indexHtml.indexOf('id="searchPanel"'));
 assert.ok(indexHtml.indexOf('id="searchPanel"') < indexHtml.indexOf('class="list"'));
 const stylesSource = fs.readFileSync(path.join(root, "src", "renderer", "styles.css"), "utf8");
-assert.ok(stylesSource.includes("flex: 0 0 20vh"));
+assert.ok(stylesSource.includes(".tabbar"));
+assert.ok(stylesSource.includes(".volume-row"));
 assert.ok(stylesSource.includes("height: 32px"));
 assert.ok(stylesSource.includes(".drag-handle"));
 assert.ok(stylesSource.includes(".preset-row.drop-before"));
@@ -1095,7 +1087,7 @@ assert.ok(stylesSource.includes(".station-search-panel"));
 assert.ok(stylesSource.includes(".recording-row"));
 assert.ok(stylesSource.includes(".recording-actions"));
 assert.ok(stylesSource.includes(".toolbar"));
-assert.ok(stylesSource.includes("justify-content: center"));
+assert.ok(stylesSource.includes(".transport"));
 assert.ok(stylesSource.includes(".station-info"));
 assert.ok(stylesSource.includes("column-gap:10px"));
 assert.ok(stylesSource.includes("row-gap:0"));
@@ -1104,8 +1096,7 @@ assert.ok(stylesSource.includes("user-select:none"));
 const preloadSource = fs.readFileSync(path.join(root, "src", "preload.js"), "utf8");
 assert.ok(preloadSource.includes('ipcRenderer.invoke("sidebar:toggle")'));
 assert.ok(preloadSource.includes('subscribe("player:station-changed"'));
-assert.ok(preloadSource.includes('ipcRenderer.invoke("notepad:get")'));
-assert.ok(preloadSource.includes('ipcRenderer.invoke("notepad:save"'));
+assert.ok(!preloadSource.includes('notepad:'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("launcher:get-status"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("launcher:install"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("launcher:remove"'));
@@ -1259,8 +1250,7 @@ assert.ok(!mainSource.includes("getIpcPath(process.platform, storage.dataDir)"))
 assert.ok(mainSource.includes("clearInterval(mediaKeyReclaimTimer)"));
 assert.ok(mainSource.includes("PLAYBACK_HEARTBEAT_MS = 10_000"));
 assert.ok(mainSource.includes("player.refreshPlaybackState()"));
-assert.ok(mainSource.includes('ipcMain.handle("notepad:get"'));
-assert.ok(mainSource.includes('ipcMain.handle("notepad:save"'));
+assert.ok(!mainSource.includes('notepad:'));
 assert.ok(mainSource.includes('ipcMain.handle("launcher:get-status"'));
 assert.ok(mainSource.includes('ipcMain.handle("launcher:install"'));
 assert.ok(mainSource.includes('ipcMain.handle("launcher:remove"'));
@@ -1319,7 +1309,9 @@ assert.ok(rendererSource.includes("presetSectionVisible"));
 assert.ok(rendererSource.includes("searchSectionVisible"));
 assert.ok(rendererSource.includes("stationSearchQuery"));
 assert.ok(rendererSource.includes("window.WaveDeckSearch.stationMatchesQuery"));
-assert.ok(rendererSource.includes('setAttribute("aria-label", search ? "Hide Search" : "Show Search")'));
+assert.ok(rendererSource.includes("const search = true"));
+assert.ok(rendererSource.includes("streamingTabBtn.addEventListener"));
+assert.ok(rendererSource.includes("musicToggleBtn.addEventListener"));
 assert.ok(rendererSource.includes("const allGroups = buildGroupsInOrder(stations, groupOrder)"));
 assert.ok(rendererSource.includes(".slice(0, 5)"));
 assert.ok(rendererSource.includes('setAttribute("aria-label", presets ? "Hide Presets" : "Show Presets")'));
@@ -2040,7 +2032,7 @@ assert.strictEqual(resolveFfmpegExecutable(), path.join(root, ".cache", "wavedec
 }
 
 validateMediaControls().then(() => {
-  console.log(`WaveDeck validation passed: v${packageJson.version} Stream Recording Update, Simple/Advanced Features, portable data, and packaging verified.`);
+  console.log(`WaveDeck validation passed: v${packageJson.version} player layout, Simple/Advanced Features, portable data, and packaging verified.`);
 }).catch((error) => {
   console.error(error);
   process.exitCode = 1;

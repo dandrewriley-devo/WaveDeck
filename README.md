@@ -22,7 +22,6 @@ WaveDeck is a lightweight, portable internet-radio player for 64-bit Windows, Li
 - Shift-click station editing and Ctrl+Shift-click pre-roll marking
 - Country, description, and best-effort bitrate information
 - Collapsed station groups with Expand All / Collapse All
-- Collapsible, persistent sidebar notepad (Linux and Windows Sidebar Mode)
 - Linux Applications-menu and panel-launcher integration (Linux only)
 - A larger Settings window that remembers its monitor-safe size and position on Linux and Windows
 - Advanced Features local MP3 search, album playback, and continuous Artist/Song Radio
@@ -46,7 +45,7 @@ On Linux, the first start downloads WaveDeck's pinned portable FFmpeg recorder a
 
 ## Local music in Advanced Features
 
-Enable Advanced Features in Settings, then use the Music toolbar button. WaveDeck creates a
+Enable Advanced Features in Settings, then open the Local Music tab. WaveDeck creates a
 `Music` folder beside `Data` and scans every MP3 inside it, including nested folders.
 It reads tags without ever modifying the music files, keeping its portable search index
 and radio-session history in `Data`.
@@ -74,7 +73,7 @@ npm test
 npm run dist:windows
 ```
 
-The Windows GitHub Actions workflow builds both bundled native components automatically. The portable executable is written to `dist/windows/WaveDeck.exe`. On first launch it creates `Data` beside the EXE. Windows Sidebar Mode and its Notepad are available; Linux Applications-menu and panel-launcher controls are intentionally omitted.
+The Windows GitHub Actions workflow builds both bundled native components automatically. The portable executable is written to `dist/windows/WaveDeck.exe`. On first launch it creates `Data` beside the EXE. Windows Sidebar Mode is available; Linux Applications-menu and panel-launcher controls are intentionally omitted.
 
 ## Build the portable AppImage
 
@@ -100,15 +99,15 @@ npm run dist:macos
 ```
 
 The resulting `WaveDeck.app` supports both Intel and Apple Silicon. Sidebar
-Mode, its notepad, and Linux panel tools are intentionally hidden on macOS.
+Mode and Linux panel tools are intentionally hidden on macOS.
 
-For a portable release, WaveDeck stores user data in a `Data` folder beside the executable or application bundle. The Windows EXE, Linux AppImage, and macOS app can share `library.json` and `preferences.json`; Electron's temporary runtime state and Linux playback-control socket stay on the local computer so WaveDeck can launch and play from common USB filesystems. The `Data` folder is intentionally excluded from this repository because it can contain personal preferences, listening history, and notes.
+For a portable release, WaveDeck stores user data in a `Data` folder beside the executable or application bundle. The Windows EXE, Linux AppImage, and macOS app can share `library.json` and `preferences.json`; Electron's temporary runtime state and Linux playback-control socket stay on the local computer so WaveDeck can launch and play from common USB filesystems. The `Data` folder is intentionally excluded from this repository because it can contain personal preferences and listening history.
 
 WaveDeck checks `https://fabulon.cloud/downloads/library_update.json` quietly at startup unless **Download new stations** is disabled on the Stations tab in Settings. A newer timestamp can add stations, groups, and subgroups and correct existing URLs, countries, and descriptions. It never removes a local listing, restores a station the user deleted, or changes Favorites and Presets. **Export Library** creates `WaveDeck_Library.json` with the required timestamp automatically, so an exported catalog can also be used as the master update file.
 
 ## Platform notes
 
-The normal player, station library, Presets, Favorites, listening statistics, groups, metadata, Settings, media keys, and library updates are shared across Windows, Linux, and macOS. Sidebar Mode and its notepad are available on Linux Mint Cinnamon and Windows. Applications-menu and panel-launcher integration remain Linux-only; Sidebar Mode and the notepad are not available on macOS.
+The normal player, station library, Presets, Favorites, listening statistics, groups, metadata, Settings, media keys, and library updates are shared across Windows, Linux, and macOS. Sidebar Mode is available on Linux Mint Cinnamon and Windows. Applications-menu and panel-launcher integration remain Linux-only; Sidebar Mode is not available on macOS.
 
 ## Project history
 

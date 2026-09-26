@@ -90,14 +90,6 @@ This keeps the player inside the reserved strip without an unused gap.
 If Cinnamon cannot perform that operation, WaveDeck stays in normal mode and
 shows the reason beneath the logo instead of silently applying a partial dock.
 
-SIDEBAR NOTEPAD
-
-The notepad button appears in the toolbar while Sidebar Mode is active.
-Click it to open or collapse a plain-text notepad at the bottom of the sidebar.
-When open, it uses about 20 percent of the screen height and the station list
-shrinks to make room. Notes save automatically in Data and remain
-available after a restart. The notepad always starts collapsed.
-
 MEDIA KEYS
 
 WaveDeck supports the Play/Pause, Previous, and Next media keys while the app

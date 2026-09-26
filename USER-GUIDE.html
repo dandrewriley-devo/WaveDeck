@@ -221,7 +221,7 @@
 
       <section id="quick-start" class="quick">
         <h2>1. Quick Start</h2>
-        <p>Extract the complete package to a normal folder or USB stick, then launch the version made for your computer. Click a station to play it, use the volume control beneath the artwork, and use the toolbar to show Search or Presets. WaveDeck starts in Simple Mode. Turn on <strong>Enable Advanced Features</strong> under Settings → Advanced when you want the expanded controls, Favorites filter, Your Top Five, Notepad, stream recording, and local Music. WaveDeck creates its portable folders beside the application and leaves existing files alone.</p>
+        <p>Extract the complete package to a normal folder or USB stick, then launch the version made for your computer. Click a station to play it, use the volume control beneath the artwork, and use the Streaming tab for your station library. WaveDeck starts in Simple Mode. Turn on <strong>Enable Advanced Features</strong> under Settings → Advanced when you want the expanded controls, Favorites filter, Your Top Five, stream recording, and Local Music. WaveDeck creates its portable folders beside the application and leaves existing files alone.</p>
 
         <div class="platforms">
           <article class="card">
@@ -230,7 +230,7 @@
           </article>
           <article class="card">
             <h3>Windows</h3>
-            <p>Double-click <code>WaveDeck.exe</code>. WaveDeck is portable and does not install itself. If SmartScreen appears, choose <strong>More info</strong>, verify that the application is WaveDeck, and choose <strong>Run anyway</strong>. Sidebar Mode and its Notepad are available from the toolbar.</p>
+            <p>Double-click <code>WaveDeck.exe</code>. WaveDeck is portable and does not install itself. If SmartScreen appears, choose <strong>More info</strong>, verify that the application is WaveDeck, and choose <strong>Run anyway</strong>. Sidebar Mode is available from the toolbar.</p>
           </article>
           <article class="card">
             <h3>macOS</h3>
@@ -264,7 +264,7 @@
         <h3>Stream Recording (Linux)</h3>
         <p>With Advanced Features enabled, click Record while a station is playing to save a continuous MP3 file. Click Record again to finish the file. Stop, changing stations, and closing WaveDeck also finish the current recording safely. Files are named from the WaveDeck station name and the date and time recording began, then saved in the portable <code>Recordings</code> folder. WaveDeck never splits recordings into individual songs. Recording captures the station through an independent stream connection, so listening volume, mute, and Station Gain do not change the saved audio.</p>
         <h2>Local music</h2>
-        <p>Click the Music button in the toolbar to search your MP3 collection by title, artist, album, genre, year, composer, comments, filename, or path. Select a result to Play Album, start Artist Radio, or start Song Radio.</p>
+        <p>Open the Local Music tab to search your MP3 collection by title, artist, album, genre, year, composer, comments, filename, or path. Select a result to Play Album, start Artist Radio, or start Song Radio.</p>
         <p>Albums play in disc and track order, then flow automatically into Artist Radio. Artist Radio and Song Radio keep playing indefinitely and select fresh tracks from your collection. Favorites and higher ratings receive a modest preference, but deeper cuts remain in rotation. One-star tracks are not automatically selected and two-star tracks are rare. WaveDeck keeps a persistent 120-minute minimum before an automatically selected song can repeat. It does not use album art or ReplayGain.</p>
         <p>Settings → Advanced includes separate Artist Radio and Song Radio tuning. Five everyday sliders are shown first; Advanced settings reveals every other rule. Each setting and each radio type has a Reset option. WaveDeck stores these choices in <code>artist-radio-rules.json</code> and <code>song-radio-rules.json</code> in <code>Data</code>; the 120-minute repeat minimum cannot be reduced.</p>
 
@@ -277,15 +277,14 @@
 
       <section id="toolbar">
         <h2>4. Toolbar and Station Lists</h2>
-        <p>The fixed toolbar sits directly beneath the player controls. Simple Mode shows Search, Presets, Sidebar Mode, and Settings. Advanced Features adds the controls marked below:</p>
+        <p>The fixed player layout uses Streaming and Local Music tabs, a context toolbar, a dedicated playback-controls row, and a search field for the selected section. Advanced Features adds the controls marked below:</p>
         <table>
           <thead><tr><th>Control</th><th>What it does</th></tr></thead>
           <tbody>
-            <tr><td>Search</td><td>Shows or hides Search. It matches names, groups, subgroups, countries, descriptions, and stream URLs. While text is present, Presets and Your Top Five temporarily disappear so only results are shown.</td></tr>
+            <tr><td>Search</td><td>Always visible beneath playback controls. Streaming search matches names, groups, subgroups, countries, descriptions, and stream URLs. While text is present, Presets and Your Top Five temporarily disappear so only results are shown.</td></tr>
             <tr><td>Presets</td><td>Shows or hides your ordered Presets list. Presets begins visible on each launch.</td></tr>
             <tr><td>Favorites (Advanced)</td><td>Filters the main Stations listing to Favorites only. Click again to restore every station.</td></tr>
             <tr><td>Your Top Five (Advanced)</td><td>Shows or hides your five most-listened stations. It begins hidden on each launch.</td></tr>
-            <tr><td>Notepad (Advanced)</td><td>Opens the auto-saving notepad while Sidebar Mode is active. Notepad is available on Linux and Windows but not on macOS.</td></tr>
             <tr><td>Sidebar Mode</td><td>Docks WaveDeck against the right edge of the desktop on Linux Mint Cinnamon or Windows. Sidebar Mode is not available on macOS.</td></tr>
             <tr><td>Settings</td><td>Opens station management, groups, importing and exporting, platform controls, About, and the changelog.</td></tr>
           </tbody>
@@ -339,9 +338,6 @@
         <h3>Sidebar Mode</h3>
         <p>On Linux Mint Cinnamon with an X11 session or on Windows, move WaveDeck to the desired screen and click the Sidebar Mode button. WaveDeck docks against that screen’s right edge and reserves the space so ordinary maximized windows use the remaining desktop area. Click it again to return to the previous floating window and position.</p>
         <p>Settings can make WaveDeck enter Sidebar Mode automatically at startup. If the operating system cannot complete the docking operation, WaveDeck remains in normal mode and displays the reason beneath the artwork. Sidebar Mode is not available on macOS.</p>
-
-        <h3>Sidebar Notepad</h3>
-        <p>The notepad button appears only while Sidebar Mode is active on Linux or Windows. It opens a plain-text writing area at the bottom of the sidebar, saves automatically in <code>Data</code>, and starts collapsed at every launch.</p>
 
         <h3>Linux Applications Menu and Panel Shortcut</h3>
         <p>The Panel Shortcut tab can add, update, or remove WaveDeck’s managed Linux Applications-menu entry. Because releases use the stable filename <code>WaveDeck.AppImage</code>, replacing the file in place keeps an existing launcher pointed at the correct location.</p>

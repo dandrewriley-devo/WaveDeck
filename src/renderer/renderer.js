@@ -10,15 +10,14 @@ const stopBtn = document.getElementById("stopBtn");
 const nextPresetBtn = document.getElementById("nextPresetBtn");
 const volumeSlider = document.getElementById("volSlider");
 const openSettingsBtn = document.getElementById("openSettingsBtn");
-const searchSectionToggleBtn = document.getElementById("searchSectionToggleBtn");
+const streamingTabBtn = document.getElementById("streamingTabBtn");
 const presetSectionToggleBtn = document.getElementById("presetSectionToggleBtn");
 const favoritesOnlyToggleBtn = document.getElementById("favoritesOnlyToggleBtn");
 const mostPlayedSectionToggleBtn = document.getElementById("mostPlayedSectionToggleBtn");
 const recordingsSectionToggleBtn = document.getElementById("recordingsSectionToggleBtn");
 const sidebarModeBtn = document.getElementById("sidebarModeBtn");
-const notepadToggleBtn = document.getElementById("notepadToggleBtn");
-const notepadPanel = document.getElementById("notepadPanel");
-const notepadText = document.getElementById("notepadText");
+const streamingToolbar = document.getElementById("streamingToolbar");
+const localMusicToolbar = document.getElementById("localMusicToolbar");
 const searchPanel = document.getElementById("searchPanel");
 const stationSearchInput = document.getElementById("stationSearchInput");
 const clearStationSearchBtn = document.getElementById("clearStationSearchBtn");
@@ -45,9 +44,6 @@ let currentRecordingId = null;
 let isMuted = false;
 let renderQueued = false;
 let volumeTimer = null;
-let notepadSaveTimer = null;
-let notepadDirty = false;
-let notepadOpen = false;
 let sidebarModeEnabled = false;
 let proModeEnabled = false;
 let recordingState = { available: false, active: false, finalizing: false };
@@ -207,8 +203,6 @@ function setProModeUi(preferences = {}) {
   document.querySelectorAll("[data-pro-only]").forEach((node) => {
     node.hidden = !proModeEnabled;
   });
-  notepadToggleBtn.hidden = !proModeEnabled || !sidebarModeEnabled;
-  if (!proModeEnabled) setNotepadOpen(false);
   if (!proModeEnabled && recordingsSectionVisible) setRecordingsSectionVisible(false);
   if (!proModeEnabled && musicVisible) setMusicVisible(false);
   setRecordingUi(recordingState);
@@ -220,31 +214,29 @@ function setSidebarUi(state) {
   const changed = sidebarModeEnabled !== enabled;
   const available = state?.available !== false;
   sidebarModeEnabled = enabled;
-  sidebarModeBtn.classList.toggle("active", enabled);
   sidebarModeBtn.disabled = !available;
   sidebarModeBtn.setAttribute("aria-pressed", String(enabled));
   sidebarModeBtn.setAttribute("aria-label", enabled ? "Turn Sidebar Mode off" : "Turn Sidebar Mode on");
   sidebarModeBtn.title = available
     ? (enabled ? "Exit Sidebar Mode" : "Sidebar Mode")
     : (state?.reason || "Sidebar Mode unavailable");
-  notepadToggleBtn.hidden = !proModeEnabled || !enabled;
-  notepadToggleBtn.disabled = !proModeEnabled || !enabled;
-  if (!enabled) setNotepadOpen(false);
   if (changed) queueRender();
 }
 
 function updateSectionToolbarHighlights() {
   const showingRecordings = recordingsSectionVisible || musicVisible;
-  searchSectionToggleBtn.classList.toggle("active", !showingRecordings && searchSectionVisible);
   presetSectionToggleBtn.classList.toggle("active", !showingRecordings && presetSectionVisible);
   favoritesOnlyToggleBtn.classList.toggle("active", !showingRecordings && favoritesOnlyVisible);
   mostPlayedSectionToggleBtn.classList.toggle("active", !showingRecordings && mostPlayedSectionVisible);
   recordingsSectionToggleBtn.classList.toggle("active", recordingsSectionVisible);
   musicToggleBtn.classList.toggle('active', musicVisible);
+  streamingTabBtn.classList.toggle('active', !musicVisible);
+  musicToggleBtn.setAttribute('aria-pressed', String(musicVisible));
+  streamingTabBtn.setAttribute('aria-pressed', String(!musicVisible));
 }
 
 function setSectionVisibilityUi(state = {}) {
-  const search = state.search === true;
+  const search = true;
   const presets = state.presets !== false;
   const favoritesOnly = state.favoritesOnly === true;
   const mostPlayed = state.mostPlayed === true;
@@ -255,19 +247,8 @@ function setSectionVisibilityUi(state = {}) {
   favoritesOnlyVisible = favoritesOnly;
   mostPlayedSectionVisible = mostPlayed;
 
-  if (!search) {
-    stationSearchQuery = "";
-    stationSearchInput.value = "";
-    clearStationSearchBtn.hidden = true;
-    clearTimeout(searchRenderTimer);
-    searchRenderTimer = null;
-  }
-
-  searchPanel.hidden = !search || recordingsSectionVisible || musicVisible;
-  searchPanel.setAttribute("aria-hidden", String(!search || recordingsSectionVisible));
-
-  searchSectionToggleBtn.setAttribute("aria-pressed", String(search));
-  searchSectionToggleBtn.setAttribute("aria-label", search ? "Hide Search" : "Show Search");
+  searchPanel.hidden = recordingsSectionVisible || musicVisible;
+  searchPanel.setAttribute("aria-hidden", String(recordingsSectionVisible || musicVisible));
   presetSectionToggleBtn.setAttribute("aria-pressed", String(presets));
   presetSectionToggleBtn.setAttribute("aria-label", presets ? "Hide Presets" : "Show Presets");
   favoritesOnlyToggleBtn.setAttribute("aria-pressed", String(favoritesOnly));
@@ -295,8 +276,8 @@ function setRecordingsSectionVisible(visible) {
   }
   recordingsPanel.hidden = !next;
   recordingsPanel.setAttribute("aria-hidden", String(!next));
-  searchPanel.hidden = !searchSectionVisible || next;
-  searchPanel.setAttribute("aria-hidden", String(!searchSectionVisible || next));
+  searchPanel.hidden = next || musicVisible;
+  searchPanel.setAttribute("aria-hidden", String(next || musicVisible));
   recordingsSectionToggleBtn.setAttribute("aria-pressed", String(next));
   recordingsSectionToggleBtn.setAttribute("aria-label", next ? "Close Recordings" : "Open Recordings");
   recordingsSectionToggleBtn.title = next ? "Close Recordings" : "Recordings";
@@ -308,9 +289,11 @@ function setMusicVisible(visible) {
   musicVisible = proModeEnabled && Boolean(visible);
   if (musicVisible && recordingsSectionVisible) setRecordingsSectionVisible(false);
   musicPanel.hidden = !musicVisible;
-  searchPanel.hidden = musicVisible || recordingsSectionVisible || !searchSectionVisible;
-  musicToggleBtn.setAttribute('aria-pressed', String(musicVisible));
-  musicToggleBtn.setAttribute('aria-label', musicVisible ? 'Close Music' : 'Open Music');
+  searchPanel.hidden = musicVisible || recordingsSectionVisible;
+  searchPanel.setAttribute("aria-hidden", String(musicVisible || recordingsSectionVisible));
+  streamingToolbar.hidden = musicVisible;
+  localMusicToolbar.hidden = !musicVisible;
+  musicToggleBtn.setAttribute('aria-label', 'Open Local Music');
   updateSectionToolbarHighlights();
   queueRender();
   if (musicVisible) {
@@ -407,7 +390,8 @@ function showMusicPlayback(status) {
   updateActiveHighlight();
 }
 
-musicToggleBtn.addEventListener('click', () => setMusicVisible(!musicVisible));
+streamingTabBtn.addEventListener('click', () => setMusicVisible(false));
+musicToggleBtn.addEventListener('click', () => setMusicVisible(true));
 function clearMusicSearch({ focus = true } = {}) {
   clearTimeout(musicSearchTimer);
   musicSearch.value = '';
@@ -431,33 +415,9 @@ document.getElementById('musicRescan').addEventListener('click', async () => {
   catch (error) { musicStatus.textContent = error.message; }
 });
 window.wavedeck.onMusicChanged(status => { setMusicStatus(status); if (musicVisible && !status.scanning) queueRender(); });
-// Browsing radio/recordings does not interrupt music; choosing a source does.
-for (const button of [searchSectionToggleBtn, presetSectionToggleBtn, favoritesOnlyToggleBtn, mostPlayedSectionToggleBtn]) {
+// Browsing Streaming Radio controls does not interrupt Local Music; choosing one does.
+for (const button of [presetSectionToggleBtn, favoritesOnlyToggleBtn, mostPlayedSectionToggleBtn, recordingsSectionToggleBtn]) {
   button.addEventListener('click', () => { if (musicVisible) setMusicVisible(false); }, { capture: true });
-}
-
-function setNotepadOpen(open, { focus = false } = {}) {
-  notepadOpen = sidebarModeEnabled && Boolean(open);
-  notepadPanel.hidden = !notepadOpen;
-  notepadPanel.setAttribute("aria-hidden", String(!notepadOpen));
-  notepadToggleBtn.classList.toggle("active", notepadOpen);
-  notepadToggleBtn.setAttribute("aria-pressed", String(notepadOpen));
-  notepadToggleBtn.setAttribute("aria-label", notepadOpen ? "Close notepad" : "Open notepad");
-  notepadToggleBtn.title = notepadOpen ? "Close Notepad" : "Notepad";
-  if (notepadOpen && focus) notepadText.focus();
-}
-
-async function saveNotepadNow() {
-  clearTimeout(notepadSaveTimer);
-  notepadSaveTimer = null;
-  if (!notepadDirty) return;
-  notepadDirty = false;
-  try {
-    await window.wavedeck.saveNotepad(notepadText.value);
-  } catch (error) {
-    notepadDirty = true;
-    nowPlaying.textContent = `Could not save notepad: ${error.message}`;
-  }
 }
 
 function formatListeningTime(seconds) {
@@ -1264,23 +1224,6 @@ openSettingsBtn.addEventListener("click", async () => {
   }
 });
 
-searchSectionToggleBtn.addEventListener("click", async () => {
-  searchSectionToggleBtn.disabled = true;
-  const showSearch = recordingsSectionVisible || !searchSectionVisible;
-  if (showSearch) focusSearchAfterRender = true;
-  try {
-    if (recordingsSectionVisible) setRecordingsSectionVisible(false);
-    setSectionVisibilityUi(await window.wavedeck.setSectionVisibility({
-      search: showSearch
-    }));
-  } catch (error) {
-    focusSearchAfterRender = false;
-    nowPlaying.textContent = `Could not toggle Search: ${error.message}`;
-  } finally {
-    searchSectionToggleBtn.disabled = false;
-  }
-});
-
 presetSectionToggleBtn.addEventListener("click", async () => {
   presetSectionToggleBtn.disabled = true;
   const showPresets = recordingsSectionVisible || !presetSectionVisible;
@@ -1338,7 +1281,6 @@ recordingsSectionToggleBtn.addEventListener("click", () => {
 sidebarModeBtn.addEventListener("click", async () => {
   sidebarModeBtn.disabled = true;
   try {
-    await saveNotepadNow();
     setSidebarUi(await window.wavedeck.toggleSidebar());
   } catch (error) {
     nowPlaying.textContent = `Sidebar Mode unavailable: ${error.message}`;
@@ -1349,22 +1291,6 @@ sidebarModeBtn.addEventListener("click", async () => {
       sidebarModeBtn.disabled = false;
     }
   }
-});
-
-notepadToggleBtn.addEventListener("click", async () => {
-  if (!sidebarModeEnabled) return;
-  if (notepadOpen) {
-    await saveNotepadNow();
-    setNotepadOpen(false);
-  } else {
-    setNotepadOpen(true, { focus: true });
-  }
-});
-
-notepadText.addEventListener("input", () => {
-  notepadDirty = true;
-  clearTimeout(notepadSaveTimer);
-  notepadSaveTimer = setTimeout(() => void saveNotepadNow(), 350);
 });
 
 stationSearchInput.addEventListener("input", () => {
@@ -1425,10 +1351,6 @@ clearRecordingSearchBtn.addEventListener("click", () => {
   clearRecordingSearchBtn.hidden = true;
   focusRecordingSearchAfterRender = true;
   queueRender();
-});
-
-window.addEventListener("beforeunload", () => {
-  if (notepadDirty) window.wavedeck.saveNotepadImmediate(notepadText.value);
 });
 
 window.wavedeck.onMetadata((metadata) => {
@@ -1502,18 +1424,14 @@ window.wavedeck.onWarning((warning) => {
   setMuteUi(false);
   await renderAll();
   try {
-    const [status, sidebarState, sectionVisibility, savedNotepad, preferences, savedRecordingState] = await Promise.all([
+    const [status, sidebarState, sectionVisibility, preferences, savedRecordingState] = await Promise.all([
       window.wavedeck.getPlayerStatus(),
       window.wavedeck.getSidebarState(),
       window.wavedeck.getSectionVisibility(),
-      window.wavedeck.getNotepad(),
       window.wavedeck.getUiPreferences(),
       window.wavedeck.getRecordingState()
     ]);
     currentPlayerStatus = status;
-    notepadText.value = savedNotepad || "";
-    notepadDirty = false;
-    setNotepadOpen(false);
     setProModeUi(preferences);
     setSidebarUi(sidebarState);
     setSectionVisibilityUi(sectionVisibility);
