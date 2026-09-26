@@ -160,7 +160,10 @@ main{
 .pro-music-settings-row .input{ flex:1; min-width:0; }
 .lastfm-settings{ border-top:1px solid var(--line); display:grid; gap:9px; margin-top:18px; padding-top:16px; }
 .lastfm-details{ display:grid; gap:8px; }
-.lastfm-status{ color:var(--muted); font-size:12px; }
+.lastfm-status{ color:var(--muted); font-size:12px; overflow-wrap:anywhere; }
+.lastfm-progress-wrap{ align-items:center; display:flex; gap:10px; margin-top:4px; }
+.lastfm-progress{ accent-color:#68a9df; flex:1 1 auto; height:12px; min-width:100px; }
+.lastfm-progress-label{ color:var(--muted); font-size:12px; font-variant-numeric:tabular-nums; min-width:38px; text-align:right; }
 
 .radio-tuning{
   border-top:1px solid #343434;

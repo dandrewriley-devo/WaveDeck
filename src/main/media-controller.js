@@ -358,7 +358,7 @@ class MediaController {
         if (!id) {
           this.music.waiting = true;
           await this.player.stop();
-          this.onStateChanged({ ...this.getStatus(), message: 'Waiting for an eligible song. The 120-minute repeat limit is still active.' });
+          this.onStateChanged({ ...this.getStatus(), message: 'Waiting for a song that fits this radio seed and is eligible to play.' });
           this.musicRetry = setTimeout(() => {
             if (this.music && this.mediaState === 'playing') void this.advanceMusic().catch(error => this.musicError(error));
           }, 15000);

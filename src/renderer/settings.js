@@ -56,6 +56,9 @@ const lastFmDetails = document.getElementById('lastFmDetails');
 const lastFmApiKey = document.getElementById('lastFmApiKey');
 const testLastFmBtn = document.getElementById('testLastFmBtn');
 const lastFmStatus = document.getElementById('lastFmStatus');
+const lastFmProgressWrap = document.getElementById('lastFmProgressWrap');
+const lastFmProgress = document.getElementById('lastFmProgress');
+const lastFmProgressLabel = document.getElementById('lastFmProgressLabel');
 const radioRuleTabs = document.querySelectorAll('.radio-rule-tab');
 const radioBasicControls = document.getElementById('radioBasicControls');
 const resetAllRadioRules = document.getElementById('resetAllRadioRules');
@@ -82,16 +85,15 @@ let activeRadioMode = 'artist';
 
 const RADIO_BASIC_RULES = [
   'artistFocusPercent', 'genreWeight', 'songPopularityPercent', 'artistVariety', 'albumVariety',
-  'releaseYearRange', 'unrelatedTrackMultiplier', 'selectionRandomness', 'repeatCooldownMinutes', 'ratingInfluence'
+  'releaseYearRange', 'selectionRandomness', 'repeatCooldownMinutes', 'ratingInfluence'
 ];
 const RADIO_RULE_COPY = {
   artistFocusPercent: { title: 'Artist Focus', description: 'How often should this station play the seed artist?', low: 'No special preference', high: 'Always' },
-  genreWeight: { title: 'Genre match', description: 'How strongly matching genres guide the next song.', low: 'Genre does not matter', high: 'Genre leads the mix' },
-  songPopularityPercent: { title: 'Song Popularity', description: 'How much should song popularity matter?', low: 'Not at all', high: 'As much as possible' },
+  genreWeight: { title: 'Genre match', description: 'How strongly matching genres guide the next song within the acceptable pool.', low: 'Genre-neutral', high: 'Genre-led' },
+  songPopularityPercent: { title: 'Song Popularity', description: 'How much should Last.fm popularity matter?', low: 'Not at all', high: 'As much as possible' },
   artistVariety: { title: 'Artist Variety', description: 'How much should WaveDeck spread out artists other than the seed artist?', low: 'Doesn’t matter', high: 'Maximum variety' },
   albumVariety: { title: 'Album Variety', description: 'How much should WaveDeck spread out tracks from the same album?', low: 'Doesn’t matter', high: 'Maximum variety' },
   releaseYearRange: { title: 'Release-Year Range', description: 'How close should songs be in release year?', low: 'Same year', high: 'Year doesn’t matter' },
-  unrelatedTrackMultiplier: { title: 'Outside Variety', description: 'How often should music outside the related mix get a turn?', low: 'Related music only', high: 'A wide-open mix' },
   selectionRandomness: { title: 'Surprise versus match', description: 'Whether each pick is more of a surprise or the closest match.', low: 'More surprises', high: 'Closest matches' },
   repeatCooldownMinutes: { title: 'Song Repeat Wait', description: 'How long before the exact same song can come back.', low: '2 hours', high: '24 hours' },
   ratingInfluence: { title: 'Ratings Matter', description: 'How strongly your read-only MP3 ratings guide radio. Unrated songs stay neutral.', low: 'Off', high: 'Dominant' }
@@ -116,10 +118,18 @@ function renderProMusicSettings(preferences) {
 
 function renderLastFmStatus(status) {
   if (!status) return;
+  const total = Number(status.tracksTotal || 0);
+  const current = Math.min(total, Number(status.tracksCurrent || 0));
+  const showProgress = status.enabled === true && status.configured === true && total > 0;
+  lastFmProgressWrap.hidden = !showProgress;
+  if (showProgress) {
+    lastFmProgress.max = total;
+    lastFmProgress.value = current;
+    lastFmProgressLabel.textContent = `${Math.round((current / total) * 100)}%`;
+    lastFmProgress.setAttribute('aria-valuetext', `${current.toLocaleString()} of ${total.toLocaleString()} tracks have current Last.fm data`);
+  }
   if (!status.enabled) { lastFmStatus.textContent = 'Last.fm music data is off.'; return; }
   if (!status.configured) { lastFmStatus.textContent = 'Add a Last.fm API key to begin refreshing music data.'; return; }
-  const total = Number(status.tracksTotal || 0);
-  const current = Number(status.tracksCurrent || 0);
   const queued = Number(status.queuedAlbums || 0);
   lastFmStatus.textContent = `Last.fm: ${current.toLocaleString()} of ${total.toLocaleString()} tracks current${queued ? ` · ${queued.toLocaleString()} albums queued` : ''}${status.message ? ` · ${status.message}` : ''}`;
 }
@@ -156,13 +166,13 @@ function plainRuleValue(key, value, schema) {
   const copy = ruleCopy(key);
   if (key === 'ratingInfluence') return ['Off', 'Gentle', 'Moderate', 'Strong', 'Dominant'][Number(value)] || 'Off';
   if (key === 'artistFocusPercent') {
-    return ({ 0: 'No special preference', 10: 'Once in a while', 25: 'Every few songs', 50: 'About half the time', 70: 'Most songs', 85: 'Nearly every song', 100: 'Always' })[Number(value)] || 'About half the time';
+    return ({ 0: 'No special preference', 25: 'Every few songs', 50: 'About half the time', 75: 'Most songs', 100: 'Always' })[Number(value)] || 'About half the time';
   }
   if (key === 'songPopularityPercent') {
-    return ({ 0: 'Not at all', 10: 'Only a little', 25: 'A modest amount', 50: 'A balanced amount', 70: 'Quite a bit', 85: 'A lot', 100: 'As much as possible' })[Number(value)] || 'A balanced amount';
+    return ({ 0: 'Not at all', 25: 'A little', 50: 'A balanced amount', 75: 'Quite a bit', 100: 'As much as possible' })[Number(value)] || 'A balanced amount';
   }
   if (key === 'artistVariety' || key === 'albumVariety') {
-    return ({ 0: 'Doesn’t matter', 1: 'Balanced', 2: 'Maximum variety' })[Number(value)] || 'Balanced';
+    return ({ 0: 'Off', 1: 'Light', 2: 'Balanced', 3: 'Strong', 4: 'Maximum' })[Number(value)] || 'Balanced';
   }
   if (key === 'releaseYearRange') {
     return ({ 0: 'Same year', 5: 'Within 5 years', 10: 'Within 10 years', 20: 'Within 20 years', 10000: 'Year doesn’t matter' })[Number(value)] || 'Within 10 years';
@@ -172,25 +182,10 @@ function plainRuleValue(key, value, schema) {
     return `${hours} hour${hours === 1 ? '' : 's'}`;
   }
   if (key === 'genreWeight') {
-    if (Number(value) <= 0) return 'Genre-neutral';
-    if (Number(value) < 2) return 'A little genre match';
-    if (Number(value) < 5) return 'Light genre match';
-    if (Number(value) < 20) return 'Balanced genre match';
-    return 'Genre-led';
-  }
-  if (key === 'unrelatedTrackMultiplier') {
-    if (Number(value) <= 0) return 'Related music only';
-    if (Number(value) < 0.1) return 'Just a little outside variety';
-    if (Number(value) < 0.3) return 'A little outside variety';
-    if (Number(value) < 0.7) return 'Balanced outside variety';
-    return 'A wide-open mix';
+    return ({ 0: 'Genre-neutral', 1: 'Light genre influence', 5: 'Balanced genre influence', 10: 'Strong genre influence', 20: 'Genre-led' })[Number(value)] || 'Balanced genre influence';
   }
   if (key === 'selectionRandomness') {
-    if (Number(value) < 0.4) return 'Very surprising';
-    if (Number(value) < 0.75) return 'More surprising';
-    if (Number(value) <= 1.5) return 'Balanced';
-    if (Number(value) <= 5) return 'Favors the best matches';
-    return 'Strongly favors the best matches';
+    return ({ 0: 'Very surprising', 0.5: 'More surprising', 1: 'Balanced', 3: 'Favors the best matches', 10: 'Strongly favors the best matches' })[Number(value)] || 'Balanced';
   }
   const displayRatio = copy.reverse ? 1 - ratio : ratio;
   if (displayRatio <= 0.08) return copy.low;

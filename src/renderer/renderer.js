@@ -398,7 +398,7 @@ function showMusicPlayback(status) {
   if (track) {
     currentStationId = null; currentRecordingId = null;
     headerStationName.textContent = track.title;
-    nowPlaying.textContent = music.waiting ? 'Waiting for eligible music (120-minute repeat limit).' :
+    nowPlaying.textContent = music.waiting ? 'Waiting for a song that fits this radio seed.' :
       (status.mediaState === 'paused' ? 'Paused — ' : '') + (track.artist || 'Unknown artist');
   }
   if (status.state === 'error') nowPlaying.textContent = status.message;

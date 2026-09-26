@@ -33,7 +33,7 @@ function addDetails(parent, title, items, fallback) {
 }
 
 function varietyLabel(value) {
-  return ({ 0: 'Doesn’t matter', 1: 'Balanced', 2: 'Maximum variety' })[Number(value)] || 'Balanced';
+  return ({ 0: 'Off', 1: 'Light', 2: 'Balanced', 3: 'Strong', 4: 'Maximum' })[Number(value)] || 'Balanced';
 }
 
 function yearRangeLabel(value) {
@@ -74,16 +74,19 @@ function renderDecision(decision, { prepend = true } = {}) {
     `Artist Variety: ${varietyLabel(decision.settings?.artistVariety)}`,
     `Album Variety: ${varietyLabel(decision.settings?.albumVariety)}`,
     `${yearRangeLabel(decision.settings?.releaseYearRange)} · ${Number(decision.settings?.repeatCooldownMinutes || 0) / 60} hour repeat wait`,
-    `Outside Variety: ${decision.outsideVariety?.targetPercent ?? 0}% · ${decision.outsideVariety?.lane || 'related'} lane`
+    `Ratings Matter: ${['Off', 'Gentle', 'Moderate', 'Strong', 'Dominant'][Number(decision.settings?.ratingInfluence) || 0]}`
   ]);
   addBox(grid, 'Candidates', [
     `${decision.counts?.totalTracks ?? 0} total · ${decision.counts?.eligible ?? 0} eligible`,
-    `${decision.counts?.related ?? 0} related · ${decision.counts?.finalPool ?? 0} in final pool`,
+    `${decision.counts?.related ?? 0} acceptable · ${decision.counts?.excludedForRelevance ?? 0} excluded for poor fit · ${decision.counts?.finalPool ?? 0} in final pool`,
     `Skipped: ${decision.counts?.skippedForCooldown ?? 0} repeat wait, ${decision.counts?.skippedForHandoff ?? 0} repeated handoff`
   ]);
   body.append(grid);
   const additions = (selected.additions || []).map(item => `${item.label}: +${number(item.amount)}`);
-  addDetails(body, 'Why this song fit', additions, 'No direct tag matches; it stayed eligible through the variety rules.');
+  addDetails(body, 'Why this song fit', [
+    ...(selected.eligibilityReasons || []).map(reason => `Acceptable match: ${reason}`),
+    ...additions
+  ], 'It qualified for the acceptable pool through artist or similarity data.');
   const multipliers = (selected.multipliers || []).map(item => `${item.label}: ×${number(item.value, 3)}${item.source ? ` (${item.source})` : ''}`);
   multipliers.push(`Score: ${number(selected.scoreBeforeRandomness, 3)} → ${number(selected.scoreAfterRandomness, 3)} after surprise/match setting`);
   addDetails(body, 'Score adjustments', multipliers, 'No score adjustments recorded.');

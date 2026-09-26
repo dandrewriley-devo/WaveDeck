@@ -25,7 +25,7 @@
       <!-- INTERFACE -->
       <section id="tab-interface" class="panel hidden">
         <div class="general-meta">
-          <b>WaveDeck version <span id="aboutVersion">0.7.10</span></b>
+          <b>WaveDeck version <span id="aboutVersion">0.7.11</span></b>
           <span>Station library: <span id="aboutDataDir">Data</span></span>
         </div>
         <div class="general-sections">
@@ -134,6 +134,10 @@
                     <button id="testLastFmBtn" class="btn" type="button">Test Connection</button>
                   </div>
                   <div class="hint">WaveDeck checks missing or six-month-old data slowly in the background. Press <b>Ctrl + Alt + Shift + F</b> to queue a catch-up refresh; songs checked within the past week are skipped.</div>
+                  <div id="lastFmProgressWrap" class="lastfm-progress-wrap" hidden>
+                    <progress id="lastFmProgress" class="lastfm-progress" max="100" value="0" aria-label="Last.fm music data progress"></progress>
+                    <span id="lastFmProgressLabel" class="lastfm-progress-label">0%</span>
+                  </div>
                   <div id="lastFmStatus" class="lastfm-status">Last.fm is ready when you are.</div>
                 </div>
               </section>
@@ -300,6 +304,14 @@
         <div class="about-divider"></div>
         <div class="changelog">
           <h2>Changelog</h2>
+
+          <h3>WaveDeck 0.7.11 — Radio Tuning & Music Data Progress</h3>
+          <ul>
+            <li>Gives every Artist Radio and Song Radio tuning slider five clear stops.</li>
+            <li>Removes Outside Variety. Radio now stays in the acceptable related-music pool and waits when no eligible songs are available.</li>
+            <li>Adds a visual Last.fm progress bar while keeping track and queued-album counts visible.</li>
+            <li>MP3 ratings remain read-only; unrated tracks are still eligible and neutral.</li>
+          </ul>
 
           <h3>WaveDeck 0.7.10 — Recent Stations & Ratings-Aware Radio</h3>
           <ul>
