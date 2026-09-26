@@ -6,8 +6,9 @@ This file is an internal continuity reference for future WaveDeck work. It recor
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `main`
-- Current published version: **0.7.10**
-- Current published commit: `d2a2a0243165d40e832fa4dbc87f69a71db624c1` — recent stations, Settings relocation, and read-only MP3 rating support.
+- Current published version: **0.7.11**
+- Current release commit: `2437af4f1bb585408af111338f8de5a8d44563ec` — five-stop radio tuning, acceptable-pool selection, read-only rating influence, and Last.fm progress bar.
+- 0.7.10 commit: `d2a2a0243165d40e832fa4dbc87f69a71db624c1` — recent stations, Settings relocation, and read-only MP3 rating support.
 - Previous relevant commit: `79fdea48f1f7eff3b71e611625a18e8485c0d689` — project handoff and connector history.
 - Previous relevant commits:
   - `ce39d7f` — 0.7.8 single Settings scrollbar attempt
@@ -42,82 +43,37 @@ WaveDeck includes:
 - Infinite radio queues. The next radio song is selected when needed, not precomputed as a fixed list.
 - Albums play in track order and then hand off to Artist Radio.
 - Song Radio starts with the chosen song, then continues with related/surprising music.
-- Artist Radio strongly favors the seed artist according to Artist Focus, then uses related/outside music when appropriate.
+- Artist Radio strongly favors the seed artist according to Artist Focus and otherwise selects only from the acceptable related-music pool.
 
 Album art and ReplayGain are intentionally not part of the current feature set.
 
 ## Current radio settings
 
-The Settings → Local Music tab currently shows ten radio controls for both Artist Radio and Song Radio:
+The Settings → Local Music tab exposes ten radio controls per mode. Every control has exactly five discrete stops:
 
-1. Artist Focus
-2. Genre Match
-3. Song Popularity
-4. Artist Variety
-5. Album Variety
-6. Release-Year Range
-7. Outside Variety
-8. Surprise versus Match
-9. Song Repeat Wait
+| Control | Five stops |
+|---|---|
+| Artist Focus | 0%, 25%, 50%, 75%, 100% |
+| Genre Match | 0, 1, 5, 10, 20 |
+| Song Popularity | 0%, 25%, 50%, 75%, 100% |
+| Artist Variety | Off, Light, Balanced, Strong, Maximum |
+| Album Variety | Off, Light, Balanced, Strong, Maximum |
+| Release-Year Range | Same year, 5, 10, 20 years, no limit |
+| Surprise versus Match | 0, 0.5, 1, 3, 10 |
+| Song Repeat Wait | 2, 4, 8, 16, 24 hours |
+| Ratings Matter | Off, Gentle, Moderate, Strong, Dominant |
 
-Important current implementation details in `src/main/music-radio.js`:
+Outside Variety has been removed. Radio eligibility is limited to the seed artist, a shared credited artist, a shared genre/tag, or a Last.fm similar-artist relationship. If this acceptable pool is empty after repeat and handoff rules, radio waits instead of choosing an unrelated track. Diagnostics record each selected candidate's eligibility reasons and count candidates excluded for relevance.
 
-- Artist Focus and Song Popularity use seven stops: `0, 10, 25, 50, 70, 85, 100` percent.
-- Artist Variety and Album Variety use three stops: `0, 1, 2`.
-- Release-Year Range and Ratings Matter each use five stops.
-- Song Repeat Wait uses eight stops from 2 hours through 24 hours.
-- Genre Match, Outside Variety, and Surprise versus Match use continuous numeric values.
-- Genre Match and Surprise versus Match are still continuous numeric controls rather than fixed-stop controls.
-- Artist Focus is a direct lane decision, not merely a score bonus. At 100%, an eligible seed-artist song is selected whenever one is available; otherwise radio falls back to related music.
-- Ratings Matter defaults to Off. At other levels it weights read-only MP3 ratings in candidate scores; Dominant does not yet exclude unrated tracks. Favorites, play counts, mood tags, and featured-artist bonuses are not used.
-- Related-artist matching is hard-coded at a balanced fixed weight.
-- Repeated A→B handoff protection is hard-coded and remembers relevant transitions for 30 days.
-- A gentle post-repeat holdback remains after the normal repeat cooldown.
+Ratings Matter affects read-only MP3 rating tags: higher star ratings receive increasingly strong selection weight as the setting rises. Unrated tracks remain eligible and neutral at every level, including Dominant. Radio does not require or write a rating tag. The rules schema is version 7 and migrates existing settings to the five-stop controls.
 
-## Next update queue
+Artist Focus remains a direct pool choice: at 100%, eligible seed-artist songs are selected whenever available; otherwise other acceptable candidates can play. Repeated A→B handoff protection remembers relevant transitions for 30 days, and a gentle post-repeat holdback remains after the configured repeat cooldown.
 
-Andrew has asked that the following items be addressed together in the next WaveDeck update. This is a queued request, not authorization to publish that update yet.
+## Recently shipped and deferred work
 
-### Make every radio slider five-stop
+WaveDeck 0.7.11 adds a visual Last.fm progress bar showing current tracks out of the library total while retaining queued-album and status text. Progress is hidden when Last.fm is off, unconfigured, or the library has no tracks.
 
-- Give every remaining visible slider in both Artist Radio and Song Radio exactly five discrete positions, with plain-English labels and a clear behavioral difference at each position.
-- Remove Outside Variety completely from Artist Radio and Song Radio. Do not retain a probabilistic unrelated-music lane or silently fall back to unrelated tracks when the acceptable pool is empty.
-- Current stop counts are mixed: Artist Focus, Song Popularity, and Song Repeat Wait have more than five; Artist Variety and Album Variety have three; Genre Match, Outside Variety, and Surprise versus Match are continuous; Release-Year Range and Ratings Matter already have five. Removing Outside Variety leaves nine controls per mode.
-- Keep proven behavior where possible, especially Artist Focus and Outside Variety. Choose values using the overnight diagnostics and targeted tests rather than evenly dividing numeric ranges blindly.
-- Candidate starting points discussed, not finalized: Artist Focus and Song Popularity at `0, 25, 50, 75, 100%`; Song Repeat Wait at `2, 4, 8, 16, 24 hours`.
-
-### Ratings Matter behavior
-
-- Keep the five labels Off, Gentle, Moderate, Strong, Dominant unless the design review changes this control.
-- Higher MP3 ratings should increasingly improve a track's radio-selection weight. Preserve read-only file behavior.
-- Andrew is considering a contextual thumbs-up/thumbs-down system instead of adding an in-app star-rating editor. Existing star tags can be read as metadata, but they are not contextual-fit votes. Decide whether the tag-based Ratings Matter slider should remain alongside contextual thumbs; do not conflate general song liking with fit for a particular seed.
-- Do not require an embedded MP3 star tag at any Ratings Matter level. Unrated songs remain eligible and neutral; higher existing star ratings receive increasingly strong preference as the slider rises.
-- Preserve the previously discussed Moderate intent: one-star tracks are extremely unlikely and two-star tracks are rare.
-
-### Last.fm scanning progress bar
-
-- Replace the plain text-only scanning status with a visual progress bar and retain the useful counts/status text.
-- Screenshot showed: `24,300 of 26,167 tracks current · 77 albums queued. Last.fm is checking music data in the background.` Make the bar reflect current/total, update as background work proceeds, and show queued albums separately. Handle unknown/zero totals and idle/completed states accessibly.
-
-### Song Radio relevance problem
-
-- Reported example: Song Radio seeded by a Beastie Boys track played George Strait. The exact decision log is not yet available, so the selection's recorded lane and candidate metadata still need review.
-- Andrew's direction is to remove Outside Variety entirely and keep selections inside an acceptable pool. Remove the unrelated lane and any automatic fallback to an unrelated candidate when that pool is empty; report/wait for an eligible choice instead.
-- Current code has an unrelatedTrackMultiplier lane and will choose the outside lane whenever no related candidates remain, even if the configured multiplier is zero. Genre Match only changes scores; it does not make a candidate ineligible. The acceptable-pool criteria need to be defined carefully because a broad one-tag genre overlap could still admit a bad fit.
-- Relatedness currently uses same/credited artist, any genre overlap, and Last.fm similar-artist metadata. Capture an exact diagnostic to see whether George Strait was classified as related or came through the outside lane. Audit stale/broad tag data as part of that investigation.
-- Do not assume more Genre Match weight will prevent out-of-style jumps. Apply eligibility boundaries before scoring and keep diagnostics explicit about why each candidate qualified.
-
-### Contextual radio feedback concept (design investigation; not yet authorized for implementation)
-
-- Andrew is interested in simple thumbs up/down feedback where a vote means “fits/does not fit this seed’s radio,” not “I like/dislike this song everywhere.” He prefers this to introducing a casual-use star-rating editor.
-- MediaController.playMusic() stores the original seed in the music session and advanceMusic() continues to pass that same seed to each radio choice. This gives the system a stable context key for a seed → candidate feedback record.
-- A useful data model would store the seed track/context, candidate track, radio mode, vote, and timestamp in portable Data. The same candidate can be downvoted for one seed and upvoted for another; do not turn a contextual downvote into a global dislike.
-- A direct vote can immediately adjust or suppress that exact seed/candidate pair. Generalizing to other candidates requires meaningful features for the seed/candidate relationship—normalized track tags/genres and Last.fm related-artist data at minimum; audio similarity could be explored later. Use positive and negative examples, confidence/smoothing, and a cold-start fallback so a few votes do not distort the whole station.
-- Do not infer votes from skips at first. Skipping can have many meanings. Consider an undo/change-vote path and keep all learned feedback local.
-- Existing MP3 star tags describe a track-level rating, not necessarily whether it fits a particular seed. They can be a weak optional prior if desired, but should not be used as contextual training labels. Resolve the relationship between this feature and the queued Ratings Matter slider before implementation.
-- First establish strict acceptable-pool selection and collect explicit votes; then evaluate whether the accumulated data is sufficient to support a real learner.
-
-
+Contextual thumbs-up/thumbs-down feedback remains a design discussion, not part of 0.7.11. A vote should mean “fits or does not fit this radio seed,” not a global song like/dislike. If revisited, store votes against the seed/candidate pair in portable Data, allow changing a vote, and do not infer votes from skips. Decide the UI before implementation.
 
 ## Last.fm integration
 
@@ -145,7 +101,7 @@ Behavior:
 - A secret `Ctrl + Alt + Shift + F` shortcut queues a library catch-up refresh.
 - Since 0.7.7, that catch-up refresh skips tracks checked within the previous seven days. Restarting WaveDeck preserves queued work in the portable database.
 
-The current Settings status text reports how many tracks are current and how many albums remain queued. The UI placement and progress reporting may be improved later, but no additional change is currently authorized.
+Settings shows a visual current/total progress bar, queued-album count, and Last.fm status text.
 
 ## Diagnostic logging
 
@@ -158,7 +114,7 @@ The Save Log button exports a diagnostic JSON file. It is intended for analysis 
 - Active radio settings.
 - Candidate counts and cooldown/handoff exclusions.
 - Artist Focus result and random roll.
-- Related versus outside lane decision.
+- The selected candidate's acceptable-pool match reasons and relevance exclusions.
 - Selected track, score, popularity value, and popularity source.
 - Score additions/multipliers.
 - Recent listening history.
