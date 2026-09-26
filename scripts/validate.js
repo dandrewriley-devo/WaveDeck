@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.7.12");
-assert.strictEqual(packageJson.wavedeckVersion, "0.7.12");
+assert.strictEqual(packageJson.version, "0.7.13");
+assert.strictEqual(packageJson.wavedeckVersion, "0.7.13");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -330,6 +330,13 @@ try {
     additionalMusicFolder: "",
     lastFmEnabled: false,
     lastFmApiKey: "",
+    streamingUi: {
+      presets: false,
+      favoritesOnly: false,
+      mostPlayed: false,
+      collapsedGroups: [],
+      collapsedSubgroups: []
+    },
     launchInSidebarMode: false,
     settingsWindowBounds: null,
     radioLogWindowBounds: null,
@@ -351,6 +358,19 @@ try {
   assert.strictEqual(storage.setProModeEnabled(true).proModeEnabled, true);
   assert.strictEqual(storage.setAdditionalMusicFolder("/mnt/music").additionalMusicFolder, "/mnt/music");
   assert.strictEqual(storage.setLastFmSettings({ enabled: true, apiKey: 'test-key' }).lastFmEnabled, true);
+  assert.deepStrictEqual(storage.setStreamingUiState({
+    presets: true,
+    favoritesOnly: true,
+    mostPlayed: true,
+    collapsedGroups: ["Rock"],
+    collapsedSubgroups: ["Rock\u001fClassic"]
+  }), {
+    presets: true,
+    favoritesOnly: true,
+    mostPlayed: true,
+    collapsedGroups: ["Rock"],
+    collapsedSubgroups: ["Rock\u001fClassic"]
+  });
   assert.deepStrictEqual(storage.setSettingsWindowBounds({ x: 2100.4, y: 40.6, width: 1120.2, height: 840.8 }), {
     x: 2100,
     y: 41,
@@ -1256,9 +1276,11 @@ assert.ok(mainSource.includes('ipcMain.handle("launcher:install"'));
 assert.ok(mainSource.includes('ipcMain.handle("launcher:remove"'));
 assert.ok(mainSource.includes('ipcMain.handle("listening:get"'));
 assert.ok(mainSource.includes('ipcMain.handle("listening:reset"'));
-assert.ok(mainSource.includes('let sectionVisibility = { search: false, presets: true, favoritesOnly: false, mostPlayed: false }'));
+assert.ok(mainSource.includes('let sectionVisibility = { presets: false, favoritesOnly: false, mostPlayed: false, collapsedGroups: [], collapsedSubgroups: [] }'));
 assert.ok(mainSource.includes('ipcMain.handle("sections:get-state"'));
 assert.ok(mainSource.includes('ipcMain.handle("sections:set-state"'));
+assert.ok(mainSource.includes('storage.getStreamingUiState()'));
+assert.ok(mainSource.includes('storage.setStreamingUiState'));
 assert.ok(mainSource.includes('sendToAll("sections:state-changed"'));
 assert.ok(mainSource.includes('ipcMain.handle("linux-ui:get-preferences"'));
 assert.ok(mainSource.includes('ipcMain.handle("linux-ui:set-launch-in-sidebar"'));
@@ -1365,6 +1387,8 @@ assert.ok(indexHtml.includes('id="clearMusicSearchBtn"'));
 assert.ok(indexHtml.includes('id="musicContextLabel"'));
 assert.ok(!indexHtml.includes('id="musicPosition"'));
 assert.ok(stylesSource.includes("#musicRescan"));
+assert.ok(stylesSource.includes(".toolbar-group[hidden]"));
+assert.ok(indexHtml.includes('aria-label="Rescan Local Music"'));
 assert.ok(stylesSource.includes("::-webkit-details-marker"));
 const settingsSource = fs.readFileSync(path.join(root, "src", "renderer", "settings.js"), "utf8");
 assert.ok(settingsSource.includes("addSubgroup"));

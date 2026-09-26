@@ -247,6 +247,14 @@ function setSectionVisibilityUi(state = {}) {
   favoritesOnlyVisible = favoritesOnly;
   mostPlayedSectionVisible = mostPlayed;
 
+  if (Array.isArray(state.collapsedGroups) && Array.isArray(state.collapsedSubgroups)) {
+    collapsedGroups.clear();
+    collapsedSubgroups.clear();
+    state.collapsedGroups.forEach((name) => collapsedGroups.add(String(name)));
+    state.collapsedSubgroups.forEach((key) => collapsedSubgroups.add(String(key)));
+    collapseStateInitialized = true;
+  }
+
   searchPanel.hidden = recordingsSectionVisible || musicVisible;
   searchPanel.setAttribute("aria-hidden", String(recordingsSectionVisible || musicVisible));
   presetSectionToggleBtn.setAttribute("aria-pressed", String(presets));
@@ -259,6 +267,15 @@ function setSectionVisibilityUi(state = {}) {
   updateSectionToolbarHighlights();
 
   if (changed) queueRender();
+}
+
+function saveStationGroupState() {
+  window.wavedeck.setSectionVisibility({
+    collapsedGroups: [...collapsedGroups],
+    collapsedSubgroups: [...collapsedSubgroups]
+  }).then(setSectionVisibilityUi).catch((error) => {
+    nowPlaying.textContent = `Could not save station layout: ${error.message}`;
+  });
 }
 
 function setRecordingsSectionVisible(visible) {
@@ -794,8 +811,6 @@ async function renderAll() {
     if (!currentSubgroups.has(key)) collapsedSubgroups.delete(key);
   }
   if (!collapseStateInitialized) {
-    renderedGroupNames.forEach((name) => collapsedGroups.add(name));
-    renderedSubgroupKeys.forEach((key) => collapsedSubgroups.add(key));
     collapseStateInitialized = true;
   }
 
@@ -1112,6 +1127,7 @@ function bindHandlers() {
       const collapsed = collapsedGroups.has(groupName);
       if (body) body.hidden = collapsed;
       if (caret) caret.textContent = collapsed ? "▸" : "▾";
+      saveStationGroupState();
     });
   });
 
@@ -1126,6 +1142,7 @@ function bindHandlers() {
       const collapsed = collapsedSubgroups.has(key);
       if (body) body.hidden = collapsed;
       if (caret) caret.textContent = collapsed ? "▸" : "▾";
+      saveStationGroupState();
     });
   });
 
@@ -1137,6 +1154,7 @@ function bindHandlers() {
       renderedGroupNames.forEach((name) => collapsedGroups.add(name));
       renderedSubgroupKeys.forEach((key) => collapsedSubgroups.add(key));
     }
+    saveStationGroupState();
     queueRender();
   });
 }

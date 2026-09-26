@@ -72,6 +72,20 @@ function cleanStationGainDb(value) {
 
 function hasOwn(value, key) { return Object.prototype.hasOwnProperty.call(value, key); }
 
+function cleanUiNameList(value, maximum = 500) {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set();
+  const cleaned = [];
+  for (const rawValue of value) {
+    const name = String(rawValue ?? "").trim();
+    if (!name || seen.has(name)) continue;
+    seen.add(name);
+    cleaned.push(name);
+    if (cleaned.length >= maximum) break;
+  }
+  return cleaned;
+}
+
 function cleanStation(raw, index = 0) {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
     throw new Error(`Station ${index + 1} is not an object.`);
@@ -241,6 +255,9 @@ function validatePreferences(value) {
     ? value.additionalMusicFolder.trim()
     : "";
   const lastFmApiKey = typeof value?.lastFmApiKey === 'string' ? value.lastFmApiKey.trim().slice(0, 160) : '';
+  const rawStreamingUi = value?.streamingUi && typeof value.streamingUi === "object" && !Array.isArray(value.streamingUi)
+    ? value.streamingUi
+    : {};
   const settingsWindowBounds = rawSettingsBounds && typeof rawSettingsBounds === "object" && !Array.isArray(rawSettingsBounds) &&
     ["x", "y", "width", "height"].every((key) => Number.isFinite(Number(rawSettingsBounds[key])))
     ? {
@@ -269,6 +286,13 @@ function validatePreferences(value) {
     additionalMusicFolder,
     lastFmEnabled: value?.lastFmEnabled === true,
     lastFmApiKey,
+    streamingUi: {
+      presets: rawStreamingUi.presets === true,
+      favoritesOnly: rawStreamingUi.favoritesOnly === true,
+      mostPlayed: rawStreamingUi.mostPlayed === true,
+      collapsedGroups: cleanUiNameList(rawStreamingUi.collapsedGroups),
+      collapsedSubgroups: cleanUiNameList(rawStreamingUi.collapsedSubgroups)
+    },
     launchInSidebarMode: value?.launchInSidebarMode === true,
     settingsWindowBounds,
     radioLogWindowBounds,
@@ -444,6 +468,31 @@ class PortableStorage {
 
   getLinuxUiPreferences() {
     return this.getUiPreferences();
+  }
+
+  getStreamingUiState() {
+    const streamingUi = this.readPreferences().streamingUi;
+    return {
+      presets: streamingUi.presets,
+      favoritesOnly: streamingUi.favoritesOnly,
+      mostPlayed: streamingUi.mostPlayed,
+      collapsedGroups: [...streamingUi.collapsedGroups],
+      collapsedSubgroups: [...streamingUi.collapsedSubgroups]
+    };
+  }
+
+  setStreamingUiState(state = {}) {
+    const preferences = this.readPreferences();
+    const current = preferences.streamingUi;
+    preferences.streamingUi = {
+      presets: typeof state.presets === "boolean" ? state.presets : current.presets,
+      favoritesOnly: typeof state.favoritesOnly === "boolean" ? state.favoritesOnly : current.favoritesOnly,
+      mostPlayed: typeof state.mostPlayed === "boolean" ? state.mostPlayed : current.mostPlayed,
+      collapsedGroups: Array.isArray(state.collapsedGroups) ? cleanUiNameList(state.collapsedGroups) : current.collapsedGroups,
+      collapsedSubgroups: Array.isArray(state.collapsedSubgroups) ? cleanUiNameList(state.collapsedSubgroups) : current.collapsedSubgroups
+    };
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getStreamingUiState();
   }
 
   setLaunchInSidebarMode(enabled) {

@@ -80,7 +80,11 @@
       <div id="localMusicToolbar" class="toolbar-group local-music-toolbar" hidden>
         <span id="musicStatus" class="music-toolbar-status" role="status"></span>
         <span id="musicContext" class="music-toolbar-context" aria-label="Current local music selection" hidden><span id="musicContextLabel"></span></span>
-        <button id="musicRescan" type="button" title="Rescan Local Music">Rescan</button>
+        <button id="musicRescan" type="button" aria-label="Rescan Local Music" title="Rescan Local Music">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M20 11a8 8 0 1 0 2.1 5.4M20 4v7h-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
       </div>
       <span class="toolbar-spacer" aria-hidden="true"></span>
       <button id="sidebarModeBtn" type="button" aria-label="Turn Sidebar Mode on"

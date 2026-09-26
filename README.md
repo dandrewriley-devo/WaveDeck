@@ -13,12 +13,12 @@ WaveDeck is a lightweight, portable internet-radio player for 64-bit Windows, Li
 - Personal Favorites and Presets stored separately from the shareable station library
 - Linux Mint Cinnamon and Windows Sidebar Mode
 - Optional automatic Sidebar Mode at startup on Linux and Windows
-- Toggleable Presets with drag-and-drop ordering and media-key navigation
+- Toggleable Presets with drag-and-drop ordering, remembered visibility, and media-key navigation
 - Independent Favorites, a Favorites-only station filter, and pre-roll markers
 - Native media-key controls with periodic registration checks
 - Toggleable five-station Your Top Five listening statistics
 - Fixed toolbar and toggleable station search across names, groups, subgroups, countries, descriptions, and URLs
-- Groups and optional subgroups
+- Remembered groups and optional subgroups, expanded by default
 - Shift-click station editing and Ctrl+Shift-click pre-roll marking
 - Country, description, and best-effort bitrate information
 - Collapsed station groups with Expand All / Collapse All

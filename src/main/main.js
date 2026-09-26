@@ -110,7 +110,7 @@ let windowsSidebar = null;
 let sidebarApplied = false;
 let sidebarTransitioning = false;
 let floatingBounds = null;
-let sectionVisibility = { search: false, presets: true, favoritesOnly: false, mostPlayed: false };
+let sectionVisibility = { presets: false, favoritesOnly: false, mostPlayed: false, collapsedGroups: [], collapsedSubgroups: [] };
 let quitFinalizingRecording = false;
 let cleanupComplete = false;
 const startupWarnings = [];
@@ -729,14 +729,13 @@ function installIpcHandlers() {
 
   ipcMain.handle("listening:get", () => listeningHistory.getStats());
   ipcMain.handle("listening:reset", () => listeningHistory.reset());
-  ipcMain.handle("sections:get-state", () => ({ ...sectionVisibility }));
+  ipcMain.handle("sections:get-state", () => ({
+    ...sectionVisibility,
+    collapsedGroups: [...sectionVisibility.collapsedGroups],
+    collapsedSubgroups: [...sectionVisibility.collapsedSubgroups]
+  }));
   ipcMain.handle("sections:set-state", (_event, state = {}) => {
-    sectionVisibility = {
-      search: typeof state.search === "boolean" ? state.search : sectionVisibility.search,
-      presets: typeof state.presets === "boolean" ? state.presets : sectionVisibility.presets,
-      favoritesOnly: typeof state.favoritesOnly === "boolean" ? state.favoritesOnly : sectionVisibility.favoritesOnly,
-      mostPlayed: typeof state.mostPlayed === "boolean" ? state.mostPlayed : sectionVisibility.mostPlayed
-    };
+    sectionVisibility = storage.setStreamingUiState({ ...sectionVisibility, ...state });
     sendToAll("sections:state-changed", { ...sectionVisibility });
     return { ...sectionVisibility };
   });
@@ -780,11 +779,11 @@ function installIpcHandlers() {
     if (!preferences.proModeEnabled) {
       if (mediaController?.music) await mediaController.stop();
       musicLibrary?.disable();
-      sectionVisibility = {
+      sectionVisibility = storage.setStreamingUiState({
         ...sectionVisibility,
         favoritesOnly: false,
         mostPlayed: false
-      };
+      });
       sendToAll("sections:state-changed", { ...sectionVisibility });
     }
     if (preferences.proModeEnabled) void musicLibrary.enable().then(() => lastFmEnricher?.configure()).catch(error => sendToMain('app:warning', error.message));
@@ -1019,6 +1018,7 @@ if (!hasSingleInstanceLock) {
     try {
       storage.initialize();
       storage.assertWritable();
+      sectionVisibility = storage.getStreamingUiState();
     } catch (error) {
       startupWarnings.push(`WaveDeck's Data folder is not writable. Changes may not be saved. ${error.message}`);
     }
