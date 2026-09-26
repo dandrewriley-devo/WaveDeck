@@ -20,6 +20,7 @@ contextBridge.exposeInMainWorld("wavedeck", {
   setLastFmSettings: settings => ipcRenderer.invoke('music:lastfm:set-settings', settings),
   testLastFm: () => ipcRenderer.invoke('music:lastfm:test'),
   queueFullLastFmRefresh: () => ipcRenderer.invoke('music:lastfm:queue-full'),
+  setLocalRadioFamiliarity: familiarity => ipcRenderer.invoke('music:local-radio:set-familiarity', familiarity),
   onLastFmChanged: callback => subscribe('music:lastfm-changed', callback),
   onMusicDebugLog: callback => subscribe('music:debug-decision', callback),
   onMusicChanged: callback => subscribe('music:changed', callback),

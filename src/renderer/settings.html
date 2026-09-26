@@ -25,7 +25,7 @@
       <!-- INTERFACE -->
       <section id="tab-interface" class="panel hidden">
         <div class="general-meta">
-          <b>WaveDeck version <span id="aboutVersion">0.7.14</span></b>
+          <b>WaveDeck version <span id="aboutVersion">0.7.15</span></b>
           <span>Station library: <span id="aboutDataDir">Data</span></span>
         </div>
         <div class="general-sections">
@@ -281,6 +281,12 @@
         <section class="radio-tuning" aria-labelledby="localRadioTitle">
                   <div class="pro-music-settings-title" id="localRadioTitle">Local Radio</div>
                   <div class="hint">Artist Radio and Song Radio build themselves from the strongest musical relationships in your library. WaveDeck uses Last.fm only when it adds a meaningful connection, honors your read-only MP3 ratings gently, and waits rather than forcing a poor match.</div>
+                  <div class="local-radio-familiarity">
+                    <label for="localRadioFamiliarity">Song familiarity</label>
+                    <input id="localRadioFamiliarity" type="range" min="0" max="2" step="1" value="1" aria-describedby="localRadioFamiliarityHelp" />
+                    <div class="local-radio-familiarity-stops" aria-hidden="true"><span>Favor the Hits</span><span>Balanced Mix</span><span>Play Deep Cuts Too</span></div>
+                    <div id="localRadioFamiliarityHelp" class="hint">Balanced Mix is the default. This adjusts only songs that already fit the Local Station.</div>
+                  </div>
         </section>
         <div id="statusLocalMusic" class="status"></div>
       </section>
@@ -298,6 +304,12 @@
         <div class="about-divider"></div>
         <div class="changelog">
           <h2>Changelog</h2>
+
+          <h3>WaveDeck 0.7.15 — Song Familiarity</h3>
+          <ul>
+            <li>Adds a three-stop Song Familiarity control for Local Radio: Favor the Hits, Balanced Mix, and Play Deep Cuts Too.</li>
+            <li>Uses Last.fm popularity only after a song has already qualified for the Local Station; missing popularity remains neutral.</li>
+          </ul>
 
           <h3>WaveDeck 0.7.14 — Automatic Local Radio</h3>
           <ul>

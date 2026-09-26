@@ -53,13 +53,13 @@ function renderDecision(decision, { prepend = true } = {}) {
     decision.seed?.album || 'No album'
   ]);
   addBox(grid, 'Local Radio policy', [
-    'Automatic — no tuning controls',
+    `Song familiarity: ${({ hits: 'Favor the Hits', balanced: 'Balanced Mix', 'deep-cuts': 'Play Deep Cuts Too' })[decision.familiarity] || 'Balanced Mix'}`,
     'Strong musical links are required',
     'Poor-fit candidates wait instead of playing'
   ]);
   addBox(grid, 'Last.fm popularity', [
     selected.popularity === null || selected.popularity === undefined ? 'Missing — treated as neutral' : `${selected.popularity}/100`,
-    'A small tie-breaker, never an eligibility rule',
+    'Adjusted by the Song familiarity preference',
     'Similar artists can provide a meaningful link'
   ]);
   addBox(grid, 'Selection safeguards', [

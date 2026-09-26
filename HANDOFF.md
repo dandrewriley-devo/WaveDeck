@@ -6,8 +6,8 @@ This file is an internal continuity reference for future WaveDeck work. It recor
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `main`
-- Current published version: **0.7.14**
-- Current release: 0.7.14 — automatic Local Radio, Local Station history, and Local Music layout refinement.
+- Current published version: **0.7.15**
+- Current release: 0.7.15 — Song Familiarity preference for Local Radio.
 - Previous release commit: `2437af4f1bb585408af111338f8de5a8d44563ec` — five-stop radio tuning, acceptable-pool selection, read-only rating influence, and Last.fm progress bar.
 - 0.7.10 commit: `d2a2a0243165d40e832fa4dbc87f69a71db624c1` — recent stations, Settings relocation, and read-only MP3 rating support.
 - Previous relevant commit: `79fdea48f1f7eff3b71e611625a18e8485c0d689` — project handoff and connector history.
@@ -50,9 +50,9 @@ Album art and ReplayGain are intentionally not part of the current feature set.
 
 ## Current Local Radio policy
 
-Local Radio is automatic: there are no listener tuning sliders. Song Radio prioritizes the seed album and seed artist; Artist Radio stays anchored to its seed artist. Shared credited artists, useful Last.fm similar-artist links, and specific shared tags can extend either station. Broad tags such as Rock, Pop, Country, or Jazz are never enough by themselves, so a song like “Comfortably Numb” cannot jump to “The Devil Went Down to Georgia” merely because both carry Rock.
+Local Radio is automatic apart from one outcome-focused preference: Song Familiarity. Its three stops are Favor the Hits, Balanced Mix (the default), and Play Deep Cuts Too. Song Radio prioritizes the seed album and seed artist; Artist Radio stays anchored to its seed artist. Shared credited artists, useful Last.fm similar-artist links, and specific shared tags can extend either station. Broad tags such as Rock, Pop, Country, or Jazz are never enough by themselves, so a song like “Comfortably Numb” cannot jump to “The Devil Went Down to Georgia” merely because both carry Rock.
 
-Last.fm is optional and only used when it creates a meaningful connection. Existing MP3 ratings are copied into the local index without modifying files; a rating is a gentle tie-breaker for an already credible song, while unrated songs remain neutral and eligible. When no credible candidate is available, Local Radio waits. Exact songs observe a fixed two-hour repeat wait.
+Last.fm is optional and only used when it creates a meaningful connection. Its popularity score is then adjusted by Song Familiarity, but only for a song that is already credible; missing popularity remains neutral. Existing MP3 ratings are copied into the local index without modifying files; a rating is a gentle tie-breaker for an already credible song, while unrated songs remain neutral and eligible. When no credible candidate is available, Local Radio waits. Exact songs observe a fixed two-hour repeat wait.
 
 Recently played Local Stations are stored separately from Streaming Stations and appear in Local Music immediately when an Artist Radio or Song Radio station starts. A recent Local Station replays its original seed and station type.
 
@@ -65,6 +65,8 @@ WaveDeck 0.7.12 replaces the old combined toolbar with Streaming and Local Music
 WaveDeck 0.7.13 fixes the context-toolbar visibility rule so Local Music library status and rescan controls are hidden on Streaming. Presets now default to hidden, station groups/subgroups default to expanded, and their display/collapse states persist in portable preferences across restarts. Local Music Rescan uses an icon-only button with an accessible label.
 
 WaveDeck 0.7.14 rebuilds Local Radio around relationship-first eligibility and automatic scoring. It removes the slider UI and rule IPCs, uses Last.fm only as an optional quality signal, and logs the selected candidate’s qualifying relationship. Local Music now lists recently played Local Stations (not Streaming Stations), moves the active Local Station label beneath search, and puts the unboxed rescan icon before the song count.
+
+WaveDeck 0.7.15 adds the three-stop Song Familiarity slider. It persists in portable preferences, defaults to Balanced Mix, and changes only Last.fm-popularity scoring among eligible Local Radio candidates: Favor the Hits increases the edge for more-popular songs; Play Deep Cuts Too gives lesser-known songs more opportunity.
 
 Contextual thumbs-up/thumbs-down feedback remains deferred. The new playback row reserves disabled thumbs buttons so their position can be tested, but they do not record votes yet. A later vote should mean “fits or does not fit this Local Radio seed,” not a global song like/dislike. Store votes against the seed/candidate pair in portable Data, allow changing a vote, and do not infer votes from skips.
 

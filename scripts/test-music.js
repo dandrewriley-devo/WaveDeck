@@ -51,6 +51,13 @@ async function run() {
     assert(weight(similar, seed, 'artist', [], now) > 0 && weight(specificTag, seed, 'radio', [], now) > 0, 'Last.fm and specific tags are meaningful links');
     assert.equal(weight(country, seed, 'radio', [], now), 0);
     assert(weight(track('rated', { artist: 'Pink Floyd', artists: ['Pink Floyd'], ratingStars: 5 }), seed, 'artist', [], now) > weight(track('unrated', { artist: 'Pink Floyd', artists: ['Pink Floyd'] }), seed, 'artist', [], now));
+    const hit = track('hit', { artist: 'Pink Floyd', artists: ['Pink Floyd'], album: 'Animals', popularity: 100 });
+    const deepCut = track('deep-cut', { artist: 'Pink Floyd', artists: ['Pink Floyd'], album: 'Obscured by Clouds', popularity: 0 });
+    assert(weight(hit, seed, 'artist', [], now, null, 'hits') > weight(deepCut, seed, 'artist', [], now, null, 'hits'), 'Favor the Hits prefers credible popular songs');
+    assert(weight(deepCut, seed, 'artist', [], now, null, 'deep-cuts') > weight(hit, seed, 'artist', [], now, null, 'deep-cuts'), 'Play Deep Cuts Too favors credible lesser-known songs');
+    const familiarityRadio = new MusicRadio({ dataDir: path.join(temp, 'familiarity'), now: () => now, random: () => 0, getFamiliarity: () => 'hits' });
+    assert.equal(familiarityRadio.choose([hit, deepCut], seed, 'artist').id, hit.id);
+    assert.equal(familiarityRadio.getLastDecision().familiarity, 'hits');
     radio.record(sameAlbum); assert.equal(radio.choose([sameAlbum], seed, 'radio'), null, 'exact song repeats wait two hours'); now += COOLDOWN;
     assert.equal(radio.choose([sameAlbum], seed, 'radio').id, sameAlbum.id); assert.equal(radio.getLastDecision().policy, 'automatic-local-radio-v1');
 

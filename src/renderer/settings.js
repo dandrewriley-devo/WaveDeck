@@ -59,6 +59,8 @@ const lastFmStatus = document.getElementById('lastFmStatus');
 const lastFmProgressWrap = document.getElementById('lastFmProgressWrap');
 const lastFmProgress = document.getElementById('lastFmProgress');
 const lastFmProgressLabel = document.getElementById('lastFmProgressLabel');
+const localRadioFamiliarity = document.getElementById('localRadioFamiliarity');
+const localRadioFamiliarityHelp = document.getElementById('localRadioFamiliarityHelp');
 const sidebarStartupHint = document.getElementById("sidebarStartupHint");
 const resetListeningBtn = document.getElementById("resetListeningBtn");
 const platform = window.wavedeck.platform;
@@ -78,6 +80,13 @@ let initialized = false;
 let pendingEditId = "";
 let activeSubgroupRename = null;
 
+const LOCAL_RADIO_FAMILIARITY = ['hits', 'balanced', 'deep-cuts'];
+const LOCAL_RADIO_FAMILIARITY_COPY = {
+  hits: 'Favor the Hits — gives better-known eligible songs a stronger edge.',
+  balanced: 'Balanced Mix — mixes hits and deeper cuts. This is the default.',
+  'deep-cuts': 'Play Deep Cuts Too — gives lesser-known eligible songs more of a chance.'
+};
+
 function renderProMusicSettings(preferences) {
   const proEnabled = preferences?.proModeEnabled === true;
   const folder = String(preferences?.additionalMusicFolder || '');
@@ -91,6 +100,11 @@ function renderProMusicSettings(preferences) {
   lastFmEnabled.checked = preferences?.lastFmEnabled === true;
   lastFmApiKey.value = String(preferences?.lastFmApiKey || '');
   lastFmDetails.hidden = !lastFmEnabled.checked;
+  const familiarity = LOCAL_RADIO_FAMILIARITY.includes(preferences?.localRadioFamiliarity)
+    ? preferences.localRadioFamiliarity
+    : 'balanced';
+  localRadioFamiliarity.value = String(LOCAL_RADIO_FAMILIARITY.indexOf(familiarity));
+  localRadioFamiliarityHelp.textContent = LOCAL_RADIO_FAMILIARITY_COPY[familiarity];
   if (proEnabled) void loadLastFmStatus();
 }
 
@@ -991,6 +1005,21 @@ testLastFmBtn.addEventListener('click', async () => {
     setStatus(statusInterface, 'Last.fm background refresh is ready.');
   } catch (error) { setStatus(statusInterface, `Last.fm connection could not start: ${error.message}`, false); }
   finally { testLastFmBtn.disabled = false; }
+});
+
+localRadioFamiliarity.addEventListener('input', () => {
+  const familiarity = LOCAL_RADIO_FAMILIARITY[Number(localRadioFamiliarity.value)] || 'balanced';
+  localRadioFamiliarityHelp.textContent = LOCAL_RADIO_FAMILIARITY_COPY[familiarity];
+});
+localRadioFamiliarity.addEventListener('change', async () => {
+  const familiarity = LOCAL_RADIO_FAMILIARITY[Number(localRadioFamiliarity.value)] || 'balanced';
+  localRadioFamiliarity.disabled = true;
+  try {
+    renderProMusicSettings(await window.wavedeck.setLocalRadioFamiliarity(familiarity));
+    setStatus(statusLocalMusic, `Local Radio set to ${familiarity === 'hits' ? 'Favor the Hits' : familiarity === 'deep-cuts' ? 'Play Deep Cuts Too' : 'Balanced Mix'}.`);
+  } catch (error) {
+    setStatus(statusLocalMusic, `Could not save Song familiarity: ${error.message}`, false);
+  } finally { localRadioFamiliarity.disabled = false; }
 });
 
 async function reloadEverything() {

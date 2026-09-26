@@ -277,6 +277,9 @@ function validatePreferences(value) {
     ? value.additionalMusicFolder.trim()
     : "";
   const lastFmApiKey = typeof value?.lastFmApiKey === 'string' ? value.lastFmApiKey.trim().slice(0, 160) : '';
+  const localRadioFamiliarity = ['hits', 'balanced', 'deep-cuts'].includes(value?.localRadioFamiliarity)
+    ? value.localRadioFamiliarity
+    : 'balanced';
   const rawStreamingUi = value?.streamingUi && typeof value.streamingUi === "object" && !Array.isArray(value.streamingUi)
     ? value.streamingUi
     : {};
@@ -308,6 +311,7 @@ function validatePreferences(value) {
     additionalMusicFolder,
     lastFmEnabled: value?.lastFmEnabled === true,
     lastFmApiKey,
+    localRadioFamiliarity,
     streamingUi: {
       presets: rawStreamingUi.presets === true,
       favoritesOnly: rawStreamingUi.favoritesOnly === true,
@@ -478,6 +482,7 @@ class PortableStorage {
       additionalMusicFolder: preferences.additionalMusicFolder,
       lastFmEnabled: preferences.lastFmEnabled,
       lastFmApiKey: preferences.lastFmApiKey,
+      localRadioFamiliarity: preferences.localRadioFamiliarity,
       launchInSidebarMode: preferences.launchInSidebarMode,
       settingsWindowBounds: preferences.settingsWindowBounds
         ? { ...preferences.settingsWindowBounds }
@@ -542,6 +547,13 @@ class PortableStorage {
     const preferences = this.readPreferences();
     preferences.lastFmEnabled = Boolean(enabled);
     preferences.lastFmApiKey = typeof apiKey === 'string' ? apiKey.trim().slice(0, 160) : preferences.lastFmApiKey;
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences();
+  }
+
+  setLocalRadioFamiliarity(value) {
+    const preferences = this.readPreferences();
+    preferences.localRadioFamiliarity = ['hits', 'balanced', 'deep-cuts'].includes(value) ? value : 'balanced';
     this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
     return this.getUiPreferences();
   }

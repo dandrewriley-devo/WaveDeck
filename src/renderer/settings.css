@@ -171,6 +171,13 @@ main{
   padding-top:14px;
 }
 
+.local-radio-familiarity{ display:grid; gap:7px; margin-top:16px; }
+.local-radio-familiarity > label{ font-size:13px; font-weight:600; }
+.local-radio-familiarity input{ accent-color:#8feab3; width:100%; }
+.local-radio-familiarity-stops{ color:var(--muted); display:grid; font-size:11px; gap:8px; grid-template-columns:1fr 1fr 1fr; }
+.local-radio-familiarity-stops span:nth-child(2){ text-align:center; }
+.local-radio-familiarity-stops span:last-child{ text-align:right; }
+
 .radio-rule-tabs{
   display:flex;
   gap:6px;

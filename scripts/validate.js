@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.7.14");
-assert.strictEqual(packageJson.wavedeckVersion, "0.7.14");
+assert.strictEqual(packageJson.version, "0.7.15");
+assert.strictEqual(packageJson.wavedeckVersion, "0.7.15");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -330,6 +330,7 @@ try {
     additionalMusicFolder: "",
     lastFmEnabled: false,
     lastFmApiKey: "",
+    localRadioFamiliarity: "balanced",
     streamingUi: {
       presets: false,
       favoritesOnly: false,
@@ -349,6 +350,7 @@ try {
     additionalMusicFolder: "",
     lastFmEnabled: false,
     lastFmApiKey: "",
+    localRadioFamiliarity: "balanced",
     launchInSidebarMode: false,
     settingsWindowBounds: null,
     radioLogWindowBounds: null
@@ -358,6 +360,7 @@ try {
   assert.strictEqual(storage.setProModeEnabled(true).proModeEnabled, true);
   assert.strictEqual(storage.setAdditionalMusicFolder("/mnt/music").additionalMusicFolder, "/mnt/music");
   assert.strictEqual(storage.setLastFmSettings({ enabled: true, apiKey: 'test-key' }).lastFmEnabled, true);
+  assert.strictEqual(storage.setLocalRadioFamiliarity('hits').localRadioFamiliarity, 'hits');
   assert.deepStrictEqual(storage.setStreamingUiState({
     presets: true,
     favoritesOnly: true,
@@ -390,6 +393,7 @@ try {
     additionalMusicFolder: "/mnt/music",
     lastFmEnabled: true,
     lastFmApiKey: "test-key",
+    localRadioFamiliarity: "hits",
     launchInSidebarMode: true,
     settingsWindowBounds: { x: 2100, y: 41, width: 1120, height: 841 },
     radioLogWindowBounds: { x: 14, y: 23, width: 864, height: 700 }
@@ -1195,6 +1199,10 @@ assert.ok(!settingsHtml.includes('WaveDeck 0.7.9 —'));
 assert.ok(settingsHtml.includes('Enable Advanced Features'));
 assert.ok(settingsHtml.includes('id="localRadioTitle"'));
 assert.ok(settingsHtml.includes('WaveDeck uses Last.fm only when it adds a meaningful connection'));
+assert.ok(settingsHtml.includes('id="localRadioFamiliarity"'));
+assert.ok(settingsHtml.includes('Favor the Hits'));
+assert.ok(settingsHtml.includes('Balanced Mix'));
+assert.ok(settingsHtml.includes('Play Deep Cuts Too'));
 assert.ok(settingsHtml.includes('id="lastFmProgress"'));
 assert.ok(!settingsHtml.includes('radio-rule-tab'));
 assert.ok(!settingsHtml.includes('id="resetAllRadioRules"'));
@@ -1417,6 +1425,7 @@ assert.ok(settingsSource.includes("setProModeEnabled(requested)"));
 assert.ok(settingsSource.includes("loadUiPreferences()"));
 assert.ok(!mainSource.includes("music:rules:get"));
 assert.ok(!mainSource.includes("music:rules:reset-all"));
+assert.ok(mainSource.includes("music:local-radio:set-familiarity"));
 
 const windowsBuild = JSON.parse(fs.readFileSync(path.join(root, "electron-builder.windows.json"), "utf8"));
 assert.strictEqual(windowsBuild.win.artifactName, "WaveDeck.exe");
