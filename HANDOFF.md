@@ -6,8 +6,9 @@ This file is an internal continuity reference for future WaveDeck work. It recor
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `main`
-- Current published version: **0.7.9**
-- Current published commit: `ea3859a77764ae0e40e8f91c1494f864d94663d4`
+- Current published version: **0.7.10**
+- Current published commit: `d2a2a0243165d40e832fa4dbc87f69a71db624c1` — recent stations, Settings relocation, and read-only MP3 rating support.
+- Previous relevant commit: `79fdea48f1f7eff3b71e611625a18e8485c0d689` — project handoff and connector history.
 - Previous relevant commits:
   - `ce39d7f` — 0.7.8 single Settings scrollbar attempt
   - `fec55ae` — 0.7.7 Last.fm catch-up refresh skips tracks checked within seven days
@@ -47,7 +48,7 @@ Album art and ReplayGain are intentionally not part of the current feature set.
 
 ## Current radio settings
 
-The Settings → Advanced tab currently shows nine radio controls for both Artist Radio and Song Radio:
+The Settings → Local Music tab currently shows ten radio controls for both Artist Radio and Song Radio:
 
 1. Artist Focus
 2. Genre Match
@@ -61,42 +62,49 @@ The Settings → Advanced tab currently shows nine radio controls for both Artis
 
 Important current implementation details in `src/main/music-radio.js`:
 
-- Artist Focus uses seven values: `0, 10, 25, 50, 70, 85, 100` percent.
-- Song Popularity uses the same seven values.
-- Artist Variety and Album Variety currently use three values: `0, 1, 2`.
-- Release-Year Range currently uses five values: `0, 5, 10, 20, 10000` years.
-- Song Repeat Wait currently uses eight values from 2 hours through 24 hours.
-- Outside Variety is a lane share from `0.0` to `1.0`; current balanced value is `0.161` (about 16%).
+- Artist Focus and Song Popularity use seven stops: `0, 10, 25, 50, 70, 85, 100` percent.
+- Artist Variety and Album Variety use three stops: `0, 1, 2`.
+- Release-Year Range and Ratings Matter each use five stops.
+- Song Repeat Wait uses eight stops from 2 hours through 24 hours.
+- Genre Match, Outside Variety, and Surprise versus Match use continuous numeric values.
 - Genre Match and Surprise versus Match are still continuous numeric controls rather than fixed-stop controls.
 - Artist Focus is a direct lane decision, not merely a score bonus. At 100%, an eligible seed-artist song is selected whenever one is available; otherwise radio falls back to related music.
-- Rating, favorites, play counts, mood tags, and featured-artist bonuses are not used by WaveDeck radio.
+- Ratings Matter defaults to Off. At other levels it weights read-only MP3 ratings in candidate scores; Dominant does not yet exclude unrated tracks. Favorites, play counts, mood tags, and featured-artist bonuses are not used.
 - Related-artist matching is hard-coded at a balanced fixed weight.
 - Repeated A→B handoff protection is hard-coded and remembers relevant transitions for 30 days.
 - A gentle post-repeat holdback remains after the normal repeat cooldown.
 
-## Planned slider redesign
+## Next update queue
 
-The next major tuning task is to give every visible slider a small, fixed number of meaningful stops—probably around five, though the exact number and labels must be discussed before implementation.
+Andrew has asked that the following items be addressed together in the next WaveDeck update. This is a queued request, not authorization to publish that update yet.
 
-Goals:
+### Make every radio slider five-stop
 
-- Every stop should create a noticeable behavioral difference.
-- The user should see plain-English labels, not raw numeric values.
-- Stops should be evenly distributed visually on the slider.
-- Keep settings that have already tested well, especially Artist Focus and Outside Variety.
-- Do not casually change the underlying radio behavior while only redesigning the UI.
-- Use the overnight diagnostic data to choose sensible values rather than arbitrary increments.
+- Give every visible slider in both Artist Radio and Song Radio exactly five discrete positions, with plain-English labels and a clear behavioral difference at each position.
+- Current stop counts are mixed: Artist Focus, Song Popularity, and Song Repeat Wait have more than five; Artist Variety and Album Variety have three; Genre Match, Outside Variety, and Surprise versus Match are continuous; Release-Year Range and Ratings Matter already have five.
+- Keep proven behavior where possible, especially Artist Focus and Outside Variety. Choose values using the overnight diagnostics and targeted tests rather than evenly dividing numeric ranges blindly.
+- Candidate starting points discussed, not finalized: Artist Focus and Song Popularity at `0, 25, 50, 75, 100%`; Song Repeat Wait at `2, 4, 8, 16, 24 hours`.
 
-Likely controls needing review first:
+### Ratings Matter behavior
 
-- Genre Match, because it can currently produce very large weights.
-- Song Popularity, to make the relationship between Last.fm scores and selection strength understandable.
-- Surprise versus Match, currently continuous.
-- Song Repeat Wait, which has more stops than the user likely needs.
-- Artist Variety and Album Variety, which already have only three stops but may need better labels/values.
-- Release-Year Range, whose five-stop model is close to the desired direction.
+- Keep the five labels Off, Gentle, Moderate, Strong, Dominant.
+- Higher MP3 ratings should increasingly improve a track's radio-selection weight. Preserve read-only file behavior.
+- At Dominant, require a rating: unrated tracks must be excluded from automatic candidates. If no rated tracks remain eligible after cooldown and other constraints, do not silently play an unrated track; decide on a clear waiting/no-rated-tracks UI outcome.
+- Preserve the previously discussed Moderate intent: one-star tracks are extremely unlikely and two-star tracks are rare.
 
-Do not start this redesign until Andrew explicitly asks to proceed/ship.
+### Last.fm scanning progress bar
+
+- Replace the plain text-only scanning status with a visual progress bar and retain the useful counts/status text.
+- Screenshot showed: `24,300 of 26,167 tracks current · 77 albums queued. Last.fm is checking music data in the background.` Make the bar reflect current/total, update as background work proceeds, and show queued albums separately. Handle unknown/zero totals and idle/completed states accessibly.
+
+### Song Radio relevance problem
+
+- Investigate the reported case: Song Radio seeded by a Beastie Boys track played George Strait. Capture a diagnostic log with the exact seed, settings, selected candidate, and lane to establish whether it came from Outside Variety or was misclassified as related.
+- Current code intentionally permits an outside lane according to `unrelatedTrackMultiplier`; Genre Match only changes candidate scores and does not prohibit unrelated-lane picks. Relatedness also depends on the available genre and Last.fm similar-artist metadata.
+- Previous overnight log had Outside Variety near 16%, plus stale embedded tag popularity often saturated at 100/100; a high Genre Match value dominated scoring but did not turn the unrelated lane off.
+- Evaluate a stricter relevance boundary for Song Radio: make a truly unrelated artist/genre ineligible when Outside Variety is Off; consider how to classify close matches versus genuinely unrelated music; verify data quality and the lane shown in diagnostics. Do not assume more scoring weight alone will prevent out-of-style jumps.
+
+
 
 ## Last.fm integration
 
