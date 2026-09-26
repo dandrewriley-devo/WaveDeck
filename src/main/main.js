@@ -786,7 +786,7 @@ function installIpcHandlers() {
       });
       sendToAll("sections:state-changed", { ...sectionVisibility });
     }
-    if (preferences.proModeEnabled) void musicLibrary.enable().then(() => lastFmEnricher?.configure()).catch(error => sendToMain('app:warning', error.message));
+    if (preferences.proModeEnabled) void musicLibrary.enable({ scanOnEnable: true }).then(() => lastFmEnricher?.configure()).catch(error => sendToMain('app:warning', error.message));
     sendToAll("ui:preferences-changed", preferences);
     return preferences;
   });

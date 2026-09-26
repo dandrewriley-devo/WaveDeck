@@ -6,10 +6,12 @@ let db, parseFile, scanning = null;
 let lastFmWrites = 0;
 const SIX_MONTHS_MS = 183 * 24 * 60 * 60 * 1000;
 const FULL_REFRESH_RECHECK_MS = 7 * 24 * 60 * 60 * 1000;
+const MUSIC_INDEX_VERSION = 2;
 const portableRoot = path.join(path.dirname(workerData.dataDir), 'Music');
 let additionalMusicFolder = String(workerData.additionalMusicFolder || '').trim();
 const dbPath = path.join(workerData.dataDir, 'music.sqlite');
 let status = { scanning: false, count: 0, checked: 0, errors: 0, folder: portableRoot, message: '' };
+let refreshAllTrackMetadata = false;
 const rows = (sql, params = []) => {
   const statement = db.prepare(sql);
   try { statement.bind(params); const result = []; while (statement.step()) result.push(statement.getAsObject()); return result; }
@@ -119,7 +121,7 @@ async function scan() {
           try {
             const stat = await fs.stat(file);
             const old = rows('SELECT size, mtime FROM tracks WHERE path = ?', [key])[0];
-            if (!old || old.size !== stat.size || old.mtime !== stat.mtimeMs) {
+            if (refreshAllTrackMetadata || !old || old.size !== stat.size || old.mtime !== stat.mtimeMs) {
               const metadata = await parseFile(file, { skipCovers: true, duration: true });
               const track = extractTrack(metadata, relative, root.id);
               const search = normalize([track.title, track.artist, track.albumArtist, track.album, track.year,
@@ -143,6 +145,10 @@ async function scan() {
         if (completeRoots.has(library) && !seen.has(row.path)) db.run('DELETE FROM tracks WHERE path = ?', [row.path]);
       }
       db.run('DELETE FROM lastfm_tracks WHERE id NOT IN (SELECT id FROM tracks)');
+      if (refreshAllTrackMetadata && completeRoots.size === roots.length) {
+        db.run('INSERT OR REPLACE INTO music_index_meta (key, value) VALUES (?, ?)', ['track_metadata_version', String(MUSIC_INDEX_VERSION)]);
+        refreshAllTrackMetadata = false;
+      }
       await persist();
       status.count = rows('SELECT COUNT(*) AS n FROM tracks')[0].n;
       status.message = status.errors ? `${status.errors} files or folders could not be read; rescan to retry.` : '';
@@ -160,9 +166,12 @@ async function initialize() {
   try { bytes = await fs.readFile(dbPath); } catch (e) { if (e.code !== 'ENOENT') throw e; }
   db = new SQL.Database(bytes);
   db.run('CREATE TABLE IF NOT EXISTS tracks (path TEXT PRIMARY KEY, id TEXT UNIQUE, size REAL, mtime REAL, json TEXT, search TEXT)');
+  db.run('CREATE TABLE IF NOT EXISTS music_index_meta (key TEXT PRIMARY KEY, value TEXT)');
   db.run('CREATE TABLE IF NOT EXISTS lastfm_tracks (id TEXT PRIMARY KEY, artist TEXT, title TEXT, album_key TEXT, listeners REAL, playcount REAL, popularity REAL, tags_json TEXT, updated_at TEXT, last_attempt_at TEXT, retry_after TEXT, status TEXT)');
   db.run('CREATE TABLE IF NOT EXISTS lastfm_artists (artist_key TEXT PRIMARY KEY, artist TEXT, similar_json TEXT, updated_at TEXT, last_attempt_at TEXT, retry_after TEXT, status TEXT)');
   db.run('CREATE TABLE IF NOT EXISTS lastfm_jobs (album_key TEXT PRIMARY KEY, priority INTEGER, force INTEGER, queued_at TEXT)');
+  const metadataVersion = Number(rows('SELECT value FROM music_index_meta WHERE key = ?', ['track_metadata_version'])[0]?.value) || 0;
+  refreshAllTrackMetadata = metadataVersion < MUSIC_INDEX_VERSION;
   status.count = rows('SELECT COUNT(*) AS n FROM tracks')[0].n;
   emit();
 }

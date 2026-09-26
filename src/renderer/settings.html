@@ -25,7 +25,7 @@
       <!-- INTERFACE -->
       <section id="tab-interface" class="panel hidden">
         <div class="general-meta">
-          <b>WaveDeck version <span id="aboutVersion">0.7.15</span></b>
+          <b>WaveDeck version <span id="aboutVersion">0.7.16</span></b>
           <span>Station library: <span id="aboutDataDir">Data</span></span>
         </div>
         <div class="general-sections">
@@ -280,7 +280,7 @@
       <section id="tab-localmusic" class="panel hidden" hidden>
         <section class="radio-tuning" aria-labelledby="localRadioTitle">
                   <div class="pro-music-settings-title" id="localRadioTitle">Local Radio</div>
-                  <div class="hint">Artist Radio and Song Radio build themselves from the strongest musical relationships in your library. WaveDeck uses Last.fm only when it adds a meaningful connection, honors your read-only MP3 ratings gently, and waits rather than forcing a poor match.</div>
+                  <div class="hint">Artist Radio and Song Radio build themselves from the strongest musical relationships in your library. WaveDeck never plays a song tagged DO_NOT_PLAY, uses your Favorite and read-only MP3 ratings as the strongest taste signals, and uses Last.fm only when it adds useful familiarity data.</div>
                   <div class="local-radio-familiarity">
                     <label for="localRadioFamiliarity">Song familiarity</label>
                     <input id="localRadioFamiliarity" type="range" min="0" max="2" step="1" value="1" aria-describedby="localRadioFamiliarityHelp" />
@@ -304,6 +304,13 @@
         <div class="about-divider"></div>
         <div class="changelog">
           <h2>Changelog</h2>
+
+          <h3>WaveDeck 0.7.16 — Personal Local Radio</h3>
+          <ul>
+            <li>Honors <code>DO_NOT_PLAY=1</code> as an absolute Local Music exclusion, including albums and manually started Local Radio.</li>
+            <li>Copies Favorite and Do Not Play MP3 tags into the portable music index during a one-time metadata refresh.</li>
+            <li>Makes Favor the Hits prioritize your Favorites, highly rated songs, and familiar Last.fm tracks that already fit the Local Station.</li>
+          </ul>
 
           <h3>WaveDeck 0.7.15 — Song Familiarity</h3>
           <ul>

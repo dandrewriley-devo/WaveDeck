@@ -52,16 +52,13 @@ and radio-session history in `Data`.
 
 Search by song, artist, album, genre, year, composer, comments, filename, or path. An
 album plays in disc/track order and then continues as Artist Radio, while Artist/Song
-Radio continue indefinitely. Radio uses the collection's
-existing tags, modestly favors favorites and higher-rated tracks, excludes one-star
-tracks, strongly downweights two-star tracks, and never automatically repeats a song
-within 120 minutes. It does not use album artwork or ReplayGain.
-
-Artist and Song Radio can be tuned without editing the application. WaveDeck creates
-`artist-radio-rules.json`, `song-radio-rules.json`, and a plain-English
-`music-radio-rules-reference.txt` in `Data`. Edit either JSON file and save; its new
-rules apply before the next radio selection. Invalid settings use built-in defaults,
-and the 120-minute repeat minimum cannot be reduced.
+Radio continue indefinitely. A `DO_NOT_PLAY=1` MP3 tag is an absolute exclusion.
+`FAVORITE=1` and read-only MP3 ratings are WaveDeck's strongest personal taste signals;
+Last.fm track popularity fills familiarity gaps after a song has passed the Local Radio
+fit rules. Song Familiarity offers Favor the Hits, Balanced Mix, and Play Deep Cuts Too.
+Favor the Hits first selects from Favorites, 4–5 star songs, and familiar Last.fm tracks.
+WaveDeck never automatically repeats a song within 120 minutes. It does not use album
+artwork or ReplayGain.
 
 ## Build the portable Windows EXE
 

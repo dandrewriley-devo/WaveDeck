@@ -58,6 +58,7 @@ function extractTrack(metadata, relativePath, library = 'portable') {
     ampId: String(custom.AMP_TRACK_ID || ''), rating, ratingStars,
     ratingSource: ratingEntry?.source || '',
     favorite: /^(1|true|yes)$/i.test(String(custom.FAVORITE || '')),
+    doNotPlay: /^(1|true|yes)$/i.test(String(custom.DO_NOT_PLAY || '')),
     playCount: number('PLAY_COUNT', 'PLAYCOUNT') || 0, skipCount: number('SKIP_COUNT', 'SKIPCOUNT') || 0,
     lastPlayed: String(custom.LAST_PLAYED || ''),
     popularity: number('LASTFM_TRACK_POPULARITY_0_100'),

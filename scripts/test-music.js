@@ -11,7 +11,7 @@ const { LastFmEnricher, popularityScore } = require('../src/main/lastfm-enricher
 
 function fixture() {
   const frame = (id, value) => { const data = Buffer.concat([Buffer.from([0]), Buffer.from(value)]); const header = Buffer.alloc(10); header.write(id); header.writeUInt32BE(data.length, 4); return Buffer.concat([header, data]); };
-  const body = Buffer.concat([frame('TIT2', 'Test Song'), frame('TPE1', 'Artist'), frame('TALB', 'Album'), frame('TCON', 'Pop'), frame('TXXX', 'RATING\0' + '8')]);
+  const body = Buffer.concat([frame('TIT2', 'Test Song'), frame('TPE1', 'Artist'), frame('TALB', 'Album'), frame('TCON', 'Pop'), frame('TXXX', 'RATING\0' + '8'), frame('TXXX', 'FAVORITE\0' + '1'), frame('TXXX', 'DO_NOT_PLAY\0' + '1')]);
   const header = Buffer.from([73, 68, 51, 3, 0, 0, 0, 0, 0, 0]); let size = body.length;
   for (let i = 9; i >= 6; i--) { header[i] = size & 127; size >>= 7; }
   const audio = Buffer.alloc(417); Buffer.from([255, 251, 144, 100]).copy(audio);
@@ -27,9 +27,13 @@ async function run() {
     const digest = async () => crypto.createHash('sha256').update(await fs.readFile(file)).digest('hex'); const before = await digest();
     library = new MusicLibrary({ dataDir }); await library.enable(); await library.rescan();
     assert.equal(library.tracks[0].ratingStars, 4, 'ratings are copied into the local index');
+    assert.equal(library.tracks[0].favorite, true, 'Favorite tags are copied into the local index');
+    assert.equal(library.tracks[0].doNotPlay, true, 'Do Not Play tags are copied into the local index');
     assert.equal(await digest(), before, 'scanning never changes MP3 bytes');
     assert.equal((await library.call('search', "' OR 1=1 --")).total, 0);
     assert.equal(extractTrack({ common: { rating: [{ rating: 0.8 }] }, native: {} }, 'fallback.mp3').ratingStars, 4);
+    const doNotPlayTag = extractTrack({ common: {}, native: { 'ID3v2.4': [{ id: 'TXXX:DO_NOT_PLAY', value: 'yes' }, { id: 'TXXX:FAVORITE', value: 'true' }] } }, 'skip.mp3');
+    assert.equal(doNotPlayTag.doNotPlay, true); assert.equal(doNotPlayTag.favorite, true);
     assert.equal(radioArtist(track('x', { albumArtist: 'Various Artists', artist: 'Solo' })), 'Solo');
 
     const savedTracks = []; const savedArtists = [];
@@ -58,13 +62,20 @@ async function run() {
     const familiarityRadio = new MusicRadio({ dataDir: path.join(temp, 'familiarity'), now: () => now, random: () => 0, getFamiliarity: () => 'hits' });
     assert.equal(familiarityRadio.choose([hit, deepCut], seed, 'artist').id, hit.id);
     assert.equal(familiarityRadio.getLastDecision().familiarity, 'hits');
+    const favoriteDeepCut = track('favorite-deep-cut', { artist: 'Pink Floyd', artists: ['Pink Floyd'], album: 'More', popularity: 0, favorite: true });
+    const lowRatedHit = track('low-rated-hit', { artist: 'Pink Floyd', artists: ['Pink Floyd'], album: 'The Division Bell', popularity: 100, ratingStars: 1 });
+    const personalizedHits = new MusicRadio({ dataDir: path.join(temp, 'personalized-hits'), now: () => now, random: () => 0 });
+    assert.equal(personalizedHits.choose([favoriteDeepCut, lowRatedHit], seed, 'artist').id, favoriteDeepCut.id, 'Favorite tags outrank public popularity in Favor the Hits');
+    const blockedHit = track('blocked-hit', { artist: 'Pink Floyd', artists: ['Pink Floyd'], popularity: 100, ratingStars: 5, favorite: true, doNotPlay: true });
+    assert.equal(personalizedHits.choose([blockedHit, hit], seed, 'artist').id, hit.id, 'Do Not Play blocks even a favorite high-rated hit');
+    assert.equal(personalizedHits.getLastDecision().counts.skippedForDoNotPlay, 1);
     radio.record(sameAlbum); assert.equal(radio.choose([sameAlbum], seed, 'radio'), null, 'exact song repeats wait two hours'); now += COOLDOWN;
     assert.equal(radio.choose([sameAlbum], seed, 'radio').id, sameAlbum.id); assert.equal(radio.getLastDecision().policy, 'automatic-local-radio-v1');
 
     const player = { getStatus: () => ({ playing: true, position: 0 }), setStationGain: async () => {}, play: async () => {}, stop: async () => {}, setPaused: async () => {}, seek: async () => {} };
-    const tracks = [track('2', { track: 2 }), track('1'), track('3', { album: 'Other' })]; const fakeLibrary = { tracks, resolve: async id => { const found = tracks.find(t => t.id === id); if (!found) throw Error('missing'); return { ...found, path: '/' + id }; } };
+    const tracks = [track('2', { track: 2 }), track('1'), track('3', { album: 'Other' }), track('blocked', { doNotPlay: true })]; const fakeLibrary = { tracks, resolve: async id => { const found = tracks.find(t => t.id === id); if (!found) throw Error('missing'); return { ...found, path: '/' + id }; } };
     const controller = serializeTransport(new MediaController({ player, getStations: () => [{ id: 's', url: 'https://example.org', name: 'Streaming', preset: true }] })); controller.configureMusic(fakeLibrary, new MusicRadio({ dataDir: path.join(temp, 'playback'), now: () => now }));
-    await controller.playMusic('2', 'album'); assert.equal(controller.getStatus().currentMusic.track.id, '1'); await controller.handleEnded({ reason: 'eof' }); assert.equal(controller.getStatus().currentMusic.track.id, '2'); await controller.handleEnded({ reason: 'eof' }); assert.equal(controller.getStatus().currentMusic.mode, 'artist'); await controller.playMusic('1', 'radio'); assert.equal(controller.getStatus().currentMusic.seed.id, '1'); await controller.playStationById('s'); assert.equal(controller.getStatus().currentMusic, null);
+    await controller.playMusic('2', 'album'); assert.equal(controller.getStatus().currentMusic.track.id, '1'); await controller.handleEnded({ reason: 'eof' }); assert.equal(controller.getStatus().currentMusic.track.id, '2'); await controller.handleEnded({ reason: 'eof' }); assert.equal(controller.getStatus().currentMusic.mode, 'artist'); await controller.playMusic('1', 'radio'); assert.equal(controller.getStatus().currentMusic.seed.id, '1'); await assert.rejects(controller.playMusic('blocked', 'radio'), /marked Do Not Play/); await controller.playStationById('s'); assert.equal(controller.getStatus().currentMusic, null);
     console.log('Music tests passed: read-only MP3 scan, Last.fm enrichment, automatic Local Radio relationships, repeat protection, diagnostics, album handoff, and source switching.');
   } finally { library?.close(); await fs.rm(temp, { recursive: true, force: true }); }
 }

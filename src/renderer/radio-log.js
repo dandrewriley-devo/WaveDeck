@@ -65,13 +65,14 @@ function renderDecision(decision, { prepend = true } = {}) {
   addBox(grid, 'Selection safeguards', [
     'Same album, artist, credits, Last.fm, or a specific tag',
     'Broad tags such as Rock or Country do not qualify alone',
-    'MP3 ratings are read-only and gently influence a credible pick',
+    'DO_NOT_PLAY is an absolute exclusion',
+    'Favorite tags and MP3 ratings lead personal song choice',
     'Exact-song repeat wait: 2 hours'
   ]);
   addBox(grid, 'Candidates', [
     `${decision.counts?.totalTracks ?? 0} total · ${decision.counts?.credible ?? 0} credible`,
-    `${decision.counts?.finalPool ?? 0} in the final pool`,
-    `Skipped: ${decision.counts?.skippedForCooldown ?? 0} repeat wait, ${decision.counts?.skippedForHandoff ?? 0} repeated handoff`
+    `${decision.counts?.knownGood ?? 0} known-good · ${decision.counts?.finalPool ?? 0} in the final pool`,
+    `Skipped: ${decision.counts?.skippedForCooldown ?? 0} repeat wait, ${decision.counts?.skippedForDoNotPlay ?? 0} Do Not Play`
   ]);
   body.append(grid);
   const additions = (selected.additions || []).map(item => `${item.label}: +${number(item.amount)}`);

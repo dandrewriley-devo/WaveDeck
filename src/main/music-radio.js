@@ -47,7 +47,19 @@ function ratingMultiplier(track) {
   const raw = track?.ratingStars ?? (Number.isFinite(Number(track?.rating)) ? Number(track.rating) / 2 : NaN);
   const rating = Number(raw);
   if (!Number.isFinite(rating)) return { value: 1, note: 'unrated (neutral)' };
-  return { value: Math.max(0.55, Math.min(1.3, 0.7 + rating * 0.12)), note: `${Math.round(rating * 10) / 10}/5 MP3 rating` };
+  const values = [0.4, 0.55, 0.8, 1, 1.55, 2];
+  const rounded = Math.max(0, Math.min(5, Math.round(rating)));
+  return { value: values[rounded], note: `${rounded}/5 MP3 rating` };
+}
+function favoriteMultiplier(track) {
+  return track?.favorite === true
+    ? { value: 2.25, note: 'FAVORITE tag' }
+    : { value: 1, note: '' };
+}
+function knownGood(track) {
+  const rating = Number(track?.ratingStars ?? (Number.isFinite(Number(track?.rating)) ? Number(track.rating) / 2 : NaN));
+  const popularity = Number(track?.popularity);
+  return track?.favorite === true || rating >= 4 || (Number.isFinite(popularity) && popularity >= 60);
 }
 function familiarityMultiplier(popularity, familiarity) {
   if (!Number.isFinite(popularity)) return { value: 1, note: 'missing (neutral)' };
@@ -59,12 +71,15 @@ function familiarityMultiplier(popularity, familiarity) {
 function scoreTrack(track, seed, mode, history = [], now = Date.now(), context = null, familiarity = 'balanced') {
   const last = context?.last?.get(track.songKey) || history.find(item => item.key === track.songKey);
   const relation = relationship(track, seed, mode);
+  if (track?.doNotPlay) return { score: 0, excluded: 'do not play', relationship: relation, additions: [], multipliers: [] };
   if (last && now - last.at < COOLDOWN) return { score: 0, excluded: 'cooldown', relationship: relation, additions: [], multipliers: [] };
   if (!relation.strength) return { score: 0, excluded: 'no credible relationship', relationship: relation, additions: [], multipliers: [] };
   let score = relation.strength;
   const additions = [{ label: relation.reasons[0], amount: relation.strength }]; const multipliers = [];
   const recent = recentPenalty(track, relation.seedArtist, history); score *= recent.multiplier;
   if (recent.multiplier !== 1) multipliers.push({ label: 'Variety protection', value: recent.multiplier, source: recent.notes.join('; ') });
+  const favorite = favoriteMultiplier(track); score *= favorite.value;
+  if (favorite.value !== 1) multipliers.push({ label: 'Favorite', value: favorite.value, source: favorite.note });
   const rating = ratingMultiplier(track); score *= rating.value; multipliers.push({ label: 'MP3 rating', value: rating.value, source: rating.note });
   const popularity = Number(track?.popularity);
   const familiarityScore = familiarityMultiplier(popularity, familiarity);
@@ -97,13 +112,16 @@ class MusicRadio {
     this.history.forEach(item => { if (!context.last.has(item.key)) context.last.set(item.key, item); });
     const scored = tracks.filter(track => !excluded.has(track.id)).map(track => ({ track, ...scoreTrack(track, seed, mode, this.history, now, context, familiarity) }));
     const cooldownExcluded = scored.filter(item => item.excluded === 'cooldown').length;
-    const candidates = scored.filter(item => item.score > 0); const credibleCount = candidates.length;
+    const doNotPlayExcluded = scored.filter(item => item.excluded === 'do not play').length;
+    const credibleCandidates = scored.filter(item => item.score > 0); const credibleCount = credibleCandidates.length;
+    const knownGoodCandidates = familiarity === 'hits' ? credibleCandidates.filter(item => knownGood(item.track)) : [];
+    const candidates = knownGoodCandidates.length ? knownGoodCandidates : credibleCandidates;
     let remaining = this.random() * candidates.reduce((sum, item) => sum + item.score, 0);
     const picked = candidates.find(item => (remaining -= item.score) < 0) || candidates.at(-1) || null;
     const selected = picked?.track || null;
-    const diagnostic = item => ({ diagnosticId: stableId(item.track), title: item.track.title, artist: item.track.artist, album: item.track.album, eligibilityReasons: item.relationship.reasons, score: item.score, additions: item.additions, multipliers: item.multipliers, popularity: item.popularity, tags: item.relationship.tags });
+    const diagnostic = item => ({ diagnosticId: stableId(item.track), title: item.track.title, artist: item.track.artist, album: item.track.album, eligibilityReasons: item.relationship.reasons, score: item.score, additions: item.additions, multipliers: item.multipliers, favorite: item.track.favorite === true, ratingStars: Number.isFinite(Number(item.track.ratingStars)) ? Number(item.track.ratingStars) : null, popularity: item.popularity, tags: item.relationship.tags });
     const ranked = [...candidates].sort((a, b) => b.score - a.score).slice(0, 8);
-    this.lastDecision = { at: new Date(now).toISOString(), mode, selectionTrigger, seed: { diagnosticId: stableId(seed), title: seed?.title || '', artist: seed?.artist || '', album: seed?.album || '', genres: seed?.genres || [] }, policy: 'automatic-local-radio-v1', familiarity, counts: { totalTracks: tracks.length, skippedByPlaybackError: excluded.size, skippedForCooldown: cooldownExcluded, credible: credibleCount, finalPool: candidates.length }, selected: selected ? diagnostic(picked) : null, diagnostics: { topFinalCandidates: ranked.map(diagnostic), recentHistory: this.history.slice(0, 12).map(item => ({ diagnosticId: stableId({ songKey: item.key }), artist: item.artist, album: item.album, at: new Date(item.at).toISOString() })) }, reason: selected ? `Picked from ${candidates.length} credible Local Radio candidates.` : 'No credible Local Radio song is currently available; waiting rather than making a poor leap.' };
+    this.lastDecision = { at: new Date(now).toISOString(), mode, selectionTrigger, seed: { diagnosticId: stableId(seed), title: seed?.title || '', artist: seed?.artist || '', album: seed?.album || '', genres: seed?.genres || [] }, policy: 'automatic-local-radio-v1', familiarity, counts: { totalTracks: tracks.length, skippedByPlaybackError: excluded.size, skippedForCooldown: cooldownExcluded, skippedForDoNotPlay: doNotPlayExcluded, credible: credibleCount, knownGood: knownGoodCandidates.length, finalPool: candidates.length }, selected: selected ? diagnostic(picked) : null, diagnostics: { topFinalCandidates: ranked.map(diagnostic), recentHistory: this.history.slice(0, 12).map(item => ({ diagnosticId: stableId({ songKey: item.key }), artist: item.artist, album: item.album, at: new Date(item.at).toISOString() })) }, reason: selected ? `Picked from ${candidates.length}${knownGoodCandidates.length ? ' known-good' : ''} credible Local Radio candidates.` : 'No credible Local Radio song is currently available; waiting rather than making a poor leap.' };
     try { this.onDecision(this.getLastDecision()); } catch {}
     return selected;
   }

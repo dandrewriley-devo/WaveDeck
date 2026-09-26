@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.7.15");
-assert.strictEqual(packageJson.wavedeckVersion, "0.7.15");
+assert.strictEqual(packageJson.version, "0.7.16");
+assert.strictEqual(packageJson.wavedeckVersion, "0.7.16");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -1198,7 +1198,7 @@ assert.ok(settingsHtml.includes('WaveDeck 0.7.x — Bug Fixes'));
 assert.ok(!settingsHtml.includes('WaveDeck 0.7.9 —'));
 assert.ok(settingsHtml.includes('Enable Advanced Features'));
 assert.ok(settingsHtml.includes('id="localRadioTitle"'));
-assert.ok(settingsHtml.includes('WaveDeck uses Last.fm only when it adds a meaningful connection'));
+assert.ok(settingsHtml.includes('WaveDeck never plays a song tagged DO_NOT_PLAY'));
 assert.ok(settingsHtml.includes('id="localRadioFamiliarity"'));
 assert.ok(settingsHtml.includes('Favor the Hits'));
 assert.ok(settingsHtml.includes('Balanced Mix'));

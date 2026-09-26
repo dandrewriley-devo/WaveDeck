@@ -314,10 +314,11 @@ class MediaController {
   async playMusic(id, mode = 'song') {
     if (!['song', 'album', 'artist', 'radio'].includes(mode)) throw new Error('Unknown music mode.');
     const track = await this.musicLibrary.resolve(id);
+    if (track.doNotPlay) throw new Error('This song is marked Do Not Play.');
     await this.beforeStop({ reason: 'music-playback', station: this.getCurrentStation() });
     this.clearMusic();
     this.currentStation = null; this.currentRecording = null;
-    const album = this.musicLibrary.tracks.filter(t => track.album && normalize(t.album) === normalize(track.album) &&
+    const album = this.musicLibrary.tracks.filter(t => !t.doNotPlay && track.album && normalize(t.album) === normalize(track.album) &&
       ((compilation(track) && !track.albumArtist) || normalize(t.albumArtist || t.artist) === normalize(track.albumArtist || track.artist)))
       .sort((a, b) => a.disc - b.disc || a.track - b.track || a.relativePath.localeCompare(b.relativePath));
     if (mode === 'album' && !album.length) album.push(track);
@@ -329,6 +330,7 @@ class MediaController {
   async loadMusic(id) {
     const generation = this.musicGeneration;
     const track = await this.musicLibrary.resolve(id);
+    if (track.doNotPlay) throw new Error('This song is marked Do Not Play.');
     if (!this.music || generation !== this.musicGeneration) return false;
     this.music.current = { ...track }; delete this.music.current.path;
     this.music.waiting = false;
