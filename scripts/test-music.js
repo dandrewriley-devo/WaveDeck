@@ -66,6 +66,14 @@ async function run() {
     const lowRatedHit = track('low-rated-hit', { artist: 'Pink Floyd', artists: ['Pink Floyd'], album: 'The Division Bell', popularity: 100, ratingStars: 1 });
     const personalizedHits = new MusicRadio({ dataDir: path.join(temp, 'personalized-hits'), now: () => now, random: () => 0 });
     assert.equal(personalizedHits.choose([favoriteDeepCut, lowRatedHit], seed, 'artist').id, favoriteDeepCut.id, 'Favorite tags outrank public popularity in Favor the Hits');
+    const unratedPopular = track('unrated-popular', { artist: 'Pink Floyd', artists: ['Pink Floyd'], album: 'A Momentary Lapse of Reason', popularity: 100 });
+    const ratedThree = track('rated-three', { artist: 'Pink Floyd', artists: ['Pink Floyd'], album: 'Meddle', popularity: 0, ratingStars: 3 });
+    const ratedFive = track('rated-five', { artist: 'Pink Floyd', artists: ['Pink Floyd'], album: 'The Dark Side of the Moon', popularity: 0, ratingStars: 5 });
+    const personalPoolRadio = new MusicRadio({ dataDir: path.join(temp, 'personal-pool'), now: () => now, random: () => 0.99, getFamiliarity: () => 'hits' });
+    const personalPoolPick = personalPoolRadio.choose([unratedPopular, ratedThree, ratedFive], seed, 'artist');
+    assert(['rated-three', 'rated-five'].includes(personalPoolPick.id), 'Favor the Hits excludes unrated songs when 3+ star songs are available');
+    assert.equal(personalPoolRadio.getLastDecision().counts.personal, 2, 'diagnostics identify the personal pool');
+    assert.equal(personalPoolRadio.getLastDecision().counts.lastFmFamiliar, 0, 'Last.fm does not dilute an available personal pool');
     const blockedHit = track('blocked-hit', { artist: 'Pink Floyd', artists: ['Pink Floyd'], popularity: 100, ratingStars: 5, favorite: true, doNotPlay: true });
     assert.equal(personalizedHits.choose([blockedHit, hit], seed, 'artist').id, hit.id, 'Do Not Play blocks even a favorite high-rated hit');
     assert.equal(personalizedHits.getLastDecision().counts.skippedForDoNotPlay, 1);

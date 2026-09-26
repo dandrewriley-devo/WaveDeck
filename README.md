@@ -56,7 +56,7 @@ Radio continue indefinitely. A `DO_NOT_PLAY=1` MP3 tag is an absolute exclusion.
 `FAVORITE=1` and read-only MP3 ratings are WaveDeck's strongest personal taste signals;
 Last.fm track popularity fills familiarity gaps after a song has passed the Local Radio
 fit rules. Song Familiarity offers Favor the Hits, Balanced Mix, and Play Deep Cuts Too.
-Favor the Hits first selects from Favorites, 4–5 star songs, and familiar Last.fm tracks.
+Favor the Hits first selects from Favorites and 3–5 star songs. Last.fm familiarity is used only when no personal rating or Favorite qualifies.
 WaveDeck never automatically repeats a song within 120 minutes. It does not use album
 artwork or ReplayGain.
 

@@ -71,7 +71,8 @@ function renderDecision(decision, { prepend = true } = {}) {
   ]);
   addBox(grid, 'Candidates', [
     `${decision.counts?.totalTracks ?? 0} total · ${decision.counts?.credible ?? 0} credible`,
-    `${decision.counts?.knownGood ?? 0} known-good · ${decision.counts?.finalPool ?? 0} in the final pool`,
+    `${decision.counts?.personal ?? 0} personal 3+ star/Favorite · ${decision.counts?.lastFmFamiliar ?? 0} Last.fm familiar`,
+    `${decision.counts?.finalPool ?? 0} in the final pool`,
     `Skipped: ${decision.counts?.skippedForCooldown ?? 0} repeat wait, ${decision.counts?.skippedForDoNotPlay ?? 0} Do Not Play`
   ]);
   body.append(grid);

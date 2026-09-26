@@ -56,10 +56,13 @@ function favoriteMultiplier(track) {
     ? { value: 2.25, note: 'FAVORITE tag' }
     : { value: 1, note: '' };
 }
-function knownGood(track) {
+function hasPersonalHitSignal(track) {
   const rating = Number(track?.ratingStars ?? (Number.isFinite(Number(track?.rating)) ? Number(track.rating) / 2 : NaN));
+  return track?.favorite === true || rating >= 3;
+}
+function hasLastFmFamiliarity(track) {
   const popularity = Number(track?.popularity);
-  return track?.favorite === true || rating >= 4 || (Number.isFinite(popularity) && popularity >= 60);
+  return Number.isFinite(popularity) && popularity >= 60;
 }
 function familiarityMultiplier(popularity, familiarity) {
   if (!Number.isFinite(popularity)) return { value: 1, note: 'missing (neutral)' };
@@ -114,14 +117,20 @@ class MusicRadio {
     const cooldownExcluded = scored.filter(item => item.excluded === 'cooldown').length;
     const doNotPlayExcluded = scored.filter(item => item.excluded === 'do not play').length;
     const credibleCandidates = scored.filter(item => item.score > 0); const credibleCount = credibleCandidates.length;
-    const knownGoodCandidates = familiarity === 'hits' ? credibleCandidates.filter(item => knownGood(item.track)) : [];
-    const candidates = knownGoodCandidates.length ? knownGoodCandidates : credibleCandidates;
+    // Favor the Hits starts with the listener's own evidence. An unrated song is
+    // deliberately neutral, but it cannot displace a 3+ star or Favorite track.
+    // Last.fm is the fallback only when the listener has given us no such signal.
+    const personalCandidates = familiarity === 'hits' ? credibleCandidates.filter(item => hasPersonalHitSignal(item.track)) : [];
+    const lastFmCandidates = familiarity === 'hits' && !personalCandidates.length
+      ? credibleCandidates.filter(item => hasLastFmFamiliarity(item.track)) : [];
+    const candidates = personalCandidates.length ? personalCandidates : (lastFmCandidates.length ? lastFmCandidates : credibleCandidates);
     let remaining = this.random() * candidates.reduce((sum, item) => sum + item.score, 0);
     const picked = candidates.find(item => (remaining -= item.score) < 0) || candidates.at(-1) || null;
     const selected = picked?.track || null;
     const diagnostic = item => ({ diagnosticId: stableId(item.track), title: item.track.title, artist: item.track.artist, album: item.track.album, eligibilityReasons: item.relationship.reasons, score: item.score, additions: item.additions, multipliers: item.multipliers, favorite: item.track.favorite === true, ratingStars: Number.isFinite(Number(item.track.ratingStars)) ? Number(item.track.ratingStars) : null, popularity: item.popularity, tags: item.relationship.tags });
     const ranked = [...candidates].sort((a, b) => b.score - a.score).slice(0, 8);
-    this.lastDecision = { at: new Date(now).toISOString(), mode, selectionTrigger, seed: { diagnosticId: stableId(seed), title: seed?.title || '', artist: seed?.artist || '', album: seed?.album || '', genres: seed?.genres || [] }, policy: 'automatic-local-radio-v1', familiarity, counts: { totalTracks: tracks.length, skippedByPlaybackError: excluded.size, skippedForCooldown: cooldownExcluded, skippedForDoNotPlay: doNotPlayExcluded, credible: credibleCount, knownGood: knownGoodCandidates.length, finalPool: candidates.length }, selected: selected ? diagnostic(picked) : null, diagnostics: { topFinalCandidates: ranked.map(diagnostic), recentHistory: this.history.slice(0, 12).map(item => ({ diagnosticId: stableId({ songKey: item.key }), artist: item.artist, album: item.album, at: new Date(item.at).toISOString() })) }, reason: selected ? `Picked from ${candidates.length}${knownGoodCandidates.length ? ' known-good' : ''} credible Local Radio candidates.` : 'No credible Local Radio song is currently available; waiting rather than making a poor leap.' };
+    const poolLabel = personalCandidates.length ? 'personal 3+ star/Favorite' : (lastFmCandidates.length ? 'Last.fm familiar' : 'credible');
+    this.lastDecision = { at: new Date(now).toISOString(), mode, selectionTrigger, seed: { diagnosticId: stableId(seed), title: seed?.title || '', artist: seed?.artist || '', album: seed?.album || '', genres: seed?.genres || [] }, policy: 'automatic-local-radio-v1', familiarity, counts: { totalTracks: tracks.length, skippedByPlaybackError: excluded.size, skippedForCooldown: cooldownExcluded, skippedForDoNotPlay: doNotPlayExcluded, credible: credibleCount, personal: personalCandidates.length, lastFmFamiliar: lastFmCandidates.length, finalPool: candidates.length }, selected: selected ? diagnostic(picked) : null, diagnostics: { topFinalCandidates: ranked.map(diagnostic), recentHistory: this.history.slice(0, 12).map(item => ({ diagnosticId: stableId({ songKey: item.key }), artist: item.artist, album: item.album, at: new Date(item.at).toISOString() })) }, reason: selected ? `Picked from ${candidates.length} ${poolLabel} Local Radio candidates.` : 'No credible Local Radio song is currently available; waiting rather than making a poor leap.' };
     try { this.onDecision(this.getLastDecision()); } catch {}
     return selected;
   }
