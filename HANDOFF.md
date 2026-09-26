@@ -80,15 +80,17 @@ Andrew has asked that the following items be addressed together in the next Wave
 
 ### Make every radio slider five-stop
 
-- Give every visible slider in both Artist Radio and Song Radio exactly five discrete positions, with plain-English labels and a clear behavioral difference at each position.
-- Current stop counts are mixed: Artist Focus, Song Popularity, and Song Repeat Wait have more than five; Artist Variety and Album Variety have three; Genre Match, Outside Variety, and Surprise versus Match are continuous; Release-Year Range and Ratings Matter already have five.
+- Give every remaining visible slider in both Artist Radio and Song Radio exactly five discrete positions, with plain-English labels and a clear behavioral difference at each position.
+- Remove Outside Variety completely from Artist Radio and Song Radio. Do not retain a probabilistic unrelated-music lane or silently fall back to unrelated tracks when the acceptable pool is empty.
+- Current stop counts are mixed: Artist Focus, Song Popularity, and Song Repeat Wait have more than five; Artist Variety and Album Variety have three; Genre Match, Outside Variety, and Surprise versus Match are continuous; Release-Year Range and Ratings Matter already have five. Removing Outside Variety leaves nine controls per mode.
 - Keep proven behavior where possible, especially Artist Focus and Outside Variety. Choose values using the overnight diagnostics and targeted tests rather than evenly dividing numeric ranges blindly.
 - Candidate starting points discussed, not finalized: Artist Focus and Song Popularity at `0, 25, 50, 75, 100%`; Song Repeat Wait at `2, 4, 8, 16, 24 hours`.
 
 ### Ratings Matter behavior
 
-- Keep the five labels Off, Gentle, Moderate, Strong, Dominant.
+- Keep the five labels Off, Gentle, Moderate, Strong, Dominant unless the design review changes this control.
 - Higher MP3 ratings should increasingly improve a track's radio-selection weight. Preserve read-only file behavior.
+- Andrew is considering a contextual thumbs-up/thumbs-down system instead of adding an in-app star-rating editor. Existing star tags can be read as metadata, but they are not contextual-fit votes. Decide whether the tag-based Ratings Matter slider should remain alongside contextual thumbs; do not conflate general song liking with fit for a particular seed.
 - At Dominant, require a rating: unrated tracks must be excluded from automatic candidates. If no rated tracks remain eligible after cooldown and other constraints, do not silently play an unrated track; decide on a clear waiting/no-rated-tracks UI outcome.
 - Preserve the previously discussed Moderate intent: one-star tracks are extremely unlikely and two-star tracks are rare.
 
@@ -99,10 +101,21 @@ Andrew has asked that the following items be addressed together in the next Wave
 
 ### Song Radio relevance problem
 
-- Investigate the reported case: Song Radio seeded by a Beastie Boys track played George Strait. Capture a diagnostic log with the exact seed, settings, selected candidate, and lane to establish whether it came from Outside Variety or was misclassified as related.
-- Current code intentionally permits an outside lane according to `unrelatedTrackMultiplier`; Genre Match only changes candidate scores and does not prohibit unrelated-lane picks. Relatedness also depends on the available genre and Last.fm similar-artist metadata.
-- Previous overnight log had Outside Variety near 16%, plus stale embedded tag popularity often saturated at 100/100; a high Genre Match value dominated scoring but did not turn the unrelated lane off.
-- Evaluate a stricter relevance boundary for Song Radio: make a truly unrelated artist/genre ineligible when Outside Variety is Off; consider how to classify close matches versus genuinely unrelated music; verify data quality and the lane shown in diagnostics. Do not assume more scoring weight alone will prevent out-of-style jumps.
+- Reported example: Song Radio seeded by a Beastie Boys track played George Strait. The exact decision log is not yet available, so the selection's recorded lane and candidate metadata still need review.
+- Andrew's direction is to remove Outside Variety entirely and keep selections inside an acceptable pool. Remove the unrelated lane and any automatic fallback to an unrelated candidate when that pool is empty; report/wait for an eligible choice instead.
+- Current code has an unrelatedTrackMultiplier lane and will choose the outside lane whenever no related candidates remain, even if the configured multiplier is zero. Genre Match only changes scores; it does not make a candidate ineligible. The acceptable-pool criteria need to be defined carefully because a broad one-tag genre overlap could still admit a bad fit.
+- Relatedness currently uses same/credited artist, any genre overlap, and Last.fm similar-artist metadata. Capture an exact diagnostic to see whether George Strait was classified as related or came through the outside lane. Audit stale/broad tag data as part of that investigation.
+- Do not assume more Genre Match weight will prevent out-of-style jumps. Apply eligibility boundaries before scoring and keep diagnostics explicit about why each candidate qualified.
+
+### Contextual radio feedback concept (design investigation; not yet authorized for implementation)
+
+- Andrew is interested in simple thumbs up/down feedback where a vote means “fits/does not fit this seed’s radio,” not “I like/dislike this song everywhere.” He prefers this to introducing a casual-use star-rating editor.
+- MediaController.playMusic() stores the original seed in the music session and advanceMusic() continues to pass that same seed to each radio choice. This gives the system a stable context key for a seed → candidate feedback record.
+- A useful data model would store the seed track/context, candidate track, radio mode, vote, and timestamp in portable Data. The same candidate can be downvoted for one seed and upvoted for another; do not turn a contextual downvote into a global dislike.
+- A direct vote can immediately adjust or suppress that exact seed/candidate pair. Generalizing to other candidates requires meaningful features for the seed/candidate relationship—normalized track tags/genres and Last.fm related-artist data at minimum; audio similarity could be explored later. Use positive and negative examples, confidence/smoothing, and a cold-start fallback so a few votes do not distort the whole station.
+- Do not infer votes from skips at first. Skipping can have many meanings. Consider an undo/change-vote path and keep all learned feedback local.
+- Existing MP3 star tags describe a track-level rating, not necessarily whether it fits a particular seed. They can be a weak optional prior if desired, but should not be used as contextual training labels. Resolve the relationship between this feature and the queued Ratings Matter slider before implementation.
+- First establish strict acceptable-pool selection and collect explicit votes; then evaluate whether the accumulated data is sufficient to support a real learner.
 
 
 
