@@ -49,7 +49,7 @@ Album art and ReplayGain are intentionally not part of the current feature set.
 
 ## Current radio settings
 
-The Settings → Local Music tab exposes ten radio controls per mode. Every control has exactly five discrete stops:
+The Settings → Local Music tab exposes nine radio controls per mode. Every control has exactly five discrete stops:
 
 | Control | Five stops |
 |---|---|
