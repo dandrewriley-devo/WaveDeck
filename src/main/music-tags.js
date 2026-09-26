@@ -21,11 +21,11 @@ function extractTrack(metadata, relativePath, library = 'portable') {
     const parsed = numeric(value);
     if (parsed === null || parsed <= 0) return null;
     let stars;
-    if (format === 'popm' || format === 'fmps' || (format === 'txxx' && parsed <= 1)) {
+    if (format === 'popm' || format === 'fmps') {
       stars = parsed <= 1 ? parsed * 5 : parsed > 5 ? parsed / 20 : parsed;
-    } else if (format === 'txxx' && parsed > 10) {
-      stars = parsed / 20;
-    } else if (format === 'amp' || parsed > 5) {
+    } else if (format === 'amp' || format === 'txxx') {
+      // WaveDeck's portable library uses its custom RATING tag as 0–10:
+      // 5 means 2.5 stars, 10 means 5 stars. Zero is an unrated track.
       stars = parsed / 2;
     } else {
       stars = parsed;

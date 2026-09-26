@@ -82,9 +82,9 @@ let activeSubgroupRename = null;
 
 const LOCAL_RADIO_FAMILIARITY = ['hits', 'balanced', 'deep-cuts'];
 const LOCAL_RADIO_FAMILIARITY_COPY = {
-  hits: 'Favor the Hits — chooses first from your Favorites and 3–5 star songs; Last.fm familiarity is used only when you have no personal ratings for the station.',
-  balanced: 'Balanced Mix — prefers your Favorites and highly rated songs, while still mixing in credible deeper cuts. This is the default.',
-  'deep-cuts': 'Play Deep Cuts Too — still respects your Favorites and ratings, but gives lesser-known eligible songs more of a chance.'
+  hits: 'Favor the Hits — chooses first from Favorites and 7–10 ratings, with the strongest odds for 9–10. Last.fm is the fallback.',
+  balanced: 'Balanced Mix — chooses first from Favorites and 5–10 ratings, while giving every qualifying rating a useful chance. This is the default.',
+  'deep-cuts': 'Play Deep Cuts Too — chooses first from Favorites and 3–10 ratings. Hits stay in rotation while 3–6 get more opportunity.'
 };
 
 function renderProMusicSettings(preferences) {

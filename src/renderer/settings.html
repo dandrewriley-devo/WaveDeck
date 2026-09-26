@@ -25,7 +25,7 @@
       <!-- INTERFACE -->
       <section id="tab-interface" class="panel hidden">
         <div class="general-meta">
-          <b>WaveDeck version <span id="aboutVersion">0.7.17</span></b>
+          <b>WaveDeck version <span id="aboutVersion">0.7.18</span></b>
           <span>Station library: <span id="aboutDataDir">Data</span></span>
         </div>
         <div class="general-sections">
@@ -304,6 +304,12 @@
         <div class="about-divider"></div>
         <div class="changelog">
           <h2>Changelog</h2>
+
+          <h3>WaveDeck 0.7.18 — Ten-Point Local Radio Ratings</h3>
+          <ul>
+            <li>Reads the Local Music <code>RATING</code> tag as 0–10, where 5 means 2.5 stars and 10 means 5 stars, then refreshes the portable music index read-only.</li>
+            <li>Uses Favorites and ratings of 7–10 for Favor the Hits, 5–10 for Balanced Mix, and 3–10 for Play Deep Cuts Too. Higher ratings have better odds within each pool.</li>
+          </ul>
 
           <h3>WaveDeck 0.7.17 — Stronger Favor the Hits</h3>
           <ul>

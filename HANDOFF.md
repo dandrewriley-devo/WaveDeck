@@ -6,8 +6,8 @@ This file is an internal continuity reference for future WaveDeck work. It recor
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `main`
-- Current published version: **0.7.17**
-- Current release: 0.7.17 — Favor the Hits now narrows to personal ratings before Last.fm.
+- Current published version: **0.7.18**
+- Current release: 0.7.18 — ten-point MP3 ratings and three familiarity pools.
 - Previous release commit: `2437af4f1bb585408af111338f8de5a8d44563ec` — five-stop radio tuning, acceptable-pool selection, read-only rating influence, and Last.fm progress bar.
 - 0.7.10 commit: `d2a2a0243165d40e832fa4dbc87f69a71db624c1` — recent stations, Settings relocation, and read-only MP3 rating support.
 - Previous relevant commit: `79fdea48f1f7eff3b71e611625a18e8485c0d689` — project handoff and connector history.
@@ -52,7 +52,7 @@ Album art and ReplayGain are intentionally not part of the current feature set.
 
 Local Radio is automatic apart from one outcome-focused preference: Song Familiarity. Its three stops are Favor the Hits, Balanced Mix (the default), and Play Deep Cuts Too. Song Radio prioritizes the seed album and seed artist; Artist Radio stays anchored to its seed artist. Shared credited artists, useful Last.fm similar-artist links, and specific shared tags can extend either station. Broad tags such as Rock, Pop, Country, or Jazz are never enough by themselves, so a song like “Comfortably Numb” cannot jump to “The Devil Went Down to Georgia” merely because both carry Rock.
 
-`DO_NOT_PLAY=1` is an absolute exclusion for every Local Music path: Local Radio, album playback, and manual Local Radio starts. `FAVORITE=1` and MP3 ratings are copied into the local index without modifying files and are the strongest personal taste signals. Last.fm is optional and fills familiarity gaps only after a song is credible. Under Favor the Hits, WaveDeck first narrows to Favorites and 3–5-star songs. Only if there are no personal candidates does it narrow to familiar Last.fm tracks; only if neither pool exists does it use the remaining credible candidates. An unrated 0 remains neutral and cannot displace a 3+ star/Favorite track. Missing popularity remains neutral. When no credible candidate is available, Local Radio waits. Exact songs observe a fixed two-hour repeat wait.
+`DO_NOT_PLAY=1` is an absolute exclusion for every Local Music path: Local Radio, album playback, and manual Local Radio starts. `FAVORITE=1` and MP3 ratings are copied into the local index without modifying files and are the strongest personal taste signals. WaveDeck's custom `RATING` tag is 0–10: 5 is 2.5 stars, 10 is 5 stars, and 0/unset is neutral. Favor the Hits first narrows to Favorites and 7–10 ratings; Balanced Mix narrows to Favorites and 5–10; Play Deep Cuts Too narrows to Favorites and 3–10, then gives 3–6 more opportunity while retaining hits. When Favor the Hits has no personal candidates, it falls back to familiar Last.fm tracks, then its normal credible Local Radio pool. Missing popularity remains neutral. When no credible candidate is available, Local Radio waits. Exact songs observe a fixed two-hour repeat wait.
 
 Recently played Local Stations are stored separately from Streaming Stations and appear in Local Music immediately when an Artist Radio or Song Radio station starts. A recent Local Station replays its original seed and station type.
 
@@ -71,6 +71,8 @@ WaveDeck 0.7.15 adds the three-stop Song Familiarity slider. It persists in port
 WaveDeck 0.7.16 reads `DO_NOT_PLAY` as an absolute exclusion and copies both it and `FAVORITE` into the portable music index. The index performs one full metadata refresh after upgrade so existing unchanged files receive these fields.
 
 WaveDeck 0.7.17 makes Favor the Hits choose from personal candidates first: Favorites and 3–5-star tracks. When none are available, it falls back to familiar Last.fm tracks, then to its normal credible Local Radio pool. This prevents an unrated track from being selected over several highly rated songs simply because Last.fm considers it popular.
+
+WaveDeck 0.7.18 corrects custom MP3 `RATING` handling to the library's 0–10 scale and forces a read-only metadata refresh so stored ratings are repaired. It replaces the one-size personal threshold with three familiarity pools: 7–10 for Favor the Hits, 5–10 for Balanced Mix, and 3–10 for Play Deep Cuts Too. Higher values retain better odds in every pool, but the Deep Cuts profile deliberately keeps the odds relatively flat.
 
 Contextual thumbs-up/thumbs-down feedback remains deferred. The new playback row reserves disabled thumbs buttons so their position can be tested, but they do not record votes yet. A later vote should mean “fits or does not fit this Local Radio seed,” not a global song like/dislike. Store votes against the seed/candidate pair in portable Data, allow changing a vote, and do not infer votes from skips.
 
