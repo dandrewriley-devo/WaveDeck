@@ -19,6 +19,7 @@ function validateListeningHistory(value) {
   const source = value && typeof value === "object" && !Array.isArray(value) ? value.stations : null;
   const recentSource = value && typeof value === "object" && !Array.isArray(value) ? value.recentStationIds : null;
   const localRecentSource = value && typeof value === "object" && !Array.isArray(value) ? value.recentLocalStations : null;
+  const localPresetSource = value && typeof value === "object" && !Array.isArray(value) ? value.localStationPresets : null;
   const stations = {};
   if (source && typeof source === "object" && !Array.isArray(source)) {
     for (const [rawId, rawEntry] of Object.entries(source)) {
@@ -55,7 +56,27 @@ function validateListeningHistory(value) {
     });
     if (recentLocalStations.length >= 10) break;
   }
-  return { version: 2, stations, recentStationIds, recentLocalStations };
+  const seenLocalPresets = new Set();
+  const localStationPresets = [];
+  for (const rawStation of Array.isArray(localPresetSource) ? localPresetSource : []) {
+    if (!rawStation || typeof rawStation !== "object" || Array.isArray(rawStation)) continue;
+    const mode = rawStation.mode === "artist" ? "artist" : rawStation.mode === "radio" ? "radio" : "";
+    const seedId = String(rawStation.seedId ?? "").trim();
+    const key = `${mode}:${seedId}`;
+    if (!mode || !seedId || seenLocalPresets.has(key)) continue;
+    seenLocalPresets.add(key);
+    localStationPresets.push({
+      key,
+      mode,
+      seedId,
+      label: String(rawStation.label ?? "").trim().slice(0, 300),
+      title: String(rawStation.title ?? "").trim().slice(0, 300),
+      artist: String(rawStation.artist ?? "").trim().slice(0, 300),
+      album: String(rawStation.album ?? "").trim().slice(0, 300),
+      lastPlayedAt: typeof rawStation.lastPlayedAt === "string" ? rawStation.lastPlayedAt : ""
+    });
+  }
+  return { version: 3, stations, recentStationIds, recentLocalStations, localStationPresets };
 }
 
 function lowerKey(value) { return String(value ?? "").trim().toLowerCase(); }
@@ -314,6 +335,7 @@ function validatePreferences(value) {
     localRadioFamiliarity,
     streamingUi: {
       presets: rawStreamingUi.presets === true,
+      localPresets: rawStreamingUi.localPresets === true,
       favoritesOnly: rawStreamingUi.favoritesOnly === true,
       mostPlayed: rawStreamingUi.mostPlayed === true,
       collapsedGroups: cleanUiNameList(rawStreamingUi.collapsedGroups),
@@ -501,6 +523,7 @@ class PortableStorage {
     const streamingUi = this.readPreferences().streamingUi;
     return {
       presets: streamingUi.presets,
+      localPresets: streamingUi.localPresets,
       favoritesOnly: streamingUi.favoritesOnly,
       mostPlayed: streamingUi.mostPlayed,
       collapsedGroups: [...streamingUi.collapsedGroups],
@@ -513,6 +536,7 @@ class PortableStorage {
     const current = preferences.streamingUi;
     preferences.streamingUi = {
       presets: typeof state.presets === "boolean" ? state.presets : current.presets,
+      localPresets: typeof state.localPresets === "boolean" ? state.localPresets : current.localPresets,
       favoritesOnly: typeof state.favoritesOnly === "boolean" ? state.favoritesOnly : current.favoritesOnly,
       mostPlayed: typeof state.mostPlayed === "boolean" ? state.mostPlayed : current.mostPlayed,
       collapsedGroups: Array.isArray(state.collapsedGroups) ? cleanUiNameList(state.collapsedGroups) : current.collapsedGroups,

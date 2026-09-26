@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.7.18");
-assert.strictEqual(packageJson.wavedeckVersion, "0.7.18");
+assert.strictEqual(packageJson.version, "0.7.19");
+assert.strictEqual(packageJson.wavedeckVersion, "0.7.19");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -333,6 +333,7 @@ try {
     localRadioFamiliarity: "balanced",
     streamingUi: {
       presets: false,
+      localPresets: false,
       favoritesOnly: false,
       mostPlayed: false,
       collapsedGroups: [],
@@ -363,12 +364,14 @@ try {
   assert.strictEqual(storage.setLocalRadioFamiliarity('hits').localRadioFamiliarity, 'hits');
   assert.deepStrictEqual(storage.setStreamingUiState({
     presets: true,
+    localPresets: true,
     favoritesOnly: true,
     mostPlayed: true,
     collapsedGroups: ["Rock"],
     collapsedSubgroups: ["Rock\u001fClassic"]
   }), {
     presets: true,
+    localPresets: true,
     favoritesOnly: true,
     mostPlayed: true,
     collapsedGroups: ["Rock"],
@@ -431,7 +434,7 @@ try {
   assert.strictEqual(exportedLibrary.stations[0].gainDb, undefined);
   const reloadedStorage = new PortableStorage({ dataDir, defaultsDir });
   reloadedStorage.initialize();
-  assert.deepStrictEqual(reloadedStorage.readListeningHistory(), { version: 2, stations: {}, recentStationIds: [], recentLocalStations: [] });
+  assert.deepStrictEqual(reloadedStorage.readListeningHistory(), { version: 3, stations: {}, recentStationIds: [], recentLocalStations: [], localStationPresets: [] });
   reloadedStorage.writeListeningHistory({
     version: 1,
     stations: { alpha: { seconds: 325, lastListenedAt: "2026-09-02T00:00:00.000Z" } },
@@ -444,6 +447,11 @@ try {
     recentLocalStations: [{ mode: 'radio', seedId: 'comfortably-numb', label: 'Comfortably Numb Radio', title: 'Comfortably Numb', artist: 'Pink Floyd' }]
   });
   assert.deepStrictEqual(reloadedStorage.readListeningHistory().recentLocalStations.map(station => station.key), ['radio:comfortably-numb']);
+  reloadedStorage.writeListeningHistory({
+    version: 3, stations: {}, recentStationIds: [], recentLocalStations: [],
+    localStationPresets: [{ mode: 'artist', seedId: 'wish-you-were-here', label: 'Pink Floyd Radio', artist: 'Pink Floyd' }]
+  });
+  assert.deepStrictEqual(reloadedStorage.readListeningHistory().localStationPresets.map(station => station.key), ['artist:wish-you-were-here']);
 
   const subgroupStations = reloadedStorage.readStations();
   const subgroupGroup = subgroupStations[0].group;
@@ -773,6 +781,10 @@ listeningHistory.handleStatus({
   currentMusic: { mode: "artist", label: "Pink Floyd Radio", seed: { id: "seed-2", title: "Wish You Were Here", artist: "Pink Floyd" } }
 });
 assert.deepStrictEqual(listeningHistory.getStats().recentLocalStations.map(station => station.key), ["artist:seed-2", "radio:seed-1"]);
+assert.strictEqual(listeningHistory.toggleLocalStationPreset(listeningHistory.getStats().recentLocalStations[0]).saved, true);
+assert.deepStrictEqual(listeningHistory.getStats().localStationPresets.map(station => station.key), ["artist:seed-2"]);
+assert.strictEqual(listeningHistory.toggleLocalStationPreset(listeningHistory.getStats().recentLocalStations[0]).saved, false);
+assert.deepStrictEqual(listeningHistory.getStats().localStationPresets, []);
 listeningHistory.close();
 
 let indieTime = 0;
@@ -1145,6 +1157,7 @@ assert.ok(preloadSource.includes('ipcRenderer.invoke("ui:set-pro-mode", enabled)
 assert.ok(preloadSource.includes('subscribe("ui:preferences-changed"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("listening:get"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("listening:reset"'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("listening:toggle-local-preset", station)'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("sections:get-state"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("sections:set-state", state)'));
 assert.ok(preloadSource.includes('subscribe("sections:state-changed"'));
@@ -1294,7 +1307,8 @@ assert.ok(mainSource.includes('ipcMain.handle("launcher:install"'));
 assert.ok(mainSource.includes('ipcMain.handle("launcher:remove"'));
 assert.ok(mainSource.includes('ipcMain.handle("listening:get"'));
 assert.ok(mainSource.includes('ipcMain.handle("listening:reset"'));
-assert.ok(mainSource.includes('let sectionVisibility = { presets: false, favoritesOnly: false, mostPlayed: false, collapsedGroups: [], collapsedSubgroups: [] }'));
+assert.ok(mainSource.includes('ipcMain.handle("listening:toggle-local-preset"'));
+assert.ok(mainSource.includes('let sectionVisibility = { presets: false, localPresets: false, favoritesOnly: false, mostPlayed: false, collapsedGroups: [], collapsedSubgroups: [] }'));
 assert.ok(mainSource.includes('ipcMain.handle("sections:get-state"'));
 assert.ok(mainSource.includes('ipcMain.handle("sections:set-state"'));
 assert.ok(mainSource.includes('storage.getStreamingUiState()'));
@@ -1398,11 +1412,15 @@ assert.ok(rendererSource.includes("nextPreset"));
 assert.ok(rendererSource.includes("clearMusicSearch"));
 assert.ok(rendererSource.includes("Recently Played Local Stations"));
 assert.ok(rendererSource.includes("recentLocalStations"));
+assert.ok(rendererSource.includes("localStationPresets"));
+assert.ok(rendererSource.includes("toggleLocalStationPreset"));
 assert.ok(rendererSource.includes("details.music-row[open]"));
 assert.ok(rendererSource.includes("['radio', 'Song Radio'], ['artist', 'Artist Radio'], ['album', 'Play Album']"));
 assert.ok(!rendererSource.includes("Play Song"));
 assert.ok(indexHtml.includes('id="clearMusicSearchBtn"'));
 assert.ok(indexHtml.includes('id="musicContextLabel"'));
+assert.ok(indexHtml.includes('Playing:'));
+assert.ok(indexHtml.includes('id="localPresetSectionToggleBtn"'));
 assert.ok(!indexHtml.includes('id="musicPosition"'));
 assert.ok(stylesSource.includes("#musicRescan"));
 assert.ok(stylesSource.includes(".toolbar-group[hidden]"));

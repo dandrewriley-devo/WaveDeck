@@ -57,6 +57,8 @@ Radio continue indefinitely. A `DO_NOT_PLAY=1` MP3 tag is an absolute exclusion.
 Last.fm track popularity fills familiarity gaps after a song has passed the Local Radio
 fit rules. Song Familiarity offers Favor the Hits, Balanced Mix, and Play Deep Cuts Too.
 WaveDeck reads the custom `RATING` tag as 0–10. Favor the Hits first selects from Favorites and 7–10 ratings, Balanced Mix uses 5–10, and Play Deep Cuts Too uses 3–10 while deliberately giving lower qualifying ratings more opportunity. Last.fm familiarity is a fallback for Favor the Hits when no personal rating or Favorite qualifies.
+
+Local Stations can be starred from Recent Local Stations and saved as portable Local Station Presets. A saved preset records the original Song Radio or Artist Radio seed and starts that same Local Station again with one click.
 WaveDeck never automatically repeats a song within 120 minutes. It does not use album
 artwork or ReplayGain.
 

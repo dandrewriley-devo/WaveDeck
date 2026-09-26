@@ -40,7 +40,25 @@ function cleanListeningHistory(value) {
     });
     if (recentLocalStations.length >= 10) break;
   }
-  return { version: 2, stations, recentStationIds, recentLocalStations };
+  const seenLocalPresets = new Set();
+  const localStationPresets = [];
+  for (const rawStation of Array.isArray(value?.localStationPresets) ? value.localStationPresets : []) {
+    if (!rawStation || typeof rawStation !== 'object' || Array.isArray(rawStation)) continue;
+    const mode = rawStation.mode === 'artist' ? 'artist' : rawStation.mode === 'radio' ? 'radio' : '';
+    const seedId = String(rawStation.seedId ?? '').trim();
+    const key = `${mode}:${seedId}`;
+    if (!mode || !seedId || seenLocalPresets.has(key)) continue;
+    seenLocalPresets.add(key);
+    localStationPresets.push({
+      key, mode, seedId,
+      label: String(rawStation.label ?? '').trim().slice(0, 300),
+      title: String(rawStation.title ?? '').trim().slice(0, 300),
+      artist: String(rawStation.artist ?? '').trim().slice(0, 300),
+      album: String(rawStation.album ?? '').trim().slice(0, 300),
+      lastPlayedAt: typeof rawStation.lastPlayedAt === 'string' ? rawStation.lastPlayedAt : ''
+    });
+  }
+  return { version: 3, stations, recentStationIds, recentLocalStations, localStationPresets };
 }
 
 class ListeningHistory {
@@ -69,6 +87,21 @@ class ListeningHistory {
   getStats() {
     this.#flushEligibleSession();
     return cleanListeningHistory(this.history);
+  }
+
+  toggleLocalStationPreset(rawStation) {
+    const station = cleanListeningHistory({ localStationPresets: [rawStation] }).localStationPresets[0];
+    if (!station) throw new Error('That Local Station cannot be saved.');
+    const index = this.history.localStationPresets.findIndex(item => item.key === station.key);
+    const saved = index < 0;
+    this.history.localStationPresets = saved
+      ? [station, ...this.history.localStationPresets]
+      : this.history.localStationPresets.filter(item => item.key !== station.key);
+    this.history = cleanListeningHistory(this.history);
+    this.storage.writeListeningHistory(this.history);
+    const history = this.getStats();
+    this.onChanged(history);
+    return { saved, history };
   }
 
   handleStatus(status) {
@@ -114,7 +147,7 @@ class ListeningHistory {
     const activeStationId = this.session?.stationId || "";
     this.#cancelTimer();
     const cleaned = cleanListeningHistory(this.history);
-    this.history = { version: 2, stations: {}, recentStationIds: cleaned.recentStationIds, recentLocalStations: cleaned.recentLocalStations };
+    this.history = { version: 3, stations: {}, recentStationIds: cleaned.recentStationIds, recentLocalStations: cleaned.recentLocalStations, localStationPresets: cleaned.localStationPresets };
     this.storage.writeListeningHistory(this.history);
     this.session = activeStationId ? {
       stationId: activeStationId,

@@ -78,6 +78,13 @@
       </button>
       </div>
       <div id="localMusicToolbar" class="toolbar-group local-music-toolbar" hidden>
+        <button id="localPresetSectionToggleBtn" type="button" aria-label="Show Local Station Presets"
+                aria-pressed="false" title="Local Station Presets">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6.5 4.25c0-.69.56-1.25 1.25-1.25h8.5c.69 0 1.25.56 1.25 1.25V21L12 17.35 6.5 21V4.25Z"
+                  fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+          </svg>
+        </button>
         <button id="musicRescan" type="button" aria-label="Rescan Local Music" title="Rescan Local Music">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M20 11a8 8 0 1 0 2.1 5.4M20 4v7h-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -149,7 +156,7 @@
                 aria-label="Clear music search" title="Clear search" hidden>×</button>
       </div>
       <div id="musicContext" class="music-station-context" aria-label="Current Local Station" hidden>
-        <span class="music-station-context-label">Local Station</span>
+        <span class="music-station-context-label">Playing:</span>
         <span id="musicContextLabel"></span>
       </div>
     </section>

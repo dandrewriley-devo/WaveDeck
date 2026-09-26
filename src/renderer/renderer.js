@@ -15,6 +15,7 @@ const presetSectionToggleBtn = document.getElementById("presetSectionToggleBtn")
 const favoritesOnlyToggleBtn = document.getElementById("favoritesOnlyToggleBtn");
 const mostPlayedSectionToggleBtn = document.getElementById("mostPlayedSectionToggleBtn");
 const recordingsSectionToggleBtn = document.getElementById("recordingsSectionToggleBtn");
+const localPresetSectionToggleBtn = document.getElementById('localPresetSectionToggleBtn');
 const sidebarModeBtn = document.getElementById("sidebarModeBtn");
 const streamingToolbar = document.getElementById("streamingToolbar");
 const localMusicToolbar = document.getElementById("localMusicToolbar");
@@ -50,6 +51,7 @@ let recordingState = { available: false, active: false, finalizing: false };
 let recordingClock = null;
 let searchSectionVisible = false;
 let presetSectionVisible = true;
+let localPresetSectionVisible = false;
 let favoritesOnlyVisible = false;
 let mostPlayedSectionVisible = false;
 let recordingsSectionVisible = false;
@@ -229,6 +231,7 @@ function updateSectionToolbarHighlights() {
   favoritesOnlyToggleBtn.classList.toggle("active", !showingRecordings && favoritesOnlyVisible);
   mostPlayedSectionToggleBtn.classList.toggle("active", !showingRecordings && mostPlayedSectionVisible);
   recordingsSectionToggleBtn.classList.toggle("active", recordingsSectionVisible);
+  localPresetSectionToggleBtn.classList.toggle('active', musicVisible && localPresetSectionVisible);
   musicToggleBtn.classList.toggle('active', musicVisible);
   streamingTabBtn.classList.toggle('active', !musicVisible);
   musicToggleBtn.setAttribute('aria-pressed', String(musicVisible));
@@ -238,12 +241,14 @@ function updateSectionToolbarHighlights() {
 function setSectionVisibilityUi(state = {}) {
   const search = true;
   const presets = state.presets !== false;
+  const localPresets = state.localPresets === true;
   const favoritesOnly = state.favoritesOnly === true;
   const mostPlayed = state.mostPlayed === true;
-  const changed = searchSectionVisible !== search || presetSectionVisible !== presets ||
+  const changed = searchSectionVisible !== search || presetSectionVisible !== presets || localPresetSectionVisible !== localPresets ||
     favoritesOnlyVisible !== favoritesOnly || mostPlayedSectionVisible !== mostPlayed;
   searchSectionVisible = search;
   presetSectionVisible = presets;
+  localPresetSectionVisible = localPresets;
   favoritesOnlyVisible = favoritesOnly;
   mostPlayedSectionVisible = mostPlayed;
 
@@ -259,6 +264,8 @@ function setSectionVisibilityUi(state = {}) {
   searchPanel.setAttribute("aria-hidden", String(recordingsSectionVisible || musicVisible));
   presetSectionToggleBtn.setAttribute("aria-pressed", String(presets));
   presetSectionToggleBtn.setAttribute("aria-label", presets ? "Hide Presets" : "Show Presets");
+  localPresetSectionToggleBtn.setAttribute('aria-pressed', String(localPresets));
+  localPresetSectionToggleBtn.setAttribute('aria-label', localPresets ? 'Hide Local Station Presets' : 'Show Local Station Presets');
   favoritesOnlyToggleBtn.setAttribute("aria-pressed", String(favoritesOnly));
   favoritesOnlyToggleBtn.setAttribute("aria-label", favoritesOnly ? "Show all Stations" : "Show Favorites only");
   mostPlayedSectionToggleBtn.setAttribute("aria-pressed", String(mostPlayed));
@@ -338,24 +345,25 @@ async function renderMusic() {
     if (!query.trim()) {
       const history = await window.wavedeck.getListeningHistory();
       if (!musicVisible || sequence !== musicRenderSequence || query !== musicSearch.value) return;
-      const recent = Array.isArray(history?.recentLocalStations) ? history.recentLocalStations.slice(0, 10) : [];
-      if (!recent.length) listEl.append(element('div', 'music-empty-state', 'Search for local music, or start a Local Station to see it here.'));
-      else {
+      const saved = Array.isArray(history?.localStationPresets) ? history.localStationPresets : [];
+      const savedKeys = new Set(saved.map(station => station.key));
+      const recent = (Array.isArray(history?.recentLocalStations) ? history.recentLocalStations : [])
+        .filter(station => !localPresetSectionVisible || !savedKeys.has(station.key)).slice(0, 10);
+      if (localPresetSectionVisible) {
+        listEl.append(createSectionTitle('Local Station Presets', saved.length ? '' : 'None yet — star a Local Station to save it.'));
+        if (saved.length) {
+          const block = element('div', 'local-station-list');
+          block.append(...saved.map(station => createLocalStationRow(station, true)));
+          listEl.append(block);
+        } else listEl.append(element('div', 'placeholder', 'No Local Station Presets yet.'));
+      }
+      if (recent.length) {
         listEl.append(createSectionTitle('Recently Played Local Stations', 'Most recent first'));
-        for (const station of recent) {
-          const label = station.label || (station.mode === 'artist'
-            ? `${station.artist || 'Artist'} Radio`
-            : `${station.title || 'Song'} Radio`);
-          const button = element('button', 'recording-action recent-station', label);
-          button.type = 'button';
-          button.addEventListener('click', async () => {
-            button.disabled = true;
-            try { await window.wavedeck.playMusic(station.seedId, station.mode); }
-            catch (error) { musicStatus.textContent = error.message; }
-            finally { button.disabled = false; }
-          });
-          listEl.append(button);
-        }
+        const block = element('div', 'local-station-list');
+        block.append(...recent.map(station => createLocalStationRow(station, savedKeys.has(station.key))));
+        listEl.append(block);
+      } else if (!saved.length || !localPresetSectionVisible) {
+        listEl.append(element('div', 'music-empty-state', 'Search for local music, or start a Local Station to see it here.'));
       }
     } else if (!result.tracks.length) listEl.append(element('div', 'placeholder', 'No matching songs.'));
     for (const track of result.tracks) {
@@ -383,6 +391,37 @@ async function renderMusic() {
     }
     if (result.total > result.tracks.length && query.trim()) listEl.append(element('div', 'placeholder', 'Showing the first 200 matches. Refine your search for more.'));
   } catch (error) { if (musicVisible) musicStatus.textContent = error.message; }
+}
+
+function localStationLabel(station) {
+  return station.label || (station.mode === 'artist'
+    ? `${station.artist || 'Artist'} Radio`
+    : `${station.title || 'Song'} Radio`);
+}
+
+function createLocalStationRow(station, saved) {
+  const row = element('div', 'local-station-row');
+  const play = element('button', 'local-station-play', localStationLabel(station));
+  play.type = 'button';
+  play.addEventListener('click', async () => {
+    play.disabled = true;
+    try { await window.wavedeck.playMusic(station.seedId, station.mode); }
+    catch (error) { musicStatus.textContent = error.message; }
+    finally { play.disabled = false; }
+  });
+  const star = element('button', `local-station-star${saved ? ' saved' : ''}`);
+  star.type = 'button';
+  star.setAttribute('aria-label', saved ? `Remove ${localStationLabel(station)} from Local Station Presets` : `Save ${localStationLabel(station)} as a Local Station Preset`);
+  star.title = saved ? 'Remove Local Station Preset' : 'Save as Local Station Preset';
+  star.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.78 5.63 6.22.9-4.5 4.39 1.06 6.2L12 17.2l-5.56 2.92 1.06-6.2L3 9.53l6.22-.9L12 3Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>';
+  star.addEventListener('click', async () => {
+    star.disabled = true;
+    try { await window.wavedeck.toggleLocalStationPreset(station); await renderMusic(); }
+    catch (error) { musicStatus.textContent = error.message; }
+    finally { star.disabled = false; }
+  });
+  row.append(play, star);
+  return row;
 }
 
 function showMusicPlayback(status) {
@@ -430,6 +469,13 @@ clearMusicSearchBtn.addEventListener('click', () => clearMusicSearch());
 document.getElementById('musicRescan').addEventListener('click', async () => {
   try { setMusicStatus(await window.wavedeck.scanMusic()); if (musicVisible) await renderMusic(); }
   catch (error) { musicStatus.textContent = error.message; }
+});
+localPresetSectionToggleBtn.addEventListener('click', async () => {
+  localPresetSectionToggleBtn.disabled = true;
+  try {
+    setSectionVisibilityUi(await window.wavedeck.setSectionVisibility({ localPresets: !localPresetSectionVisible }));
+  } catch (error) { musicStatus.textContent = error.message; }
+  finally { localPresetSectionToggleBtn.disabled = false; }
 });
 window.wavedeck.onMusicChanged(status => { setMusicStatus(status); if (musicVisible && !status.scanning) queueRender(); });
 // Browsing Streaming Radio controls does not interrupt Local Music; choosing one does.

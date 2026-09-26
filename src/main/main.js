@@ -110,7 +110,7 @@ let windowsSidebar = null;
 let sidebarApplied = false;
 let sidebarTransitioning = false;
 let floatingBounds = null;
-let sectionVisibility = { presets: false, favoritesOnly: false, mostPlayed: false, collapsedGroups: [], collapsedSubgroups: [] };
+let sectionVisibility = { presets: false, localPresets: false, favoritesOnly: false, mostPlayed: false, collapsedGroups: [], collapsedSubgroups: [] };
 let quitFinalizingRecording = false;
 let cleanupComplete = false;
 const startupWarnings = [];
@@ -729,6 +729,7 @@ function installIpcHandlers() {
 
   ipcMain.handle("listening:get", () => listeningHistory.getStats());
   ipcMain.handle("listening:reset", () => listeningHistory.reset());
+  ipcMain.handle("listening:toggle-local-preset", (_event, station) => listeningHistory.toggleLocalStationPreset(station));
   ipcMain.handle("sections:get-state", () => ({
     ...sectionVisibility,
     collapsedGroups: [...sectionVisibility.collapsedGroups],
