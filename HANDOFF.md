@@ -91,7 +91,7 @@ Andrew has asked that the following items be addressed together in the next Wave
 - Keep the five labels Off, Gentle, Moderate, Strong, Dominant unless the design review changes this control.
 - Higher MP3 ratings should increasingly improve a track's radio-selection weight. Preserve read-only file behavior.
 - Andrew is considering a contextual thumbs-up/thumbs-down system instead of adding an in-app star-rating editor. Existing star tags can be read as metadata, but they are not contextual-fit votes. Decide whether the tag-based Ratings Matter slider should remain alongside contextual thumbs; do not conflate general song liking with fit for a particular seed.
-- At Dominant, require a rating: unrated tracks must be excluded from automatic candidates. If no rated tracks remain eligible after cooldown and other constraints, do not silently play an unrated track; decide on a clear waiting/no-rated-tracks UI outcome.
+- Do not require an embedded MP3 star tag at any Ratings Matter level. Unrated songs remain eligible and neutral; higher existing star ratings receive increasingly strong preference as the slider rises.
 - Preserve the previously discussed Moderate intent: one-star tracks are extremely unlikely and two-star tracks are rare.
 
 ### Last.fm scanning progress bar
