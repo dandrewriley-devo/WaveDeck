@@ -149,6 +149,12 @@ class MusicRadio {
     const lastFmCandidates = familiarity === 'hits' && !personalCandidates.length
       ? credibleCandidates.filter(item => hasLastFmFamiliarity(item.track)) : [];
     const candidates = personalCandidates.length ? personalCandidates : (lastFmCandidates.length ? lastFmCandidates : credibleCandidates);
+    // A set is intentional, not a reason to pause radio. If its artist has no
+    // second eligible track, end the set and immediately choose the next artist.
+    if (!candidates.length && forcedArtist) {
+      this.artistSet = null;
+      return this.choose(tracks, seed, mode, excluded, selectionTrigger);
+    }
     let remaining = this.random() * candidates.reduce((sum, item) => sum + item.score, 0);
     const picked = candidates.find(item => (remaining -= item.score) < 0) || candidates.at(-1) || null;
     const selected = picked?.track || null;
