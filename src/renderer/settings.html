@@ -25,7 +25,7 @@
       <!-- INTERFACE -->
       <section id="tab-interface" class="panel hidden">
         <div class="general-meta">
-          <b>WaveDeck version <span id="aboutVersion">0.7.19</span></b>
+          <b>WaveDeck version <span id="aboutVersion">0.7.20</span></b>
           <span>Station library: <span id="aboutDataDir">Data</span></span>
         </div>
         <div class="general-sections">
@@ -284,8 +284,26 @@
                   <div class="local-radio-familiarity">
                     <label for="localRadioFamiliarity">Song familiarity</label>
                     <input id="localRadioFamiliarity" type="range" min="0" max="2" step="1" value="1" aria-describedby="localRadioFamiliarityHelp" />
-                    <div class="local-radio-familiarity-stops" aria-hidden="true"><span>Favor the Hits</span><span>Balanced Mix</span><span>Play Deep Cuts Too</span></div>
+                    <div class="local-radio-familiarity-stops" aria-hidden="true"><span>Play Deep Cuts Too</span><span>Balanced Mix</span><span>Favor the Hits</span></div>
                     <div id="localRadioFamiliarityHelp" class="hint">Balanced Mix is the default. This adjusts only songs that already fit the Local Station.</div>
+                  </div>
+                  <div class="local-radio-familiarity">
+                    <label for="localRadioSongRepeat">Song repeat wait</label>
+                    <input id="localRadioSongRepeat" type="range" min="0" max="2" step="1" value="1" aria-describedby="localRadioSongRepeatHelp" />
+                    <div class="local-radio-familiarity-stops" aria-hidden="true"><span>2 hours</span><span>4 hours</span><span>6 hours</span></div>
+                    <div id="localRadioSongRepeatHelp" class="hint">4 hours is the default. A song cannot return until this wait has passed.</div>
+                  </div>
+                  <div class="local-radio-familiarity">
+                    <label for="localRadioArtistRepeat">Artist repeat wait</label>
+                    <input id="localRadioArtistRepeat" type="range" min="0" max="2" step="1" value="1" aria-describedby="localRadioArtistRepeatHelp" />
+                    <div class="local-radio-familiarity-stops" aria-hidden="true"><span>30 minutes</span><span>90 minutes</span><span>180 minutes</span></div>
+                    <div id="localRadioArtistRepeatHelp" class="hint">90 minutes is the default. The artist cannot return until this wait has passed.</div>
+                  </div>
+                  <div class="local-radio-familiarity">
+                    <label for="localRadioArtistSet">Artist sets</label>
+                    <input id="localRadioArtistSet" type="range" min="0" max="3" step="1" value="0" aria-describedby="localRadioArtistSetHelp" />
+                    <div class="local-radio-familiarity-stops four" aria-hidden="true"><span>Single Tracks</span><span>Two-Fers</span><span>Three Plays</span><span>Four Plays</span></div>
+                    <div id="localRadioArtistSetHelp" class="hint">Single Tracks is the default. A set plays before the artist's repeat wait begins.</div>
                   </div>
         </section>
         <div id="statusLocalMusic" class="status"></div>
@@ -304,6 +322,12 @@
         <div class="about-divider"></div>
         <div class="changelog">
           <h2>Changelog</h2>
+
+          <h3>WaveDeck 0.7.20 — Local Radio Rotation</h3>
+          <ul>
+            <li>Adds persistent Song Repeat Wait, Artist Repeat Wait, and Artist Sets controls for Local Radio.</li>
+            <li>Defaults to 4 hours between the same song, 90 minutes between the same artist, and Single Tracks. Song Familiarity now increases toward Favor the Hits.</li>
+          </ul>
 
           <h3>WaveDeck 0.7.19 — Local Station Presets</h3>
           <ul>

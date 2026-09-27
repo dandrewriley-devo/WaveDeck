@@ -317,6 +317,7 @@ class MediaController {
     if (track.doNotPlay) throw new Error('This song is marked Do Not Play.');
     await this.beforeStop({ reason: 'music-playback', station: this.getCurrentStation() });
     this.clearMusic();
+    this.musicRadio?.beginSession?.();
     this.currentStation = null; this.currentRecording = null;
     const album = this.musicLibrary.tracks.filter(t => !t.doNotPlay && track.album && normalize(t.album) === normalize(track.album) &&
       ((compilation(track) && !track.albumArtist) || normalize(t.albumArtist || t.artist) === normalize(track.albumArtist || track.artist)))

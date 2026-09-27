@@ -301,6 +301,9 @@ function validatePreferences(value) {
   const localRadioFamiliarity = ['hits', 'balanced', 'deep-cuts'].includes(value?.localRadioFamiliarity)
     ? value.localRadioFamiliarity
     : 'balanced';
+  const localRadioSongRepeatHours = [2, 4, 6].includes(Number(value?.localRadioSongRepeatHours)) ? Number(value.localRadioSongRepeatHours) : 4;
+  const localRadioArtistRepeatMinutes = [30, 90, 180].includes(Number(value?.localRadioArtistRepeatMinutes)) ? Number(value.localRadioArtistRepeatMinutes) : 90;
+  const localRadioArtistSetSize = [1, 2, 3, 4].includes(Number(value?.localRadioArtistSetSize)) ? Number(value.localRadioArtistSetSize) : 1;
   const rawStreamingUi = value?.streamingUi && typeof value.streamingUi === "object" && !Array.isArray(value.streamingUi)
     ? value.streamingUi
     : {};
@@ -333,6 +336,9 @@ function validatePreferences(value) {
     lastFmEnabled: value?.lastFmEnabled === true,
     lastFmApiKey,
     localRadioFamiliarity,
+    localRadioSongRepeatHours,
+    localRadioArtistRepeatMinutes,
+    localRadioArtistSetSize,
     streamingUi: {
       presets: rawStreamingUi.presets === true,
       localPresets: rawStreamingUi.localPresets === true,
@@ -505,6 +511,9 @@ class PortableStorage {
       lastFmEnabled: preferences.lastFmEnabled,
       lastFmApiKey: preferences.lastFmApiKey,
       localRadioFamiliarity: preferences.localRadioFamiliarity,
+      localRadioSongRepeatHours: preferences.localRadioSongRepeatHours,
+      localRadioArtistRepeatMinutes: preferences.localRadioArtistRepeatMinutes,
+      localRadioArtistSetSize: preferences.localRadioArtistSetSize,
       launchInSidebarMode: preferences.launchInSidebarMode,
       settingsWindowBounds: preferences.settingsWindowBounds
         ? { ...preferences.settingsWindowBounds }
@@ -578,6 +587,15 @@ class PortableStorage {
   setLocalRadioFamiliarity(value) {
     const preferences = this.readPreferences();
     preferences.localRadioFamiliarity = ['hits', 'balanced', 'deep-cuts'].includes(value) ? value : 'balanced';
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences();
+  }
+
+  setLocalRadioTuning(value = {}) {
+    const preferences = this.readPreferences();
+    if ([2, 4, 6].includes(Number(value.songRepeatHours))) preferences.localRadioSongRepeatHours = Number(value.songRepeatHours);
+    if ([30, 90, 180].includes(Number(value.artistRepeatMinutes))) preferences.localRadioArtistRepeatMinutes = Number(value.artistRepeatMinutes);
+    if ([1, 2, 3, 4].includes(Number(value.artistSetSize))) preferences.localRadioArtistSetSize = Number(value.artistSetSize);
     this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
     return this.getUiPreferences();
   }

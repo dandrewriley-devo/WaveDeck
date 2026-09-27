@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.7.19");
-assert.strictEqual(packageJson.wavedeckVersion, "0.7.19");
+assert.strictEqual(packageJson.version, "0.7.20");
+assert.strictEqual(packageJson.wavedeckVersion, "0.7.20");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -331,6 +331,9 @@ try {
     lastFmEnabled: false,
     lastFmApiKey: "",
     localRadioFamiliarity: "balanced",
+    localRadioSongRepeatHours: 4,
+    localRadioArtistRepeatMinutes: 90,
+    localRadioArtistSetSize: 1,
     streamingUi: {
       presets: false,
       localPresets: false,
@@ -352,6 +355,9 @@ try {
     lastFmEnabled: false,
     lastFmApiKey: "",
     localRadioFamiliarity: "balanced",
+    localRadioSongRepeatHours: 4,
+    localRadioArtistRepeatMinutes: 90,
+    localRadioArtistSetSize: 1,
     launchInSidebarMode: false,
     settingsWindowBounds: null,
     radioLogWindowBounds: null
@@ -362,6 +368,7 @@ try {
   assert.strictEqual(storage.setAdditionalMusicFolder("/mnt/music").additionalMusicFolder, "/mnt/music");
   assert.strictEqual(storage.setLastFmSettings({ enabled: true, apiKey: 'test-key' }).lastFmEnabled, true);
   assert.strictEqual(storage.setLocalRadioFamiliarity('hits').localRadioFamiliarity, 'hits');
+  assert.deepStrictEqual(storage.setLocalRadioTuning({ songRepeatHours: 6, artistRepeatMinutes: 180, artistSetSize: 2 }).localRadioArtistSetSize, 2);
   assert.deepStrictEqual(storage.setStreamingUiState({
     presets: true,
     localPresets: true,
@@ -397,6 +404,9 @@ try {
     lastFmEnabled: true,
     lastFmApiKey: "test-key",
     localRadioFamiliarity: "hits",
+    localRadioSongRepeatHours: 6,
+    localRadioArtistRepeatMinutes: 180,
+    localRadioArtistSetSize: 2,
     launchInSidebarMode: true,
     settingsWindowBounds: { x: 2100, y: 41, width: 1120, height: 841 },
     radioLogWindowBounds: { x: 14, y: 23, width: 864, height: 700 }

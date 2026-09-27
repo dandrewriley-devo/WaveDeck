@@ -834,6 +834,12 @@ function installIpcHandlers() {
     sendToAll('ui:preferences-changed', preferences);
     return preferences;
   });
+  ipcMain.handle('music:local-radio:set-tuning', (_event, tuning) => {
+    requireAdvancedFeatures();
+    const preferences = storage.setLocalRadioTuning(tuning || {});
+    sendToAll('ui:preferences-changed', preferences);
+    return preferences;
+  });
 
   const requireAdvancedFeatures = () => {
     if (!storage.getUiPreferences().proModeEnabled) {
@@ -1086,7 +1092,9 @@ if (!hasSingleInstanceLock) {
     }));
 
     musicLibrary = new MusicLibrary({ dataDir: getDataDir(), additionalMusicFolder: storage.getUiPreferences().additionalMusicFolder, onStatus: status => sendToMain('music:changed', status) });
-    musicRadio = new MusicRadio({ dataDir: getDataDir(), onDecision: sendToRadioLog, getFamiliarity: () => storage.getUiPreferences().localRadioFamiliarity });
+    musicRadio = new MusicRadio({ dataDir: getDataDir(), onDecision: sendToRadioLog,
+      getFamiliarity: () => storage.getUiPreferences().localRadioFamiliarity,
+      getTuning: () => storage.getUiPreferences() });
     lastFmEnricher = new LastFmEnricher({
       library: musicLibrary,
       getPreferences: () => storage.getUiPreferences(),
