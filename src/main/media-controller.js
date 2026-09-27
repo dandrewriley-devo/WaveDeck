@@ -1,4 +1,386 @@
-YªçŠx-®éÜj×¢ëiºÚ+Š§j[h‘éÜ¢éíçŸ=N‹Z–‹­¦ëeŠw¬Õ½¹ÍÐì¹½Éµ…±¥é”°½µÁ¥±…Ñ¥½¸°É…‘¥½ÉÑ¥ÍÐô€ôÉ•ÅÕ¥É” œ¸½µÕÍ¥ŒµÑ…Ìœ¤ì)½¹ÍÐìÉ•Í½±Ù•1½…±5¥àô€ôÉ•ÅÕ¥É” œ¸½±½…°µµ¥á•Ìœ¤ì)™Õ¹Ñ¥½¸Í½ÉÑ	å9…µ”¡„°ˆ¤ì(€É•ÑÕÉ¸MÑÉ¥¹œ¡„ü¹¹…µ”€üü€ˆˆ¤¹±½…±•½µÁ…É”¡MÑÉ¥¹œ¡ˆü¹¹…µ”€üü€ˆˆ¤°Õ¹‘•™¥¹•°ì(€€€Í•¹Í¥Ñ¥Ù¥Ñäè€‰‰…Í”ˆ(€ô¤ì)ô()™Õ¹Ñ¥½¸ÁÉ•Í•ÑI…¹¬¡ÍÑ…Ñ¥½¸¤ì(€½¹ÍÐÉ…Ü€ôÍÑ…Ñ¥½¸ü¹ÁÉ•Í•Ñ=É‘•Èì(€¥˜€¡É…Ü€ôôô¹Õ±°ñðÉ…Ü€ôôôÕ¹‘•™¥¹•ñðÉ…Ü€ôôô€ˆˆ¤É•ÑÕÉ¸¹Õ±°ì(€½¹ÍÐÙ…±Õ”€ô9Õµ‰•È¡É…Ü¤ì(€É•ÑÕÉ¸9Õµ‰•È¹¥ÍM…™•%¹Ñ••È¡Ù…±Õ”¤€˜˜Ù…±Õ”€øô€À€üÙ…±Õ”€è¹Õ±°ì)ô()™Õ¹Ñ¥½¸Í½ÉÑAÉ•Í•ÑÌ¡„°ˆ¤ì(€½¹ÍÐ…I…¹¬€ôÁÉ•Í•ÑI…¹¬¡„¤ì(€½¹ÍÐ‰I…¹¬€ôÁÉ•Í•ÑI…¹¬¡ˆ¤ì(€¥˜€¡…I…¹¬€„ôô¹Õ±°€˜˜‰I…¹¬€„ôô¹Õ±°€˜˜…I…¹¬€„ôô‰I…¹¬¤É•ÑÕÉ¸…I…¹¬€´‰I…¹¬ì(€¥˜€¡…I…¹¬€„ôô¹Õ±°€˜˜‰I…¹¬€ôôô¹Õ±°¤É•ÑÕÉ¸€´Äì(€¥˜€¡…I…¹¬€ôôô¹Õ±°€˜˜‰I…¹¬€„ôô¹Õ±°¤É•ÑÕÉ¸€Äì(€É•ÑÕÉ¸Í½ÉÑ	å9…µ”¡„°ˆ¤ì)ô()™Õ¹Ñ¥½¸ÁÕ‰±¥MÑ…Ñ¥½¸¡ÍÑ…Ñ¥½¸¤ì(€¥˜€ …ÍÑ…Ñ¥½¸¤É•ÑÕÉ¸¹Õ±°ì(€É•ÑÕÉ¸ì(€€€¥èMÑÉ¥¹œ¡ÍÑ…Ñ¥½¸¹¥€üü€ˆˆ¤°(€€€¹…µ”èMÑÉ¥¹œ¡ÍÑ…Ñ¥½¸¹¹…µ”€üü€ˆˆ¤°(€€€ÕÉ°èMÑÉ¥¹œ¡ÍÑ…Ñ¥½¸¹ÕÉ°€üü€ˆˆ¤°(€€€½Õ¹ÑÉäèMÑÉ¥¹œ¡ÍÑ…Ñ¥½¸¹½Õ¹ÑÉä€üü€ˆˆ¤°(€€€‘•ÍÉ¥ÁÑ¥½¸èMÑÉ¥¹œ¡ÍÑ…Ñ¥½¸¹‘•ÍÉ¥ÁÑ¥½¸€üü€ˆˆ¤°(€€€ÍÕ‰É½ÕÀèMÑÉ¥¹œ¡ÍÑ…Ñ¥½¸¹ÍÕ‰É½ÕÀ€üü€ˆˆ¤°(€€€™…Ù½É¥Ñ”è	½½±•…¸¡ÍÑ…Ñ¥½¸¹™…Ù½É¥Ñ”¤°(€€€ÁÉ•Í•Ðè	½½±•…¸¡ÍÑ…Ñ¥½¸¹ÁÉ•Í•Ð¤°(€€€¡…ÍAÉ•I½±°è	½½±•…¸¡ÍÑ…Ñ¥½¸¹¡…ÍAÉ•I½±°¤°(€€€…¥¹ˆè9Õµ‰•È¹¥Í¥¹¥Ñ”¡9Õµ‰•È¡ÍÑ…Ñ¥½¸¹…¥¹ˆ¤¤€ü9Õµ‰•È¡ÍÑ…Ñ¥½¸¹…¥¹ˆ¤€è€À(€ôì)ô()™Õ¹Ñ¥½¸ÁÕ‰±¥I•½É‘¥¹œ¡É•½É‘¥¹œ¤ì(€¥˜€ …É•½É‘¥¹œ¤É•ÑÕÉ¸¹Õ±°ì(€É•ÑÕÉ¸ì(€€€¥èMÑÉ¥¹œ¡É•½É‘¥¹œ¹¥€üü€ˆˆ¤°(€€€™¥±•9…µ”èMÑÉ¥¹œ¡É•½É‘¥¹œ¹™¥±•9…µ”€üü€ˆˆ¤°(€€€¹…µ”èMÑÉ¥¹œ¡É•½É‘¥¹œ¹¹…µ”€üü€‰]…Ù••¬I•½É‘¥¹œˆ¤°(€€€µ½‘¥™¥•‘ÐèMÑÉ¥¹œ¡É•½É‘¥¹œ¹µ½‘¥™¥•‘Ð€üü€ˆˆ¤°(€€€Í¥é”è9Õµ‰•È¡É•½É‘¥¹œ¹Í¥é”¤ñð€À°(€€€‘ÕÉ…Ñ¥½¹M•½¹‘Ìè9Õµ‰•È¹¥Í¥¹¥Ñ”¡9Õµ‰•È¡É•½É‘¥¹œ¹‘ÕÉ…Ñ¥½¹M•½¹‘Ì¤¤(€€€€€€ü9Õµ‰•È¡É•½É‘¥¹œ¹‘ÕÉ…Ñ¥½¹M•½¹‘Ì¤(€€€€€€è¹Õ±°(€ôì)ô()™Õ¹Ñ¥½¸µÕÍ¥½¹Ñ•áÑ1…‰•°¡µÕÍ¥Œ¤ì(€¥˜€¡µÕÍ¥Œü¹µ½‘”€ôôô€µ¥àœ¤É•ÑÕÉ¸µÕÍ¥Œü¹±…‰•°ñðµÕÍ¥Œü¹Í••ü¹Ñ¥Ñ±”ñð€1½…°5¥àœì(€½¹ÍÐÍ••€ôµÕÍ¥Œü¹Í••ñðµÕÍ¥Œü¹ÕÉÉ•¹Ðñðíôì(€¥˜€¡µÕÍ¥Œü¹µ½‘”€ôôô€…±‰Õ´œ¤É•ÑÕÉ¸Í••¹…±‰Õ´€ü€‘íÍ••¹…±‰ÕµôI…‘¥½€€è€±‰Õ´I…‘¥¼œì(€¥˜€¡µÕÍ¥Œü¹µ½‘”€ôôô€…ÉÑ¥ÍÐœ¤É•ÑÕÉ¸€‘íÉ…‘¥½ÉÑ¥ÍÐ¡Í••¤ñðÍ••¹…ÉÑ¥ÍÐñð€ÉÑ¥ÍÐôI…‘¥½€ì(€¥˜€¡µÕÍ¥Œü¹µ½‘”€ôôô€É…‘¥¼œ¤É•ÑÕÉ¸Í••¹Ñ¥Ñ±”€ü€‘íÍ••¹Ñ¥Ñ±•ôI…‘¥½€€è€M½¹œI…‘¥¼œì(€É•ÑÕÉ¸Í••¹Ñ¥Ñ±”ñð€M½¹œœì)ô()±…ÍÌ5•‘¥…½¹ÑÉ½±±•Èì(€½¹ÍÑÉÕÑ½È¡ì(€€€Á±…å•È°(€€€•ÑMÑ…Ñ¥½¹Ì°(€€€½¹MÑ…Ñ¥½¹¡…¹•°(€€€½¹MÑ…Ñ•¡…¹•°(€€€‰•™½É•MÑ…Ñ¥½¹¡…¹”°(€€€‰•™½É•MÑ½À(€ô¤ì(€€€Ñ¡¥Ì¹Á±…å•È€ôÁ±…å•Èì(€€€Ñ¡¥Ì¹•ÑMÑ…Ñ¥½¹Ì€ô•ÑMÑ…Ñ¥½¹Ìì(€€€Ñ¡¥Ì¹½¹MÑ…Ñ¥½¹¡…¹•€ô½¹MÑ…Ñ¥½¹¡…¹•ñð€  ¤€ôøíô¤ì(€€€Ñ¡¥Ì¹½¹MÑ…Ñ•¡…¹•€ô½¹MÑ…Ñ•¡…¹•ñð€  ¤€ôøíô¤ì(€€€Ñ¡¥Ì¹‰•™½É•MÑ…Ñ¥½¹¡…¹”€ô‰•™½É•MÑ…Ñ¥½¹¡…¹”ñð€¡…Íå¹Œ€ ¤€ôøíô¤ì(€€€Ñ¡¥Ì¹‰•™½É•MÑ½À€ô‰•™½É•MÑ½Àñð€¡…Íå¹Œ€ ¤€ôøíô¤ì(€€€Ñ¡¥Ì¹ÕÉÉ•¹ÑMÑ…Ñ¥½¸€ô¹Õ±°ì(€€€Ñ¡¥Ì¹ÕÉÉ•¹ÑI•½É‘¥¹œ€ô¹Õ±°ì(€€€Ñ¡¥Ì¹µ•‘¥…MÑ…Ñ”€ô€‰ÍÑ½ÁÁ•ˆì(€€€Ñ¡¥Ì¹µÕÍ¥Œ€ô¹Õ±°ì(€€€Ñ¡¥Ì¹µÕÍ¥•¹•É…Ñ¥½¸€ô€Àì(€€€Ñ¡¥Ì¹µÕÍ¥I•ÑÉä€ô¹Õ±°ì(€€€Ñ¡¥Ì¹µÕÍ¥	ÕÍä€ô™…±Í”ì(€ô((€•ÑÕÉÉ•¹ÑMÑ…Ñ¥½¸ ¤ì(€€€É•ÑÕÉ¸ÁÕ‰±¥MÑ…Ñ¥½¸¡Ñ£~|öÚ$z{-®éÜj× === 'album') this.music.mode = 'artist';
+const { normalize, compilation, radioArtist } = require('./music-tags');
+const { resolveLocalMix } = require('./local-mixes');
+function sortByName(a, b) {
+  return String(a?.name ?? "").localeCompare(String(b?.name ?? ""), undefined, {
+    sensitivity: "base"
+  });
+}
+
+function presetRank(station) {
+  const raw = station?.presetOrder;
+  if (raw === null || raw === undefined || raw === "") return null;
+  const value = Number(raw);
+  return Number.isSafeInteger(value) && value >= 0 ? value : null;
+}
+
+function sortPresets(a, b) {
+  const aRank = presetRank(a);
+  const bRank = presetRank(b);
+  if (aRank !== null && bRank !== null && aRank !== bRank) return aRank - bRank;
+  if (aRank !== null && bRank === null) return -1;
+  if (aRank === null && bRank !== null) return 1;
+  return sortByName(a, b);
+}
+
+function publicStation(station) {
+  if (!station) return null;
+  return {
+    id: String(station.id ?? ""),
+    name: String(station.name ?? ""),
+    url: String(station.url ?? ""),
+    country: String(station.country ?? ""),
+    description: String(station.description ?? ""),
+    subgroup: String(station.subgroup ?? ""),
+    favorite: Boolean(station.favorite),
+    preset: Boolean(station.preset),
+    hasPreRoll: Boolean(station.hasPreRoll),
+    gainDb: Number.isFinite(Number(station.gainDb)) ? Number(station.gainDb) : 0
+  };
+}
+
+function publicRecording(recording) {
+  if (!recording) return null;
+  return {
+    id: String(recording.id ?? ""),
+    fileName: String(recording.fileName ?? ""),
+    name: String(recording.name ?? "WaveDeck Recording"),
+    modifiedAt: String(recording.modifiedAt ?? ""),
+    size: Number(recording.size) || 0,
+    durationSeconds: Number.isFinite(Number(recording.durationSeconds))
+      ? Number(recording.durationSeconds)
+      : null
+  };
+}
+
+function musicContextLabel(music) {
+  if (music?.mode === 'mix') return music?.label || music?.seed?.title || 'Local Mix';
+  const seed = music?.seed || music?.current || {};
+  if (music?.mode === 'album') return seed.album ? `${seed.album} Radio` : 'Album Radio';
+  if (music?.mode === 'artist') return `${radioArtist(seed) || seed.artist || 'Artist'} Radio`;
+  if (music?.mode === 'radio') return seed.title ? `${seed.title} Radio` : 'Song Radio';
+  return seed.title || 'Song';
+}
+
+class MediaController {
+  constructor({
+    player,
+    getStations,
+    onStationChanged,
+    onStateChanged,
+    beforeStationChange,
+    beforeStop
+  }) {
+    this.player = player;
+    this.getStations = getStations;
+    this.onStationChanged = onStationChanged || (() => {});
+    this.onStateChanged = onStateChanged || (() => {});
+    this.beforeStationChange = beforeStationChange || (async () => {});
+    this.beforeStop = beforeStop || (async () => {});
+    this.currentStation = null;
+    this.currentRecording = null;
+    this.mediaState = "stopped";
+    this.music = null;
+    this.musicGeneration = 0;
+    this.musicRetry = null;
+    this.musicBusy = false;
+  }
+
+  getCurrentStation() {
+    return publicStation(this.currentStation);
+  }
+
+  getMediaState() {
+    return this.mediaState;
+  }
+
+  getStatus(playerStatus = this.player.getStatus()) {
+    return {
+      ...playerStatus,
+      mediaState: this.mediaState,
+      currentStation: this.getCurrentStation(),
+      currentRecording: publicRecording(this.currentRecording),
+      currentMusic: this.music ? {
+        track: this.music.current,
+        seed: (() => { const seed = { ...this.music.seed }; delete seed.path; return seed; })(),
+        mode: this.music.mode,
+        mixId: this.music.mixId || '',
+        label: musicContextLabel(this.music),
+        waiting: this.music.waiting
+      } : null
+    };
+  }
+
+  getPresets() {
+    return this.getStations()
+      .filter((station) => station.preset)
+      .sort(sortPresets);
+  }
+
+  async playUrl(url) {
+    const station = this.getStations().find((item) => item.url === url);
+    if (!station) throw new Error("That station is no longer in WaveDeck.");
+    return this.playStation(station);
+  }
+
+  async playStationById(stationId) {
+    const id = String(stationId ?? "").trim();
+    const station = this.getStations().find((item) => String(item.id) === id);
+    if (!station) throw new Error("That station is no longer in WaveDeck.");
+    return this.playStation(station);
+  }
+
+  async playStation(station) {
+    this.clearMusic();
+    const nextStation = publicStation(station);
+    const stationChanged = this.currentStation && (
+      String(this.currentStation.id) !== String(nextStation.id) ||
+      this.currentStation.url !== nextStation.url
+    );
+    if (stationChanged) {
+      await this.beforeStationChange({
+        previousStation: this.getCurrentStation(),
+        nextStation
+      });
+    }
+    this.currentRecording = null;
+    this.currentStation = nextStation;
+    const stationId = this.currentStation.id;
+    this.mediaState = "playing";
+    this.onStationChanged(this.getCurrentStation());
+    this.onStateChanged(this.getStatus());
+    try {
+      await this.player.setStationGain(this.currentStation.gainDb);
+      await this.player.play(this.currentStation.url);
+    } catch (error) {
+      if (String(this.currentStation?.id) === stationId) {
+        this.mediaState = "stopped";
+        this.onStateChanged({
+          ...this.getStatus(),
+          state: "error",
+          playing: false,
+          message: `Could not play station: ${error.message}`
+        });
+      }
+      throw error;
+    }
+    return this.getCurrentStation();
+  }
+
+  async playRecording(recording) {
+    this.clearMusic();
+    const nextRecording = {
+      ...publicRecording(recording),
+      path: String(recording?.path ?? "")
+    };
+    if (!nextRecording.id || !nextRecording.path) throw new Error("That recording is no longer available.");
+
+    await this.beforeStop({
+      reason: "recording-playback",
+      station: this.getCurrentStation(),
+      recording: publicRecording(nextRecording)
+    });
+    this.currentStation = null;
+    this.currentRecording = nextRecording;
+    const recordingId = nextRecording.id;
+    this.mediaState = "playing";
+    this.onStationChanged(null);
+    this.onStateChanged(this.getStatus());
+    try {
+      await this.player.setStationGain(0);
+      await this.player.play(nextRecording.path);
+    } catch (error) {
+      if (String(this.currentRecording?.id) === recordingId) {
+        this.mediaState = "stopped";
+        this.onStateChanged({
+          ...this.getStatus(),
+          state: "error",
+          playing: false,
+          message: `Could not play recording: ${error.message}`
+        });
+      }
+      throw error;
+    }
+    return publicRecording(this.currentRecording);
+  }
+
+  async pause() {
+    if (this.mediaState !== "playing") return false;
+    if (this.music) {
+      clearTimeout(this.musicRetry);
+      await this.player.setPaused(true);
+      this.mediaState = 'paused'; this.onStateChanged(this.getStatus()); return true;
+    }
+    await this.beforeStop({ reason: "pause", station: this.getCurrentStation() });
+    this.mediaState = "paused";
+    this.onStateChanged(this.getStatus());
+    await this.player.stop();
+    return true;
+  }
+
+  async stop() {
+    if (this.music) this.clearMusic();
+    await this.beforeStop({ reason: "stop", station: this.getCurrentStation() });
+    this.mediaState = "stopped";
+    this.onStateChanged(this.getStatus());
+    await this.player.stop();
+    return true;
+  }
+
+  async setVolume(normalizedValue) {
+    const normalized = Math.min(Math.max(Number(normalizedValue) || 0, 0), 1);
+    await this.player.setVolume(normalized * 100);
+    return normalized;
+  }
+
+  async setStationGain(stationId, value) {
+    const id = String(stationId ?? "").trim();
+    const gainDb = Number(value) || 0;
+    if (String(this.currentStation?.id) !== id) return false;
+    this.currentStation = { ...this.currentStation, gainDb };
+    await this.player.setStationGain(gainDb);
+    this.onStateChanged(this.getStatus());
+    return true;
+  }
+
+  async play() {
+    if (this.music) {
+      this.mediaState = 'playing';
+      if (this.music.waiting) await this.advanceMusic(); else await this.player.setPaused(false);
+      this.onStateChanged(this.getStatus()); return true;
+    }
+    if (this.mediaState === "playing" && this.player.getStatus().playing) return true;
+    if (this.currentStation) {
+      await this.playStation(this.currentStation);
+      return true;
+    }
+    if (this.currentRecording) {
+      await this.playRecording(this.currentRecording);
+      return true;
+    }
+
+    const presets = this.getPresets();
+    if (!presets.length) return false;
+    await this.playStation(presets[0]);
+    return true;
+  }
+
+  async togglePlayPause() {
+    if (this.mediaState === "playing") return this.pause();
+    return this.play();
+  }
+
+  async nextPreset() {
+    if (this.music) {
+      if (['radio', 'artist', 'mix'].includes(this.music.mode) && this.music.current) {
+        this.musicRadio?.recordFeedback(this.music.radioKey, this.music.current, 'skip');
+      }
+      return this.advanceMusic('skip');
+    }
+    return this.#movePreset(1);
+  }
+
+  async previousPreset() {
+    if (this.music) {
+      if (this.musicBusy) return false;
+      if ((this.player.getStatus().position || 0) > 3) { await this.player.seek(0); return true; }
+      if (this.music.back.length > 1) {
+        this.music.back.pop();
+        const previous = this.music.back.pop();
+        if (this.music.mode === 'album') this.music.queue.unshift(this.music.current.id);
+        return this.loadMusic(previous);
+      }
+      await this.player.seek(0); return true;
+    }
+    return this.#movePreset(-1);
+  }
+
+  async #movePreset(direction) {
+    const presets = this.getPresets();
+    if (!presets.length) return false;
+
+    const currentIndex = presets.findIndex((station) => (
+      String(station.id) === String(this.currentStation?.id) ||
+      station.url === this.currentStation?.url
+    ));
+    let targetIndex;
+    if (currentIndex < 0) targetIndex = direction > 0 ? 0 : presets.length - 1;
+    else targetIndex = (currentIndex + direction + presets.length) % presets.length;
+
+    await this.playStation(presets[targetIndex]);
+    return true;
+  }
+
+  configureMusic(library, radio, onMusicTrack = () => {}) {
+    this.musicLibrary = library; this.musicRadio = radio;
+    this.onMusicTrack = typeof onMusicTrack === 'function' ? onMusicTrack : () => {};
+  }
+
+  clearMusic() {
+    this.musicGeneration++; clearTimeout(this.musicRetry); this.music = null;
+  }
+
+  async playMusic(id, mode = 'song') {
+    if (!['song', 'album', 'artist', 'radio'].includes(mode)) throw new Error('Unknown music mode.');
+    const track = await this.musicLibrary.resolve(id);
+    if (track.doNotPlay) throw new Error('This song is marked Do Not Play.');
+    await this.beforeStop({ reason: 'music-playback', station: this.getCurrentStation() });
+    this.clearMusic();
+    this.musicRadio?.beginSession?.();
+    this.currentStation = null; this.currentRecording = null;
+    const album = this.musicLibrary.tracks.filter(t => !t.doNotPlay && track.album && normalize(t.album) === normalize(track.album) &&
+      ((compilation(track) && !track.albumArtist) || normalize(t.albumArtist || t.artist) === normalize(track.albumArtist || track.artist)))
+      .sort((a, b) => a.disc - b.disc || a.track - b.track || a.relativePath.localeCompare(b.relativePath));
+    if (mode === 'album' && !album.length) album.push(track);
+    this.music = { seed: track, mode, radioKey: `${mode}:${track.songKey || track.id}`, current: null, queue: mode === 'album' ? album.map(t => t.id) : [], back: [], failed: new Set(), waiting: false };
+    this.onStationChanged(null);
+    return this.loadMusic(mode === 'album' ? this.music.queue.shift() : id);
+  }
+
+  async playLocalMix(mixId) {
+    const mix = resolveLocalMix(mixId, this.musicLibrary.tracks);
+    await this.beforeStop({ reason: 'music-playback', station: this.getCurrentStation() });
+    this.clearMusic();
+    this.musicRadio?.beginSession?.();
+    this.currentStation = null; this.currentRecording = null;
+    this.music = {
+      seed: { id: `mix:${mix.id}`, title: mix.name, artist: '', album: '', genres: [] },
+      profile: mix, mixId: mix.id, label: mix.name, mode: 'mix', radioKey: `mix:${mix.id}`,
+      current: null, queue: [], back: [], failed: new Set(), waiting: false
+    };
+    this.onStationChanged(null);
+    return this.advanceMusic('start');
+  }
+
+  async loadMusic(id) {
+    const generation = this.musicGeneration;
+    const track = await this.musicLibrary.resolve(id);
+    if (track.doNotPlay) throw new Error('This song is marked Do Not Play.');
+    if (!this.music || generation !== this.musicGeneration) return false;
+    this.music.current = { ...track }; delete this.music.current.path;
+    this.music.waiting = false;
+    this.mediaState = 'playing';
+    await this.player.setStationGain(0);
+    if (!this.music || generation !== this.musicGeneration) return false;
+    await this.player.play(track.path);
+    if (!this.music || generation !== this.musicGeneration) return false;
+    this.music.back.push(id); this.music.back = this.music.back.slice(-100);
+    this.musicRadio.record(track);
+    try { this.onMusicTrack(track); } catch {}
+    this.onStateChanged(this.getStatus());
+    return true;
+  }
+
+  async advanceMusic(reason = 'next') {
+    if (!this.music || this.musicBusy) return false;
+    this.musicBusy = true;
+    const generation = this.musicGeneration;
+    clearTimeout(this.musicRetry);
+    try {
+      if (reason === 'error' && this.music.current) this.music.failed.add(this.music.current.id);
+      if (this.music.mode === 'song') { await this.stop(); return true; }
+      while (this.music && generation === this.musicGeneration) {
+        let id = this.music.queue.shift();
+        if (!id && this.music.mode === 'album') this.music.mode = 'artist';
         if (!id) id = this.musicRadio.choose(this.musicLibrary.tracks, this.music.profile || this.music.seed, this.music.mode, this.music.failed, reason, this.music.radioKey)?.id;
         if (!id) {
           this.music.waiting = true;

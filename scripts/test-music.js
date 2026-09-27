@@ -1,4 +1,107 @@
-YªçŠx-®éÜj×¢ëiºÚ+Š§j[h‘éÜ¢éíçm8N‹Z–‹­¦ëeŠw¬Õ½¹ÍÐ…ÍÍ•ÉÐ€ôÉ•ÅÕ¥É” …ÍÍ•ÉÐ½ÍÑÉ¥Ðœ¤ì)½¹ÍÐ™Ì€ôÉ•ÅÕ¥É” ™Ì½ÁÉ½µ¥Í•Ìœ¤ì)½¹ÍÐ½Ì€ôÉ•ÅÕ¥É” ½Ìœ¤ì)½¹ÍÐÁ…Ñ €ôÉ•ÅÕ¥É” Á…Ñ œ¤ì)½¹ÍÐÉåÁÑ¼€ôÉ•ÅÕ¥É” ÉåÁÑ¼œ¤ì)½¹ÍÐì5ÕÍ¥1¥‰É…Éäô€ôÉ•ÅÕ¥É” œ¸¸½ÍÉŒ½µ…¥¸½µÕÍ¥Œµ±¥‰É…Éäœ¤ì)½¹ÍÐì5ÕÍ¥I…‘¥¼°Ý•¥¡Ð°==1=]8ô€ôÉ•ÅÕ¥É” œ¸¸½ÍÉŒ½µ…¥¸½µÕÍ¥ŒµÉ…‘¥¼œ¤ì)½¹ÍÐì•áÑÉ…ÑQÉ…¬°É…‘¥½ÉÑ¥ÍÐô€ôÉ•ÅÕ¥É” œ¸¸½ÍÉŒ½µ…¥¸½µÕÍ¥ŒµÑ…Ìœ¤ì)½¹ÍÐì5•‘¥…½¹ÑÉ½±±•È°Í•É¥…±¥é•QÉ…¹ÍÁ½ÉÐô€ôÉ•ÅÕ¥É” œ¸¸½ÍÉŒ½µ…¥¸½µ•‘¥„µ½¹ÑÉ½±±•Èœ¤ì)½¹ÍÐì1…ÍÑµ¹É¥¡•È°Á½ÁÕ±…É¥ÑåM½É”ô€ôÉ•ÅÕ¥É” œ¸¸½ÍÉŒ½µ…¥¸½±…ÍÑ™´µ•¹É¥¡•Èœ¤ì)½¹ÍÐìÉ•Í½±Ù•1½…±5¥àô€ôÉ•ÅÕ¥É” œ¸¸½ÍÉŒ½µ…¥¸½±½…°µµ¥á•Ìœ¤ì()™Õ¹Ñ¥½¸™¥áÑÕÉ” ¤ì(€½¹ÍÐ™É…µ”€ô€¡¥°Ù…±Õ”¤€ôøì½¹ÍÐ‘…Ñ„€ô	Õ™™•È¹½¹…Ð¡m	Õ™™•È¹™É½´¡lÁt¤°	Õ™™•È¹™É½´¡Ù…±Õ”¥t¤ì½¹ÍÐ¡•…‘•È€ô	Õ™™•È¹…±±½Œ ÄÀ¤ì¡•…‘•È¹ÝÉ¥Ñ”¡¥¤ì¡•…‘•È¹ÝÉ¥Ñ•U%¹ÐÌÉ	¡‘…Ñ„¹±•¹Ñ °€Ð¤ìÉ•ÑÕÉ¸	Õ™™•È¹½¹…Ð¡m¡•…‘•È°‘…Ñ…t¤ìôì(€½¹ÍÐ‰½‘ä€ô	Õ™™•È¹½¹…Ð¡m™É…µ” Q%PÈœ°€Q•ÍÐM½¹œœ¤°™É…µ” QAÄœ°€ÉÑ¥ÍÐœ¤°™É…µ” Q1œ°€±‰Õ´œ¤°™É…µ” Q=8œ°€A½Àœ¤°™É…µ” Qaa`œ°€IQ%9pÀœ€¬€œàœ¤°™É…µ” Qaa`œ°€Y=I%QpÀœ€¬€œÄœ¤°™É…µ” Qaa`œ°€=}9=Q}A1epÀœ€¬€œÄœ¥t¤ì(€½¹ÍÐ¡•…‘•È€ô	Õ™™•È¹™É½´¡lÜÌ°€Øà°€ÔÄ°€Ì°€À°€À°€À°€À°€À°€Át¤ì±•ÐÍ¥é”€ô‰½‘ä¹±•¹Ñ ì(€™½È€¡±•Ð¤€ô€äì¤€øô€Øì¤´´¤ì¡•…‘•Ém¥t€ôÍ¥é”€˜€ÄÈÜìÍ¥é”€øøô€Üìô(€½¹ÍÐ…Õ‘¥¼€ô	Õ™™•È¹…±±½Œ ÐÄÜ¤ì	Õ™™•È¹™É½´¡lÈÔÔ°€ÈÔÄ°€ÄÐÐ°€ÄÀÁt¤¹½Áä¡…Õ‘¥¼¤ì(€É•ÑÕÉ¸	Õ™™•È¹½¹…Ð¡m¡•…‘•È°‰½‘ä°€¸¸¹ÉÉ…ä¹™É½´¡ì±•¹Ñ è€ÄÀÀô°€ ¤€ôø…Õ‘¥¼¥t¤ì)ô)™Õ¹Ñ¥½¸ÑÉ…¬¡¥°µ½É”€ôíô¤ìÉ•ÑÕÉ¸ì¥°Í½¹-•äè¥°Ñ¥Ñ±”è¥°…ÉÑ¥ÍÐè€ÉÑ¥ÍÐœ°…ÉÑ¥ÍÑÌèlÉÑ¥ÍÐt°…±‰ÕµÉÑ¥ÍÐè€ÉÑ¥ÍÐœ°…±‰Õ´è€±‰Õ´œ°ÑÉ…¬è9Õµ‰•È¡¥¤ñð€Ä°‘¥ÍŒè€Ä°É•±…Ñ¥Ù•A…Ñ è€‘í¥‘ô¹µÀÍ€°•¹É•ÌèlA½Àt°Í¥µ¥±…ÉÉÑ¥ÍÑÌèmt°É…Ñ¥¹œè¹Õ±°°€¸¸¹µ½É”ôìô()…Íå¹Œ™Õ¹Ñ¥½¸ÉÕ¸ ¤ì(€½¹ÍÐÑ•µÀ€ô…Ý…¥Ð™Ì¹µ­‘Ñ•µÀ¡Á…Ñ ¹©½¥¸¡½Ì¹ÑµÁ‘¥È ¤°€Ý…Ù•‘•¬µµÕÍ¥ŒµÑ•ÍÐ´œ¤¤ì±•Ð±¥‰É…Éäì(€ÑÉäì(€€€½¹ÍÐ‘…Ñ…¥È€ôÁ…Ñ ¹©½¥¸¡Ñ•µÀ°€…Ñ„œ¤ì½¹ÍÐµÕÍ¥¥È€ôÁ…Ñ ¹©½¥¸¡Ñ•µÀ°€5ÕÍ¥Œœ¤ì…Ý…¥Ð™Ì¹µ­‘¥È¡µÕÍ¥¥È°ìÉ•ÕÉÍ¥Ù”èÑÉÕ”ô¤ì(€€€½¹ÍÐ™¥±”€ôÁ…Ñ ¹©½¥¸¡µÕÍ¥¥È°€Í½¹œ¹5@Ìœ¤ì…Ý…¥Ð™Ì¹ÝÉ¥Ñ•¥±”¡™¥±”°™¥áÑÕÉ” ¤¤ì(€€€½¹ÍÐ‘¥•ÍÐ€ô…Íå¹Œ€ ¤€ôøÉåÁÑ¼¹É•…Ñ•!…Í  Í¡„ÈÔØœ¤¹ÕÁ‘…Ñ”¡…Ý…¥Ð™Ì¹É•…‘¥±”¡™¥±”¤¤¹‘¥•ÍÐ ¡•àœ¤ì½¹ÍÐ‰•™½É”€ô…Ý…¥Ð‘¥•ÍÐ ¤ì(€€€±¥‰É…Éä€ô¹•Ü5ÕÍ¥1¥‰É…Éä¡ì‘…Ñ…¥Èô¤ì…Ý…¥Ð±¥‰É…Éä¹•¹…‰±” ¤ì…Ý…¥Ð±¥‰É…Éä¹É•Í…¸ ¤ì(€€€…ÍÍ•ÉÐ¹•ÅÕ…°¡±¥‰É…Éä¹ÑÉ…­ÍlÁt¹É…Ñ¥¹MÑ…ÉÌ°€Ð°€É…Ñ¥¹Ì…É”½Á¥•¥¹Ñ¼Ñ¡”±½…°¥¹‘•àœ¤ì(€€€…ÍÍ•ÉÐ¹•ÅÕ…°¡±¥‰É…Éä¹ÑÉ…­ÍlÁt¹™…Ù½É¥Ñ”°ÑÉÕ”°€…Ù½É¥Ñ”Ñ…Ì…É”½Á¥•¥¹Ñ¼Ñ¡”±½…°¥¹‘•àœ¤ì(€€€…ÍÍ•ÉÐ¹•ÅÕ…°¡±¥‰É…Éä¹ÑÉ…­ÍlÁt¹‘½9½ÑA±…ä°ÑÉÕ”°€¼9½ÐA±…äÑ…Ì…É”½Á¥•¥¹Ñ¼Ñ¡”±½…°¥¹‘•àœ¤ì(€€€…ÍÍ•ÉÐ¹•ÅÕ…°¡…Ý…¥Ð‘¥•ÍÐ ¤°‰•™½É”°€Í…¹¹¥¹œ¹•Ù•È¡…¹•Ì5@Ì‰åÑ•Ìœ¤ì(€€€…ÍÍ•ÉÐ¹•ÅÕ…° ¡…Ý…¥Ð±¥‰É…Éä¹…±° Í•…É œ°€ˆœ=H€ÄôÄ€´´ˆ¤¤¹Ñ½Ñ…°°€À¤ì(€€€…ÍÍ•ÉÐ¹•ÅÕ…°¡•áÑÉ…ÑQÉ…¬¡ì½µµ½¸èìÉ…Ñ¥¹œèmìÉ…Ñ¥¹œè€À¸àõtô°¹…Ñ¥Ù”èíôô°€™…±±‰…¬¹µÀÌœ¤¹É…Ñ¥¹MÑ…ÉÌ°€Ð¤ì(€€€½¹ÍÐÑ•¹A½¥¹ÑI…Ñ¥¹œ€ô•áÑÉ…ÑQÉ…¬¡ì½µµ½¸èíô°¹…Ñ¥Ù”èì€%ÍØÈ¸Ðœèmì¥è€Qaa`éIQ%9œ°Ù…±Õ”è€œÔœõtôô°€™¥Ù”µ½˜µÑ•¸¹µÀÌœ¤ì(€€€…ÍÍ•Ë}´âÚ$z{-®éÜj×nst feedbackB = track('feedback-b', { artist: 'Pink Floyd', artists: ['Pink Floyd'], rating: 8 });
+const assert = require('assert/strict');
+const fs = require('fs/promises');
+const os = require('os');
+const path = require('path');
+const crypto = require('crypto');
+const { MusicLibrary } = require('../src/main/music-library');
+const { MusicRadio, weight, COOLDOWN } = require('../src/main/music-radio');
+const { extractTrack, radioArtist } = require('../src/main/music-tags');
+const { MediaController, serializeTransport } = require('../src/main/media-controller');
+const { LastFmEnricher, popularityScore } = require('../src/main/lastfm-enricher');
+const { resolveLocalMix } = require('../src/main/local-mixes');
+
+function fixture() {
+  const frame = (id, value) => { const data = Buffer.concat([Buffer.from([0]), Buffer.from(value)]); const header = Buffer.alloc(10); header.write(id); header.writeUInt32BE(data.length, 4); return Buffer.concat([header, data]); };
+  const body = Buffer.concat([frame('TIT2', 'Test Song'), frame('TPE1', 'Artist'), frame('TALB', 'Album'), frame('TCON', 'Pop'), frame('TXXX', 'RATING\0' + '8'), frame('TXXX', 'FAVORITE\0' + '1'), frame('TXXX', 'DO_NOT_PLAY\0' + '1')]);
+  const header = Buffer.from([73, 68, 51, 3, 0, 0, 0, 0, 0, 0]); let size = body.length;
+  for (let i = 9; i >= 6; i--) { header[i] = size & 127; size >>= 7; }
+  const audio = Buffer.alloc(417); Buffer.from([255, 251, 144, 100]).copy(audio);
+  return Buffer.concat([header, body, ...Array.from({ length: 100 }, () => audio)]);
+}
+function track(id, more = {}) { return { id, songKey: id, title: id, artist: 'Artist', artists: ['Artist'], albumArtist: 'Artist', album: 'Album', track: Number(id) || 1, disc: 1, relativePath: `${id}.mp3`, genres: ['Pop'], similarArtists: [], rating: null, ...more }; }
+
+async function run() {
+  const temp = await fs.mkdtemp(path.join(os.tmpdir(), 'wavedeck-music-test-')); let library;
+  try {
+    const dataDir = path.join(temp, 'Data'); const musicDir = path.join(temp, 'Music'); await fs.mkdir(musicDir, { recursive: true });
+    const file = path.join(musicDir, 'song.MP3'); await fs.writeFile(file, fixture());
+    const digest = async () => crypto.createHash('sha256').update(await fs.readFile(file)).digest('hex'); const before = await digest();
+    library = new MusicLibrary({ dataDir }); await library.enable(); await library.rescan();
+    assert.equal(library.tracks[0].ratingStars, 4, 'ratings are copied into the local index');
+    assert.equal(library.tracks[0].favorite, true, 'Favorite tags are copied into the local index');
+    assert.equal(library.tracks[0].doNotPlay, true, 'Do Not Play tags are copied into the local index');
+    assert.equal(await digest(), before, 'scanning never changes MP3 bytes');
+    assert.equal((await library.call('search', "' OR 1=1 --")).total, 0);
+    assert.equal(extractTrack({ common: { rating: [{ rating: 0.8 }] }, native: {} }, 'fallback.mp3').ratingStars, 4);
+    const tenPointRating = extractTrack({ common: {}, native: { 'ID3v2.4': [{ id: 'TXXX:RATING', value: '5' }] } }, 'five-of-ten.mp3');
+    assert.equal(tenPointRating.rating, 5, 'custom RATING remains on the portable 0â€“10 scale');
+    assert.equal(tenPointRating.ratingStars, 2.5, 'custom RATING=5 means 2.5 stars');
+    const doNotPlayTag = extractTrack({ common: {}, native: { 'ID3v2.4': [{ id: 'TXXX:DO_NOT_PLAY', value: 'yes' }, { id: 'TXXX:FAVORITE', value: 'true' }] } }, 'skip.mp3');
+    assert.equal(doNotPlayTag.doNotPlay, true); assert.equal(doNotPlayTag.favorite, true);
+    assert.equal(radioArtist(track('x', { albumArtist: 'Various Artists', artist: 'Solo' })), 'Solo');
+
+    const savedTracks = []; const savedArtists = [];
+    const lastFmLibrary = { enabled: true, worker: {}, getLastFmStatus: async () => ({ tracksTotal: 1, tracksCurrent: 0, queuedAlbums: 1 }), nextLastFmAlbum: async () => ({ albumKey: 'artist\\nalbum', queued: true, tracks: [track('lastfm')], artists: ['Artist'] }), updateLastFmTrack: async value => savedTracks.push(value), updateLastFmArtist: async value => savedArtists.push(value), applyLastFmTrack: () => {}, applyLastFmArtist: () => {}, completeLastFmAlbum: async () => {} };
+    const enricher = new LastFmEnricher({ library: lastFmLibrary, getPreferences: () => ({ lastFmEnabled: true, lastFmApiKey: 'key' }), requestIntervalMs: 0, fetchImpl: async url => ({ ok: true, json: async () => url.includes('track.getInfo') ? { track: { listeners: '100000', toptags: { tag: [{ name: 'Progressive Rock' }] } } } : { similarartists: { artist: [{ name: 'David Gilmour' }] } } }) });
+    await enricher.tick(); enricher.stop(); assert(savedTracks[0].popularity > 0 && savedArtists[0].similarArtists.includes('David Gilmour')); assert(popularityScore(100000) > popularityScore(1000));
+
+    let now = 10_000_000;
+    const seed = track('comfortably-numb', { title: 'Comfortably Numb', artist: 'Pink Floyd', artists: ['Pink Floyd'], albumArtist: 'Pink Floyd', album: 'The Wall', genres: ['Progressive Rock', 'Rock'], similarArtists: ['David Gilmour'] });
+    const sameAlbum = track('run-like-hell', { title: 'Run Like Hell', artist: 'Pink Floyd', artists: ['Pink Floyd'], albumArtist: 'Pink Floyd', album: 'The Wall', genres: ['Rock'], ratingStars: 5 });
+    const seedArtist = track('wish-you-were-here', { artist: 'Pink Floyd', artists: ['Pink Floyd'], albumArtist: 'Pink Floyd', album: 'Wish You Were Here', genres: ['Rock'] });
+    const similar = track('gilmour', { artist: 'David Gilmour', artists: ['David Gilmour'], album: 'About Face', genres: ['Rock'] });
+    const specificTag = track('prog', { artist: 'King Crimson', artists: ['King Crimson'], album: 'Red', genres: ['Progressive Rock'] });
+    const country = track('devil', { title: 'The Devil Went Down to Georgia', artist: 'Charlie Daniels Band', artists: ['Charlie Daniels Band'], album: 'Million Mile Reflections', genres: ['Country', 'Rock'] });
+    const radio = new MusicRadio({ dataDir, now: () => now, random: () => 0 });
+    assert.equal(radio.choose([country], seed, 'radio'), null, 'a broad Rock tag alone is never enough');
+    assert.equal(radio.choose([sameAlbum, country], seed, 'radio').id, sameAlbum.id, 'same-album songs lead Song Radio');
+    assert(weight(seedArtist, seed, 'artist', [], now) > weight(similar, seed, 'artist', [], now), 'Artist Radio returns to seed artist');
+    assert(weight(similar, seed, 'artist', [], now) > 0 && weight(specificTag, seed, 'radio', [], now) > 0, 'Last.fm and specific tags are meaningful links');
+    assert.equal(weight(country, seed, 'radio', [], now), 0);
+    assert(weight(track('rated', { artist: 'Pink Floyd', artists: ['Pink Floyd'], ratingStars: 5 }), seed, 'artist', [], now) > weight(track('unrated', { artist: 'Pink Floyd', artists: ['Pink Floyd'] }), seed, 'artist', [], now));
+    const hit = track('hit', { artist: 'Pink Floyd', artists: ['Pink Floyd'], album: 'Animals', popularity: 100 });
+    const deepCut = track('deep-cut', { artist: 'Pink Floyd', artists: ['Pink Floyd'], album: 'Obscured by Clouds', popularity: 0 });
+    assert(weight(hit, seed, 'artist', [], now, null, 'hits') > weight(deepCut, seed, 'artist', [], now, null, 'hits'), 'Favor the Hits prefers credible popular songs');
+    assert(weight(deepCut, seed, 'artist', [], now, null, 'deep-cuts') > weight(hit, seed, 'artist', [], now, null, 'deep-cuts'), 'Play Deep Cuts Too favors credible lesser-known songs');
+    const familiarityRadio = new MusicRadio({ dataDir: path.join(temp, 'familiarity'), now: () => now, random: () => 0, getFamiliarity: () => 'hits' });
+    assert.equal(familiarityRadio.choose([hit, deepCut], seed, 'artist').id, hit.id);
+    assert.equal(familiarityRadio.getLastDecision().familiarity, 'hits');
+    const favoriteDeepCut = track('favorite-deep-cut', { artist: 'Pink Floyd', artists: ['Pink Floyd'], album: 'More', popularity: 0, favorite: true });
+    const lowRatedHit = track('low-rated-hit', { artist: 'Pink Floyd', artists: ['Pink Floyd'], album: 'The Division Bell', popularity: 100, ratingStars: 1 });
+    const personalizedHits = new MusicRadio({ dataDir: path.join(temp, 'personalized-hits'), now: () => now, random: () => 0 });
+    assert.equal(personalizedHits.choose([favoriteDeepCut, lowRatedHit], seed, 'artist').id, favoriteDeepCut.id, 'Favorite tags outrank public popularity in Favor the Hits');
+    const unratedPopular = track('unrated-popular', { artist: 'Pink Floyd', artists: ['Pink Floyd'], album: 'A Momentary Lapse of Reason', popularity: 100 });
+    const ratedSix = track('rated-six', { artist: 'Pink Floyd', artists: ['Pink Floyd'], album: 'Meddle', popularity: 0, rating: 6, ratingStars: 3 });
+    const ratedSeven = track('rated-seven', { artist: 'Pink Floyd', artists: ['Pink Floyd'], album: 'The Dark Side of the Moon', popularity: 0, rating: 7, ratingStars: 3.5 });
+    const ratedTen = track('rated-ten', { artist: 'Pink Floyd', artists: ['Pink Floyd'], album: 'Wish You Were Here', popularity: 0, rating: 10, ratingStars: 5 });
+    const personalPoolRadio = new MusicRadio({ dataDir: path.join(temp, 'personal-pool'), now: () => now, random: () => 0.99, getFamiliarity: () => 'hits' });
+    const personalPoolPick = personalPoolRadio.choose([unratedPopular, ratedSix, ratedSeven, ratedTen], seed, 'artist');
+    assert(['rated-seven', 'rated-ten'].includes(personalPoolPick.id), 'Favor the Hits excludes unrated and 6/10 songs when 7â€“10 songs are available');
+    assert.equal(personalPoolRadio.getLastDecision().counts.personal, 2, 'diagnostics identify the personal pool');
+    assert.equal(personalPoolRadio.getLastDecision().counts.lastFmFamiliar, 0, 'Last.fm does not dilute an available personal pool');
+    const balancedPoolRadio = new MusicRadio({ dataDir: path.join(temp, 'balanced-pool'), now: () => now, random: () => 0, getFamiliarity: () => 'balanced' });
+    assert(['rated-six', 'rated-seven', 'rated-ten'].includes(balancedPoolRadio.choose([unratedPopular, ratedSix, ratedSeven, ratedTen], seed, 'artist').id), 'Balanced Mix uses its 5â€“10 personal pool');
+    const deepPoolRadio = new MusicRadio({ dataDir: path.join(temp, 'deep-pool'), now: () => now, random: () => 0, getFamiliarity: () => 'deep-cuts' });
+    const ratedThree = track('rated-three', { artist: 'Pink Floyd', artists: ['Pink Floyd'], album: 'More', popularity: 0, rating: 3, ratingStars: 1.5 });
+    assert.equal(deepPoolRadio.choose([unratedPopular, ratedThree, ratedTen], seed, 'artist').id, ratedThree.id, 'Play Deep Cuts Too keeps 3/10 music in the personal pool');
+    const blockedHit = track('blocked-hit', { artist: 'Pink Floyd', artists: ['Pink Floyd'], popularity: 100, ratingStars: 5, favorite: true, doNotPlay: true });
+    assert.equal(personalizedHits.choose([blockedHit, hit], seed, 'artist').id, hit.id, 'Do Not Play blocks even a favorite high-rated hit');
+    assert.equal(personalizedHits.getLastDecision().counts.skippedForDoNotPlay, 1);
+    radio.record(sameAlbum); assert.equal(radio.choose([sameAlbum], seed, 'radio'), null, 'exact song repeats wait two hours'); now += COOLDOWN;
+    assert.equal(radio.choose([sameAlbum], seed, 'radio').id, sameAlbum.id); assert.equal(radio.getLastDecision().policy, 'automatic-local-radio-v2');
+    const rotationA = track('rotation-a', { artist: 'David Gilmour', artists: ['David Gilmour'], albumArtist: 'David Gilmour', album: 'A' });
+    const rotationB = track('rotation-b', { artist: 'David Gilmour', artists: ['David Gilmour'], albumArtist: 'David Gilmour', album: 'B' });
+    const artistWaitRadio = new MusicRadio({ dataDir: path.join(temp, 'artist-wait'), now: () => now, random: () => 0, getTuning: () => ({ songRepeatHours: 2, artistRepeatMinutes: 90, artistSetSize: 1 }) });
+    assert.equal(artistWaitRadio.choose([rotationA], seed, 'radio').id, rotationA.id); artistWaitRadio.record(rotationA);
+    assert.equal(artistWaitRadio.choose([rotationB], seed, 'radio'), null, 'artist repeat wait blocks a different song by the same artist');
+    const twoFerRadio = new MusicRadio({ dataDir: path.join(temp, 'two-fer'), now: () => now, random: () => 0, getTuning: () => ({ songRepeatHours: 2, artistRepeatMinutes: 90, artistSetSize: 2 }) });
+    assert.equal(twoFerRadio.choose([rotationA, rotationB], seed, 'radio').id, rotationA.id); twoFerRadio.record(rotationA);
+    assert.equal(twoFerRadio.choose([rotationA, rotationB], seed, 'radio').id, rotationB.id, 'Artist Sets intentionally continues the selected artist');
+
+    const feedbackDir = path.join(temp, 'feedback');
+    const feedbackRadio = new MusicRadio({ dataDir: feedbackDir, now: () => now, random: () => 0.99 });
+    const feedbackA = track('feedback-a', { artist: 'Pink Floyd', artists: ['Pink Floyd'], rating: 8 });
+    const feedbackB = track('feedback-b', { artist: 'Pink Floyd', artists: ['Pink Floyd'], rating: 8 });
     feedbackRadio.recordFeedback('mix:classic-rock', feedbackA, 'down');
     feedbackRadio.recordFeedback('mix:classic-rock', feedbackB, 'up');
     assert.equal(feedbackRadio.choose([feedbackA, feedbackB], seed, 'artist', new Set(), 'next', 'mix:classic-rock').id, feedbackB.id, 'Local Mix feedback changes only that stationâ€™s selection weights');

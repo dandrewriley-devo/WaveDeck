@@ -1,1 +1,1016 @@
-YªçŠx-®éÜj×¢ëiºÚ+Š§j[h‘éÜ¢éí×üí:-jZ.¶›­–)Þ³V6öç7Bg2Ò&WV—&R‚&g2"“°¦6öç7BF‚Ò&WV—&R‚'F‚"“° ¦6öç7BÄ”%$%•ôd”ÄRÒ&Æ–'&'’æ§6öâ#°¦6öç7B$TdU$Tä4U5ôd”ÄRÒ'&VfW&Væ6W2æ§6öâ#°¦6öç7BÄTt5•ôd”ÄU2Ò²'7FF–öç2æ§6öâ"Â&w&÷W2æ§6öâ"Â'7V&w&÷W2æ§6öâ%Ó°¦6öç7BÄ•5DTä”äuô„•5Dõ%•ôd”ÄRÒ&Æ—7FVæ–ærÖ†—7F÷'’æ§6öâ#°¦6öç7B5D%DU%õ$U4UEôäÔU2Òö&¦V7Bæg&VW¦R…°¢%f—&v–â&F–ò6Æ76–2&ö6²"À¢%7v—72÷"À¢$’Æ÷fR†—Ô†÷"À¢%FöF’w2†÷B6÷VçG'’"À¢%&F–òÖ÷F÷vâ"À¢$G&ö—B¦§¢VæFW&w&÷VæB"À¢$w&ö÷fR6ÆB ¥Ò“° ¦gVæ7F–öâfÆ–FFTÆ—7FVæ–æt†—7F÷'’‡fÇVR’°¢6öç7B6÷W&6RÒfÇVRbbG—VöbfÇVRÓÓÒ&ö&¦V7B"bb'&’æ—4'&’‡fÇVR’òfÇVRç7FF–öç2¢çVÆÃ°¢6öç7B&V6VçE6÷W&6RÒfÇVRbbG—VöbfÇVRÓÓÒ&ö&¦V7B"bb'&’æ—4'&’‡fÇVR’òfÇVRç&V6VçE7FF–öä–G2¢çVÆÃ°¢6öç7BÆö6Å&V6VçE6÷W&6RÒfÇVRbbG—VöbfÇVRÓÓÒ&ö&¦V7B"bb'&’æ—4'&’‡fÇVR’òfÇVRç&V6VçDÆö6Å7FF–öç2¢çVÆÃ°¢6öç7BÆö6Å&W6WE6÷W&6RÒfÇVRbbG—VöbfÇVRÓÓÒ&ö&¦V7B"bb'&’æ—4'&’‡fÇVR’òfÇVRæÆö6Å7FF–öå&W6WG2¢çVÆÃ°¢6öç7B7FF–öç2Ò·Ó°¢–b‡6÷W&6RbbG—Vöb6÷W&6RÓÓÒ&ö&¦V7B"bb'&’æ—4'&’‡6÷W&6R’’°¢f÷"†6öç7B·&t–BÂ&tVçG'•Òöbö&¦V7BæVçG&–W2‡6÷W&6R’’°¢6öç7B–BÒ7G&–ær‡&t–Bóò""’çG&–Ò‚“°¢–b‚–BÇÂ&tVçG'’ÇÂG—Vöb&tVçG'’ÓÒ&ö&¦V7B"ÇÂ'&’æ—4'&’‡&tVçG'’’’6öçF–çVS°¢6öç7B6V6öæG2ÒÖF‚æÖ‚ƒÂÖF‚æfÆö÷"„çVÖ&W"‡&tVçG'’ç6V6öæG2’ÇÂ’“°¢–b‚6V6öæG2’6öçF–çVS°¢7FF–öç5¶–EÒÒ°¢6V6öæG2À¢Æ7DÆ—7FVæVDC¢G—Vöb&tVçG'’æÆ7DÆ—7FVæVDBÓÓÒ'7G&–ær"ò&tVçG'’æÆ7DÆ—7FVæVDB¢" ¢Ó°¢Ð¢Ð¢6öç7B&V6VçE7FF–öä–G2Ò²ââææWr6WB‚„'&’æ—4'&’‡&V6VçE6÷W&6R’ò&V6VçE6÷W&6R¢µÒ¢æÖ†–BÓâ7G&–ær†–Bóò""’çG&–Ò‚’’æf–ÇFW"„&ööÆVâ’•Òç6Æ–6RƒÂ“°¢6öç7B6VVäÆö6Å7FF–öç2ÒæWr6WB‚“°¢6öç7B&V6VçDÆö6Å7FF–öç2ÒµÓ°¢f÷"†6öç7B&u7FF–öâöb'&’æ—4'&’†Æö6Å&V6VçE6÷W&6R’òÆö6Å&V6VçE6÷W&6R¢µÒ’°¢–b‚&u7FF–öâÇÂG—Vöb&u7FF–öâÓÒ&ö&¦V7B"ÇÂ'&’æ—4'&’‡&u7FF–öâ’’6öçF–çVS°¢6öç7BÖöFRÒ&u7FF–öâæÖöFRÓÓÒ&'F—7B"ò&'F—7B"¢&u7FF–öâæÖöFRÓÓÒ'&F–ò"ò'&F–ò"¢"#°¢6öç7B6VVD–BÒ7G&–ær‡&u7FF–öâç6VVD–Bóò""’çG&–Ò‚“°¢6öç7B¶W’ÒG¶ÖöFWÓ¢G·6VVD–GÖ°¢–b‚ÖöFRÇÂ6VVD–BÇÂ6VVäÆö6Å7FF–öç2æ†2†¶W’’’6öçF–çVS°¢6VVäÆö6Å7FF–öç2æFB†¶W’“°¢&V6VçDÆö6Å7FF–öç2çW6‚‡°¢¶W’À¢ÖöFRÀ¢6VVD–BÀ¢Æ&VÃ¢7G&–ær‡&u7FF–öâæÆ&VÂóò""’çG&–Ò‚’ç6Æ–6RƒÂ3’À¢F—FÆS¢7G&–ær‡&u7FF–öâçF—FÆRóò""’çG&–Ò‚’ç6Æ–6RƒÂ3’À¢'F—7C¢7G&–ær‡&u7FF–öâæ'F—7Bóò""’çG&–Ò‚’ç6Æ–6RƒÂ3’À¢Æ'VÓ¢7G&–ær‡&u7FF–öâæÆ'VÒóò""’çG&–Ò‚’ç6Æ–6RƒÂ3’À¢Æ7EÆ–VDC¢G—Vöb&u7FF–öâæÆ7EÆ–VDBÓÓÒ'7G&–ær"ò&u7FF–öâæÆ7EÆ–VDB¢" ¢Ò“°¢–b‡&V6VçDÆö6Å7FF–öç2æÆVæwF‚ãÒ’'&V³°¢Ð¢6öç7B6VVäÆö6Å&W6WG2ÒæWr6WB‚“°¢6öç7BÆö6Å7FF–öå&W6WG2ÒµÓ°¢f÷"†6öç7B&u7FF–öâöb'&’æ—4'&’†Æö6Å&W6WE6÷W&6R’òÆö6Å&W6WE6÷W&6R¢µÒ’°¢–b‚&u7FF–öâÇÂG—Vöb&u7FF–öâÓÒ&ö&¦V7B"ÇÂ'&’æ—4'&’‡&u7FF–öâ’’6öçFvßÎí¢G§²ÚîÆ­yÖö–â‡F†—2æFFF—"Âf–ÆTæÖR“°¢–b‚g2æW†—7G57–æ2‡6÷W&6R’’6öçF–çVS°¢ÆWBFW7F–æF–öâÒF‚æ¦ö–â‡F†—2æ&6·WF—"Â&R×cãBÒG¶f–ÆTæÖWÖ“°¢–b†g2æW†—7G57–æ2†FW7F–æF–öâ’’FW7F–æF–öâÒF‚æ¦ö–â‡F†—2æ&6·WF—"Â&R×cãBÒG´FFRææ÷r‚—ÒÒG¶f–ÆTæÖWÖ“°¢G'’²g2ç&VæÖU7–æ2‡6÷W&6RÂFW7F–æF–öâ“²Ð¢6F6‚†W'&÷"’°¢F†—2æöåv&æ–ær†vfTFV6²Ö–w&FVBG¶f–ÆTæÖWÒÂ'WB6÷VÆBæ÷B&6†—fRF†RöÆB6÷“¢G¶W'&÷"æÖW76vWÖ“°¢Ð¢Ð¢Ð ¢7&VDÆVv7•fÆ–FFVB†f–ÆTæÖRÂfÆ–FF÷"ÂfÆÆ&6²’°¢6öç7B6æF–FFW2Ò°¢F‚æ¦ö–â‡F†—2æFFF—"Âf–ÆTæÖR’À¢F‚æ¦ö–â‡F†—2æ&6·WF—"ÂG¶f–ÆTæÖWÒæ&¶¢Ó°¢ÆWBÆ7DW'&÷"ÒçVÆÃ°¢f÷"†6öç7B¶–æFW‚Â6æF–FFUÒöb6æF–FFW2æVçG&–W2‚’’°¢–b‚g2æW†—7G57–æ2†6æF–FFR’’6öçF–çVS°¢G'’°¢6öç7BfÇVRÒfÆ–FF÷"„¥4ôâç'6R†g2ç&VDf–ÆU7–æ2†6æF–FFRÂ'WFc‚"’’“°¢–b†–æFW‚ÓÓÒ’F†—2æöåv&æ–ær†G¶f–ÆTæÖWÒv2FÖvVBæB—G2&6·Wv2W6VBGW&–ærÖ–w&F–öâæ“°¢&WGW&âfÇVS°¢Ò6F6‚†W'&÷"’°¢Æ7DW'&÷"ÒW'&÷#°¢Ð¢Ð¢–b†Æ7DW'&÷"’F†—2æöåv&æ–ær†G¶f–ÆTæÖWÒ6÷VÆBæ÷B&RÖ–w&FVC¢G¶Æ7DW'&÷"æÖW76vWÖ“°¢&WGW&âfÆÆ&6³°¢Ð ¢7&VEfÆ–FFVB†f–ÆTæÖRÂfÆ–FF÷"ÂfÆÆ&6²’°¢6öç7BF&vWBÒF‚æ¦ö–â‡F†—2æFFF—"Âf–ÆTæÖR“°¢G'’²&WGW&âfÆ–FF÷"„¥4ôâç'6R†g2ç&VDf–ÆU7–æ2‡F&vWBÂ'WFc‚"’’“²Ð¢6F6‚†W'&÷"’°¢6öç7B&6·WÒF‚æ¦ö–â‡F†—2æ&6·WF—"ÂG¶f–ÆTæÖWÒæ&¶“°¢–b†g2æW†—7G57–æ2†&6·W’’°¢G'’°¢6öç7B&V6÷fW&VBÒfÆ–FF÷"„¥4ôâç'6R†g2ç&VDf–ÆU7–æ2†&6·WÂ'WFc‚"’’“°¢F†—2â6FöÖ–5w&—FR†f–ÆTæÖRÂ&V6÷fW&VBÂ²7&VFT&6·W¢fÇ6RÒ“°¢F†—2æöåv&æ–ær†G¶f–ÆTæÖWÒv2FÖvVBæB†2&VVâ&W7F÷&VBg&öÒ—G2&6·Wæ“°¢&WGW&â&V6÷fW&VC°¢Ò6F6‚·Ð¢Ð¢F†—2æöåv&æ–ær†G¶f–ÆTæÖWÒ6÷VÆBæ÷B&R&VC¢G¶W'&÷"æÖW76vWÖ“°¢&WGW&âfÆÆ&6³°¢Ð¢Ð ¢6FöÖ–5w&—FR†f–ÆTæÖRÂFFÂ²7&VFT&6·WÒG'VRÒÒ·Ò’°¢6öç7BF&vWBÒF‚æ¦ö–â‡F†—2æFFF—"Âf–ÆTæÖR“°¢6öç7BFV×÷&'’ÒF‚æ¦ö–â‡F†—2æFFF—"ÂâG¶f–ÆTæÖWÒâG·&ö6W72ç–GÒâG´FFRææ÷r‚—ÒçF×“°¢6öç7B&6·WÒF‚æ¦ö–â‡F†—2æ&6·WF—"ÂG¶f–ÆTæÖWÒæ&¶“°¢g2æÖ¶F—%7–æ2‡F†—2æFFF—"Â²&V7W'6—fS¢G'VRÒ“°¢g2æÖ¶F—%7–æ2‡F†—2æ&6·WF—"Â²&V7W'6—fS¢G'VRÒ“°¢g2çw&—FTf–ÆU7–æ2‡FV×÷&'’ÂG´¥4ôâç7G&–æv–g’†FFÂçVÆÂÂ"—ÕÆæÂ'WFc‚"“°¢G'’°¢–b†7&VFT&6·Wbbg2æW†—7G57–æ2‡F&vWB’’g2æ6÷”f–ÆU7–æ2‡F&vWBÂ&6·W“°¢g2ç&VæÖU7–æ2‡FV×÷&'’ÂF&vWB“°¢Ò6F6‚†W'&÷"’°¢G'’²–b†g2æW†—7G57–æ2‡FV×÷&'’’’g2çVæÆ–æµ7–æ2‡FV×÷&'’“²Ò6F6‚·Ð¢F‡&÷ræWrW'&÷"†6÷VÆBæ÷B6fRG¶f–ÆTæÖWÓ¢G¶W'&÷"æÖW76vWÖ“°¢Ð¢Ð §Ð ¦ÖöGVÆRæW‡÷'G2Ò°¢5D%DU%õ$U4UEôäÔU2À¢÷'F&ÆU7F÷&vRÀ¢6ÆVå7FF–öäv–äF"À¢6ÆVå7FF–öâÀ¢Vç7W&T÷F†W$Æ7BÀ¢æ÷&ÖÆ—¦Tw&÷WæÖRÀ¢æ÷&ÖÆ—¦U7V&w&÷WæÖRÀ¢fÆ–FFTw&÷W2À¢fÆ–FFTÆ–'&'’À¢fÆ–FFTÆ—7FVæ–æt†—7F÷'’À¢fÆ–FFU&VfW&Væ6W2À¢fÆ–FFU7V&w&÷W2À¢fÆ–FFU7FF–öç0§Ó°
+const fs = require("fs");
+const path = require("path");
+
+const LIBRARY_FILE = "library.json";
+const PREFERENCES_FILE = "preferences.json";
+const LEGACY_FILES = ["stations.json", "groups.json", "subgroups.json"];
+const LISTENING_HISTORY_FILE = "listening-history.json";
+const STARTER_PRESET_NAMES = Object.freeze([
+  "Virgin Radio Classic Rock",
+  "Swiss Pop",
+  "I Love Hip-Hop",
+  "Today's Hot Country",
+  "Radio Motown",
+  "Adroit Jazz Underground",
+  "Groove Salad"
+]);
+
+function validateListeningHistory(value) {
+  const source = value && typeof value === "object" && !Array.isArray(value) ? value.stations : null;
+  const recentSource = value && typeof value === "object" && !Array.isArray(value) ? value.recentStationIds : null;
+  const localRecentSource = value && typeof value === "object" && !Array.isArray(value) ? value.recentLocalStations : null;
+  const localPresetSource = value && typeof value === "object" && !Array.isArray(value) ? value.localStationPresets : null;
+  const stations = {};
+  if (source && typeof source === "object" && !Array.isArray(source)) {
+    for (const [rawId, rawEntry] of Object.entries(source)) {
+      const id = String(rawId ?? "").trim();
+      if (!id || !rawEntry || typeof rawEntry !== "object" || Array.isArray(rawEntry)) continue;
+      const seconds = Math.max(0, Math.floor(Number(rawEntry.seconds) || 0));
+      if (!seconds) continue;
+      stations[id] = {
+        seconds,
+        lastListenedAt: typeof rawEntry.lastListenedAt === "string" ? rawEntry.lastListenedAt : ""
+      };
+    }
+  }
+  const recentStationIds = [...new Set((Array.isArray(recentSource) ? recentSource : [])
+    .map(id => String(id ?? "").trim()).filter(Boolean))].slice(0, 10);
+  const seenLocalStations = new Set();
+  const recentLocalStations = [];
+  for (const rawStation of Array.isArray(localRecentSource) ? localRecentSource : []) {
+    if (!rawStation || typeof rawStation !== "object" || Array.isArray(rawStation)) continue;
+    const mode = rawStation.mode === "artist" ? "artist" : rawStation.mode === "radio" ? "radio" : "";
+    const seedId = String(rawStation.seedId ?? "").trim();
+    const key = `${mode}:${seedId}`;
+    if (!mode || !seedId || seenLocalStations.has(key)) continue;
+    seenLocalStations.add(key);
+    recentLocalStations.push({
+      key,
+      mode,
+      seedId,
+      label: String(rawStation.label ?? "").trim().slice(0, 300),
+      title: String(rawStation.title ?? "").trim().slice(0, 300),
+      artist: String(rawStation.artist ?? "").trim().slice(0, 300),
+      album: String(rawStation.album ?? "").trim().slice(0, 300),
+      lastPlayedAt: typeof rawStation.lastPlayedAt === "string" ? rawStation.lastPlayedAt : ""
+    });
+    if (recentLocalStations.length >= 10) break;
+  }
+  const seenLocalPresets = new Set();
+  const localStationPresets = [];
+  for (const rawStation of Array.isArray(localPresetSource) ? localPresetSource : []) {
+    if (!rawStation || typeof rawStation !== "object" || Array.isArray(rawStation)) continue;
+    const mode = rawStation.mode === "artist" ? "artist" : rawStation.mode === "radio" ? "radio" : "";
+    const seedId = String(rawStation.seedId ?? "").trim();
+    const key = `${mode}:${seedId}`;
+    if (!mode || !seedId || seenLocalPresets.has(key)) continue;
+    seenLocalPresets.add(key);
+    localStationPresets.push({
+      key,
+      mode,
+      seedId,
+      label: String(rawStation.label ?? "").trim().slice(0, 300),
+      title: String(rawStation.title ?? "").trim().slice(0, 300),
+      artist: String(rawStation.artist ?? "").trim().slice(0, 300),
+      album: String(rawStation.album ?? "").trim().slice(0, 300),
+      lastPlayedAt: typeof rawStation.lastPlayedAt === "string" ? rawStation.lastPlayedAt : ""
+    });
+  }
+  return { version: 3, stations, recentStationIds, recentLocalStations, localStationPresets };
+}
+
+function lowerKey(value) { return String(value ?? "").trim().toLowerCase(); }
+function normalizeGroupName(value) { return String(value ?? "").trim() || "Other"; }
+function normalizeSubgroupName(value) { return String(value ?? "").trim(); }
+
+function ensureOtherLast(values) {
+  const seen = new Set();
+  const cleaned = [];
+  for (const value of Array.isArray(values) ? values : []) {
+    const name = normalizeGroupName(value);
+    const key = lowerKey(name);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    if (key !== "other") cleaned.push(name);
+  }
+  cleaned.push("Other");
+  return cleaned;
+}
+
+function createStationId() {
+  return `st_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function cleanPresetOrder(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const order = Number(value);
+  return Number.isSafeInteger(order) && order >= 0 ? order : null;
+}
+
+function cleanStationGainDb(value) {
+  const gain = Number(value);
+  if (!Number.isFinite(gain)) return 0;
+  return Math.round(Math.min(Math.max(gain, -12), 12) * 2) / 2;
+}
+
+function hasOwn(value, key) { return Object.prototype.hasOwnProperty.call(value, key); }
+
+function cleanUiNameList(value, maximum = 500) {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set();
+  const cleaned = [];
+  for (const rawValue of value) {
+    const name = String(rawValue ?? "").trim();
+    if (!name || seen.has(name)) continue;
+    seen.add(name);
+    cleaned.push(name);
+    if (cleaned.length >= maximum) break;
+  }
+  return cleaned;
+}
+
+function cleanStation(raw, index = 0) {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+    throw new Error(`Station ${index + 1} is not an object.`);
+  }
+  const name = String(raw.name ?? "").trim();
+  const url = String(raw.url ?? "").trim();
+  if (!name || !url) throw new Error(`Station ${index + 1} must have a name and URL.`);
+  let parsed;
+  try { parsed = new URL(url); } catch { throw new Error(`Station ${index + 1} has an invalid URL.`); }
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    throw new Error(`Station ${index + 1} must use an HTTP or HTTPS URL.`);
+  }
+
+  // Before v0.2.3, `favorite` represented what is now called Presets.
+  const currentSchema = hasOwn(raw, "preset");
+  const preset = currentSchema ? Boolean(raw.preset) : Boolean(raw.favorite);
+  const favorite = currentSchema ? Boolean(raw.favorite) : false;
+  const presetOrderSource = currentSchema ? raw.presetOrder : raw.favoriteOrder;
+  return {
+    id: String(raw.id ?? "").trim() || createStationId(),
+    name,
+    url: parsed.toString(),
+    group: normalizeGroupName(raw.group),
+    favorite,
+    preset,
+    presetOrder: preset ? cleanPresetOrder(presetOrderSource) : null,
+    country: String(raw.country ?? "").trim(),
+    subgroup: normalizeSubgroupName(raw.subgroup),
+    description: String(raw.description ?? "").trim().slice(0, 2000),
+    hasPreRoll: currentSchema && Boolean(raw.hasPreRoll),
+    gainDb: cleanStationGainDb(raw.gainDb)
+  };
+}
+
+function validateStations(values) {
+  if (!Array.isArray(values)) throw new Error("Station data must be a JSON array.");
+  const stations = values.map(cleanStation);
+  const ids = new Set();
+  for (const station of stations) {
+    if (ids.has(station.id)) throw new Error(`Duplicate station ID: ${station.id}`);
+    ids.add(station.id);
+  }
+  return stations;
+}
+
+function validateGroups(values) {
+  if (!Array.isArray(values)) throw new Error("Group data must be a JSON array.");
+  return ensureOtherLast(values);
+}
+
+function validateSubgroups(value) {
+  const source = value && typeof value === "object" && !Array.isArray(value) ? value.groups : null;
+  const groups = [];
+  const seenGroups = new Set();
+  for (const rawEntry of Array.isArray(source) ? source : []) {
+    if (!rawEntry || typeof rawEntry !== "object" || Array.isArray(rawEntry)) continue;
+    const group = normalizeGroupName(rawEntry.group);
+    const groupKey = lowerKey(group);
+    if (seenGroups.has(groupKey)) continue;
+    seenGroups.add(groupKey);
+    const seenNames = new Set();
+    const subgroups = [];
+    for (const rawName of Array.isArray(rawEntry.subgroups) ? rawEntry.subgroups : []) {
+      const name = normalizeSubgroupName(rawName);
+      const key = lowerKey(name);
+      if (!name || seenNames.has(key)) continue;
+      seenNames.add(key);
+      subgroups.push(name);
+    }
+    if (subgroups.length) groups.push({ group, subgroups });
+  }
+  return { version: 1, groups };
+}
+
+function libraryStation(station) {
+  return {
+    id: station.id,
+    name: station.name,
+    url: station.url,
+    group: station.group,
+    country: station.country,
+    subgroup: station.subgroup,
+    description: station.description,
+    hasPreRoll: station.hasPreRoll
+  };
+}
+
+function addStationStructure(groups, subgroups, stations) {
+  const groupNames = [...groups];
+  const entries = subgroups.groups.map((entry) => ({ group: entry.group, subgroups: [...entry.subgroups] }));
+  for (const station of stations) {
+    if (!groupNames.some((name) => lowerKey(name) === lowerKey(station.group))) {
+      groupNames.splice(Math.max(0, groupNames.length - 1), 0, station.group);
+    }
+    if (!station.subgroup) continue;
+    let entry = entries.find((item) => lowerKey(item.group) === lowerKey(station.group));
+    if (!entry) {
+      entry = { group: station.group, subgroups: [] };
+      entries.push(entry);
+    }
+    if (!entry.subgroups.some((name) => lowerKey(name) === lowerKey(station.subgroup))) {
+      entry.subgroups.push(station.subgroup);
+    }
+  }
+  return { groups: ensureOtherLast(groupNames), subgroups: validateSubgroups({ version: 1, groups: entries }) };
+}
+
+function validateLibrary(value) {
+  // Old station-only exports remain importable. Their hierarchy is inferred.
+  if (Array.isArray(value)) {
+    const stations = validateStations(value).map(libraryStation);
+    const structure = addStationStructure(["Other"], validateSubgroups(null), stations);
+    return { version: 1, groups: structure.groups, subgroups: structure.subgroups, stations };
+  }
+  if (!value || typeof value !== "object") throw new Error("Library data must be a JSON object.");
+  const rawStations = Array.isArray(value.stations)
+    ? value.stations.map((station) => (
+      station && typeof station === "object" && !Array.isArray(station)
+        ? { ...station, favorite: false, preset: false, presetOrder: null }
+        : station
+    ))
+    : value.stations;
+  const stations = validateStations(rawStations).map(libraryStation);
+  const structure = addStationStructure(
+    validateGroups(Array.isArray(value.groups) ? value.groups : ["Other"]),
+    validateSubgroups(value.subgroups),
+    stations
+  );
+  return { version: 1, groups: structure.groups, subgroups: structure.subgroups, stations };
+}
+
+function validatePreferences(value) {
+  const source = value && typeof value === "object" && !Array.isArray(value) ? value.stations : null;
+  const stations = {};
+  if (source && typeof source === "object" && !Array.isArray(source)) {
+    for (const [rawId, rawEntry] of Object.entries(source)) {
+      const id = String(rawId ?? "").trim();
+      if (!id || !rawEntry || typeof rawEntry !== "object" || Array.isArray(rawEntry)) continue;
+      const favorite = Boolean(rawEntry.favorite);
+      const preset = Boolean(rawEntry.preset);
+      const gainDb = cleanStationGainDb(rawEntry.gainDb);
+      if (!favorite && !preset && gainDb === 0) continue;
+      const stationPreferences = {
+        favorite,
+        preset,
+        presetOrder: preset ? cleanPresetOrder(rawEntry.presetOrder) : null
+      };
+      if (gainDb !== 0) stationPreferences.gainDb = gainDb;
+      stations[id] = stationPreferences;
+    }
+  }
+  const rawDeletedIds = value && typeof value === "object" && !Array.isArray(value)
+    ? value.deletedOfficialStationIds
+    : null;
+  const deletedOfficialStationIds = [];
+  const seenDeletedIds = new Set();
+  for (const rawId of Array.isArray(rawDeletedIds) ? rawDeletedIds : []) {
+    const id = String(rawId ?? "").trim();
+    if (!id || seenDeletedIds.has(id)) continue;
+    seenDeletedIds.add(id);
+    deletedOfficialStationIds.push(id);
+  }
+  const parsedUpdatedAt = Date.parse(String(value?.lastLibraryUpdate ?? ""));
+  const rawSettingsBounds = value?.settingsWindowBounds;
+  const rawRadioLogBounds = value?.radioLogWindowBounds;
+  const additionalMusicFolder = typeof value?.additionalMusicFolder === "string"
+    ? value.additionalMusicFolder.trim()
+    : "";
+  const lastFmApiKey = typeof value?.lastFmApiKey === 'string' ? value.lastFmApiKey.trim().slice(0, 160) : '';
+  const localRadioFamiliarity = ['hits', 'balanced', 'deep-cuts'].includes(value?.localRadioFamiliarity)
+    ? value.localRadioFamiliarity
+    : 'balanced';
+  const localRadioSongRepeatHours = [2, 4, 6].includes(Number(value?.localRadioSongRepeatHours)) ? Number(value.localRadioSongRepeatHours) : 4;
+  const localRadioArtistRepeatMinutes = [30, 90, 180].includes(Number(value?.localRadioArtistRepeatMinutes)) ? Number(value.localRadioArtistRepeatMinutes) : 90;
+  const localRadioArtistSetSize = [1, 2, 3, 4].includes(Number(value?.localRadioArtistSetSize)) ? Number(value.localRadioArtistSetSize) : 1;
+  const rawStreamingUi = value?.streamingUi && typeof value.streamingUi === "object" && !Array.isArray(value.streamingUi)
+    ? value.streamingUi
+    : {};
+  const settingsWindowBounds = rawSettingsBounds && typeof rawSettingsBounds === "object" && !Array.isArray(rawSettingsBounds) &&
+    ["x", "y", "width", "height"].every((key) => Number.isFinite(Number(rawSettingsBounds[key])))
+    ? {
+        x: Math.round(Number(rawSettingsBounds.x)),
+        y: Math.round(Number(rawSettingsBounds.y)),
+        width: Math.max(1, Math.round(Number(rawSettingsBounds.width))),
+        height: Math.max(1, Math.round(Number(rawSettingsBounds.height)))
+      }
+    : null;
+  const radioLogWindowBounds = rawRadioLogBounds && typeof rawRadioLogBounds === "object" && !Array.isArray(rawRadioLogBounds) &&
+    ["x", "y", "width", "height"].every((key) => Number.isFinite(Number(rawRadioLogBounds[key])))
+    ? {
+        x: Math.round(Number(rawRadioLogBounds.x)),
+        y: Math.round(Number(rawRadioLogBounds.y)),
+        width: Math.max(1, Math.round(Number(rawRadioLogBounds.width))),
+        height: Math.max(1, Math.round(Number(rawRadioLogBounds.height)))
+      }
+    : null;
+  return {
+    version: 1,
+    stations,
+    downloadNewStations: typeof value?.downloadNewStations === "boolean"
+      ? value.downloadNewStations
+      : true,
+    proModeEnabled: value?.proModeEnabled === true,
+    additionalMusicFolder,
+    lastFmEnabled: value?.lastFmEnabled === true,
+    lastFmApiKey,
+    localRadioFamiliarity,
+    localRadioSongRepeatHours,
+    localRadioArtistRepeatMinutes,
+    localRadioArtistSetSize,
+    streamingUi: {
+      presets: rawStreamingUi.presets === true,
+      localPresets: rawStreamingUi.localPresets === true,
+      localMixes: rawStreamingUi.localMixes !== false,
+      favoritesOnly: rawStreamingUi.favoritesOnly === true,
+      mostPlayed: rawStreamingUi.mostPlayed === true,
+      collapsedGroups: cleanUiNameList(rawStreamingUi.collapsedGroups),
+      collapsedSubgroups: cleanUiNameList(rawStreamingUi.collapsedSubgroups)
+    },
+    launchInSidebarMode: value?.launchInSidebarMode === true,
+    settingsWindowBounds,
+    radioLogWindowBounds,
+    lastLibraryUpdate: Number.isFinite(parsedUpdatedAt) ? new Date(parsedUpdatedAt).toISOString() : "",
+    deletedOfficialStationIds
+  };
+}
+
+function preferencesFromStations(stations) {
+  const preferences = validatePreferences(null);
+  for (const station of stations) {
+    const gainDb = cleanStationGainDb(station.gainDb);
+    if (!station.favorite && !station.preset && gainDb === 0) continue;
+    const stationPreferences = {
+      favorite: Boolean(station.favorite),
+      preset: Boolean(station.preset),
+      presetOrder: station.preset ? cleanPresetOrder(station.presetOrder) : null
+    };
+    if (gainDb !== 0) stationPreferences.gainDb = gainDb;
+    preferences.stations[station.id] = stationPreferences;
+  }
+  return preferences;
+}
+
+function starterPreferences(stations) {
+  const byName = new Map(stations.map((station) => [lowerKey(station.name), station]));
+  const preferences = validatePreferences(null);
+  STARTER_PRESET_NAMES.forEach((name, presetOrder) => {
+    const station = byName.get(lowerKey(name));
+    if (!station) return;
+    preferences.stations[station.id] = {
+      favorite: false,
+      preset: true,
+      presetOrder
+    };
+  });
+  return preferences;
+}
+
+class PortableStorage {
+  constructor({ dataDir, defaultsDir, onWarning = () => {} }) {
+    this.dataDir = dataDir;
+    this.defaultsDir = defaultsDir;
+    this.backupDir = path.join(dataDir, "backups");
+    this.onWarning = onWarning;
+  }
+
+  initialize() {
+    fs.mkdirSync(this.dataDir, { recursive: true });
+    fs.mkdirSync(this.backupDir, { recursive: true });
+    this.#initializeLibraryAndPreferences();
+    if (!fs.existsSync(this.getListeningHistoryPath())) {
+      this.#atomicWrite(LISTENING_HISTORY_FILE, validateListeningHistory(null), { createBackup: false });
+    }
+  }
+
+  assertWritable() {
+    const probe = path.join(this.dataDir, `.write-test-${process.pid}-${Date.now()}`);
+    fs.writeFileSync(probe, "ok", "utf8");
+    fs.unlinkSync(probe);
+    return true;
+  }
+
+  getLibraryPath() { return path.join(this.dataDir, LIBRARY_FILE); }
+  getPreferencesPath() { return path.join(this.dataDir, PREFERENCES_FILE); }
+  getListeningHistoryPath() { return path.join(this.dataDir, LISTENING_HISTORY_FILE); }
+
+  readLibrary() {
+    return this.#readValidated(
+      LIBRARY_FILE,
+      validateLibrary,
+      { version: 1, groups: ["Other"], subgroups: validateSubgroups(null), stations: [] }
+    );
+  }
+  readPreferences() {
+    return this.#readValidated(PREFERENCES_FILE, validatePreferences, validatePreferences(null));
+  }
+  readStations() {
+    const library = this.readLibrary();
+    const preferences = this.readPreferences().stations;
+    return library.stations.map((station) => {
+      const preference = preferences[station.id] || {};
+      return {
+        ...station,
+        favorite: Boolean(preference.favorite),
+        preset: Boolean(preference.preset),
+        presetOrder: preference.preset ? cleanPresetOrder(preference.presetOrder) : null,
+        gainDb: cleanStationGainDb(preference.gainDb)
+      };
+    });
+  }
+
+  writeStations(values) {
+    const stations = validateStations(values);
+    const library = this.readLibrary();
+    const currentPreferences = this.readPreferences();
+    const updatedIds = new Set(stations.map((station) => station.id));
+    for (const id of updatedIds) delete currentPreferences.stations[id];
+    Object.assign(currentPreferences.stations, preferencesFromStations(stations).stations);
+    library.stations = stations.map(libraryStation);
+    this.#atomicWrite(LIBRARY_FILE, validateLibrary(library));
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(currentPreferences));
+    return this.readStations();
+  }
+
+  readGroups() { return this.readLibrary().groups; }
+  writeGroups(values) {
+    const library = this.readLibrary();
+    library.groups = validateGroups(values);
+    const saved = validateLibrary(library);
+    this.#atomicWrite(LIBRARY_FILE, saved);
+    return saved.groups;
+  }
+  readSubgroups() { return this.readLibrary().subgroups; }
+  writeSubgroups(value) {
+    const library = this.readLibrary();
+    library.subgroups = validateSubgroups(value);
+    const saved = validateLibrary(library);
+    this.#atomicWrite(LIBRARY_FILE, saved);
+    return saved.subgroups;
+  }
+
+  readListeningHistory() {
+    return this.#readValidated(LISTENING_HISTORY_FILE, validateListeningHistory, validateListeningHistory(null));
+  }
+  writeListeningHistory(value) {
+    const history = validateListeningHistory(value);
+    this.#atomicWrite(LISTENING_HISTORY_FILE, history);
+    return history;
+  }
+
+  exportLibrary(now = new Date()) {
+    const updatedAt = now instanceof Date ? now.toISOString() : String(now ?? "");
+    const parsedUpdatedAt = Date.parse(updatedAt);
+    if (!Number.isFinite(parsedUpdatedAt)) throw new Error("The library export timestamp is invalid.");
+    return {
+      ...this.readLibrary(),
+      updatedAt: new Date(parsedUpdatedAt).toISOString()
+    };
+  }
+
+  getLibraryUpdateState() {
+    const preferences = this.readPreferences();
+    return {
+      enabled: preferences.downloadNewStations,
+      lastLibraryUpdate: preferences.lastLibraryUpdate
+    };
+  }
+
+  setLibraryUpdatesEnabled(enabled) {
+    const preferences = this.readPreferences();
+    preferences.downloadNewStations = Boolean(enabled);
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getLibraryUpdateState();
+  }
+
+  getUiPreferences() {
+    const preferences = this.readPreferences();
+    return {
+      proModeEnabled: preferences.proModeEnabled,
+      additionalMusicFolder: preferences.additionalMusicFolder,
+      lastFmEnabled: preferences.lastFmEnabled,
+      lastFmApiKey: preferences.lastFmApiKey,
+      localRadioFamiliarity: preferences.localRadioFamiliarity,
+      localRadioSongRepeatHours: preferences.localRadioSongRepeatHours,
+      localRadioArtistRepeatMinutes: preferences.localRadioArtistRepeatMinutes,
+      localRadioArtistSetSize: preferences.localRadioArtistSetSize,
+      launchInSidebarMode: preferences.launchInSidebarMode,
+      settingsWindowBounds: preferences.settingsWindowBounds
+        ? { ...preferences.settingsWindowBounds }
+        : null,
+      radioLogWindowBounds: preferences.radioLogWindowBounds
+        ? { ...preferences.radioLogWindowBounds }
+        : null
+    };
+  }
+
+  getLinuxUiPreferences() {
+    return this.getUiPreferences();
+  }
+
+  getStreamingUiState() {
+    const streamingUi = this.readPreferences().streamingUi;
+    return {
+      presets: streamingUi.presets,
+      localPresets: streamingUi.localPresets,
+      localMixes: streamingUi.localMixes,
+      favoritesOnly: streamingUi.favoritesOnly,
+      mostPlayed: streamingUi.mostPlayed,
+      collapsedGroups: [...streamingUi.collapsedGroups],
+      collapsedSubgroups: [...streamingUi.collapsedSubgroups]
+    };
+  }
+
+  setStreamingUiState(state = {}) {
+    const preferences = this.readPreferences();
+    const current = preferences.streamingUi;
+    preferences.streamingUi = {
+      presets: typeof state.presets === "boolean" ? state.presets : current.presets,
+      localPresets: typeof state.localPresets === "boolean" ? state.localPresets : current.localPresets,
+      localMixes: typeof state.localMixes === "boolean" ? state.localMixes : current.localMixes,
+      favoritesOnly: typeof state.favoritesOnly === "boolean" ? state.favoritesOnly : current.favoritesOnly,
+      mostPlayed: typeof state.mostPlayed === "boolean" ? state.mostPlayed : current.mostPlayed,
+      collapsedGroups: Array.isArray(state.collapsedGroups) ? cleanUiNameList(state.collapsedGroups) : current.collapsedGroups,
+      collapsedSubgroups: Array.isArray(state.collapsedSubgroups) ? cleanUiNameList(state.collapsedSubgroups) : current.collapsedSubgroups
+    };
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getStreamingUiState();
+  }
+
+  setLaunchInSidebarMode(enabled) {
+    const preferences = this.readPreferences();
+    preferences.launchInSidebarMode = Boolean(enabled);
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences();
+  }
+
+  setProModeEnabled(enabled) {
+    const preferences = this.readPreferences();
+    preferences.proModeEnabled = Boolean(enabled);
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences();
+  }
+
+  setAdditionalMusicFolder(folder) {
+    const preferences = this.readPreferences();
+    preferences.additionalMusicFolder = typeof folder === "string" ? folder.trim() : "";
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences();
+  }
+
+  setLastFmSettings({ enabled, apiKey }) {
+    const preferences = this.readPreferences();
+    preferences.lastFmEnabled = Boolean(enabled);
+    preferences.lastFmApiKey = typeof apiKey === 'string' ? apiKey.trim().slice(0, 160) : preferences.lastFmApiKey;
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences();
+  }
+
+  setLocalRadioFamiliarity(value) {
+    const preferences = this.readPreferences();
+    preferences.localRadioFamiliarity = ['hits', 'balanced', 'deep-cuts'].includes(value) ? value : 'balanced';
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences();
+  }
+
+  setLocalRadioTuning(value = {}) {
+    const preferences = this.readPreferences();
+    if ([2, 4, 6].includes(Number(value.songRepeatHours))) preferences.localRadioSongRepeatHours = Number(value.songRepeatHours);
+    if ([30, 90, 180].includes(Number(value.artistRepeatMinutes))) preferences.localRadioArtistRepeatMinutes = Number(value.artistRepeatMinutes);
+    if ([1, 2, 3, 4].includes(Number(value.artistSetSize))) preferences.localRadioArtistSetSize = Number(value.artistSetSize);
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences();
+  }
+
+  setSettingsWindowBounds(bounds) {
+    const preferences = this.readPreferences();
+    preferences.settingsWindowBounds = bounds;
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences().settingsWindowBounds;
+  }
+
+  setRadioLogWindowBounds(bounds) {
+    const preferences = this.readPreferences();
+    preferences.radioLogWindowBounds = bounds;
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences().radioLogWindowBounds;
+  }
+
+  setStationGain(stationId, value) {
+    const id = String(stationId ?? "").trim();
+    if (!id || !this.readLibrary().stations.some((station) => station.id === id)) {
+      throw new Error("That station is no longer in WaveDeck.");
+    }
+    const gainDb = cleanStationGainDb(value);
+    const preferences = this.readPreferences();
+    const current = preferences.stations[id] || {
+      favorite: false,
+      preset: false,
+      presetOrder: null
+    };
+    if (gainDb === 0) delete current.gainDb;
+    else current.gainDb = gainDb;
+    if (current.favorite || current.preset || current.gainDb) preferences.stations[id] = current;
+    else delete preferences.stations[id];
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return gainDb;
+  }
+
+  deleteStation(stationId) {
+    const id = String(stationId ?? "").trim();
+    if (!id) return { ok: false, reason: "Select a station to delete." };
+    const library = this.readLibrary();
+    const station = library.stations.find((item) => item.id === id);
+    if (!station) return { ok: false, reason: "That station no longer exists." };
+
+    library.stations = library.stations.filter((item) => item.id !== id);
+    const preferences = this.readPreferences();
+    delete preferences.stations[id];
+    if (!preferences.deletedOfficialStationIds.includes(id)) {
+      preferences.deletedOfficialStationIds.push(id);
+    }
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    this.#atomicWrite(LIBRARY_FILE, validateLibrary(library));
+    return { ok: true, station };
+  }
+
+  applyLibraryUpdate(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      throw new Error("The downloaded library must be a JSON object.");
+    }
+    const parsedUpdatedAt = Date.parse(String(value.updatedAt ?? ""));
+    if (!Number.isFinite(parsedUpdatedAt)) {
+      throw new Error("The downloaded library does not have a valid updatedAt timestamp.");
+    }
+    if (!Array.isArray(value.stations) || value.stations.some((station) => (
+      !station || typeof station !== "object" || !String(station.id ?? "").trim()
+    ))) {
+      throw new Error("Every downloaded station must have a permanent station ID.");
+    }
+    const updatedAt = new Date(parsedUpdatedAt).toISOString();
+    const incoming = validateLibrary(value);
+    const preferences = this.readPreferences();
+    const previousUpdateTime = Date.parse(preferences.lastLibraryUpdate);
+    if (Number.isFinite(previousUpdateTime) && parsedUpdatedAt <= previousUpdateTime) {
+      return { applied: false, addedStations: 0, updatedStations: 0, addedGroups: 0, addedSubgroups: 0 };
+    }
+
+    const current = this.readLibrary();
+    const stationsById = new Map(current.stations.map((station) => [station.id, station]));
+    const deletedIds = new Set(preferences.deletedOfficialStationIds);
+    let addedStations = 0;
+    let updatedStations = 0;
+    for (const incomingStation of incoming.stations) {
+      const existing = stationsById.get(incomingStation.id);
+      if (existing) {
+        const nextUrl = incomingStation.url;
+        const nextCountry = incomingStation.country;
+        const nextDescription = incomingStation.description;
+        if (
+          existing.url !== nextUrl ||
+          existing.country !== nextCountry ||
+          existing.description !== nextDescription
+        ) {
+          existing.url = nextUrl;
+          existing.country = nextCountry;
+          existing.description = nextDescription;
+          updatedStations += 1;
+        }
+        continue;
+      }
+      if (deletedIds.has(incomingStation.id)) continue;
+      const addition = { ...incomingStation };
+      current.stations.push(addition);
+      stationsById.set(addition.id, addition);
+      addedStations += 1;
+    }
+
+    let addedGroups = 0;
+    for (const group of incoming.groups) {
+      if (
+        lowerKey(group) === "other" ||
+        current.groups.some((existing) => lowerKey(existing) === lowerKey(group))
+      ) continue;
+      current.groups.splice(Math.max(0, current.groups.length - 1), 0, group);
+      addedGroups += 1;
+    }
+
+    const subgroupEntries = current.subgroups.groups.map((entry) => ({
+      group: entry.group,
+      subgroups: [...entry.subgroups]
+    }));
+    let addedSubgroups = 0;
+    for (const incomingEntry of incoming.subgroups.groups) {
+      let entry = subgroupEntries.find((item) => lowerKey(item.group) === lowerKey(incomingEntry.group));
+      if (!entry) {
+        entry = { group: incomingEntry.group, subgroups: [] };
+        subgroupEntries.push(entry);
+      }
+      for (const subgroup of incomingEntry.subgroups) {
+        if (entry.subgroups.some((existing) => lowerKey(existing) === lowerKey(subgroup))) continue;
+        entry.subgroups.push(subgroup);
+        addedSubgroups += 1;
+      }
+    }
+    current.subgroups = { version: 1, groups: subgroupEntries };
+
+    const merged = validateLibrary(current);
+    if (addedStations || updatedStations || addedGroups || addedSubgroups) {
+      this.#atomicWrite(LIBRARY_FILE, merged);
+    }
+    preferences.lastLibraryUpdate = updatedAt;
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return { applied: true, addedStations, updatedStations, addedGroups, addedSubgroups };
+  }
+
+  importLibrary(value, { mode = "add" } = {}) {
+    const incoming = validateLibrary(value);
+    if (mode === "replace") {
+      this.#atomicWrite(LIBRARY_FILE, incoming);
+      return {
+        mode,
+        stationCount: incoming.stations.length,
+        addedStations: incoming.stations.length,
+        addedGroups: incoming.groups.filter((name) => lowerKey(name) !== "other").length,
+        addedSubgroups: incoming.subgroups.groups.reduce((sum, entry) => sum + entry.subgroups.length, 0)
+      };
+    }
+    if (mode !== "add") throw new Error("Unknown library import mode.");
+
+    const current = this.readLibrary();
+    const ids = new Set(current.stations.map((station) => station.id));
+    const identities = new Set(current.stations.map((station) => `${lowerKey(station.name)}\n${lowerKey(station.url)}`));
+    const additions = incoming.stations.filter((station) => {
+      const identity = `${lowerKey(station.name)}\n${lowerKey(station.url)}`;
+      if (ids.has(station.id) || identities.has(identity)) return false;
+      ids.add(station.id);
+      identities.add(identity);
+      return true;
+    });
+
+    const nextGroups = [...current.groups];
+    let addedGroups = 0;
+    for (const group of incoming.groups) {
+      if (lowerKey(group) === "other" || nextGroups.some((name) => lowerKey(name) === lowerKey(group))) continue;
+      nextGroups.splice(Math.max(0, nextGroups.length - 1), 0, group);
+      addedGroups += 1;
+    }
+    const subgroupEntries = current.subgroups.groups.map((entry) => ({ group: entry.group, subgroups: [...entry.subgroups] }));
+    let addedSubgroups = 0;
+    for (const incomingEntry of incoming.subgroups.groups) {
+      let entry = subgroupEntries.find((item) => lowerKey(item.group) === lowerKey(incomingEntry.group));
+      if (!entry) {
+        entry = { group: incomingEntry.group, subgroups: [] };
+        subgroupEntries.push(entry);
+      }
+      for (const subgroup of incomingEntry.subgroups) {
+        if (entry.subgroups.some((name) => lowerKey(name) === lowerKey(subgroup))) continue;
+        entry.subgroups.push(subgroup);
+        addedSubgroups += 1;
+      }
+    }
+    const merged = validateLibrary({
+      version: 1,
+      groups: nextGroups,
+      subgroups: { version: 1, groups: subgroupEntries },
+      stations: [...current.stations, ...additions]
+    });
+    this.#atomicWrite(LIBRARY_FILE, merged);
+    return { mode, stationCount: merged.stations.length, addedStations: additions.length, addedGroups, addedSubgroups };
+  }
+
+  syncGroupsWithStations(stations) {
+    const groups = this.readGroups();
+    const keys = new Set(groups.map(lowerKey));
+    const additions = [];
+    for (const station of stations) {
+      const group = normalizeGroupName(station.group);
+      const key = lowerKey(group);
+      if (key !== "other" && !keys.has(key)) { keys.add(key); additions.push(group); }
+    }
+    if (!additions.length) return groups;
+    return this.writeGroups([...groups.filter((group) => lowerKey(group) !== "other"), ...additions, "Other"]);
+  }
+
+  syncSubgroupsWithStations(stations) {
+    const config = this.readSubgroups();
+    const entries = config.groups.map((entry) => ({ group: entry.group, subgroups: [...entry.subgroups] }));
+    for (const station of stations) {
+      const subgroup = normalizeSubgroupName(station.subgroup);
+      if (!subgroup) continue;
+      const group = normalizeGroupName(station.group);
+      let entry = entries.find((item) => lowerKey(item.group) === lowerKey(group));
+      if (!entry) { entry = { group, subgroups: [] }; entries.push(entry); }
+      if (!entry.subgroups.some((name) => lowerKey(name) === lowerKey(subgroup))) entry.subgroups.push(subgroup);
+    }
+    const next = validateSubgroups({ version: 1, groups: entries });
+    if (JSON.stringify(next) === JSON.stringify(config)) return config;
+    return this.writeSubgroups(next);
+  }
+
+  saveSubgroups(value) { return this.writeSubgroups(value); }
+
+  removeGroup(groupName) {
+    const target = normalizeGroupName(groupName);
+    if (lowerKey(target) === "other") return { ok: false, reason: "The Other group cannot be removed." };
+    const stations = this.readStations().map((station) => lowerKey(station.group) === lowerKey(target)
+      ? { ...station, group: "Other", subgroup: "" } : station);
+    const groups = this.readGroups().filter((group) => lowerKey(group) !== lowerKey(target));
+    const subgroups = this.readSubgroups();
+    subgroups.groups = subgroups.groups.filter((entry) => lowerKey(entry.group) !== lowerKey(target));
+    this.writeStations(stations);
+    this.writeGroups(groups);
+    this.writeSubgroups(subgroups);
+    return { ok: true, stations: this.readStations(), groups: this.readGroups() };
+  }
+
+  renameSubgroup(groupName, oldName, newName) {
+    const group = normalizeGroupName(groupName);
+    const oldSubgroup = normalizeSubgroupName(oldName);
+    const nextSubgroup = normalizeSubgroupName(newName);
+    if (!oldSubgroup || !nextSubgroup) return { ok: false, reason: "Subgroup names cannot be empty." };
+    const config = this.readSubgroups();
+    const entry = config.groups.find((item) => lowerKey(item.group) === lowerKey(group));
+    if (!entry || !entry.subgroups.some((name) => lowerKey(name) === lowerKey(oldSubgroup))) {
+      return { ok: false, reason: "That subgroup no longer exists." };
+    }
+    if (entry.subgroups.some((name) => lowerKey(name) === lowerKey(nextSubgroup) && lowerKey(name) !== lowerKey(oldSubgroup))) {
+      return { ok: false, reason: "That subgroup name is already in use." };
+    }
+    entry.subgroups = entry.subgroups.map((name) => lowerKey(name) === lowerKey(oldSubgroup) ? nextSubgroup : name);
+    const stations = this.readStations().map((station) => (
+      lowerKey(station.group) === lowerKey(group) && lowerKey(station.subgroup) === lowerKey(oldSubgroup)
+        ? { ...station, subgroup: nextSubgroup } : station
+    ));
+    this.writeStations(stations);
+    this.writeSubgroups(config);
+    return { ok: true, stations: this.readStations(), subgroups: this.readSubgroups() };
+  }
+
+  removeSubgroup(groupName, subgroupName) {
+    const group = normalizeGroupName(groupName);
+    const subgroup = normalizeSubgroupName(subgroupName);
+    if (!subgroup) return { ok: false, reason: "Select a subgroup to remove." };
+    const config = this.readSubgroups();
+    const entry = config.groups.find((item) => lowerKey(item.group) === lowerKey(group));
+    if (!entry || !entry.subgroups.some((name) => lowerKey(name) === lowerKey(subgroup))) {
+      return { ok: false, reason: "That subgroup no longer exists." };
+    }
+    entry.subgroups = entry.subgroups.filter((name) => lowerKey(name) !== lowerKey(subgroup));
+    config.groups = config.groups.filter((item) => item.subgroups.length);
+    const stations = this.readStations().map((station) => (
+      lowerKey(station.group) === lowerKey(group) && lowerKey(station.subgroup) === lowerKey(subgroup)
+        ? { ...station, subgroup: "" } : station
+    ));
+    this.writeStations(stations);
+    this.writeSubgroups(config);
+    return { ok: true, stations: this.readStations(), subgroups: this.readSubgroups() };
+  }
+
+  #initializeLibraryAndPreferences() {
+    const bundled = path.join(this.defaultsDir, LIBRARY_FILE);
+    const defaultLibrary = fs.existsSync(bundled)
+      ? validateLibrary(JSON.parse(fs.readFileSync(bundled, "utf8")))
+      : validateLibrary({ version: 1, stations: [], groups: ["Other"], subgroups: null });
+    let seedStarterPresets = false;
+    if (!fs.existsSync(this.getLibraryPath())) {
+      const legacyStationsPath = path.join(this.dataDir, LEGACY_FILES[0]);
+      if (fs.existsSync(legacyStationsPath)) {
+        const defaultStations = defaultLibrary.stations.map((station) => cleanStation({
+          ...station,
+          favorite: false,
+          preset: false,
+          presetOrder: null
+        }));
+        const stations = this.#readLegacyValidated(LEGACY_FILES[0], validateStations, defaultStations);
+        const groups = this.#readLegacyValidated(LEGACY_FILES[1], validateGroups, defaultLibrary.groups);
+        const subgroups = this.#readLegacyValidated(LEGACY_FILES[2], validateSubgroups, defaultLibrary.subgroups);
+        const library = validateLibrary({
+          version: 1,
+          stations,
+          groups,
+          subgroups
+        });
+        this.#atomicWrite(LIBRARY_FILE, library, { createBackup: false });
+        if (!fs.existsSync(this.getPreferencesPath())) {
+          this.#atomicWrite(PREFERENCES_FILE, preferencesFromStations(stations), { createBackup: false });
+        }
+        this.#archiveLegacyFiles();
+      } else {
+        this.#atomicWrite(LIBRARY_FILE, defaultLibrary, { createBackup: false });
+        seedStarterPresets = true;
+      }
+    }
+    if (!fs.existsSync(this.getPreferencesPath())) {
+      const initialPreferences = seedStarterPresets
+        ? starterPreferences(defaultLibrary.stations)
+        : validatePreferences(null);
+      this.#atomicWrite(PREFERENCES_FILE, initialPreferences, { createBackup: false });
+    }
+  }
+
+  #archiveLegacyFiles() {
+    for (const fileName of LEGACY_FILES) {
+      const source = path.join(this.dataDir, fileName);
+      if (!fs.existsSync(source)) continue;
+      let destination = path.join(this.backupDir, `pre-v0.4-${fileName}`);
+      if (fs.existsSync(destination)) destination = path.join(this.backupDir, `pre-v0.4-${Date.now()}-${fileName}`);
+      try { fs.renameSync(source, destination); }
+      catch (error) {
+        this.onWarning(`WaveDeck migrated ${fileName}, but could not archive the old copy: ${error.message}`);
+      }
+    }
+  }
+
+  #readLegacyValidated(fileName, validator, fallback) {
+    const candidates = [
+      path.join(this.dataDir, fileName),
+      path.join(this.backupDir, `${fileName}.bak`)
+    ];
+    let lastError = null;
+    for (const [index, candidate] of candidates.entries()) {
+      if (!fs.existsSync(candidate)) continue;
+      try {
+        const value = validator(JSON.parse(fs.readFileSync(candidate, "utf8")));
+        if (index === 1) this.onWarning(`${fileName} was damaged and its backup was used during migration.`);
+        return value;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+    if (lastError) this.onWarning(`${fileName} could not be migrated: ${lastError.message}`);
+    return fallback;
+  }
+
+  #readValidated(fileName, validator, fallback) {
+    const target = path.join(this.dataDir, fileName);
+    try { return validator(JSON.parse(fs.readFileSync(target, "utf8"))); }
+    catch (error) {
+      const backup = path.join(this.backupDir, `${fileName}.bak`);
+      if (fs.existsSync(backup)) {
+        try {
+          const recovered = validator(JSON.parse(fs.readFileSync(backup, "utf8")));
+          this.#atomicWrite(fileName, recovered, { createBackup: false });
+          this.onWarning(`${fileName} was damaged and has been restored from its backup.`);
+          return recovered;
+        } catch {}
+      }
+      this.onWarning(`${fileName} could not be read: ${error.message}`);
+      return fallback;
+    }
+  }
+
+  #atomicWrite(fileName, data, { createBackup = true } = {}) {
+    const target = path.join(this.dataDir, fileName);
+    const temporary = path.join(this.dataDir, `.${fileName}.${process.pid}.${Date.now()}.tmp`);
+    const backup = path.join(this.backupDir, `${fileName}.bak`);
+    fs.mkdirSync(this.dataDir, { recursive: true });
+    fs.mkdirSync(this.backupDir, { recursive: true });
+    fs.writeFileSync(temporary, `${JSON.stringify(data, null, 2)}\n`, "utf8");
+    try {
+      if (createBackup && fs.existsSync(target)) fs.copyFileSync(target, backup);
+      fs.renameSync(temporary, target);
+    } catch (error) {
+      try { if (fs.existsSync(temporary)) fs.unlinkSync(temporary); } catch {}
+      throw new Error(`Could not save ${fileName}: ${error.message}`);
+    }
+  }
+
+}
+
+module.exports = {
+  STARTER_PRESET_NAMES,
+  PortableStorage,
+  cleanStationGainDb,
+  cleanStation,
+  ensureOtherLast,
+  normalizeGroupName,
+  normalizeSubgroupName,
+  validateGroups,
+  validateLibrary,
+  validateListeningHistory,
+  validatePreferences,
+  validateSubgroups,
+  validateStations
+};

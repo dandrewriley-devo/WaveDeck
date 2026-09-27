@@ -1,77 +1,103 @@
-YªçŠx-®éÜj×¢ëiºÚ+Š§j[h‘éÜ¢éíÛ^÷N‹Z–‹­¦ëeŠw¬Õ½¹ÍÐì½¹Ñ•áÑ	É¥‘”°¥ÁI•¹‘•É•Èô€ôÉ•ÅÕ¥É” ‰•±•ÑÉ½¸ˆ¤ì()™Õ¹Ñ¥½¸ÍÕ‰ÍÉ¥‰”¡¡…¹¹•°°…±±‰…¬¤ì(€¥˜€¡ÑåÁ•½˜…±±‰…¬€„ôô€‰™Õ¹Ñ¥½¸ˆ¤É•ÑÕÉ¸€ ¤€ôøíôì(€½¹ÍÐ±¥ÍÑ•¹•È€ô€¡}•Ù•¹Ð°Á…å±½…¤€ôø…±±‰…¬¡Á…å±½…¤ì(€¥ÁI•¹‘•É•È¹½¸¡¡…¹¹•°°±¥ÍÑ•¹•È¤ì(€É•ÑÕÉ¸€ ¤€ôø¥ÁI•¹‘•É•È¹É•µ½Ù•1¥ÍÑ•¹•È¡¡…¹¹•°°±¥ÍÑ•¹•È¤ì)ô()½¹Ñ•áÑ	É¥‘”¹•áÁ½Í•%¹5…¥¹]½É± ‰Ý…Ù•‘•¬ˆ°ì(€Á±…Ñ™½É´èÁÉ½•ÍÌ¹Á±…Ñ™½É´°(€•Ñ5ÕÍ¥MÑ…ÑÕÌè€ ¤€ôø¥ÁI•¹‘•É•È¹¥¹Ù½­” µÕÍ¥ŒéÍÑ…ÑÕÌœ¤°(€Í•…É¡5ÕÍ¥ŒèÅÕ•Éä€ôø¥ÁI•¹‘•É•È¹¥¹Ù½­” µÕÍ¥ŒéÍ•…É œ°ÅÕ•Éä¤°(€Í…¹5ÕÍ¥Œè€ ¤€ôø¥ÁI•¹‘•É•È¹¥¹Ù½­” µÕÍ¥ŒéÍ…¸œ¤°(€Á±…å5ÕÍ¥Œè€¡¥°µ½‘”¤€ôø¥ÁI•¹‘•É•È¹¥¹Ù½­” µÕÍ¥ŒéÁ±…äœ°¥°µ½‘”¤°(€•Ñ1½…±5¥á•Ìè€ ¤€ôø¥ÁI•¹‘•É•È¹¥¹Ù½­” µÕÍ¥Œéµ¥á•Ìœ¤°(€Á±…å1½…±5¥àè¥€ôø¥ÁI•¹‘•É•È¹¥¹Ù½­” µÕÍ¥ŒéÁ±…äµµ¥àœ°¥¤°(€Í•¹‘5ÕÍ¥••‘‰…¬è­¥¹€ôø¥ÁI•¹‘•É•È¹¥¹Ù½­” µÕÍ¥Œé™••‘‰…¬œ°­¥¹¤°(€Í••­5ÕÍ¥ŒèÍ•½¹‘Ì€ôø¥ÁI•¹‘•É•È¹¥¹Ù½­” µÕÍ¥ŒéÍ••¬œ°Í•½¹‘Ì¤°(€•Ñ5ÕÍ¥•‰Õ1½œè€ ¤€ôø¥ÁI•¹‘•É•È¹¥¹Ù½­” µÕÍ¥Œé‘•‰Õœé•Ðµ±…ÍÐµ‘•¥Í¥½¸œ¤°(€Í…Ù•5ÕÍ¥•‰Õ1½œè€ ¤€ôø¥ÁI•¹‘•É•È¹¥¹Ù½­” µÕÍ¥Œé‘•‰ÕœéÍ…Ù”µ±½œœ¤°(€•Ñ1…ÍÑµMÑ…ÑÕÌè€ ¤€ôø¥ÁI•¹‘•É•È¹¥¹Ù½­” µÕÍ¥Œé±…ÍÑ™´é•ÐµÍÑ…ÑÕÌœ¤°(€Í•Ñ1…ÍÑµM•ÑÑ¥¹ÌèÍ•ÑÑ¥¹Ì€ôø¥ÁI•¹‘•É•È¹¥¹Ù½­” µÕÍ¥Œé±…ÍÑ™´éÍ•ÐµÍ•ÑÑ¥¹Ìœ°Í•ÑÑ¥¹Ì¤°(€Ñ•ÍÑ1…ÍÑ´è€ ¤€ôø¥ÁI•¹‘•É•È¹¥¹Ù½­” µÕÍ¥Œé±…ÍÑ™´éÑ•ÍÐœ¤°(€ÅÕ•Õ•Õ±±1…ÍÑµI•™É•Í è€ ¤€ôø¥ÁI•¹‘•É•È¹¥¹Ù½­” µÕÍ¥Œé±…ÍÑ™´éÅÕ•Õ”µ™Õ±°œ¤°(€Í•Ñ1½…±I…‘¥½…µ¥±¥…É¥Ñäè™…µ¥±¥…É¥Ñä€ôø¥ÁI•¹‘•É•È¹¥¹Ù½­” µÕÍ¥Œé±½…°µÉ…‘¥¼éÍ•Ðµ™…µ¥±¥…É¥Ñäœ°™…µ¥±¥…É¥Ñä¤°(€Í•Ñ1½…±I…‘¥½QÕ¹¥¹œèÑÕ¹¥¹œ€ôø¥ÁI•¹‘•É•È¹¥¹Ù½­” µÕÍ¥Œé±½…°µÉ…‘¥¼éÍ•ÐµÑÕ¹¥¹œœ°ÑÕ¹¥¹œ¤°(€½¹1…ÍÑµ¡…¹•è…±±‰…¬€ôøÍÕ‰ÍÉ¥‰” µÕÍ¥Œé±…ÍÑ™´µ¡…¹•œ°…±±‰…¬¤°(€½¹5ÕÍ¥•‰Õ1½œè…±±‰…¬€ôøÍÕ‰ÍÉ¥‰” µÕÍ¥Œé‘•‰Õœµ‘•¥Í¥½¸œ°…±±‰…¬¤°(€½¹5ÕÍ¥¡…¹•è…±±‰…¬€ôøÍÕ‰ÍÉ¥‰” µÕÍ¥Œé¡…¹•œ°…±±‰…¬¤°(€•ÑMÑ…Ñ¥½¹Ìè€ ¤€ôø¥ÁI•¹‘•É•È¹¥¹Ù½­” ‰ÍÑ…Ñ¥½¹Ìé•Ðˆ¤°(€Í…Ù•MÑ…Ñ¥½¹Ìè€¡ÍÑ…Ñ¥½¹Ì¤€ôø¥ÁI•¹‘•É•È¹¥¹Ù½­” ‰ÍÑ…Ñ¥½¹ÌéÍ…Ù”ˆ°ÍÑ…Ñ¥½¹Ì¤°(€‘•±•Ñ•MÑ…Ñ¥½¸è€¡ÍÑ…Ñ¥½¹%¤€ôø¥ÁI•¹‘•É•È¹¥¹Ù½­” ‰ÍÑ…Ñ¥½¹Ìé‘•±•Ñ”ˆ°ÍÑ…Ñ¥½¹%¤°(€Í•ÑMÑ…Ñ¥½¹…¥¸è€¡ÍÑ…Ñ¥½¹%°…¥¹ˆ¤€ôø¥ÁI•¹‘•É•È¹¥¹Ù½­” ‰ÍÑ…Ñ¥½¹ÌéÍ•Ðµ…¥¸ˆ°ÍÑ…Ñ¥½¹%°…¥¹ˆ¤°(€½¹MÑ…Ñ¥½¹Í¡…¹•è€¡…±±‰…¬¤€ôøÍÕ‰ÍÉ¥‰” ‰ÍÑ…Ñ¥½¹Ìé¡…¹•ˆ°…±±‰…¬¤°(€•‘¥ÑMÑ…Ñ¥½¸è€¡ÍÑ…Ñ¥½¹%¤€ôø¥ÁI•¹‘•É•È¹¥¹Ù½­” ‰Í•ÑÑ¥¹Ìé½Á•¸ˆ°ÍÑ…Ñ¥½¹%¤°(€½¹‘¥ÑMÑ…Ñ¥½¹I•ÅÕ•ÍÑ•è€¡…±±‰…¬¤€ôøÍÕ‰ÍÉ¥‰” ‰Í•ÑÑ¥¹Ìé•‘¥ÐµÍÑ…Ñ¥½¸ˆ°…±±‰…¬¤°((€•ÑÉ½ÕÁÌè€ ¤€ôø¥ÁI•¹‘•É•È¹¥¹Ù½­” ‰É½ÕÁÌé•Ðˆ¤°(€Í…Ù•É½ÕÁÌè€¡É½ÕÁÌ¤€ôø¥ÁI•¹‘•É•È¹¥¹Ù½­” ‰É½ÕÁÌéÍ…Ù”ˆ°É½ÕÁÌ¤°(€É•µ½Ù•É½ÕÀè€¡É½ÕÁ9…µ”¤€ôø¥ÁI•¹‘•É•È¹¥¹Ù½­” ‰É½ÕÁÌéÉ•µ½Ù”ˆ°É½ÕÁ9…µ”¤°(€½¹É½ÕÁÍ¡…¹•è€¡…±±‰…¬¤€ôøÍÕ‰ÍÉ¥‰” ‰É½ÕÁÌé¡…¹•ˆ°…±±‰…¬¤°((€•ÑMÕ‰É½ÕÁÌè€ ¤€ôø¥ÁI•¹‘•É•È¹¥¹Ù½­” ‰ÍÕ‰É½ÕÁÌé•Ðˆ¤°(€Í…Ù•MÕ‰É½ÕÁÌè€¡ÍÕ‰É½ÕÁÌ¤€ôø¥ÁI•¹‘•É•È¹¥¹Ù½­” ‰ÍÕ‰É½ÕÁÌéÍ…Ù”ˆ°ÍÕ‰É½ÕÁÌ¤°(€É•¹…µ•MÕ‰É½ÕÀè€¡É½ÕÁ9…µ”°½±‘9…µ”°¹•Ý9…µ”¤€ôø¥ÁI•¹‘•É•È¹¥¹Ù½­” ‰ÍÕ‰É½ÕÁÌéÉ•¹…µ”ˆ°É½ÕÁ9…µ”°½±‘9…µ”°¹•Ý9…µ”¤°(€É•µ½Ù•MÕ‰É½ÕÀè€¡É½ÕÁ9…µ”°ÍÕ‰É½ÕÁ9…µ”¤€ôø¥ÁI•¹‘•É•È¹¥¹Ù½­” ‰ÍÕ‰É½ÕÁÌéÉ•µ½Ù”ˆ°É½ÕÁ9…µ”°ÍÕ‰É½ÕÁ9…µ”¤°(€½¹MÕ‰É½×^÷¶‰žËkºwµçHœÙXÝ[ÛœÎœÙ]\Ý]H‹Ý]JKˆÛ”ÙXÝ[Û•š\ÚXš[]PÚ[™ÙYˆ
-Ø[˜XÚÊHOˆÝXœØÜšX™JœÙXÝ[ÛœÎœÝ]KXÚ[™ÙY‹Ø[˜XÚÊK‚ˆÙ]][˜Ú\”Ý]\Îˆ
+const { contextBridge, ipcRenderer } = require("electron");
 
-HOˆ\Ô™[™\™\‹š[›ÚÙJ›][˜Ú\Ž™Ù]\Ý]\ÈŠKˆ[œÝ[][˜Ú\Žˆ
+function subscribe(channel, callback) {
+  if (typeof callback !== "function") return () => {};
+  const listener = (_event, payload) => callback(payload);
+  ipcRenderer.on(channel, listener);
+  return () => ipcRenderer.removeListener(channel, listener);
+}
 
-HOˆ\Ô™[™\™\‹š[›ÚÙJ›][˜Ú\Žš[œÝ[ŠKˆ™[[Ý™S][˜Ú\Žˆ
+contextBridge.exposeInMainWorld("wavedeck", {
+  platform: process.platform,
+  getMusicStatus: () => ipcRenderer.invoke('music:status'),
+  searchMusic: query => ipcRenderer.invoke('music:search', query),
+  scanMusic: () => ipcRenderer.invoke('music:scan'),
+  playMusic: (id, mode) => ipcRenderer.invoke('music:play', id, mode),
+  getLocalMixes: () => ipcRenderer.invoke('music:mixes'),
+  playLocalMix: id => ipcRenderer.invoke('music:play-mix', id),
+  sendMusicFeedback: kind => ipcRenderer.invoke('music:feedback', kind),
+  seekMusic: seconds => ipcRenderer.invoke('music:seek', seconds),
+  getMusicDebugLog: () => ipcRenderer.invoke('music:debug:get-last-decision'),
+  saveMusicDebugLog: () => ipcRenderer.invoke('music:debug:save-log'),
+  getLastFmStatus: () => ipcRenderer.invoke('music:lastfm:get-status'),
+  setLastFmSettings: settings => ipcRenderer.invoke('music:lastfm:set-settings', settings),
+  testLastFm: () => ipcRenderer.invoke('music:lastfm:test'),
+  queueFullLastFmRefresh: () => ipcRenderer.invoke('music:lastfm:queue-full'),
+  setLocalRadioFamiliarity: familiarity => ipcRenderer.invoke('music:local-radio:set-familiarity', familiarity),
+  setLocalRadioTuning: tuning => ipcRenderer.invoke('music:local-radio:set-tuning', tuning),
+  onLastFmChanged: callback => subscribe('music:lastfm-changed', callback),
+  onMusicDebugLog: callback => subscribe('music:debug-decision', callback),
+  onMusicChanged: callback => subscribe('music:changed', callback),
+  getStations: () => ipcRenderer.invoke("stations:get"),
+  saveStations: (stations) => ipcRenderer.invoke("stations:save", stations),
+  deleteStation: (stationId) => ipcRenderer.invoke("stations:delete", stationId),
+  setStationGain: (stationId, gainDb) => ipcRenderer.invoke("stations:set-gain", stationId, gainDb),
+  onStationsChanged: (callback) => subscribe("stations:changed", callback),
+  editStation: (stationId) => ipcRenderer.invoke("settings:open", stationId),
+  onEditStationRequested: (callback) => subscribe("settings:edit-station", callback),
 
-HOˆ\Ô™[™\™\‹š[›ÚÙJ›][˜Ú\Žœ™[[Ý™HŠKˆÙ]ZT™Y™\™[˜Ù\Îˆ
+  getGroups: () => ipcRenderer.invoke("groups:get"),
+  saveGroups: (groups) => ipcRenderer.invoke("groups:save", groups),
+  removeGroup: (groupName) => ipcRenderer.invoke("groups:remove", groupName),
+  onGroupsChanged: (callback) => subscribe("groups:changed", callback),
 
-HOˆ\Ô™[™\™\‹š[›ÚÙJZN™Ù]\™Y™\™[˜Ù\ÈŠKˆÙ]][˜Ú[”ÚYX˜\“[ÙNˆ
-[˜X›Y
-HOˆ\Ô™[™\™\‹š[›ÚÙJZNœÙ][][˜ÚZ[‹\ÚYX˜\ˆ‹[˜X›Y
-KˆÙ]›Ó[ÙQ[˜X›Yˆ
-[˜X›Y
-HOˆ\Ô™[™\™\‹š[›ÚÙJZNœÙ]\›Ë[[ÙH‹[˜X›Y
-KˆÚÛÜÙPY][Û˜[]\ÚXÑ›Û\Žˆ
+  getSubgroups: () => ipcRenderer.invoke("subgroups:get"),
+  saveSubgroups: (subgroups) => ipcRenderer.invoke("subgroups:save", subgroups),
+  renameSubgroup: (groupName, oldName, newName) => ipcRenderer.invoke("subgroups:rename", groupName, oldName, newName),
+  removeSubgroup: (groupName, subgroupName) => ipcRenderer.invoke("subgroups:remove", groupName, subgroupName),
+  onSubgroupsChanged: (callback) => subscribe("subgroups:changed", callback),
 
-HOˆ\Ô™[™\™\‹š[›ÚÙJ	ÝZN˜ÚÛÜÙKXY][Û˜[[]\ÚXËY›Û\‰ÊKˆÙ]Y][Û˜[]\ÚXÑ›Û\Žˆ
-›Û\ŠHOˆ\Ô™[™\™\‹š[›ÚÙJ	ÝZNœÙ]XY][Û˜[[]\ÚXËY›Û\‰Ë›Û\ŠKˆÛ•ZT™Y™\™[˜Ù\ÐÚ[™ÙYˆ
-Ø[˜XÚÊHOˆÝXœØÜšX™JZNœ™Y™\™[˜Ù\ËXÚ[™ÙY‹Ø[˜XÚÊK‚ˆ^ÜXœ˜\žNˆ
+  getListeningHistory: () => ipcRenderer.invoke("listening:get"),
+  resetListeningHistory: () => ipcRenderer.invoke("listening:reset"),
+  toggleLocalStationPreset: (station) => ipcRenderer.invoke("listening:toggle-local-preset", station),
+  onListeningHistoryChanged: (callback) => subscribe("listening:changed", callback),
 
-HOˆ\Ô™[™\™\‹š[›ÚÙJ›Xœ˜\žN™^ÜŠKˆ[\ÜXœ˜\žNˆ
-[ÙJHOˆ\Ô™[™\™\‹š[›ÚÙJ›Xœ˜\žNš[\Ü‹[ÙJKˆÙ]Xœ˜\žU\]TÝ]Nˆ
+  getSectionVisibility: () => ipcRenderer.invoke("sections:get-state"),
+  setSectionVisibility: (state) => ipcRenderer.invoke("sections:set-state", state),
+  onSectionVisibilityChanged: (callback) => subscribe("sections:state-changed", callback),
 
-HOˆ\Ô™[™\™\‹š[›ÚÙJ›Xœ˜\žK]\]N™Ù]\Ý]HŠKˆÙ]Xœ˜\žU\]\Ñ[˜X›Yˆ
-[˜X›Y
-HOˆ\Ô™[™\™\‹š[›ÚÙJ›Xœ˜\žK]\]NœÙ]Y[˜X›Y‹[˜X›Y
-Kˆ\ÝÝ™X[U\›ˆ
-\›
-HOˆ\Ô™[™\™\‹š[›ÚÙJœÝ™X[N\Ý‹\›
-K‚ˆ^TÝ][ÛŽˆ
-Ý][Û’Y
-HOˆ\Ô™[™\™\‹š[›ÚÙJœ^Y\Žœ^K\Ý][Ûˆ‹Ý][Û’Y
-Kˆ^T]\ÙNˆ
+  getLauncherStatus: () => ipcRenderer.invoke("launcher:get-status"),
+  installLauncher: () => ipcRenderer.invoke("launcher:install"),
+  removeLauncher: () => ipcRenderer.invoke("launcher:remove"),
+  getUiPreferences: () => ipcRenderer.invoke("ui:get-preferences"),
+  setLaunchInSidebarMode: (enabled) => ipcRenderer.invoke("ui:set-launch-in-sidebar", enabled),
+  setProModeEnabled: (enabled) => ipcRenderer.invoke("ui:set-pro-mode", enabled),
+  chooseAdditionalMusicFolder: () => ipcRenderer.invoke('ui:choose-additional-music-folder'),
+  setAdditionalMusicFolder: (folder) => ipcRenderer.invoke('ui:set-additional-music-folder', folder),
+  onUiPreferencesChanged: (callback) => subscribe("ui:preferences-changed", callback),
 
-HOˆ\Ô™[™\™\‹š[›ÚÙJœ^Y\Žœ^K\]\ÙHŠKˆ™]š[Ý\Ô™\Ù]ˆ
+  exportLibrary: () => ipcRenderer.invoke("library:export"),
+  importLibrary: (mode) => ipcRenderer.invoke("library:import", mode),
+  getLibraryUpdateState: () => ipcRenderer.invoke("library-update:get-state"),
+  setLibraryUpdatesEnabled: (enabled) => ipcRenderer.invoke("library-update:set-enabled", enabled),
+  testStreamUrl: (url) => ipcRenderer.invoke("stream:test", url),
 
-HOˆ\Ô™[™\™\‹š[›ÚÙJœ^Y\Žœ™]š[Ý\Ë\™\Ù]ŠKˆ™^™\Ù]ˆ
+  playStation: (stationId) => ipcRenderer.invoke("player:play-station", stationId),
+  playPause: () => ipcRenderer.invoke("player:play-pause"),
+  previousPreset: () => ipcRenderer.invoke("player:previous-preset"),
+  nextPreset: () => ipcRenderer.invoke("player:next-preset"),
+  stop: () => ipcRenderer.invoke("player:stop"),
+  setVolume: (value) => ipcRenderer.invoke("player:volume", value),
+  toggleMute: () => ipcRenderer.invoke("player:mute"),
+  getPlayerStatus: () => ipcRenderer.invoke("player:status"),
+  onPlayerStatus: (callback) => subscribe("player:status-changed", callback),
+  onStationChanged: (callback) => subscribe("player:station-changed", callback),
+  onMetadata: (callback) => subscribe("player:metadata", callback),
 
-HOˆ\Ô™[™\™\‹š[›ÚÙJœ^Y\Ž›™^\™\Ù]ŠKˆÝÜˆ
+  getRecordingState: () => ipcRenderer.invoke("recording:get-state"),
+  toggleRecording: () => ipcRenderer.invoke("recording:toggle"),
+  onRecordingState: (callback) => subscribe("recording:state-changed", callback),
+  getRecordings: () => ipcRenderer.invoke("recordings:list"),
+  playRecording: (recordingId) => ipcRenderer.invoke("recordings:play", recordingId),
+  revealRecording: (recordingId) => ipcRenderer.invoke("recordings:reveal", recordingId),
+  deleteRecording: (recordingId) => ipcRenderer.invoke("recordings:delete", recordingId),
+  onRecordingsChanged: (callback) => subscribe("recordings:changed", callback),
 
-HOˆ\Ô™[™\™\‹š[›ÚÙJœ^Y\ŽœÝÜŠKˆÙ]›Û[YNˆ
-˜[YJHOˆ\Ô™[™\™\‹š[›ÚÙJœ^Y\Ž›Û[YH‹˜[YJKˆÙÙÛS]]Nˆ
+  getSidebarState: () => ipcRenderer.invoke("sidebar:get-state"),
+  toggleSidebar: () => ipcRenderer.invoke("sidebar:toggle"),
+  onSidebarState: (callback) => subscribe("sidebar:state-changed", callback),
 
-HOˆ\Ô™[™\™\‹š[›ÚÙJœ^Y\Ž›]]HŠKˆÙ]^Y\”Ý]\Îˆ
-
-HOˆ\Ô™[™\™\‹š[›ÚÙJœ^Y\ŽœÝ]\ÈŠKˆÛ”^Y\”Ý]\Îˆ
-Ø[˜XÚÊHOˆÝXœØÜšX™Jœ^Y\ŽœÝ]\ËXÚ[™ÙY‹Ø[˜XÚÊKˆÛ”Ý][ÛÚ[™ÙYˆ
-Ø[˜XÚÊHOˆÝXœØÜšX™Jœ^Y\ŽœÝ][Û‹XÚ[™ÙY‹Ø[˜XÚÊKˆÛ“Y]Y]Nˆ
-Ø[˜XÚÊHOˆÝXœØÜšX™Jœ^Y\Ž›Y]Y]H‹Ø[˜XÚÊK‚ˆÙ]™XÛÜ™[™ÔÝ]Nˆ
-
-HOˆ\Ô™[™\™\‹š[›ÚÙJœ™XÛÜ™[™Î™Ù]\Ý]HŠKˆÙÙÛT™XÛÜ™[™Îˆ
-
-HOˆ\Ô™[™\™\‹š[›ÚÙJœ™XÛÜ™[™ÎÙÙÛHŠKˆÛ”™XÛÜ™[™ÔÝ]Nˆ
-Ø[˜XÚÊHOˆÝXœØÜšX™Jœ™XÛÜ™[™ÎœÝ]KXÚ[™ÙY‹Ø[˜XÚÊKˆÙ]™XÛÜ™[™ÜÎˆ
-
-HOˆ\Ô™[™\™\‹š[›ÚÙJœ™XÛÜ™[™ÜÎ›\ÝŠKˆ^T™XÛÜ™[™Îˆ
-™XÛÜ™[™ÒY
-HOˆ\Ô™[™\™\‹š[›ÚÙJœ™XÛÜ™[™ÜÎœ^H‹™XÛÜ™[™ÒY
-Kˆ™]™X[™XÛÜ™[™Îˆ
-™XÛÜ™[™ÒY
-HOˆ\Ô™[™\™\‹š[›ÚÙJœ™XÛÜ™[™ÜÎœ™]™X[‹™XÛÜ™[™ÒY
-Kˆ[]T™XÛÜ™[™Îˆ
-™XÛÜ™[™ÒY
-HOˆ\Ô™[™\™\‹š[›ÚÙJœ™XÛÜ™[™ÜÎ™[]H‹™XÛÜ™[™ÒY
-KˆÛ”™XÛÜ™[™ÜÐÚ[™ÙYˆ
-Ø[˜XÚÊHOˆÝXœØÜšX™Jœ™XÛÜ™[™ÜÎ˜Ú[™ÙY‹Ø[˜XÚÊK‚ˆÙ]ÚYX˜\”Ý]Nˆ
-
-HOˆ\Ô™[™\™\‹š[›ÚÙJœÚYX˜\Ž™Ù]\Ý]HŠKˆÙÙÛTÚYX˜\Žˆ
-
-HOˆ\Ô™[™\™\‹š[›ÚÙJœÚYX˜\ŽÙÙÛHŠKˆÛ”ÚYX˜\”Ý]Nˆ
-Ø[˜XÚÊHOˆÝXœØÜšX™JœÚYX˜\ŽœÝ]KXÚ[™ÙY‹Ø[˜XÚÊK‚ˆÜ[”Ù][™ÜÎˆ
-Ý][Û’YHˆŠHOˆ\Ô™[™\™\‹š[›ÚÙJœÙ][™ÜÎ›Ü[ˆ‹Ý][Û’Y
-KˆÙ]\[™›Îˆ
-
-HOˆ\Ô™[™\™\‹š[›ÚÙJ˜\š[™›ÈŠKˆÛ•Ø\›š[™Îˆ
-Ø[˜XÚÊHOˆÝXœØÜšX™J˜\Ø\›š[™È‹Ø[˜XÚÊBŸJNÂ
+  openSettings: (stationId = "") => ipcRenderer.invoke("settings:open", stationId),
+  getAppInfo: () => ipcRenderer.invoke("app:info"),
+  onWarning: (callback) => subscribe("app:warning", callback)
+});

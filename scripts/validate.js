@@ -1,1 +1,2114 @@
-YªçŠx-®éÜj×¢ëiºÚ+Š§j[h‘éÜ¢éíß~¼ñ:-jZ.¶›­–)Ş³V6öç7B76W'BÒ&WV—&R‚&76W'B"“°¦6öç7Bg2Ò&WV—&R‚&g2"“°¦6öç7B÷2Ò&WV—&R‚&÷2"“°¦6öç7BF‚Ò&WV—&R‚'F‚"“°¦6öç7BfÒÒ&WV—&R‚'fÒ"“°¦6öç7B¦Æ–"Ò&WV—&R‚'¦Æ–""“°¦6öç7B²WfVçDVÖ—GFW"ÒÒ&WV—&R‚&WfVçG2"“°¦6öç7B²75F‡&÷Vv‚ÒÒ&WV—&R‚'7G&VÒ"“° ¦6öç7B²6÷”ÆVv7”FFÒÒ&WV—&R‚"ââ÷7&2öÖ–âöFFÖÖ–w&F–öâ"“°¦6öç7B°¢ÔätTEôÔ$´U"À¢'V–ÆDFW6·F÷VçG'’À¢vWDÆVæ6†W%F‡2À¢vWDÆVæ6†W%7FGW2À¢–ç7FÆÄÆVæ6†W"À¢V÷FTW†V4&wVÖVçBÀ¢&VÖ÷fTÆVæ6†W §ÒÒ&WV—&R‚"ââ÷7&2öÖ–âöFW6·F÷ÖÆVæ6†W""“°¦6öç7B°¢&W6öÇfTFFF—"À¢&W6öÇfTÆVv7”FFF—'2À¢&W6öÇfU÷'F&ÆU7FFRÀ¢&W6öÇfU'VçF–ÖTF— §ÒÒ&WV—&R‚"ââ÷7&2öÖ–â÷÷'F&ÆR×F‡2"“°¦6öç7B°¢6Æ7VÆFU6–FV&$Æ–÷WBÀ¢vWEƒv–æF÷t–BÀ¢6–FV&$f–Æ&–Æ—G§ÒÒ&WV—&R‚"ââ÷7&2öÖ–â÷6–FV&""“°¦6öç7B°¢v–æF÷w56–FV&"À¢6Æ7VÆFUv–æF÷w56–FV&$&÷VæG2À¢æF—fUv–æF÷t†æFÆU7G&–ærÀ¢'6U&VG”Æ–æRÀ¢&W6öÇfUv–æF÷w56–FV&$†VÇW §ÒÒ&WV—&R‚"ââ÷7&2öÖ–â÷v–æF÷w2×6–FV&""“°¦6öç7B²6ÆVçW6öFRÂ&W6W'fF–öä6öFRÂv–æF÷tÆöö·W6öFRÒÒ&WV—&R‚"ââ÷7&2öÖ–âö6–ææÖöâ×&W6W'fF–öâ"“°¦6öç7B²ÖVF–6öçG&öÆÆW"ÒÒ&WV—&R‚"ââ÷7&2öÖ–âöÖVF–Ö6öçG&öÆÆW""“°¦6öç7B²&V6÷&F–ætÆ–'&'’ÂF—7Æ”æÖRÂ6fU&V6÷&F–æt–BÒÒ&WV—&R‚"ââ÷7&2öÖ–â÷&V6÷&F–ærÖÆ–'&'’"“°¦6öç7B²Æ—7FVæ–æt†—7F÷'’ÒÒ&WV—&R‚"ââ÷7&2öÖ–âöÆ—7FVæ–ærÖ†—7F÷'’"“°¦6öç7B°¢Ä”%$%•õUDDUõU$ÂÀ¢66†T'W7FVEW&ÂÀ¢7&VFTÆ–'&'•WFFW"À¢F÷væÆöDÆ–'&'’À¢æöFT‡GG4fWF6€§ÒÒ&WV—&R‚"ââ÷7&2öÖ–âöÆ–'&'’×WFFW""“°¦6öç7B°¢×eÆ–W"À¢&—G&FTg&öÔÖWFFFÀ¢&—G&FTg&öÕG&6´Æ—7BÀ¢vWD—5F‚À¢vWD×dW†V7WF&ÆRÀ¢æ÷&ÖÆ—¦U7FF–öäv–äF"À¢æ÷&ÖÆ—¦T&—G&FT¶'0§ÒÒ&WV—&R‚"ââ÷7&2öÖ–â÷Æ–W""“°¦6öç7B²×&—5Æ–W$–çFW&f6RÂÖWFFFf÷%7FF–öâÂ7FF–öåG&6µF‚ÒÒ&WV—&R‚"ââ÷7&2öÖ–âö×&—2"“°¦6öç7B°¢6–ææÖöäÖVF–¶W—2À¢”åDU$d4UôäÔRÀ¢ô$¤T5EõDƒ¢4”ääÔôåôÔTD”ô´U•5õD‚À¢4U%d”4UôäÔP§ÒÒ&WV—&R‚"ââ÷7&2öÖ–âö6–ææÖöâÖÖVF–Ö¶W—2"“°¦6öç7B²ÔTD”ô´U•ô$”äD”äu2Âv–æF÷w4ÖVF–¶W—2ÒÒ&WV—&R‚"ââ÷7&2öÖ–â÷v–æF÷w2ÖÖVF–Ö¶W—2"“°¦6öç7B°¢7G&VÕ&V6÷&FW"À¢&V6÷&F–æuF–ÖW7F×À¢&W&Tfg&ö&TW†V7WF&ÆRÀ¢&W&Tff×VtW†V7WF&ÆRÀ¢&V6÷fW%'F–Å&V6÷&F–æw2À¢&W6öÇfTfg&ö&TW†V7WF&ÆRÀ¢&W6öÇfTff×VtW†V7WF&ÆRÀ¢6fTf–ÆVæÖRÀ¢Væ—VUF‚À¢fW&–g”ff×VtW†V7WF&ÆP§ÒÒ&WV—&R‚"ââ÷7&2öÖ–â÷&V6÷&FW""“°¦6öç7B°¢4T$4…ôd”TÄE2À¢æ÷&ÖÆ—¦U6V&6…FW‡BÀ¢7FF–öäÖF6†W5VW'§ÒÒ&WV—&R‚"ââ÷7&2÷&VæFW&W"÷6V&6‚"“°¦6öç7B°¢÷'F&ÆU7F÷&vRÀ¢5D%DU%õ$U4UEôäÔU2À¢6ÆVå7FF–öäv–äF"À¢fÆ–FFTw&÷W2À¢fÆ–FFTÆ–'&'’À¢fÆ–FFU7FF–öç2À¢fÆ–FFU7V&w&÷W0§ÒÒ&WV—&R‚"ââ÷7&2öÖ–â÷7F÷&vR"“°¦6öç7B°¢6Æ7VÆFT&÷GFöÕ&–v‡D&÷VæG2À¢6Æ7VÆFT6VçFW&VD&÷VæG2À¢6öç7G&–ä&÷VæG5FôF—7Æ§ÒÒ&WV—&R‚"ââ÷7&2öÖ–â÷v–æF÷rÖÆ–÷WB"“° ¦6öç7B&ö÷BÒF‚ç&W6öÇfR…õöF—&æÖRÂ"ââ"“°¦6öç7BFVfVÇG4F—"ÒF‚æ¦ö–â‡&ö÷BÂ&FVfVÇG2"“°¦6öç7B6¶vT§6öâÒ¥4ôâç'6R†g2ç&VDf–ÆU7–æ2‡F‚æ¦ö–â‡&ö÷BÂ'6¶vRæ§6öâ"’Â'WFc‚"’“°¦6öç7BFVfVÇDÆ–'&'’ÒfÆ–FFTÆ–'&'’„¥4ôâç'6R†g2ç&VDf–ÆU7–æ2‡F‚æ¦ö–â†FVfVÇG4F—"Â&Æ–'&'’æ§6öâ"’Â'WFc‚"’’“°¦6öç7B7FF–öç2ÒFVf]õëÏ-¢G§²ÚîÆ­yÖÆ–6F–öâÂF–ÖR’°¢F†—2æw&'2çW6‚…¶Æ–6F–öâÂF–ÖUÒ“°¢–b‡F†—2æf–ÄæW‡Dw&"’°¢F†—2æf–ÄæW‡Dw&"ÒfÇ6S°¢F‡&÷ræWrW'&÷"‚&ÖVF–Ö¶W’6W'f–6R6öææV7F–öâÆ÷7B"“°¢Ğ¢Ğ ¢7–æ2&VÆV6TÖVF–Æ–W$¶W—2†Æ–6F–öâ’°¢F†—2ç&VÆV6W2çW6‚†Æ–6F–öâ“°¢Ğ¢Ğ ¢6öç7BÖö6´ÖVF–¶W—2ÒæWrÖö6´ÖVF–¶W—4–çFW&f6R‚“°¢ÆWBF—66öææV7D6÷VçBÒ°¢6öç7BÖö6´'W2Ò°¢7–æ2vWE&÷‡”ö&¦V7B‡6W'f–6TæÖRÂö&¦V7EF‚’°¢76W'Bç7G&–7DWVÂ‡6W'f–6TæÖRÂ4U%d”4UôäÔR“°¢76W'Bç7G&–7DWVÂ†ö&¦V7EF‚Â4”ääÔôåôÔTD”ô´U•5õD‚“°¢&WGW&â°¢vWD–çFW&f6R†–çFW&f6TæÖR’°¢76W'Bç7G&–7DWVÂ†–çFW&f6TæÖRÂ”åDU$d4UôäÔR“°¢&WGW&âÖö6´ÖVF–¶W—3°¢Ğ¢Ó°¢ÒÀ¢F—66öææV7B‚’²F—66öææV7D6÷VçB³Ò²Ğ¢Ó°¢6öç7B6–ææÖöäÖVF–¶W—2ÒæWr6–ææÖöäÖVF–¶W—2‡°¢ÆFf÷&Ó¢&Æ–çW‚"À¢Æ–6F–öäæÖS¢%vfTFV6²×FW7B"À¢'W4f7F÷'“¢‚’ÓâÖö6´'W2À¢6öçG&öÆÆW ¢Ò“° ¢76W'Bç7G&–7DWVÂ†v—B6–ææÖöäÖVF–¶W—2ç7F'B‚’ÂG'VR“°¢76W'BæFVW7G&–7DWVÂ†Öö6´ÖVF–¶W—2æw&'2Âµ²%vfTFV6²×FW7B"ÂÕÒ“°¢Öö6´ÖVF–¶W—2æVÖ—B‚$ÖVF–Æ–W$¶W•&W76VB"Â%6öÖR÷F†W"Æ–W""Â$æW‡B"“°¢v—BæWr&öÖ—6R‚‡&W6öÇfR’Óâ6WD–ÖÖVF–FR‡&W6öÇfR’“°¢76W'Bç7G&–7DWVÂ†6öçG&öÆÆW"ævWD7W'&VçE7FF–öâ‚’ææÖRÂ$&WF"“°¢Öö6´ÖVF–¶W—2æVÖ—B‚$ÖVF–Æ–W$¶W•&W76VB"Â%vfTFV6²×FW7B"Â%&Wf–÷W2"“°¢v—BæWr&öÖ—6R‚‡&W6öÇfR’Óâ6WD–ÖÖVF–FR‡&W6öÇfR’“°¢76W'Bç7G&–7DWVÂ†6öçG&öÆÆW"ævWD7W'&VçE7FF–öâ‚’ææÖRÂ$Ç†"“°¢v—B×&—2äæW‡B‚“°¢76W'Bç7G&–7DWVÂ†6öçG&öÆÆW"ævWD7W'&VçE7FF–öâ‚’ææÖRÂ$&WF"“°¢v—B6–ææÖöäÖVF–¶W—2æ6Æ–Ò‚“°¢76W'Bç7G&–7DWVÂ†Öö6´ÖVF–¶W—2æw&'2æÆVæwF‚Â"“°¢Öö6´ÖVF–¶W—2æf–ÄæW‡Dw&"ÒG'VS°¢v—B76W'Bç&V¦V7G2†6–ææÖöäÖVF–¶W—2æ6Æ–Ò‚’Âö6öææV7F–öâÆ÷7Bò“°¢76W'Bç7G&–7DWVÂ†F—66öææV7D6÷VçBÂ“°¢76W'Bç7G&–7DWVÂ†v—B6–ææÖöäÖVF–¶W—2æ6Æ–Ò‡²&V6öææV7C¢G'VRÒ’ÂG'VR“°¢76W'Bç7G&–7DWVÂ†Öö6´ÖVF–¶W—2æw&'2æÆVæwF‚ÂB“°¢6–ææÖöäÖVF–¶W—2æ6Æ÷6R‚“°¢v—BæWr&öÖ—6R‚‡&W6öÇfR’Óâ6WD–ÖÖVF–FR‡&W6öÇfR’“°¢76W'BæFVW7G&–7DWVÂ†Öö6´ÖVF–¶W—2ç&VÆV6W2Â²%vfTFV6²×FW7B%Ò“°¢76W'Bç7G&–7DWVÂ†F—66öææV7D6÷VçBÂ"“° ¢v—B6öçG&öÆÆW"çÆ•&V6÷&F–ær‡°¢–C¢%f—&v–â&F–ò&ö6²ssÒ##bÓ’Ó#’ÓRÓæ×2"À¢f–ÆTæÖS¢%f—&v–â&F–ò&ö6²ssÒ##bÓ’Ó#’ÓRÓæ×2"À¢æÖS¢%f—&v–â&F–ò&ö6²ss"À¢Fƒ¢"÷&V6÷&F–æw2÷f—&v–â×&ö6²æ×2"À¢ÖöF–f–VDC¢###bÓ’Ó#C“£S£ã¢"À¢6—¦S¢#3@¢Ò“°¢76W'Bç7G&–7DWVÂ†6öçG&öÆÆW"ævWD7W'&VçE7FF–öâ‚’ÂçVÆÂ“°¢76W'Bç7G&–7DWVÂ†6öçG&öÆÆW"ævWE7FGW2‚’æ7W'&VçE&V6÷&F–ærææÖRÂ%f—&v–â&F–ò&ö6²ss"“°¢76W'BæFVW7G&–7DWVÂ†6ÆÇ2æB‚Ó"’Â²&v–â"ÂÒ“°¢76W'BæFVW7G&–7DWVÂ†6ÆÇ2æB‚Ó’Â²'Æ’"Â"÷&V6÷&F–æw2÷f—&v–â×&ö6²æ×2%Ò“°§Ğ §fÆ–FFTÖVF–6öçG&öÇ2‚’çF†Vâ‚‚’Óâ°¢6öç6öÆRæÆör†vfTFV6²fÆ–FF–öâ76VC¢bG·6¶vT§6öâçfW'6–öçÒÆ–W"Æ–÷WBÂ6–×ÆRôGfæ6VBfVGW&W2Â÷'F&ÆRFFÂæB6¶v–ærfW&–f–VBæ“°§Ò’æ6F6‚‚†W'&÷"’Óâ°¢6öç6öÆRæW'&÷"†W'&÷"“°¢&ö6W72æW†—D6öFRÒ°§Ò“°
+const assert = require("assert");
+const fs = require("fs");
+const os = require("os");
+const path = require("path");
+const vm = require("vm");
+const zlib = require("zlib");
+const { EventEmitter } = require("events");
+const { PassThrough } = require("stream");
+
+const { copyLegacyData } = require("../src/main/data-migration");
+const {
+  MANAGED_MARKER,
+  buildDesktopEntry,
+  getLauncherPaths,
+  getLauncherStatus,
+  installLauncher,
+  quoteExecArgument,
+  removeLauncher
+} = require("../src/main/desktop-launcher");
+const {
+  resolveDataDir,
+  resolveLegacyDataDirs,
+  resolvePortableState,
+  resolveRuntimeDir
+} = require("../src/main/portable-paths");
+const {
+  calculateSidebarLayout,
+  getX11WindowId,
+  sidebarAvailability
+} = require("../src/main/sidebar");
+const {
+  WindowsSidebar,
+  calculateWindowsSidebarBounds,
+  nativeWindowHandleString,
+  parseReadyLine,
+  resolveWindowsSidebarHelper
+} = require("../src/main/windows-sidebar");
+const { cleanupCode, reservationCode, windowLookupCode } = require("../src/main/cinnamon-reservation");
+const { MediaController } = require("../src/main/media-controller");
+const { RecordingLibrary, displayName, safeRecordingId } = require("../src/main/recording-library");
+const { ListeningHistory } = require("../src/main/listening-history");
+const {
+  LIBRARY_UPDATE_URL,
+  cacheBustedUrl,
+  createLibraryUpdater,
+  downloadLibrary,
+  nodeHttpsFetch
+} = require("../src/main/library-updater");
+const {
+  MpvPlayer,
+  bitrateFromMetadata,
+  bitrateFromTrackList,
+  getIpcPath,
+  getMpvExecutable,
+  normalizeStationGainDb,
+  normalizeBitrateKbps
+} = require("../src/main/player");
+const { MprisPlayerInterface, metadataForStation, stationTrackPath } = require("../src/main/mpris");
+const {
+  CinnamonMediaKeys,
+  INTERFACE_NAME,
+  OBJECT_PATH: CINNAMON_MEDIA_KEYS_PATH,
+  SERVICE_NAME
+} = require("../src/main/cinnamon-media-keys");
+const { MEDIA_KEY_BINDINGS, WindowsMediaKeys } = require("../src/main/windows-media-keys");
+const {
+  StreamRecorder,
+  recordingTimestamp,
+  prepareFfprobeExecutable,
+  prepareFfmpegExecutable,
+  recoverPartialRecordings,
+  resolveFfprobeExecutable,
+  resolveFfmpegExecutable,
+  safeFilename,
+  uniquePath,
+  verifyFfmpegExecutable
+} = require("../src/main/recorder");
+const {
+  SEARCH_FIELDS,
+  normalizeSearchText,
+  stationMatchesQuery
+} = require("../src/renderer/search");
+const {
+  PortableStorage,
+  STARTER_PRESET_NAMES,
+  cleanStationGainDb,
+  validateGroups,
+  validateLibrary,
+  validateStations,
+  validateSubgroups
+} = require("../src/main/storage");
+const {
+  calculateBottomRightBounds,
+  calculateCenteredBounds,
+  constrainBoundsToDisplay
+} = require("../src/main/window-layout");
+
+const root = path.resolve(__dirname, "..");
+const defaultsDir = path.join(root, "defaults");
+const packageJson = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
+const defaultLibrary = validateLibrary(JSON.parse(fs.readFileSync(path.join(defaultsDir, "library.json"), "utf8")));
+const stations = defaultLibrary.stations;
+const groups = defaultLibrary.groups;
+
+function assertValidHeaderPng(filePath) {
+  const png = fs.readFileSync(filePath);
+  const signature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+  assert.ok(png.subarray(0, 8).equals(signature), "Header artwork must be a PNG");
+
+  let offset = 8;
+  let ihdr = null;
+  const idat = [];
+  while (offset + 12 <= png.length) {
+    const length = png.readUInt32BE(offset);
+    const type = png.toString("ascii", offset + 4, offset + 8);
+    const dataStart = offset + 8;
+    const dataEnd = dataStart + length;
+    assert.ok(dataEnd + 4 <= png.length, `Truncated PNG chunk: ${type}`);
+    const data = png.subarray(dataStart, dataEnd);
+    if (type === "IHDR") ihdr = data;
+    if (type === "IDAT") idat.push(data);
+    offset = dataEnd + 4;
+    if (type === "IEND") break;
+  }
+
+  assert.ok(ihdr && ihdr.length === 13, "Header PNG must contain IHDR data");
+  assert.ok(idat.length > 0, "Header PNG must contain image data");
+  const width = ihdr.readUInt32BE(0);
+  const height = ihdr.readUInt32BE(4);
+  const bitDepth = ihdr[8];
+  const colorType = ihdr[9];
+  const interlace = ihdr[12];
+  assert.strictEqual(bitDepth, 8, "Header PNG must use 8-bit channels");
+  assert.strictEqual(colorType, 6, "Header PNG must use RGBA color");
+  assert.strictEqual(interlace, 0, "Header PNG must be non-interlaced");
+
+  const scanlines = zlib.inflateSync(Buffer.concat(idat));
+  const rowSize = (width * 4) + 1;
+  assert.strictEqual(scanlines.length, rowSize * height, "Header PNG scanline size is invalid");
+  for (let y = 0; y < height; y += 1) {
+    assert.ok(scanlines[y * rowSize] <= 4, `Header PNG has an invalid filter on row ${y}`);
+  }
+}
+
+assertValidHeaderPng(path.join(root, "assets", "logo.png"));
+
+assert.strictEqual(packageJson.name, "wavedeck");
+assert.strictEqual(packageJson.version, "0.7.21");
+assert.strictEqual(packageJson.wavedeckVersion, "0.7.21");
+assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
+assert.strictEqual(packageJson.build.productName, "WaveDeck");
+assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
+assert.strictEqual(packageJson.dependencies["dbus-next"], "^0.10.2");
+assert.ok(packageJson.scripts["prepare:linux-recorder"].includes("prepare-linux-ffmpeg.js"));
+assert.ok(packageJson.scripts.start.includes("prepare:linux-recorder"));
+assert.ok(packageJson.scripts["dist:linux"].includes("prepare:linux-recorder"));
+assert.ok(!packageJson.build.asarUnpack);
+assert.ok(packageJson.build.files.includes("!node_modules/usocket{,/**/*}"), "Linux packages must exclude the incompatible optional usocket module");
+assert.deepStrictEqual(packageJson.build.extraResources, [
+  {
+    from: ".cache/wavedeck-tools/linux/ffmpeg",
+    to: "recording/ffmpeg"
+  },
+  {
+    from: ".cache/wavedeck-tools/linux/ffprobe",
+    to: "recording/ffprobe"
+  }
+]);
+assert.strictEqual(packageJson.build.linux.syncDesktopName, true);
+assert.strictEqual(packageJson.build.linux.artifactName, "WaveDeck.${ext}");
+assert.ok(packageJson.scripts["dist:windows"].includes("electron-builder.windows.json"));
+assert.strictEqual(stations.length, 360);
+assert.strictEqual(groups.length, 17);
+assert.strictEqual(new Set(stations.map((station) => station.id)).size, 360);
+assert.strictEqual(defaultLibrary.subgroups.groups.reduce((sum, entry) => sum + entry.subgroups.length, 0), 105);
+assert.ok(defaultLibrary.stations.every((station) => (
+  !Object.hasOwn(station, "favorite") &&
+  !Object.hasOwn(station, "preset") &&
+  !Object.hasOwn(station, "presetOrder")
+)));
+assert.ok(!fs.existsSync(path.join(defaultsDir, "preferences.json")));
+assert.deepStrictEqual(SEARCH_FIELDS, ["name", "group", "subgroup", "country", "description", "url"]);
+assert.strictEqual(normalizeSearchText("  RÃDIO ZÃ¼rich  "), "radio zurich");
+const searchableStation = {
+  name: "Radio ZÃ¼rich",
+  group: "Rock",
+  subgroup: "Classic Rock",
+  country: "Switzerland",
+  description: "Alpine guitars and deep cuts.",
+  url: "https://example.com/alpine"
+};
+assert.strictEqual(stationMatchesQuery(searchableStation, "zurich"), true);
+assert.strictEqual(stationMatchesQuery(searchableStation, "classic rock"), true);
+assert.strictEqual(stationMatchesQuery(searchableStation, "switzerland"), true);
+assert.strictEqual(stationMatchesQuery(searchableStation, "deep cuts"), true);
+assert.strictEqual(stationMatchesQuery(searchableStation, "example.com"), true);
+assert.strictEqual(stationMatchesQuery(searchableStation, "jazz"), false);
+
+assert.strictEqual(resolvePortableState({
+  platform: "linux",
+  isPackaged: true,
+  appImagePath: "/media/USB/WaveDeck.AppImage"
+}), true);
+assert.strictEqual(resolvePortableState({
+  platform: "linux",
+  isPackaged: false,
+  appImagePath: undefined
+}), false);
+assert.strictEqual(resolvePortableState({
+  platform: "darwin",
+  isPackaged: true,
+  appImagePath: undefined
+}), true);
+
+assert.strictEqual(resolveDataDir({
+  platform: "linux",
+  isPackaged: true,
+  appImagePath: "/media/USB/WaveDeck.AppImage",
+  execPath: "/tmp/mount/wavedeck",
+  projectRoot: "/source",
+  homeDir: "/home/tester"
+}), path.posix.normalize("/media/USB/Data"));
+
+assert.deepStrictEqual(resolveLegacyDataDirs({
+  platform: "linux",
+  isPackaged: true,
+  appImagePath: "/media/USB/WaveDeck Portable Linux/WaveDeck.AppImage",
+  homeDir: "/home/tester"
+}), [
+  path.posix.normalize("/media/USB/WaveDeck Portable Linux/WaveDeck-Data"),
+  path.posix.normalize("/media/USB/WaveDeck Portable Linux/WaveDeckSB-Data"),
+  path.posix.normalize("/media/USB/WaveDeckSB Portable Linux/WaveDeckSB-Data")
+]);
+
+assert.strictEqual(resolveDataDir({
+  platform: "win32",
+  isPackaged: true,
+  portableExecutableDir: "D:\\Radio\\WaveDeck Portable Windows",
+  execPath: "C:\\Users\\tester\\AppData\\Local\\Temp\\wavedeck\\WaveDeck.exe",
+  projectRoot: "C:\\source",
+  homeDir: "C:\\Users\\tester"
+}), path.win32.normalize("D:\\Radio\\WaveDeck Portable Windows\\Data"));
+
+assert.strictEqual(resolveDataDir({
+  platform: "win32",
+  isPackaged: true,
+  execPath: "C:\\WaveDeck\\WaveDeck.exe",
+  projectRoot: "C:\\source",
+  homeDir: "C:\\Users\\tester"
+}), path.win32.normalize("C:\\WaveDeck\\Data"));
+
+assert.strictEqual(resolveDataDir({
+  platform: "darwin",
+  isPackaged: true,
+  execPath: "/Volumes/WaveDeck Portable/WaveDeck.app/Contents/MacOS/WaveDeck",
+  projectRoot: "/source",
+  homeDir: "/Users/tester"
+}), path.posix.normalize("/Volumes/WaveDeck Portable/Data"));
+
+assert.strictEqual(resolveRuntimeDir({
+  platform: "linux",
+  appDataDir: "/home/tester/.config"
+}), path.posix.normalize("/home/tester/.config/wavedeck-runtime/linux"));
+assert.strictEqual(resolveRuntimeDir({
+  platform: "win32",
+  appDataDir: "C:\\Users\\tester\\AppData\\Roaming"
+}), path.win32.normalize("C:\\Users\\tester\\AppData\\Roaming\\wavedeck-runtime\\win32"));
+assert.strictEqual(resolveRuntimeDir({
+  platform: "darwin",
+  appDataDir: "/Users/tester/Library/Application Support"
+}), path.posix.normalize("/Users/tester/Library/Application Support/wavedeck-runtime/darwin"));
+assert.strictEqual(
+  getIpcPath("linux", "/home/tester/.config/wavedeck-runtime/linux", 4242),
+  path.posix.normalize("/home/tester/.config/wavedeck-runtime/linux/mpv-4242.sock")
+);
+assert.strictEqual(getIpcPath("win32", "D:\\WaveDeck Portable\\Data", 4242), "\\\\.\\pipe\\wavedeck-4242");
+assert.strictEqual(
+  getIpcPath("darwin", "/Users/tester/Library/Application Support/wavedeck-runtime/darwin", 4242),
+  path.posix.normalize("/Users/tester/Library/Application Support/wavedeck-runtime/darwin/mpv-4242.sock")
+);
+assert.strictEqual(getMpvExecutable({
+  platform: "darwin",
+  packaged: true,
+  resourcesPath: "/Volumes/WaveDeck Portable/WaveDeck.app/Contents/Resources",
+  projectRoot: "/source",
+  architecture: "arm64"
+}), path.posix.normalize("/Volumes/WaveDeck Portable/WaveDeck.app/Contents/Resources/playback/darwin/arm64/mpv"));
+assert.strictEqual(getMpvExecutable({
+  platform: "darwin",
+  packaged: true,
+  resourcesPath: "/Volumes/WaveDeck Portable/WaveDeck.app/Contents/Resources",
+  projectRoot: "/source",
+  architecture: "x64"
+}), path.posix.normalize("/Volumes/WaveDeck Portable/WaveDeck.app/Contents/Resources/playback/darwin/x64/mpv"));
+
+const testRoot = fs.mkdtempSync(path.join(os.tmpdir(), "wavedeck-validate-"));
+try {
+  const dataDir = path.join(testRoot, "Data");
+  const storage = new PortableStorage({ dataDir, defaultsDir });
+  storage.initialize();
+  storage.assertWritable();
+  assert.strictEqual(storage.readStations().length, 360);
+  assert.strictEqual(storage.readGroups().length, 17);
+  assert.strictEqual(storage.readSubgroups().groups.reduce((sum, entry) => sum + entry.subgroups.length, 0), 105);
+  const seededPresets = storage.readStations()
+    .filter((station) => station.preset)
+    .sort((a, b) => a.presetOrder - b.presetOrder)
+    .map((station) => station.name);
+  assert.deepStrictEqual(seededPresets, [...STARTER_PRESET_NAMES]);
+  assert.strictEqual(Object.keys(storage.readPreferences().stations).length, STARTER_PRESET_NAMES.length);
+
+  const existingLibraryDir = path.join(testRoot, "Existing-Data");
+  fs.mkdirSync(existingLibraryDir, { recursive: true });
+  fs.writeFileSync(path.join(existingLibraryDir, "library.json"), JSON.stringify({
+    version: 1,
+    groups: ["Other"],
+    subgroups: { version: 1, groups: [] },
+    stations: [{ id: "existing-one", name: "Existing Station", url: "https://example.com/existing", group: "Other" }]
+  }), "utf8");
+  const existingStorage = new PortableStorage({ dataDir: existingLibraryDir, defaultsDir });
+  existingStorage.initialize();
+  assert.strictEqual(existingStorage.readStations().length, 1);
+  assert.strictEqual(existingStorage.readStations()[0].name, "Existing Station");
+  assert.strictEqual(existingStorage.readStations()[0].preset, false);
+  assert.deepStrictEqual(existingStorage.readPreferences(), {
+    version: 1,
+    stations: {},
+    downloadNewStations: true,
+    proModeEnabled: false,
+    additionalMusicFolder: "",
+    lastFmEnabled: false,
+    lastFmApiKey: "",
+    localRadioFamiliarity: "balanced",
+    localRadioSongRepeatHours: 4,
+    localRadioArtistRepeatMinutes: 90,
+    localRadioArtistSetSize: 1,
+    streamingUi: {
+      presets: false,
+      localPresets: false,
+      localMixes: true,
+      favoritesOnly: false,
+      mostPlayed: false,
+      collapsedGroups: [],
+      collapsedSubgroups: []
+    },
+    launchInSidebarMode: false,
+    settingsWindowBounds: null,
+    radioLogWindowBounds: null,
+    lastLibraryUpdate: "",
+    deletedOfficialStationIds: []
+  });
+
+  assert.deepStrictEqual(storage.getLinuxUiPreferences(), {
+    proModeEnabled: false,
+    additionalMusicFolder: "",
+    lastFmEnabled: false,
+    lastFmApiKey: "",
+    localRadioFamiliarity: "balanced",
+    localRadioSongRepeatHours: 4,
+    localRadioArtistRepeatMinutes: 90,
+    localRadioArtistSetSize: 1,
+    launchInSidebarMode: false,
+    settingsWindowBounds: null,
+    radioLogWindowBounds: null
+  });
+  assert.deepStrictEqual(storage.getUiPreferences(), storage.getLinuxUiPreferences());
+  assert.strictEqual(storage.setLaunchInSidebarMode(true).launchInSidebarMode, true);
+  assert.strictEqual(storage.setProModeEnabled(true).proModeEnabled, true);
+  assert.strictEqual(storage.setAdditionalMusicFolder("/mnt/music").additionalMusicFolder, "/mnt/music");
+  assert.strictEqual(storage.setLastFmSettings({ enabled: true, apiKey: 'test-key' }).lastFmEnabled, true);
+  assert.strictEqual(storage.setLocalRadioFamiliarity('hits').localRadioFamiliarity, 'hits');
+  assert.deepStrictEqual(storage.setLocalRadioTuning({ songRepeatHours: 6, artistRepeatMinutes: 180, artistSetSize: 2 }).localRadioArtistSetSize, 2);
+  assert.deepStrictEqual(storage.setStreamingUiState({
+    presets: true,
+    localPresets: true,
+    localMixes: false,
+    favoritesOnly: true,
+    mostPlayed: true,
+    collapsedGroups: ["Rock"],
+    collapsedSubgroups: ["Rock\u001fClassic"]
+  }), {
+    presets: true,
+    localPresets: true,
+    localMixes: false,
+    favoritesOnly: true,
+    mostPlayed: true,
+    collapsedGroups: ["Rock"],
+    collapsedSubgroups: ["Rock\u001fClassic"]
+  });
+  assert.deepStrictEqual(storage.setSettingsWindowBounds({ x: 2100.4, y: 40.6, width: 1120.2, height: 840.8 }), {
+    x: 2100,
+    y: 41,
+    width: 1120,
+    height: 841
+  });
+  assert.deepStrictEqual(storage.setRadioLogWindowBounds({ x: 13.6, y: 22.5, width: 863.8, height: 699.6 }), {
+    x: 14,
+    y: 23,
+    width: 864,
+    height: 700
+  });
+  const uiPreferenceReload = new PortableStorage({ dataDir, defaultsDir });
+  uiPreferenceReload.initialize();
+  assert.deepStrictEqual(uiPreferenceReload.getLinuxUiPreferences(), {
+    proModeEnabled: true,
+    additionalMusicFolder: "/mnt/music",
+    lastFmEnabled: true,
+    lastFmApiKey: "test-key",
+    localRadioFamiliarity: "hits",
+    localRadioSongRepeatHours: 6,
+    localRadioArtistRepeatMinutes: 180,
+    localRadioArtistSetSize: 2,
+    launchInSidebarMode: true,
+    settingsWindowBounds: { x: 2100, y: 41, width: 1120, height: 841 },
+    radioLogWindowBounds: { x: 14, y: 23, width: 864, height: 700 }
+  });
+
+  const changed = storage.readStations();
+  changed[0].favorite = !changed[0].favorite;
+  storage.writeStations(changed);
+  assert.strictEqual(storage.readStations()[0].favorite, changed[0].favorite);
+  const customOrder = storage.readStations();
+  customOrder[0].preset = true;
+  customOrder[0].presetOrder = 1;
+  customOrder[1].preset = true;
+  customOrder[1].presetOrder = 0;
+  storage.writeStations(customOrder);
+  assert.strictEqual(storage.readStations()[0].presetOrder, 1);
+  assert.strictEqual(storage.readStations()[1].presetOrder, 0);
+  const unorderedPreset = storage.readStations();
+  unorderedPreset[0].preset = true;
+  unorderedPreset[0].presetOrder = null;
+  storage.writeStations(unorderedPreset);
+  assert.strictEqual(storage.readStations()[0].presetOrder, null);
+  const gainStationId = storage.readStations()[0].id;
+  assert.strictEqual(storage.setStationGain(gainStationId, 20), 12);
+  assert.strictEqual(storage.readStations()[0].gainDb, 12);
+  assert.strictEqual(storage.readPreferences().stations[gainStationId].gainDb, 12);
+  assert.strictEqual(storage.setStationGain(gainStationId, -4.25), -4);
+  assert.strictEqual(storage.readStations()[0].gainDb, -4);
+  assert.ok(fs.existsSync(path.join(dataDir, "backups", "library.json.bak")));
+  assert.ok(fs.existsSync(path.join(dataDir, "preferences.json")));
+  const exportedLibrary = storage.exportLibrary("2026-09-08T12:34:56.789Z");
+  assert.strictEqual(exportedLibrary.updatedAt, "2026-09-08T12:34:56.789Z");
+  assert.strictEqual(exportedLibrary.stations[0].favorite, undefined);
+  assert.strictEqual(exportedLibrary.stations[0].preset, undefined);
+  assert.strictEqual(exportedLibrary.stations[0].gainDb, undefined);
+  const reloadedStorage = new PortableStorage({ dataDir, defaultsDir });
+  reloadedStorage.initialize();
+  assert.deepStrictEqual(reloadedStorage.readListeningHistory(), { version: 3, stations: {}, recentStationIds: [], recentLocalStations: [], localStationPresets: [] });
+  reloadedStorage.writeListeningHistory({
+    version: 1,
+    stations: { alpha: { seconds: 325, lastListenedAt: "2026-09-02T00:00:00.000Z" } },
+    recentStationIds: ["alpha", "beta", "alpha", ...Array.from({ length: 12 }, (_, index) => `station-${index}`)]
+  });
+  assert.strictEqual(reloadedStorage.readListeningHistory().stations.alpha.seconds, 325);
+  assert.deepStrictEqual(reloadedStorage.readListeningHistory().recentStationIds, ["alpha", "beta", ...Array.from({ length: 8 }, (_, index) => `station-${index}`)]);
+  reloadedStorage.writeListeningHistory({
+    version: 2, stations: {}, recentStationIds: [],
+    recentLocalStations: [{ mode: 'radio', seedId: 'comfortably-numb', label: 'Comfortably Numb Radio', title: 'Comfortably Numb', artist: 'Pink Floyd' }]
+  });
+  assert.deepStrictEqual(reloadedStorage.readListeningHistory().recentLocalStations.map(station => station.key), ['radio:comfortably-numb']);
+  reloadedStorage.writeListeningHistory({
+    version: 3, stations: {}, recentStationIds: [], recentLocalStations: [],
+    localStationPresets: [{ mode: 'artist', seedId: 'wish-you-were-here', label: 'Pink Floyd Radio', artist: 'Pink Floyd' }]
+  });
+  assert.deepStrictEqual(reloadedStorage.readListeningHistory().localStationPresets.map(station => station.key), ['artist:wish-you-were-here']);
+
+  const subgroupStations = reloadedStorage.readStations();
+  const subgroupGroup = subgroupStations[0].group;
+  subgroupStations[0].subgroup = "Pacific Northwest";
+  subgroupStations[0].description = "Independent alternative and local music.";
+  subgroupStations[0].hasPreRoll = true;
+  reloadedStorage.writeStations(subgroupStations);
+  reloadedStorage.syncSubgroupsWithStations(subgroupStations);
+  const updatedSubgroupEntry = reloadedStorage.readSubgroups().groups.find((entry) => entry.group === subgroupGroup);
+  assert.ok(updatedSubgroupEntry?.subgroups.includes("Pacific Northwest"));
+  assert.strictEqual(reloadedStorage.readStations()[0].description, "Independent alternative and local music.");
+  assert.strictEqual(reloadedStorage.readStations()[0].hasPreRoll, true);
+  assert.strictEqual(reloadedStorage.renameSubgroup(subgroupGroup, "Pacific Northwest", "PNW").ok, true);
+  assert.strictEqual(reloadedStorage.readStations()[0].subgroup, "PNW");
+  assert.strictEqual(reloadedStorage.removeSubgroup(subgroupGroup, "PNW").ok, true);
+  assert.strictEqual(reloadedStorage.readStations()[0].subgroup, "");
+
+  const personalStation = reloadedStorage.readStations()[0];
+  personalStation.favorite = true;
+  personalStation.preset = true;
+  personalStation.presetOrder = 3;
+  reloadedStorage.writeStations(reloadedStorage.readStations().map((station) => (
+    station.id === personalStation.id ? personalStation : station
+  )));
+  const personalPreferences = JSON.stringify(reloadedStorage.readPreferences());
+  const shareableLibrary = reloadedStorage.exportLibrary();
+  assert.ok(!Object.hasOwn(shareableLibrary.stations[0], "favorite"));
+  assert.ok(!Object.hasOwn(shareableLibrary.stations[0], "preset"));
+  const addResult = reloadedStorage.importLibrary({
+    version: 1,
+    groups: ["Imported Group", "Other"],
+    subgroups: { version: 1, groups: [{ group: "Imported Group", subgroups: ["Imported Subgroup"] }] },
+    stations: [
+      shareableLibrary.stations[0],
+      { id: "imported-new", name: "Imported New", url: "https://example.com/new", group: "Imported Group", subgroup: "Imported Subgroup" }
+    ]
+  }, { mode: "add" });
+  assert.strictEqual(addResult.addedStations, 1);
+  assert.strictEqual(addResult.addedGroups, 1);
+  assert.strictEqual(addResult.addedSubgroups, 1);
+  assert.strictEqual(JSON.stringify(reloadedStorage.readPreferences()), personalPreferences);
+  const replaceResult = reloadedStorage.importLibrary({
+    version: 1,
+    groups: ["Replacement", "Other"],
+    subgroups: { version: 1, groups: [] },
+    stations: [{ ...shareableLibrary.stations[0], name: "Replacement Name", group: "Replacement" }]
+  }, { mode: "replace" });
+  assert.strictEqual(replaceResult.stationCount, 1);
+  assert.strictEqual(reloadedStorage.readStations()[0].favorite, true);
+  assert.strictEqual(reloadedStorage.readStations()[0].preset, true);
+  assert.strictEqual(reloadedStorage.readStations()[0].gainDb, -4);
+  assert.strictEqual(reloadedStorage.readStations()[0].name, "Replacement Name");
+  assert.ok(fs.existsSync(path.join(dataDir, "backups", "library.json.bak")));
+  assert.doesNotThrow(() => validateLibrary([{ name: "Old Export", url: "https://example.com/old", favorite: true }]));
+
+  const updateDataDir = path.join(testRoot, "Update-Data");
+  fs.mkdirSync(updateDataDir, { recursive: true });
+  fs.writeFileSync(path.join(updateDataDir, "library.json"), JSON.stringify({
+    version: 1,
+    groups: ["Rock", "Other"],
+    subgroups: { version: 1, groups: [{ group: "Rock", subgroups: ["Local"] }] },
+    stations: [
+      {
+        id: "official-existing",
+        name: "Keep My Name",
+        url: "https://example.com/old-stream",
+        group: "Rock",
+        country: "Old Country",
+        subgroup: "Local",
+        description: "Old description",
+        hasPreRoll: true
+      },
+      { id: "official-deleted", name: "Delete Me", url: "https://example.com/delete", group: "Rock" },
+      { id: "local-only", name: "Local Only", url: "https://example.com/local-only", group: "Other" }
+    ]
+  }), "utf8");
+  fs.writeFileSync(path.join(updateDataDir, "preferences.json"), JSON.stringify({
+    version: 1,
+    stations: {
+      "official-existing": { favorite: true, preset: true, presetOrder: 2 }
+    }
+  }), "utf8");
+  const updateStorage = new PortableStorage({ dataDir: updateDataDir, defaultsDir });
+  updateStorage.initialize();
+  assert.strictEqual(updateStorage.getLibraryUpdateState().enabled, true);
+  assert.strictEqual(updateStorage.setLibraryUpdatesEnabled(false).enabled, false);
+  const updateStorageReloaded = new PortableStorage({ dataDir: updateDataDir, defaultsDir });
+  updateStorageReloaded.initialize();
+  assert.strictEqual(updateStorageReloaded.getLibraryUpdateState().enabled, false);
+  updateStorageReloaded.setLibraryUpdatesEnabled(true);
+  assert.strictEqual(updateStorageReloaded.deleteStation("official-deleted").ok, true);
+  const remoteLibrary = {
+    version: 1,
+    updatedAt: "2026-09-08T15:30:00.000Z",
+    groups: ["Rock", "Jazz", "Other"],
+    subgroups: {
+      version: 1,
+      groups: [
+        { group: "Rock", subgroups: ["Local", "Classic"] },
+        { group: "Jazz", subgroups: ["Modern"] }
+      ]
+    },
+    stations: [
+      {
+        id: "official-existing",
+        name: "Remote Name Must Not Win",
+        url: "https://example.com/new-stream",
+        group: "Jazz",
+        country: "New Country",
+        subgroup: "Modern",
+        description: "New description",
+        hasPreRoll: false
+      },
+      { id: "official-deleted", name: "Do Not Restore", url: "https://example.com/delete", group: "Rock" },
+      {
+        id: "official-new",
+        name: "Brand New",
+        url: "https://example.com/new",
+        group: "Jazz",
+        subgroup: "Modern",
+        country: "Canada",
+        description: "A new listing."
+      }
+    ]
+  };
+  const updateResult = updateStorageReloaded.applyLibraryUpdate(remoteLibrary);
+  assert.deepStrictEqual(updateResult, {
+    applied: true,
+    addedStations: 1,
+    updatedStations: 1,
+    addedGroups: 1,
+    addedSubgroups: 2
+  });
+  const updatedStations = updateStorageReloaded.readStations();
+  const updatedExisting = updatedStations.find((station) => station.id === "official-existing");
+  assert.strictEqual(updatedExisting.name, "Keep My Name");
+  assert.strictEqual(updatedExisting.group, "Rock");
+  assert.strictEqual(updatedExisting.subgroup, "Local");
+  assert.strictEqual(updatedExisting.url, "https://example.com/new-stream");
+  assert.strictEqual(updatedExisting.country, "New Country");
+  assert.strictEqual(updatedExisting.description, "New description");
+  assert.strictEqual(updatedExisting.hasPreRoll, true);
+  assert.strictEqual(updatedExisting.favorite, true);
+  assert.strictEqual(updatedExisting.preset, true);
+  assert.ok(updatedStations.some((station) => station.id === "official-new"));
+  assert.ok(updatedStations.some((station) => station.id === "local-only"));
+  assert.ok(!updatedStations.some((station) => station.id === "official-deleted"));
+  assert.ok(updateStorageReloaded.readGroups().includes("Jazz"));
+  assert.strictEqual(updateStorageReloaded.getLibraryUpdateState().lastLibraryUpdate, remoteLibrary.updatedAt);
+  assert.ok(updateStorageReloaded.readPreferences().deletedOfficialStationIds.includes("official-deleted"));
+  assert.strictEqual(updateStorageReloaded.applyLibraryUpdate({
+    ...remoteLibrary,
+    updatedAt: "2026-09-08T15:29:59.000Z"
+  }).applied, false);
+  assert.throws(() => updateStorageReloaded.applyLibraryUpdate({
+    ...remoteLibrary,
+    updatedAt: "2026-09-08T15:31:00.000Z",
+    stations: [{ name: "Missing ID", url: "https://example.com/no-id" }]
+  }), /permanent station ID/);
+
+  const legacySchemaDir = path.join(testRoot, "Legacy-Schema-Data");
+  fs.mkdirSync(legacySchemaDir, { recursive: true });
+  fs.writeFileSync(path.join(legacySchemaDir, "stations.json"), JSON.stringify([{
+    id: "legacy-one",
+    name: "Legacy Preset",
+    url: "https://example.com/legacy",
+    group: "Rock",
+    favorite: true,
+    favoriteOrder: 4,
+    noPreRoll: true
+  }]), "utf8");
+  const legacySchemaStorage = new PortableStorage({ dataDir: legacySchemaDir, defaultsDir });
+  legacySchemaStorage.initialize();
+  const migratedStation = legacySchemaStorage.readStations()[0];
+  assert.strictEqual(migratedStation.preset, true);
+  assert.strictEqual(migratedStation.presetOrder, 4);
+  assert.strictEqual(migratedStation.favorite, false);
+  assert.strictEqual(migratedStation.hasPreRoll, false);
+  const migratedRaw = JSON.parse(fs.readFileSync(path.join(legacySchemaDir, "library.json"), "utf8")).stations[0];
+  assert.ok(!Object.hasOwn(migratedRaw, "preset"));
+  assert.ok(!Object.hasOwn(migratedRaw, "favorite"));
+  assert.ok(!Object.hasOwn(migratedRaw, "favoriteOrder"));
+  assert.ok(!Object.hasOwn(migratedRaw, "noPreRoll"));
+  assert.ok(fs.existsSync(path.join(legacySchemaDir, "preferences.json")));
+  assert.ok(fs.existsSync(path.join(legacySchemaDir, "backups", "pre-v0.4-stations.json")));
+
+  const legacyDir = path.join(testRoot, "WaveDeckSB-Data");
+  const legacyStorage = new PortableStorage({ dataDir: legacyDir, defaultsDir });
+  legacyStorage.initialize();
+  const migratedDir = path.join(testRoot, "Migrated-WaveDeck-Data");
+  const migration = copyLegacyData({ legacyDirs: [legacyDir], targetDir: migratedDir });
+  assert.ok(migration.copied.length >= 3);
+  assert.strictEqual(copyLegacyData({ legacyDirs: [legacyDir], targetDir: migratedDir }).copied.length, 0);
+
+  const fakeAppImage = path.join(testRoot, "WaveDeck Portable", "WaveDeck.AppImage");
+  const nextFakeAppImage = path.join(testRoot, "WaveDeck Portable", "WaveDeck Next.AppImage");
+  const fakeIcon = path.join(testRoot, "icon.png");
+  fs.mkdirSync(path.dirname(fakeAppImage), { recursive: true });
+  fs.writeFileSync(fakeAppImage, "appimage");
+  fs.writeFileSync(nextFakeAppImage, "next-appimage");
+  fs.writeFileSync(fakeIcon, "png-icon");
+
+  const desktopEntry = buildDesktopEntry({ appImagePath: fakeAppImage, version: "0.1.14" });
+  assert.ok(desktopEntry.includes(`Exec=${quoteExecArgument(fakeAppImage)}`));
+  assert.ok(desktopEntry.includes("Icon=wavedeck"));
+  assert.ok(desktopEntry.includes("StartupWMClass=wavedeck"));
+  assert.ok(desktopEntry.includes(MANAGED_MARKER));
+
+  // Desktop-entry installation is a Linux-only feature. Its file-mode behavior
+  // cannot be meaningfully exercised on a Windows filesystem.
+  if (process.platform !== "win32") {
+    const installedLauncher = installLauncher({
+      homeDir: testRoot,
+      appImagePath: fakeAppImage,
+      iconSourcePath: fakeIcon,
+      version: "0.1.14"
+    });
+    assert.strictEqual(installedLauncher.installed, true);
+    assert.strictEqual(installedLauncher.managed, true);
+    assert.strictEqual(installedLauncher.current, true);
+    assert.strictEqual(fs.statSync(installedLauncher.launcherPath).mode & 0o777, 0o755);
+    assert.strictEqual(fs.statSync(installedLauncher.iconPath).mode & 0o777, 0o644);
+    assert.strictEqual(fs.readFileSync(installedLauncher.iconPath, "utf8"), "png-icon");
+
+    const updatedLauncher = installLauncher({
+      homeDir: testRoot,
+      appImagePath: nextFakeAppImage,
+      iconSourcePath: fakeIcon,
+      version: "0.1.14"
+    });
+    assert.strictEqual(updatedLauncher.current, true);
+    assert.ok(fs.readFileSync(updatedLauncher.launcherPath, "utf8").includes(
+      `Exec=${quoteExecArgument(nextFakeAppImage)}`
+    ));
+    assert.strictEqual(getLauncherStatus({ homeDir: testRoot, appImagePath: fakeAppImage }).current, false);
+
+    const removedLauncher = removeLauncher({ homeDir: testRoot, appImagePath: nextFakeAppImage });
+    assert.strictEqual(removedLauncher.installed, false);
+    assert.strictEqual(fs.existsSync(updatedLauncher.iconPath), false);
+
+    const launcherPaths = getLauncherPaths(testRoot);
+    fs.mkdirSync(launcherPaths.applicationsDir, { recursive: true });
+    fs.writeFileSync(launcherPaths.launcherPath, "[Desktop Entry]\nName=Custom WaveDeck\n");
+    assert.throws(
+      () => installLauncher({
+        homeDir: testRoot,
+        appImagePath: fakeAppImage,
+        iconSourcePath: fakeIcon,
+        version: "0.1.14"
+      }),
+      /will not overwrite/
+    );
+    assert.throws(
+      () => removeLauncher({ homeDir: testRoot, appImagePath: fakeAppImage }),
+      /left untouched/
+    );
+    assert.ok(fs.readFileSync(launcherPaths.launcherPath, "utf8").includes("Custom WaveDeck"));
+  }
+} finally {
+  fs.rmSync(testRoot, { recursive: true, force: true });
+}
+
+const primary = {
+  bounds: { x: 0, y: 0, width: 1920, height: 1080 },
+  workArea: { x: 0, y: 28, width: 1920, height: 1052 }
+};
+
+let historyTime = 0;
+const historyWrites = [];
+const historyChanges = [];
+let nextTimerId = 1;
+const historyTimers = new Map();
+const historyStorage = {
+  readListeningHistory: () => ({ version: 1, stations: {} }),
+  writeListeningHistory: (history) => {
+    historyWrites.push(JSON.parse(JSON.stringify(history)));
+    return history;
+  }
+};
+const listeningHistory = new ListeningHistory({
+  storage: historyStorage,
+  onChanged: (history) => historyChanges.push(history),
+  now: () => historyTime,
+  minimumSessionMs: 30_000,
+  flushIntervalMs: 30_000,
+  setTimer: (callback) => {
+    const id = nextTimerId++;
+    historyTimers.set(id, callback);
+    return id;
+  },
+  clearTimer: (id) => historyTimers.delete(id)
+});
+const playingAlpha = {
+  state: "playing",
+  playing: true,
+  mediaState: "playing",
+  currentStation: { id: "alpha", name: "Alpha", url: "https://example.com/alpha" }
+};
+listeningHistory.handleStatus(playingAlpha);
+historyTime = 29_000;
+assert.deepStrictEqual(listeningHistory.getStats().stations, {});
+assert.deepStrictEqual(listeningHistory.getStats().recentStationIds, ["alpha"]);
+historyTime = 30_000;
+assert.strictEqual(listeningHistory.getStats().stations.alpha.seconds, 30);
+historyTime = 44_500;
+listeningHistory.handleStatus({ ...playingAlpha, state: "ready", playing: false, mediaState: "paused" });
+assert.strictEqual(listeningHistory.getStats().stations.alpha.seconds, 44);
+historyTime = 50_000;
+listeningHistory.handleStatus({
+  ...playingAlpha,
+  currentStation: { ...playingAlpha.currentStation, name: "Alpha Renamed", url: "https://new.example/alpha" }
+});
+historyTime = 70_000;
+listeningHistory.handleStatus({ ...playingAlpha, state: "ready", playing: false, mediaState: "paused" });
+assert.strictEqual(listeningHistory.getStats().stations.alpha.seconds, 44);
+assert.ok(historyWrites.length >= 2);
+assert.ok(historyChanges.length >= 2);
+assert.deepStrictEqual(listeningHistory.reset().stations, {});
+assert.deepStrictEqual(listeningHistory.getStats().recentStationIds, ["alpha"]);
+listeningHistory.handleStatus({
+  state: "playing", playing: true, mediaState: "playing", currentStation: null,
+  currentMusic: { mode: "radio", label: "Comfortably Numb Radio", seed: { id: "seed-1", title: "Comfortably Numb", artist: "Pink Floyd", album: "The Wall" } }
+});
+assert.deepStrictEqual(listeningHistory.getStats().recentLocalStations.map(station => station.key), ["radio:seed-1"]);
+listeningHistory.handleStatus({
+  state: "playing", playing: true, mediaState: "playing", currentStation: null,
+  currentMusic: { mode: "artist", label: "Pink Floyd Radio", seed: { id: "seed-2", title: "Wish You Were Here", artist: "Pink Floyd" } }
+});
+assert.deepStrictEqual(listeningHistory.getStats().recentLocalStations.map(station => station.key), ["artist:seed-2", "radio:seed-1"]);
+assert.strictEqual(listeningHistory.toggleLocalStationPreset(listeningHistory.getStats().recentLocalStations[0]).saved, true);
+assert.deepStrictEqual(listeningHistory.getStats().localStationPresets.map(station => station.key), ["artist:seed-2"]);
+assert.strictEqual(listeningHistory.toggleLocalStationPreset(listeningHistory.getStats().recentLocalStations[0]).saved, false);
+assert.deepStrictEqual(listeningHistory.getStats().localStationPresets, []);
+listeningHistory.close();
+
+let indieTime = 0;
+const indieWrites = [];
+const indieHistory = new ListeningHistory({
+  storage: {
+    readListeningHistory: () => ({ version: 1, stations: {} }),
+    writeListeningHistory: (history) => {
+      indieWrites.push(JSON.parse(JSON.stringify(history)));
+      return history;
+    }
+  },
+  now: () => indieTime,
+  minimumSessionMs: 30_000,
+  flushIntervalMs: 30_000,
+  setTimer: () => 1,
+  clearTimer: () => {}
+});
+const indieStatusWithoutPlayingEvent = {
+  state: "ready",
+  playing: false,
+  mediaState: "playing",
+  currentStation: {
+    id: "st_mtjk2dw5_kn5p33sb",
+    name: "IndieXL",
+    url: "https://server-23.stream-server.nl:18438/"
+  }
+};
+indieHistory.handleStatus(indieStatusWithoutPlayingEvent);
+indieTime = 50 * 60 * 1000;
+assert.strictEqual(indieHistory.getStats().stations.st_mtjk2dw5_kn5p33sb.seconds, 3000);
+indieHistory.handleStatus({ ...indieStatusWithoutPlayingEvent, mediaState: "paused" });
+indieTime = 60 * 60 * 1000;
+assert.strictEqual(indieHistory.getStats().stations.st_mtjk2dw5_kn5p33sb.seconds, 3000);
+assert.ok(indieWrites.length >= 1);
+indieHistory.close();
+assert.strictEqual(normalizeBitrateKbps("128 kb/s"), 128);
+assert.strictEqual(normalizeStationGainDb(20), 12);
+assert.strictEqual(normalizeStationGainDb(-20), -12);
+assert.strictEqual(normalizeStationGainDb(2.24), 2);
+assert.strictEqual(cleanStationGainDb(2.26), 2.5);
+assert.strictEqual(normalizeBitrateKbps(192000, { assumeBitsPerSecond: true }), 192);
+assert.strictEqual(bitrateFromMetadata({ "icy-br": "320" }), 320);
+assert.strictEqual(bitrateFromTrackList([{ type: "audio", selected: true, "demux-bitrate": 256000 }]), 256);
+assert.strictEqual(bitrateFromMetadata({ title: "No bitrate here" }), null);
+assert.deepStrictEqual(validateSubgroups({
+  groups: [
+    { group: "International", subgroups: ["Canada", "canada", "UK"] },
+    { group: "international", subgroups: ["Ignored duplicate group"] }
+  ]
+}), {
+  version: 1,
+  groups: [{ group: "International", subgroups: ["Canada", "UK"] }]
+});
+assert.deepStrictEqual(
+  calculateBottomRightBounds(primary, 300, 600),
+  { x: 1620, y: 480, width: 300, height: 600 }
+);
+assert.deepStrictEqual(
+  calculateCenteredBounds(primary, 860, 620),
+  { x: 530, y: 244, width: 860, height: 620 }
+);
+assert.deepStrictEqual(
+  constrainBoundsToDisplay(primary, { x: 1800, y: -500, width: 2200, height: 1400 }, { minWidth: 700, minHeight: 500 }),
+  { x: 0, y: 28, width: 1920, height: 1052 }
+);
+assert.deepStrictEqual(
+  constrainBoundsToDisplay(primary, { x: -400, y: 800, width: 1100, height: 800 }, { minWidth: 700, minHeight: 500 }),
+  { x: 0, y: 280, width: 1100, height: 800 }
+);
+const sidebarLayout = calculateSidebarLayout(primary, [primary]);
+assert.deepStrictEqual(sidebarLayout.bounds, { x: 1620, y: 28, width: 300, height: 1052 });
+assert.strictEqual(sidebarLayout.canUseDesktopStrut, true);
+assert.deepStrictEqual(sidebarLayout.strut, [0, 300, 0, 0]);
+assert.deepStrictEqual(
+  sidebarLayout.partialStrut,
+  [0, 300, 0, 0, 0, 0, 28, 1079, 0, 0, 0, 0]
+);
+assert.strictEqual(getX11WindowId({
+  getNativeWindowHandle: () => Buffer.from([0x78, 0x56, 0x34, 0x12])
+}), 0x12345678);
+assert.deepStrictEqual(
+  sidebarAvailability({ platform: "win32", windowsHelperAvailable: true }),
+  { available: true, reason: "" }
+);
+assert.strictEqual(
+  sidebarAvailability({ platform: "win32", windowsHelperAvailable: false }).available,
+  false
+);
+assert.strictEqual(
+  sidebarAvailability({ platform: "darwin", windowsHelperAvailable: true }).available,
+  false
+);
+assert.strictEqual(nativeWindowHandleString({
+  getNativeWindowHandle: () => Buffer.from([0x78, 0x56, 0x34, 0x12])
+}), "305419896");
+assert.strictEqual(nativeWindowHandleString({
+  getNativeWindowHandle: () => Buffer.from([0x78, 0x56, 0x34, 0x12, 0, 0, 0, 0])
+}), "305419896");
+assert.deepStrictEqual(parseReadyLine("READY|-300|24|300|1056"), {
+  x: -300, y: 24, width: 300, height: 1056
+});
+assert.strictEqual(parseReadyLine("ERROR|nope"), null);
+assert.deepStrictEqual(calculateWindowsSidebarBounds({
+  workArea: { x: -1600, y: 40, width: 1600, height: 860 }
+}, 300), { x: -300, y: 40, width: 300, height: 860 });
+assert.deepStrictEqual(calculateWindowsSidebarBounds({
+  workArea: { x: 0, y: 0, width: 180, height: 720 }
+}, 300), { x: 0, y: 0, width: 180, height: 720 });
+assert.throws(
+  () => calculateWindowsSidebarBounds(null, 300),
+  /No display is available/
+);
+assert.ok(resolveWindowsSidebarHelper({
+  packaged: true,
+  resourcesPath: "C:\\WaveDeckResources",
+  projectRoot: "C:\\Source"
+}).endsWith(path.join("native", "WaveDeckSidebar.exe")));
+const internalMonitorLayout = calculateSidebarLayout(primary, [
+  primary,
+  {
+    bounds: { x: 1920, y: 0, width: 1920, height: 1080 },
+    workArea: { x: 1920, y: 28, width: 1920, height: 1052 }
+  }
+]);
+assert.deepStrictEqual(internalMonitorLayout.bounds, { x: 1620, y: 28, width: 300, height: 1052 });
+assert.strictEqual(internalMonitorLayout.canUseDesktopStrut, false);
+
+const SIDEBAR_NATIVE_TITLE = "WaveDeck Sidebar";
+const cinnamonReservation = reservationCode(4321, SIDEBAR_NATIVE_TITLE);
+assert.ok(cinnamonReservation.includes("affectsStruts: true"));
+assert.ok(cinnamonReservation.includes("global.get_window_actors()"));
+assert.ok(cinnamonReservation.includes("var monitorIndex = bestWindow.get_monitor()"));
+assert.ok(cinnamonReservation.includes("workspace.get_work_area_for_monitor(monitorIndex)"));
+assert.ok(cinnamonReservation.includes("Math.min(floatingRect.width, workArea.width)"));
+assert.ok(!cinnamonReservation.includes("Math.min(300, workArea.width)"));
+assert.ok(cinnamonReservation.includes("global._waveDeckSBApplyDockGeometry"));
+assert.ok(cinnamonReservation.includes("global._waveDeckSBSettleCount"));
+assert.ok(cinnamonReservation.includes("global._waveDeckSBCreateStrut"));
+assert.ok(cinnamonReservation.includes("target.move_resize_frame(false, desired.x, desired.y, desired.width, desired.height)"));
+assert.ok(cinnamonReservation.includes("Mainloop.timeout_add(200"));
+assert.ok(cinnamonReservation.includes("Mainloop.timeout_add_seconds(1"));
+assert.ok(cinnamonReservation.includes("candidate.get_pid()"));
+assert.ok(cinnamonReservation.includes('title === "WaveDeck Sidebar"'));
+assert.ok(cinnamonReservation.includes("bestWindow.get_window_type() !== Meta.WindowType.DOCK"));
+assert.ok(cinnamonReservation.includes("actor.set_position(desired.x, desired.y)"));
+assert.ok(cinnamonReservation.includes("actor.set_size(desired.width, desired.height)"));
+assert.ok(cinnamonReservation.includes("affectsInputRegion: false"));
+assert.ok(cinnamonReservation.includes("Main.layoutManager._chrome.updateRegions()"));
+assert.ok(
+  cinnamonReservation.indexOf("Main.layoutManager._chrome.updateRegions()") <
+  cinnamonReservation.indexOf("workspace.get_work_area_for_monitor(monitorIndex)")
+);
+assert.ok(cinnamonReservation.includes('/proc/4321'));
+const cinnamonCleanup = cleanupCode(4321, true, SIDEBAR_NATIVE_TITLE);
+assert.ok(cinnamonCleanup.includes("removeChrome"));
+assert.ok(cinnamonCleanup.includes("bestWindow.move_resize_frame(false, saved.x, saved.y, saved.width, saved.height)"));
+assert.ok(windowLookupCode(4321, SIDEBAR_NATIVE_TITLE).includes("candidatePid === 4321"));
+assert.ok(windowLookupCode(4321, SIDEBAR_NATIVE_TITLE).includes('title === "WaveDeck Sidebar"'));
+assert.doesNotThrow(() => new Function(`return ${cinnamonReservation};`));
+assert.doesNotThrow(() => new Function(`return ${cinnamonCleanup};`));
+
+const cinnamonCalls = [];
+class MockWidget {
+  set_position(x, y) {
+    this.position = { x, y };
+  }
+
+  set_size(width, height) {
+    this.size = { width, height };
+  }
+
+  destroy() {
+    cinnamonCalls.push(["destroy"]);
+  }
+}
+
+let mockCurrentFrame = { x: -620, y: 40, width: 198, height: 600 };
+const mockMetaWindow = {
+  get_pid: () => 4321,
+  get_title: () => SIDEBAR_NATIVE_TITLE,
+  get_wm_class: () => "wavedeck",
+  get_window_type: () => 7,
+  get_frame_rect: () => ({ ...mockCurrentFrame }),
+  get_monitor: () => 2,
+  unmaximize: (flags) => cinnamonCalls.push(["unmaximize", flags]),
+  move_resize_frame: (...args) => {
+    cinnamonCalls.push(["move_resize_frame", ...args]);
+    mockCurrentFrame = {
+      x: args[1],
+      y: args[2],
+      width: args[3],
+      height: args[4]
+    };
+  }
+};
+
+const mockMain = {
+  layoutManager: {
+    _chrome: {
+      updateRegions: () => cinnamonCalls.push(["updateRegions"])
+    },
+    addChrome: (actor, params) => cinnamonCalls.push(["addChrome", actor, params]),
+    removeChrome: () => cinnamonCalls.push(["removeChrome"]),
+    updateChrome: () => cinnamonCalls.push(["updateChrome"])
+  }
+};
+
+const mockGlobal = {
+  get_window_actors: () => [{
+    meta_window: {
+      get_pid: () => 4321,
+      get_title: () => "WaveDeck",
+      get_wm_class: () => "wavedeck",
+      get_window_type: () => 0
+    }
+  }, { meta_window: mockMetaWindow }],
+  workspace_manager: {
+    get_active_workspace: () => ({
+      get_work_area_for_monitor: (monitorIndex) => {
+        assert.strictEqual(monitorIndex, 2);
+        return { x: 3840, y: 32, width: 2560, height: 1408 };
+      }
+    })
+  }
+};
+
+const cinnamonContext = {
+  global: mockGlobal,
+  imports: {
+    ui: { main: mockMain },
+    mainloop: {
+      source_remove: (id) => cinnamonCalls.push(["source_remove", id]),
+      timeout_add: (milliseconds, callback) => {
+        cinnamonCalls.push(["timeout_add", milliseconds, callback]);
+        return 77;
+      },
+      timeout_add_seconds: (seconds, callback) => {
+        cinnamonCalls.push(["timeout_add_seconds", seconds, callback]);
+        return 99;
+      }
+    },
+    gi: {
+      GLib: { file_test: () => true, FileTest: { EXISTS: 1 } },
+      Meta: { MaximizeFlags: { BOTH: 3 }, WindowType: { DOCK: 7 } },
+      St: { Widget: MockWidget }
+    }
+  }
+};
+
+assert.strictEqual(
+  vm.runInNewContext(cinnamonReservation, cinnamonContext),
+  "docked:2:6202,32,198,1408"
+);
+assert.deepStrictEqual(
+  cinnamonCalls.find((call) => call[0] === "move_resize_frame"),
+  ["move_resize_frame", false, 6202, 32, 198, 1408]
+);
+assert.ok(!cinnamonCalls.some((call) => call[0] === "addChrome"));
+
+// Simulate Electron briefly restoring the old floating height after Cinnamon
+// has moved the window. Cinnamon must put it back and see two stable checks
+// before it creates the reserved strip.
+mockCurrentFrame = { x: 6202, y: 32, width: 198, height: 600 };
+const retryCall = cinnamonCalls.find((call) => call[0] === "timeout_add");
+assert.strictEqual(retryCall[1], 200);
+assert.strictEqual(retryCall[2](), true);
+assert.deepStrictEqual(mockCurrentFrame, { x: 6202, y: 32, width: 198, height: 1408 });
+assert.ok(!cinnamonCalls.some((call) => call[0] === "addChrome"));
+assert.strictEqual(retryCall[2](), true);
+assert.strictEqual(retryCall[2](), false);
+
+const addChromeCall = cinnamonCalls.find((call) => call[0] === "addChrome");
+assert.deepStrictEqual(addChromeCall[1].position, { x: 6202, y: 32 });
+assert.deepStrictEqual(addChromeCall[1].size, { width: 198, height: 1408 });
+assert.strictEqual(addChromeCall[2].affectsStruts, true);
+const lastMoveIndex = cinnamonCalls.reduce(
+  (result, call, index) => call[0] === "move_resize_frame" ? index : result,
+  -1
+);
+const addChromeIndex = cinnamonCalls.findIndex((call) => call[0] === "addChrome");
+assert.ok(lastMoveIndex < addChromeIndex);
+
+// Simulate the work-area update displacing the player after the strut appears.
+// Because the replacement is a real dock window, the post-strut verification
+// can safely put it back inside the reserved strip.
+mockCurrentFrame = { x: 6004, y: 32, width: 198, height: 1408 };
+const postStrutCall = cinnamonCalls.filter((call) => call[0] === "timeout_add")[1];
+assert.strictEqual(postStrutCall[1], 250);
+assert.strictEqual(postStrutCall[2](), false);
+assert.deepStrictEqual(mockCurrentFrame, { x: 6202, y: 32, width: 198, height: 1408 });
+
+// The liveness watcher also keeps the dock matched if Cinnamon later changes
+// monitor work areas or reapplies constraints.
+const watcherCall = cinnamonCalls.find((call) => call[0] === "timeout_add_seconds");
+assert.strictEqual(watcherCall[1], 1);
+mockCurrentFrame = { x: 6004, y: 32, width: 198, height: 1408 };
+const moveCountBeforeWatch = cinnamonCalls.filter((call) => call[0] === "move_resize_frame").length;
+assert.strictEqual(watcherCall[2](), true);
+assert.strictEqual(
+  cinnamonCalls.filter((call) => call[0] === "move_resize_frame").length,
+  moveCountBeforeWatch + 1
+);
+assert.deepStrictEqual(mockCurrentFrame, { x: 6202, y: 32, width: 198, height: 1408 });
+
+assert.strictEqual(
+  vm.runInNewContext(cinnamonCleanup, cinnamonContext),
+  "removed-and-restored"
+);
+assert.ok(cinnamonCalls.some((call) => (
+  call[0] === "move_resize_frame" &&
+  call[2] === -620 && call[3] === 40 && call[4] === 198 && call[5] === 600
+)));
+
+const indexHtml = fs.readFileSync(path.join(root, "src", "renderer", "index.html"), "utf8");
+assert.ok(indexHtml.includes('id="streamingTabBtn"'));
+assert.ok(indexHtml.includes('id="musicToggleBtn"'));
+assert.ok(indexHtml.includes('id="presetSectionToggleBtn"'));
+assert.ok(indexHtml.includes('id="favoritesOnlyToggleBtn"'));
+assert.ok(indexHtml.includes('id="mostPlayedSectionToggleBtn"'));
+assert.ok(indexHtml.includes('id="recordingsSectionToggleBtn"'));
+assert.ok(indexHtml.includes('id="sidebarModeBtn"'));
+assert.ok(indexHtml.includes('id="localThumbUpBtn"'));
+assert.ok(indexHtml.includes('id="localThumbDownBtn"'));
+assert.ok(indexHtml.includes('id="searchPanel"'));
+assert.ok(indexHtml.includes('id="stationSearchInput"'));
+assert.ok(!indexHtml.includes('id="appVersion"'));
+assert.ok(indexHtml.includes("Warming up the airwaves..."));
+assert.ok(indexHtml.indexOf('id="streamingTabBtn"') < indexHtml.indexOf('id="presetSectionToggleBtn"'));
+assert.ok(indexHtml.indexOf('id="presetSectionToggleBtn"') < indexHtml.indexOf('id="favoritesOnlyToggleBtn"'));
+assert.ok(indexHtml.indexOf('id="favoritesOnlyToggleBtn"') < indexHtml.indexOf('id="mostPlayedSectionToggleBtn"'));
+assert.ok(indexHtml.indexOf('id="mostPlayedSectionToggleBtn"') < indexHtml.indexOf('id="recordingsSectionToggleBtn"'));
+assert.ok(indexHtml.indexOf('id="mostPlayedSectionToggleBtn"') < indexHtml.indexOf('id="sidebarModeBtn"'));
+assert.ok(indexHtml.indexOf('id="openSettingsBtn"') < indexHtml.indexOf('class="toolbar"'));
+assert.ok(indexHtml.indexOf('id="sidebarModeBtn"') < indexHtml.indexOf('id="localThumbUpBtn"'));
+assert.ok(indexHtml.indexOf('class="transport"') < indexHtml.indexOf('id="searchPanel"'));
+assert.ok(indexHtml.indexOf('id="searchPanel"') < indexHtml.indexOf('class="list"'));
+const stylesSource = fs.readFileSync(path.join(root, "src", "renderer", "styles.css"), "utf8");
+assert.ok(stylesSource.includes(".tabbar"));
+assert.ok(stylesSource.includes(".volume-row"));
+assert.ok(stylesSource.includes("height: 32px"));
+assert.ok(stylesSource.includes(".drag-handle"));
+assert.ok(stylesSource.includes(".preset-row.drop-before"));
+assert.ok(stylesSource.includes(".favBtn.preset"));
+assert.ok(stylesSource.includes(".favBtn.has-preroll"));
+assert.ok(stylesSource.includes("#e65324"));
+assert.ok(stylesSource.includes(".section-action"));
+assert.ok(stylesSource.includes(".station-search-input"));
+assert.ok(stylesSource.includes(".station-search-clear"));
+assert.ok(stylesSource.includes(".station-search-panel"));
+assert.ok(stylesSource.includes(".recording-row"));
+assert.ok(stylesSource.includes(".recording-actions"));
+assert.ok(stylesSource.includes(".toolbar"));
+assert.ok(stylesSource.includes(".transport"));
+assert.ok(stylesSource.includes(".station-info"));
+assert.ok(stylesSource.includes("column-gap:10px"));
+assert.ok(stylesSource.includes("row-gap:0"));
+assert.ok(stylesSource.includes(".subgroup-header"));
+assert.ok(stylesSource.includes("user-select:none"));
+const preloadSource = fs.readFileSync(path.join(root, "src", "preload.js"), "utf8");
+assert.ok(preloadSource.includes('ipcRenderer.invoke("sidebar:toggle")'));
+assert.ok(preloadSource.includes('subscribe("player:station-changed"'));
+assert.ok(!preloadSource.includes('notepad:'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("launcher:get-status"'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("launcher:install"'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("launcher:remove"'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("ui:get-preferences"'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("ui:set-launch-in-sidebar", enabled)'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("ui:set-pro-mode", enabled)'));
+assert.ok(preloadSource.includes('subscribe("ui:preferences-changed"'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("listening:get"'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("listening:reset"'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("listening:toggle-local-preset", station)'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("sections:get-state"'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("sections:set-state", state)'));
+assert.ok(preloadSource.includes('subscribe("sections:state-changed"'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("settings:open", stationId)'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("subgroups:get"'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("subgroups:rename"'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("library:export"'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("library:import", mode)'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("library-update:get-state")'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("library-update:set-enabled", enabled)'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("stations:delete", stationId)'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("stations:set-gain", stationId, gainDb)'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("player:play-station", stationId)'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("player:play-pause")'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("player:previous-preset")'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("player:next-preset")'));
+assert.ok(preloadSource.includes("ipcRenderer.invoke('music:mixes')"));
+assert.ok(preloadSource.includes("ipcRenderer.invoke('music:feedback', kind)"));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("recording:get-state")'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("recording:toggle")'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("recordings:list")'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("recordings:play", recordingId)'));
+assert.ok(preloadSource.includes("platform: process.platform"));
+assert.ok(!preloadSource.includes("showStationContextMenu"));
+const settingsHtml = fs.readFileSync(path.join(root, "src", "renderer", "settings.html"), "utf8");
+assert.ok(!settingsHtml.includes('data-tab="launcher"'));
+assert.ok(!settingsHtml.includes('id="tab-launcher"'));
+assert.ok(settingsHtml.includes('id="tab-interface"'));
+assert.ok(settingsHtml.includes('data-tab="interface">General</button>'));
+assert.ok(!settingsHtml.includes('data-tab="importexport"'));
+assert.ok(!settingsHtml.includes('id="tab-importexport"'));
+assert.ok(settingsHtml.includes('id="installLauncherBtn"'));
+assert.ok(settingsHtml.includes('id="removeLauncherBtn"'));
+const settingsRendererSource = fs.readFileSync(path.join(root, "src", "renderer", "settings.js"), "utf8");
+assert.ok(settingsRendererSource.includes('Drag to reorder this subgroup'));
+assert.ok(settingsHtml.includes('id="stationEditor"'));
+assert.ok(settingsHtml.includes('id="stationEditorHome"'));
+assert.ok(settingsHtml.includes('id="exportLibraryBtn"'));
+assert.ok(settingsHtml.includes('id="importLibraryAddBtn"'));
+assert.ok(settingsHtml.includes('id="importLibraryReplaceBtn"'));
+assert.ok(settingsHtml.includes('>Export</button>'));
+assert.ok(settingsHtml.includes('>Import Stations</button>'));
+assert.ok(settingsHtml.includes('>Replace Library</button>'));
+assert.ok(settingsHtml.includes('id="downloadNewStations"'));
+assert.ok(settingsHtml.includes('id="launchInSidebarMode"'));
+assert.ok(settingsHtml.includes('id="proModeEnabled"'));
+assert.ok(settingsHtml.includes('id="proMusicSettings"'));
+assert.ok(settingsHtml.includes('data-tab="localmusic" hidden>Local Music</button>'));
+assert.ok(settingsHtml.indexOf('data-tab="groups"') < settingsHtml.indexOf('data-tab="localmusic"'));
+assert.ok(settingsHtml.indexOf('data-tab="localmusic"') < settingsHtml.indexOf('data-tab="about"'));
+assert.ok(settingsHtml.includes('id="tab-localmusic"'));
+assert.ok(settingsHtml.includes('WaveDeck 0.7.x â€” Bug Fixes'));
+assert.ok(!settingsHtml.includes('WaveDeck 0.7.9 â€”'));
+assert.ok(settingsHtml.includes('Enable Advanced Features'));
+assert.ok(settingsHtml.includes('id="localRadioTitle"'));
+assert.ok(settingsHtml.includes('WaveDeck never plays a song tagged DO_NOT_PLAY'));
+assert.ok(settingsHtml.includes('id="localRadioFamiliarity"'));
+assert.ok(settingsHtml.includes('Favor the Hits'));
+assert.ok(settingsHtml.includes('Balanced Mix'));
+assert.ok(settingsHtml.includes('Play Deep Cuts Too'));
+assert.ok(settingsHtml.includes('id="lastFmProgress"'));
+assert.ok(!settingsHtml.includes('radio-rule-tab'));
+assert.ok(!settingsHtml.includes('id="resetAllRadioRules"'));
+assert.ok(settingsHtml.includes('id="chooseAdditionalMusicFolderBtn"'));
+assert.ok(settingsHtml.includes('id="lastFmEnabled"'));
+assert.ok(settingsHtml.includes('id="lastFmApiKey"'));
+assert.ok(settingsHtml.includes('Ctrl + Alt + Shift + F'));
+assert.ok(settingsHtml.includes("WaveDeck_Library.json"));
+assert.ok(settingsHtml.indexOf('id="stationEditorHome"') < settingsHtml.indexOf('class="listening-history-bar"'));
+assert.ok(settingsHtml.includes('id="resetListeningBtn"'));
+assert.ok(settingsHtml.includes("Listened"));
+assert.ok(settingsHtml.includes('id="st_subgroup"'));
+assert.ok(settingsHtml.includes('id="st_description"'));
+assert.ok(settingsHtml.includes('id="st_favorite"'));
+assert.ok(settingsHtml.includes('id="st_preset"'));
+assert.ok(settingsHtml.includes('id="st_has_preroll"'));
+assert.ok(settingsHtml.includes("WaveDeck 0.6.7 â€” Stream Recording & Settings Update"));
+assert.ok(settingsHtml.includes("native Sidebar Mode"));
+assert.ok(settingsHtml.includes("Changelog"));
+assert.ok(!settingsRendererSource.includes('artistFocusPercent'));
+assert.ok(!settingsRendererSource.includes('ratingInfluence'));
+assert.ok(!settingsRendererSource.includes('unrelatedTrackMultiplier'));
+assert.ok(!settingsHtml.includes('id="outsideVariety"'));
+assert.ok(!settingsRendererSource.includes('outsideVariety'));
+assert.ok(!settingsRendererSource.includes('RADIO_ADVANCED_GROUPS'));
+assert.ok(!settingsRendererSource.includes('featuredArtistWeight'));
+assert.ok(!settingsRendererSource.includes('moodWeight'));
+assert.ok(!settingsRendererSource.includes('playCountBoostMaximum'));
+const settingsStyles = fs.readFileSync(path.join(root, "src", "renderer", "settings.css"), "utf8");
+assert.ok(settingsStyles.includes("position: sticky"));
+assert.ok(settingsStyles.includes("overflow: auto"));
+assert.ok(settingsStyles.includes("flex:1 1 auto"));
+assert.ok(!settingsStyles.includes("min(62vh"));
+const mainSource = fs.readFileSync(path.join(root, "src", "main", "main.js"), "utf8");
+assert.ok(!mainSource.includes("loadSidebarState"));
+assert.ok(!mainSource.includes("saveSidebarState"));
+assert.ok(!mainSource.includes("screen.getCursorScreenPoint()"));
+assert.ok(!mainSource.includes("screen.getDisplayNearestPoint"));
+assert.ok(mainSource.includes("screen.getPrimaryDisplay()"));
+assert.ok(mainSource.includes("screen.getDisplayMatching(mainWindow.getBounds())"));
+assert.ok(mainSource.includes("calculateBottomRightBounds"));
+assert.ok(mainSource.includes("calculateCenteredBounds"));
+assert.ok(mainSource.includes("constrainBoundsToDisplay"));
+assert.ok(mainSource.includes("LASTFM_REFRESH_SHORTCUT"));
+assert.ok(mainSource.includes("music:lastfm:queue-full"));
+assert.ok(fs.existsSync(path.join(root, 'src', 'main', 'lastfm-enricher.js')));
+assert.ok(!mainSource.includes("calculateSidebarLayout"));
+assert.ok(!mainSource.includes("setReservedSpace"));
+assert.ok(mainSource.includes('type: sidebar && process.platform === "linux" ? "dock" : undefined'));
+assert.ok(mainSource.includes("SIDEBAR_NATIVE_TITLE"));
+assert.ok(mainSource.includes("dockWindow.waveDeckLoadPromise"));
+assert.ok(mainSource.includes("setCinnamonReservedSpace(process.pid, SIDEBAR_NATIVE_TITLE)"));
+assert.ok(mainSource.includes("clearCinnamonReservedSpace(process.pid, false, SIDEBAR_NATIVE_TITLE)"));
+assert.ok(mainSource.includes("Cinnamon could not apply Sidebar Mode"));
+assert.ok(!mainSource.includes("mainWindow.setBounds(layout.bounds)"));
+assert.ok(mainSource.includes("mainWindow.setResizable(false)"));
+assert.ok(mainSource.includes("await windowsSidebar.apply(mainWindow, FIXED_WIDTH)"));
+assert.ok(mainSource.includes("await windowsSidebar.remove()"));
+assert.ok(mainSource.includes("new MediaController"));
+assert.ok(mainSource.includes('process.platform === "linux"'));
+assert.ok(mainSource.includes('process.platform === "win32"'));
+assert.ok(mainSource.includes('process.platform === "darwin"'));
+assert.ok(mainSource.includes("calculateWindowsSidebarBounds("));
+assert.strictEqual(
+  (mainSource.match(/mainWindow\.setBounds\(windowsDockBounds, false\)/g) || []).length,
+  2
+);
+assert.ok(mainSource.includes('CinnamonMediaKeys: PlatformMediaKeys'));
+assert.ok(mainSource.includes('WindowsMediaKeys: PlatformMediaKeys'));
+assert.ok(mainSource.includes("new MprisService"));
+assert.ok(mainSource.includes("new PlatformMediaKeys"));
+assert.ok(mainSource.includes("await mprisService?.start()"));
+assert.ok(mainSource.includes("await platformMediaKeys?.start()"));
+assert.ok(mainSource.includes("MEDIA_KEY_RECLAIM_INTERVAL_MS = 15_000"));
+assert.ok(mainSource.includes("setInterval(reclaimMediaKeys, MEDIA_KEY_RECLAIM_INTERVAL_MS)"));
+assert.ok(mainSource.includes("claim({ reconnect: true })"));
+assert.ok(mainSource.includes("mediaKeyReclaimPaused = true"));
+assert.ok(mainSource.includes("resolveRuntimeDir({"));
+assert.ok(mainSource.includes('appDataDir: app.getPath("appData")'));
+assert.ok(!mainSource.includes('path.join(getDataDir(), "runtime"'));
+assert.ok(mainSource.includes('getIpcPath(process.platform, app.getPath("userData"))'));
+assert.ok(!mainSource.includes("getIpcPath(process.platform, storage.dataDir)"));
+assert.ok(mainSource.includes("clearInterval(mediaKeyReclaimTimer)"));
+assert.ok(mainSource.includes("PLAYBACK_HEARTBEAT_MS = 10_000"));
+assert.ok(mainSource.includes("player.refreshPlaybackState()"));
+assert.ok(!mainSource.includes('notepad:'));
+assert.ok(mainSource.includes('ipcMain.handle("launcher:get-status"'));
+assert.ok(mainSource.includes('ipcMain.handle("launcher:install"'));
+assert.ok(mainSource.includes('ipcMain.handle("launcher:remove"'));
+assert.ok(mainSource.includes('ipcMain.handle("listening:get"'));
+assert.ok(mainSource.includes('ipcMain.handle("listening:reset"'));
+assert.ok(mainSource.includes('ipcMain.handle("listening:toggle-local-preset"'));
+assert.ok(mainSource.includes('let sectionVisibility = { presets: false, localPresets: false, localMixes: true, favoritesOnly: false, mostPlayed: false, collapsedGroups: [], collapsedSubgroups: [] }'));
+assert.ok(mainSource.includes('ipcMain.handle("sections:get-state"'));
+assert.ok(mainSource.includes('ipcMain.handle("sections:set-state"'));
+assert.ok(mainSource.includes('storage.getStreamingUiState()'));
+assert.ok(mainSource.includes('storage.setStreamingUiState'));
+assert.ok(mainSource.includes('sendToAll("sections:state-changed"'));
+assert.ok(mainSource.includes('ipcMain.handle("linux-ui:get-preferences"'));
+assert.ok(mainSource.includes('ipcMain.handle("linux-ui:set-launch-in-sidebar"'));
+assert.ok(mainSource.includes('ipcMain.handle("ui:get-preferences"'));
+assert.ok(mainSource.includes('ipcMain.handle("ui:set-launch-in-sidebar"'));
+assert.ok(mainSource.includes('ipcMain.handle("ui:set-pro-mode"'));
+assert.ok(mainSource.includes("storage.setSettingsWindowBounds(bounds)"));
+assert.ok(mainSource.includes("SETTINGS_DEFAULT_WIDTH = 1100"));
+assert.ok(mainSource.includes("SETTINGS_DEFAULT_HEIGHT = 800"));
+assert.ok(mainSource.includes("await setSidebarMode(true)"));
+assert.ok(mainSource.includes('process.platform === "linux" || process.platform === "win32"'));
+assert.ok(mainSource.includes('ipcMain.handle("subgroups:get"'));
+assert.ok(mainSource.includes('ipcMain.handle("subgroups:rename"'));
+assert.ok(mainSource.includes('ipcMain.handle("library:export"'));
+assert.ok(mainSource.includes('ipcMain.handle("library:import"'));
+assert.ok(mainSource.includes('ipcMain.handle("library-update:get-state"'));
+assert.ok(mainSource.includes('ipcMain.handle("library-update:set-enabled"'));
+assert.ok(mainSource.includes('ipcMain.handle("stations:delete"'));
+assert.ok(mainSource.includes('ipcMain.handle("stations:set-gain"'));
+assert.ok(mainSource.includes('"WaveDeck_Library.json"'));
+assert.ok(mainSource.includes("createLibraryUpdater"));
+assert.ok(mainSource.includes("net.fetch"));
+assert.ok(mainSource.includes("isPaused: () => Boolean(settingsWindow"));
+assert.ok(mainSource.includes('ipcMain.handle("player:play-station"'));
+assert.ok(mainSource.includes('ipcMain.handle("recording:toggle"'));
+assert.ok(mainSource.includes('ipcMain.handle("recordings:list"'));
+assert.ok(mainSource.includes('ipcMain.handle("recordings:play"'));
+assert.ok(mainSource.includes('shell.trashItem(recording.path)'));
+assert.ok(mainSource.includes("new StreamRecorder"));
+assert.ok(mainSource.includes("prepareFfmpegExecutable"));
+assert.ok(mainSource.includes('path.dirname(getDataDir()), "Recordings"'));
+assert.ok(!mainSource.includes('ipcMain.on("stations:show-context-menu"'));
+const desktopLauncherSource = fs.readFileSync(path.join(root, "src", "main", "desktop-launcher.js"), "utf8");
+assert.ok(desktopLauncherSource.includes('.local", "share", "applications"'));
+assert.ok(desktopLauncherSource.includes("X-WaveDeck-Managed=true"));
+const rendererSource = fs.readFileSync(path.join(root, "src", "renderer", "renderer.js"), "utf8");
+assert.ok(rendererSource.includes("savePresetOrder"));
+assert.ok(rendererSource.includes('handle.draggable = true'));
+assert.ok(rendererSource.includes("normalizePresetOrder"));
+assert.ok(rendererSource.includes('createSectionTitle("Presets"'));
+assert.ok(rendererSource.includes("const groups = buildGroupsInOrder(filteredStations, groupOrder)"));
+assert.ok(rendererSource.includes('id: "toggleAllGroupsBtn"'));
+assert.ok(rendererSource.includes("renderedGroupNames.forEach"));
+assert.ok(rendererSource.includes('"Your Top Five",\n      mostListened.length'));
+assert.ok(rendererSource.includes("const MOST_LISTENED_MINIMUM_SECONDS = 5 * 60"));
+assert.ok(rendererSource.includes("mostPlayedSectionVisible"));
+assert.ok(rendererSource.includes("presetSectionVisible"));
+assert.ok(rendererSource.includes("searchSectionVisible"));
+assert.ok(rendererSource.includes("stationSearchQuery"));
+assert.ok(rendererSource.includes("window.WaveDeckSearch.stationMatchesQuery"));
+assert.ok(rendererSource.includes("const search = true"));
+assert.ok(rendererSource.includes("streamingTabBtn.addEventListener"));
+assert.ok(rendererSource.includes("musicToggleBtn.addEventListener"));
+assert.ok(rendererSource.includes("const allGroups = buildGroupsInOrder(stations, groupOrder)"));
+assert.ok(rendererSource.includes(".slice(0, 5)"));
+assert.ok(rendererSource.includes('setAttribute("aria-label", presets ? "Hide Presets" : "Show Presets")'));
+assert.ok(rendererSource.includes('setAttribute("aria-label", mostPlayed ? "Hide Your Top Five" : "Show Your Top Five")'));
+assert.ok(rendererSource.includes("favoritesOnlyVisible"));
+assert.ok(rendererSource.includes("!favoritesFilterActive || station.favorite"));
+assert.ok(rendererSource.includes('getSectionVisibility()'));
+assert.ok(rendererSource.includes('setSectionVisibility({'));
+assert.ok(rendererSource.includes('onSectionVisibilityChanged(setSectionVisibilityUi)'));
+assert.ok(rendererSource.includes("Warming up the airwaves..."));
+assert.ok(rendererSource.includes("onListeningHistoryChanged"));
+assert.ok(rendererSource.includes("createLocalMixRow"));
+assert.ok(rendererSource.includes("sendMusicFeedback('up')"));
+assert.ok(rendererSource.includes("if (mostPlayedSectionVisible) queueRender()"));
+assert.ok(rendererSource.includes("event.shiftKey"));
+assert.ok(rendererSource.includes("event.ctrlKey"));
+assert.ok(rendererSource.includes("event.ctrlKey && event.shiftKey"));
+assert.ok(rendererSource.includes('row.addEventListener("pointerdown"'));
+assert.ok(!rendererSource.includes("event.altKey"));
+const presetStackIndex = rendererSource.indexOf('if (presetSectionVisible && !searchActive) {');
+const mostPlayedStackIndex = rendererSource.indexOf('if (topFiveActive && !searchActive) {', presetStackIndex);
+const stationsStackIndex = rendererSource.indexOf('listEl.append(createSectionTitle("stations"', mostPlayedStackIndex);
+assert.ok(presetStackIndex >= 0);
+assert.ok(presetStackIndex < mostPlayedStackIndex);
+assert.ok(mostPlayedStackIndex < stationsStackIndex);
+assert.ok(
+  rendererSource.indexOf("event.ctrlKey && event.shiftKey") <
+  rendererSource.indexOf("if (event.ctrlKey)"),
+  "Ctrl+Shift-click must be handled before Ctrl-click"
+);
+assert.ok(rendererSource.includes("station.hasPreRoll = !station.hasPreRoll"));
+assert.ok(rendererSource.includes("editStation(row.dataset.id)"));
+assert.ok(rendererSource.includes("Detecting bitrate"));
+assert.ok(rendererSource.includes("createSubgroupBlock"));
+assert.ok(rendererSource.includes("playStation(row.dataset.id)"));
+assert.ok(rendererSource.includes("currentStationId"));
+assert.ok(rendererSource.includes("station-gain-slider"));
+assert.ok(rendererSource.includes("setStationGain(stationId, value)"));
+assert.ok(rendererSource.includes("presetSectionVisible && !searchActive"));
+assert.ok(rendererSource.includes("topFiveActive && !searchActive"));
+assert.ok(rendererSource.includes('platform !== "linux" && platform !== "win32"'));
+assert.ok(rendererSource.includes("setProModeUi"));
+assert.ok(rendererSource.includes("toggleRecording"));
+assert.ok(rendererSource.includes("previousPreset"));
+assert.ok(rendererSource.includes("nextPreset"));
+assert.ok(rendererSource.includes("clearMusicSearch"));
+assert.ok(rendererSource.includes("Recently Played Local Stations"));
+assert.ok(rendererSource.includes("recentLocalStations"));
+assert.ok(rendererSource.includes("localStationPresets"));
+assert.ok(rendererSource.includes("toggleLocalStationPreset"));
+assert.ok(rendererSource.includes("details.music-row[open]"));
+assert.ok(rendererSource.includes("['radio', 'Song Radio'], ['artist', 'Artist Radio'], ['album', 'Play Album']"));
+assert.ok(!rendererSource.includes("Play Song"));
+assert.ok(indexHtml.includes('id="clearMusicSearchBtn"'));
+assert.ok(indexHtml.includes('id="musicContextLabel"'));
+assert.ok(indexHtml.includes('Playing:'));
+assert.ok(indexHtml.includes('id="localPresetSectionToggleBtn"'));
+assert.ok(!indexHtml.includes('id="musicPosition"'));
+assert.ok(stylesSource.includes("#musicRescan"));
+assert.ok(stylesSource.includes(".toolbar-group[hidden]"));
+assert.ok(indexHtml.includes('aria-label="Rescan Local Music"'));
+assert.ok(stylesSource.includes("::-webkit-details-marker"));
+const settingsSource = fs.readFileSync(path.join(root, "src", "renderer", "settings.js"), "utf8");
+assert.ok(settingsSource.includes("addSubgroup"));
+assert.ok(settingsSource.includes("renameSubgroup"));
+assert.ok(settingsSource.includes("beginSubgroupRename"));
+assert.ok(settingsSource.includes("cancelSubgroupRename"));
+assert.ok(settingsSource.includes("subgroup-rename-input"));
+assert.ok(!settingsSource.includes("prompt("));
+assert.ok(settingsSource.includes("moveSubgroup"));
+assert.ok(settingsSource.includes("deleteSubgroup"));
+assert.ok(settingsSource.includes('stationsTbody.querySelectorAll("tr[data-station-id]")'));
+assert.ok(settingsSource.includes('row.querySelector(".listened-total")'));
+assert.ok(settingsSource.includes('platform === "linux" || platform === "win32"'));
+assert.ok(settingsSource.includes('platform === "linux" ? loadLauncherStatus()'));
+assert.ok(settingsSource.includes("setProModeEnabled(requested)"));
+assert.ok(settingsSource.includes("loadUiPreferences()"));
+assert.ok(!mainSource.includes("music:rules:get"));
+assert.ok(!mainSource.includes("music:rules:reset-all"));
+assert.ok(mainSource.includes("music:local-radio:set-familiarity"));
+
+const windowsBuild = JSON.parse(fs.readFileSync(path.join(root, "electron-builder.windows.json"), "utf8"));
+assert.strictEqual(windowsBuild.win.artifactName, "WaveDeck.exe");
+assert.strictEqual(windowsBuild.win.target[0].target, "portable");
+assert.deepStrictEqual(windowsBuild.win.target[0].arch, ["x64"]);
+assert.strictEqual(windowsBuild.extraResources[0].to, "playback/mpv.exe");
+assert.strictEqual(windowsBuild.extraResources[1].to, "licenses/mpv-GPL-2.0.txt");
+assert.ok(fs.existsSync(path.join(root, "licenses", "mpv-GPL-2.0.txt")));
+const windowsIcon = fs.readFileSync(path.join(root, "build", "icon.ico"));
+assert.deepStrictEqual([...windowsIcon.subarray(0, 4)], [0, 0, 1, 0]);
+
+const macosBuild = JSON.parse(fs.readFileSync(path.join(root, "electron-builder.macos.json"), "utf8"));
+assert.strictEqual(macosBuild.mac.target[0].target, "dir");
+assert.deepStrictEqual(macosBuild.mac.target[0].arch, ["universal"]);
+assert.strictEqual(macosBuild.mac.minimumSystemVersion, "11.0.0");
+assert.strictEqual(macosBuild.mac.x64ArchFiles, "Contents/Resources/playback/darwin/**");
+assert.strictEqual(macosBuild.extraResources[0].to, "playback/darwin");
+assert.ok(fs.existsSync(path.join(root, "START-HERE-MACOS.txt")));
+const macosIcon = fs.readFileSync(path.join(root, "build", "icon-macos.png"));
+assert.strictEqual(macosIcon.readUInt32BE(16), 1024);
+assert.strictEqual(macosIcon.readUInt32BE(20), 1024);
+const macosWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "macos-portable.yml"), "utf8");
+assert.ok(macosWorkflow.includes('ditto "$arm_app/Contents/MacOS" playback/darwin/arm64'));
+assert.ok(macosWorkflow.includes('arm_binary="playback/darwin/arm64/mpv"'));
+assert.ok(macosWorkflow.includes("zip -qry --symlinks"));
+assert.ok(macosWorkflow.includes('test ! -d "$app_path/Contents/_CodeSignature"'));
+assert.ok(!macosWorkflow.includes("codesign --force --deep"));
+assert.ok(!macosWorkflow.includes("  push:"));
+const combinedWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "portable-release.yml"), "utf8");
+assert.ok(!combinedWorkflow.includes("  push:"));
+assert.ok(combinedWorkflow.includes("Build Windows Sidebar helper"));
+assert.ok(combinedWorkflow.includes("WaveDeckSidebar.c"));
+assert.ok(windowsBuild.extraResources.some((resource) => resource.to === "native/WaveDeckSidebar.exe"));
+const windowsSidebarNativeSource = fs.readFileSync(path.join(root, "native", "windows", "WaveDeckSidebar.c"), "utf8");
+assert.ok(windowsSidebarNativeSource.includes("SHAppBarMessage(ABM_NEW"));
+assert.ok(windowsSidebarNativeSource.includes("SHAppBarMessage(ABM_QUERYPOS"));
+assert.ok(windowsSidebarNativeSource.includes("SHAppBarMessage(ABM_SETPOS"));
+assert.ok(windowsSidebarNativeSource.includes("SHAppBarMessage(ABM_REMOVE"));
+assert.ok(windowsSidebarNativeSource.includes('RegisterWindowMessageW(L"TaskbarCreated")'));
+assert.ok(windowsSidebarNativeSource.includes("target_rect.top = monitor_info.rcWork.top"));
+assert.ok(windowsSidebarNativeSource.includes("target_rect.bottom = monitor_info.rcWork.bottom"));
+const windowsWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "windows-portable.yml"), "utf8");
+assert.ok(windowsWorkflow.includes("  push:"));
+assert.ok(windowsWorkflow.includes("Build and inspect Windows Sidebar helper"));
+assert.ok(windowsWorkflow.includes("WaveDeck-0.6.5-Windows"));
+const linuxWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "linux-portable.yml"), "utf8");
+assert.ok(linuxWorkflow.includes("  push:"));
+assert.ok(linuxWorkflow.includes("WaveDeck-0.6.7-Linux.zip"));
+assert.ok(linuxWorkflow.includes('install -m 755 dist/WaveDeck.AppImage'));
+assert.ok(linuxWorkflow.includes('install -m 644 USER-GUIDE.html'));
+assert.ok(!linuxWorkflow.includes('install -m 644 START-HERE.txt'));
+const macosInstructions = fs.readFileSync(path.join(root, "START-HERE-MACOS.txt"), "utf8");
+assert.ok(macosInstructions.includes("Version 0.6.1 universal build"));
+assert.ok(macosInstructions.includes("WaveDeck is unsigned"));
+
+for (const file of [
+  "src/main/main.js",
+  "src/main/data-migration.js",
+  "src/main/desktop-launcher.js",
+  "src/main/player.js",
+  "src/main/portable-paths.js",
+  "src/main/storage.js",
+  "src/main/stream-probe.js",
+  "src/main/sidebar.js",
+  "src/main/cinnamon-reservation.js",
+  "src/main/cinnamon-media-keys.js",
+  "src/main/windows-media-keys.js",
+  "src/main/windows-sidebar.js",
+  "src/main/media-controller.js",
+  "src/main/listening-history.js",
+  "src/main/mpris.js",
+  "src/main/window-layout.js",
+  "src/preload.js",
+  "src/renderer/search.js",
+  "src/renderer/renderer.js",
+  "src/renderer/settings.js"
+]) {
+  new Function(fs.readFileSync(path.join(root, file), "utf8"));
+}
+
+async function validateMediaControls() {
+  const windowsHelperTestDir = fs.mkdtempSync(path.join(os.tmpdir(), "wavedeck-sidebar-"));
+  const fakeWindowsHelper = path.join(windowsHelperTestDir, "WaveDeckSidebar.exe");
+  fs.writeFileSync(fakeWindowsHelper, "test", "utf8");
+  let spawnedArguments = null;
+  const fakeChild = new EventEmitter();
+  fakeChild.stdin = new PassThrough();
+  fakeChild.stdout = new PassThrough();
+  fakeChild.stderr = new PassThrough();
+  fakeChild.kill = () => { setImmediate(() => fakeChild.emit("exit", 1)); };
+  fakeChild.stdin.on("data", (chunk) => {
+    if (String(chunk).includes("REMOVE")) setImmediate(() => fakeChild.emit("exit", 0));
+  });
+  const windowsSidebar = new WindowsSidebar({
+    helperPath: fakeWindowsHelper,
+    spawnImpl: (executable, args, options) => {
+      spawnedArguments = { executable, args, options };
+      setImmediate(() => fakeChild.stdout.write("READY|-450|60|450|1380\n"));
+      return fakeChild;
+    },
+    startTimeoutMs: 500,
+    stopTimeoutMs: 500
+  });
+  assert.strictEqual(windowsSidebar.isAvailable(), true);
+  assert.deepStrictEqual(await windowsSidebar.apply({
+    getNativeWindowHandle: () => Buffer.from([0x78, 0x56, 0x34, 0x12, 0, 0, 0, 0])
+  }, 300), { x: -450, y: 60, width: 450, height: 1380 });
+  assert.deepStrictEqual(spawnedArguments.args, ["305419896", "300"]);
+  assert.strictEqual(spawnedArguments.options.windowsHide, true);
+  assert.strictEqual(windowsSidebar.active, true);
+  await windowsSidebar.remove();
+  assert.strictEqual(windowsSidebar.active, false);
+  fs.rmSync(windowsHelperTestDir, { recursive: true, force: true });
+
+  assert.strictEqual(recordingTimestamp(new Date(2026, 8, 19, 20, 32, 47)), "2026-09-19 20-32-47");
+  assert.strictEqual(safeFilename('Virgin: Radio / Rock? *'), "Virgin - Radio - Rock");
+assert.strictEqual(resolveFfmpegExecutable(), path.join(root, ".cache", "wavedeck-tools", "linux", "ffmpeg"));
+  assert.strictEqual(resolveFfprobeExecutable(), path.join(root, ".cache", "wavedeck-tools", "linux", "ffprobe"));
+  const recorderTestDir = fs.mkdtempSync(path.join(os.tmpdir(), "wavedeck-recorder-"));
+  const recorderRuntimeDir = fs.mkdtempSync(path.join(os.tmpdir(), "wavedeck-runtime-"));
+  const packagedFfmpeg = path.join(recorderTestDir, "packaged-ffmpeg");
+  fs.writeFileSync(packagedFfmpeg, "fake ffmpeg", { mode: 0o644 });
+  const runtimeFfmpeg = prepareFfmpegExecutable({
+    executable: packagedFfmpeg,
+    runtimeDir: recorderRuntimeDir,
+    packaged: true,
+    platform: "linux"
+  });
+  assert.ok(runtimeFfmpeg.startsWith(path.join(recorderRuntimeDir, "tools")));
+  assert.strictEqual(fs.readFileSync(runtimeFfmpeg, "utf8"), "fake ffmpeg");
+  assert.strictEqual(fs.statSync(runtimeFfmpeg).mode & 0o777, 0o755);
+  const packagedFfprobe = path.join(recorderTestDir, "packaged-ffprobe");
+  fs.writeFileSync(packagedFfprobe, "fake ffprobe", { mode: 0o644 });
+  const runtimeFfprobe = prepareFfprobeExecutable({
+    executable: packagedFfprobe,
+    runtimeDir: recorderRuntimeDir,
+    packaged: true,
+    platform: "linux"
+  });
+  assert.ok(path.basename(runtimeFfprobe).startsWith("ffprobe-"));
+  assert.strictEqual(fs.readFileSync(runtimeFfprobe, "utf8"), "fake ffprobe");
+  assert.strictEqual(prepareFfmpegExecutable({
+    executable: packagedFfmpeg,
+    runtimeDir: recorderRuntimeDir,
+    packaged: false,
+    platform: "linux"
+  }), packagedFfmpeg);
+  assert.strictEqual(verifyFfmpegExecutable({
+    executable: runtimeFfmpeg,
+    runtimeDir: recorderRuntimeDir,
+    spawnSyncImpl: (_executable, args) => {
+      fs.writeFileSync(args.at(-1), "probe mp3", "utf8");
+      return { status: 0, stderr: "" };
+    }
+  }), true);
+  const abandonedPart = path.join(recorderTestDir, "Earlier Station - 2026-09-19 10-00-00.mp3.part");
+  fs.writeFileSync(abandonedPart, "partial recording", "utf8");
+  const recovered = recoverPartialRecordings(recorderTestDir);
+  assert.strictEqual(recovered.length, 1);
+  assert.ok(recovered[0].endsWith(" - incomplete.mp3"));
+  assert.strictEqual(uniquePath(recovered[0]).includes("(2).mp3"), true);
+
+  let recorderSpawn = null;
+  const recorderStates = [];
+  const recorder = new StreamRecorder({
+    executable: "/test/ffmpeg",
+    recordingsDir: recorderTestDir,
+    platform: "linux",
+    now: () => new Date(2026, 8, 19, 20, 32, 47),
+    onStateChanged: (state) => recorderStates.push(state),
+    spawnImpl: (executable, args, options) => {
+      const child = new EventEmitter();
+      child.stderr = new PassThrough();
+      child.kill = (signal) => {
+        if (signal === "SIGINT") {
+          fs.writeFileSync(args.at(-1), Buffer.from("recorded mp3"));
+          setImmediate(() => child.emit("exit", 0, null));
+        }
+      };
+      recorderSpawn = { executable, args, options };
+      return child;
+    }
+  });
+  recorder.initialize();
+  const recordingStarted = await recorder.start({
+    id: "station-one",
+    name: "Virgin: Radio / Rock?",
+    url: "https://example.com/live"
+  });
+  assert.strictEqual(recordingStarted.active, true);
+  assert.strictEqual(recorderSpawn.executable, "/test/ffmpeg");
+  assert.ok(recorderSpawn.args.includes("libmp3lame"));
+  assert.ok(recorderSpawn.args.includes("-nostdin"));
+  assert.ok(recorderSpawn.args.includes("https://example.com/live"));
+  assert.strictEqual(recorderSpawn.options.windowsHide, true);
+  assert.deepStrictEqual(recorderSpawn.options.stdio, ["ignore", "ignore", "pipe"]);
+  const recordingStopped = await recorder.stop();
+  assert.strictEqual(recordingStopped.active, false);
+  assert.strictEqual(recordingStopped.finalizing, false);
+  assert.ok(recordingStopped.lastFileName.endsWith(".mp3"));
+  assert.ok(fs.existsSync(path.join(recorderTestDir, recordingStopped.lastFileName)));
+  assert.ok(recorderStates.some((state) => state.active));
+  fs.rmSync(recorderTestDir, { recursive: true, force: true });
+  fs.rmSync(recorderRuntimeDir, { recursive: true, force: true });
+
+  const recordingLibraryDir = fs.mkdtempSync(path.join(os.tmpdir(), "wavedeck-recordings-"));
+  fs.writeFileSync(path.join(recordingLibraryDir, "Virgin Radio Rock '70 - 2026-09-20 09-15-00.mp3"), "mp3");
+  fs.writeFileSync(path.join(recordingLibraryDir, "ignore.mp3.part"), "partial");
+  const recordingLibrary = new RecordingLibrary({
+    recordingsDir: recordingLibraryDir,
+    probeExecutable: "/test/ffprobe",
+    spawnSyncImpl: () => ({ status: 0, stdout: "2537.4\n" })
+  });
+  const recordings = recordingLibrary.list();
+  assert.strictEqual(recordings.length, 1);
+  assert.strictEqual(recordings[0].name, "Virgin Radio Rock '70");
+  assert.strictEqual(recordings[0].durationSeconds, 2537);
+  assert.strictEqual(safeRecordingId("../outside.mp3"), "");
+  assert.strictEqual(safeRecordingId("inside.mp3"), "inside.mp3");
+  assert.strictEqual(displayName("A Station - 2026-09-20 09-15-00.mp3"), "A Station");
+  fs.rmSync(recordingLibraryDir, { recursive: true, force: true });
+
+  assert.strictEqual(LIBRARY_UPDATE_URL, "https://fabulon.cloud/downloads/library_update.json");
+  assert.strictEqual(
+    cacheBustedUrl(LIBRARY_UPDATE_URL, () => 1234),
+    "https://fabulon.cloud/downloads/library_update.json?wavedeck=1234"
+  );
+  let requestedLibraryUrl = "";
+  let requestedLibraryOptions = null;
+  const downloadedLibrary = await downloadLibrary({
+    now: () => 5678,
+    fetchImpl: async (url, options) => {
+      requestedLibraryUrl = url;
+      requestedLibraryOptions = options;
+      return {
+        ok: true,
+        status: 200,
+        headers: { get: () => null },
+        text: async () => JSON.stringify({ updatedAt: "2026-09-08T16:00:00.000Z" })
+      };
+    }
+  });
+  assert.strictEqual(requestedLibraryUrl, `${LIBRARY_UPDATE_URL}?wavedeck=5678`);
+  assert.strictEqual(requestedLibraryOptions.cache, "no-store");
+  assert.strictEqual(requestedLibraryOptions.headers["cache-control"], "no-cache");
+  assert.strictEqual(downloadedLibrary.updatedAt, "2026-09-08T16:00:00.000Z");
+
+  let fallbackAttempts = 0;
+  const fallbackLibrary = await downloadLibrary({
+    now: () => 6789,
+    fetchImpl: async () => { throw new Error("Electron network failure"); },
+    fallbackFetchImpl: async (url, options) => {
+      fallbackAttempts += 1;
+      assert.strictEqual(url, `${LIBRARY_UPDATE_URL}?wavedeck=6789`);
+      assert.strictEqual(options.headers.accept, "application/json");
+      return {
+        ok: true,
+        status: 200,
+        headers: { get: () => null },
+        text: async () => JSON.stringify({ updatedAt: "2026-09-08T16:00:30.000Z" })
+      };
+    }
+  });
+  assert.strictEqual(fallbackAttempts, 1);
+  assert.strictEqual(fallbackLibrary.updatedAt, "2026-09-08T16:00:30.000Z");
+  assert.strictEqual(typeof nodeHttpsFetch, "function");
+
+  let appliedUpdate = null;
+  const updater = createLibraryUpdater({
+    storage: {
+      getLibraryUpdateState: () => ({ enabled: true }),
+      applyLibraryUpdate: (value) => {
+        appliedUpdate = value;
+        return { applied: true, addedStations: 1 };
+      }
+    },
+    fetchImpl: async () => ({
+      ok: true,
+      status: 200,
+      headers: { get: () => null },
+      text: async () => JSON.stringify({ updatedAt: "2026-09-08T16:01:00.000Z" })
+    })
+  });
+  assert.strictEqual((await updater.check()).ok, true);
+  assert.strictEqual(appliedUpdate.updatedAt, "2026-09-08T16:01:00.000Z");
+  const silentFailure = createLibraryUpdater({
+    storage: { getLibraryUpdateState: () => ({ enabled: true }) },
+    fetchImpl: async () => { throw new Error("site unavailable"); }
+  });
+  assert.deepStrictEqual(await silentFailure.check(), { ok: false, silent: true });
+  let pausedFetches = 0;
+  const pausedUpdater = createLibraryUpdater({
+    storage: { getLibraryUpdateState: () => ({ enabled: true }) },
+    isPaused: () => true,
+    fetchImpl: async () => { pausedFetches += 1; }
+  });
+  assert.deepStrictEqual(await pausedUpdater.check(), { ok: true, skipped: "paused" });
+  assert.strictEqual(pausedFetches, 0);
+
+  const nativeGainCommands = [];
+  const nativeGainPlayer = new MpvPlayer({ executable: "mpv", ipcPath: "/tmp/test-native-gain.sock" });
+  nativeGainPlayer.start = async () => true;
+  nativeGainPlayer.command = async (command) => {
+    nativeGainCommands.push(command);
+    return { error: "success" };
+  };
+  assert.strictEqual(await nativeGainPlayer.setStationGain(4.25), 4.5);
+  assert.deepStrictEqual(nativeGainCommands, [["set_property", "volume-gain", 4.5]]);
+  assert.strictEqual(nativeGainPlayer.getStatus().stationGainDb, 4.5);
+
+  const fallbackGainCommands = [];
+  const fallbackGainPlayer = new MpvPlayer({ executable: "mpv", ipcPath: "/tmp/test-filter-gain.sock" });
+  fallbackGainPlayer.start = async () => true;
+  fallbackGainPlayer.command = async (command) => {
+    fallbackGainCommands.push(command);
+    if (command[0] === "set_property" && command[1] === "volume-gain") {
+      throw new Error("property not found");
+    }
+    return { error: "success" };
+  };
+  assert.strictEqual(await fallbackGainPlayer.setStationGain(6), 6);
+  assert.deepStrictEqual(fallbackGainCommands.at(-1), [
+    "af",
+    "add",
+    "@wavedeck-station-gain:lavfi=[volume=6dB,alimiter=limit=0.98:level=false]"
+  ]);
+  assert.strictEqual(await fallbackGainPlayer.setStationGain(0), 0);
+  assert.deepStrictEqual(fallbackGainCommands.at(-1), ["af", "remove", "@wavedeck-station-gain"]);
+
+  const heartbeatEvents = [];
+  const heartbeatPlayer = new MpvPlayer({
+    executable: "mpv",
+    ipcPath: "/tmp/wavedeck-heartbeat-test.sock",
+    platform: "linux",
+    onStatus: (status) => heartbeatEvents.push(status)
+  });
+  heartbeatPlayer.socket = { destroyed: false };
+  heartbeatPlayer.command = async (command) => {
+    assert.deepStrictEqual(command, ["get_property", "idle-active"]);
+    return { data: false };
+  };
+  await heartbeatPlayer.refreshPlaybackState();
+  assert.strictEqual(heartbeatPlayer.getStatus().playing, true);
+  assert.strictEqual(heartbeatPlayer.getStatus().state, "playing");
+  assert.strictEqual(heartbeatEvents.length, 1);
+
+  const stationList = [
+    { id: "beta-alias", name: "Beta Alias", url: "https://example.com/beta", preset: false },
+    { id: "beta", name: "Beta", url: "https://example.com/beta", preset: true, presetOrder: 0 },
+    { id: "other", name: "Other", url: "https://example.com/other", preset: false },
+    { id: "alpha", name: "Alpha", url: "https://example.com/alpha", preset: true, presetOrder: 1 }
+  ];
+  let missingEventTime = 0;
+  const missingEventHistory = new ListeningHistory({
+    storage: {
+      readListeningHistory: () => ({ version: 1, stations: {} }),
+      writeListeningHistory: (history) => history
+    },
+    now: () => missingEventTime,
+    setTimer: () => 1,
+    clearTimer: () => {}
+  });
+  const missingEventPlayer = {
+    getStatus: () => ({ state: "ready", playing: false }),
+    setStationGain: async () => 0,
+    play: async () => true,
+    stop: async () => true
+  };
+  const missingEventController = new MediaController({
+    player: missingEventPlayer,
+    getStations: () => [{
+      id: "st_mtjk2dw5_kn5p33sb",
+      name: "IndieXL",
+      url: "https://server-23.stream-server.nl:18438/"
+    }],
+    onStateChanged: (status) => missingEventHistory.handleStatus(status)
+  });
+  await missingEventController.playStationById("st_mtjk2dw5_kn5p33sb");
+  missingEventTime = 50 * 60 * 1000;
+  assert.strictEqual(
+    missingEventHistory.getStats().stations.st_mtjk2dw5_kn5p33sb.seconds,
+    3000
+  );
+  await missingEventController.stop();
+  missingEventHistory.close();
+
+  const calls = [];
+  const fakePlayer = {
+    status: { state: "ready", message: "Playback engine is ready.", playing: false, volume: 80 },
+    getStatus() { return { ...this.status }; },
+    async play(url) {
+      calls.push(["play", url]);
+      this.status = { ...this.status, state: "playing", playing: true };
+      return true;
+    },
+    async stop() {
+      calls.push(["stop"]);
+      this.status = { ...this.status, state: "ready", playing: false };
+      return true;
+    },
+    async setVolume(value) {
+      calls.push(["volume", value]);
+      this.status = { ...this.status, volume: value };
+      return value;
+    },
+    async setStationGain(value) {
+      calls.push(["gain", value]);
+      this.status = { ...this.status, stationGainDb: value };
+      return value;
+    }
+  };
+  const stationEvents = [];
+  const stateEvents = [];
+  const controller = new MediaController({
+    player: fakePlayer,
+    getStations: () => stationList,
+    onStationChanged: (station) => stationEvents.push(station),
+    onStateChanged: (status) => stateEvents.push(status.mediaState)
+  });
+  assert.deepStrictEqual(controller.getPresets().map((station) => station.name), ["Beta", "Alpha"]);
+  assert.strictEqual(await controller.togglePlayPause(), true);
+  assert.strictEqual(controller.getCurrentStation().name, "Beta");
+  assert.strictEqual(await controller.nextPreset(), true);
+  assert.strictEqual(controller.getCurrentStation().name, "Alpha");
+  assert.strictEqual(await controller.nextPreset(), true);
+  assert.strictEqual(controller.getCurrentStation().name, "Beta");
+  assert.strictEqual(await controller.previousPreset(), true);
+  assert.strictEqual(controller.getCurrentStation().name, "Alpha");
+  assert.strictEqual(await controller.pause(), true);
+  assert.strictEqual(controller.getMediaState(), "paused");
+  assert.strictEqual(await controller.togglePlayPause(), true);
+  assert.strictEqual(controller.getCurrentStation().name, "Alpha");
+  await controller.playUrl("https://example.com/other");
+  assert.strictEqual(await controller.nextPreset(), true);
+  assert.strictEqual(controller.getCurrentStation().name, "Beta");
+  await controller.playUrl("https://example.com/other");
+  assert.strictEqual(await controller.previousPreset(), true);
+  assert.strictEqual(controller.getCurrentStation().name, "Alpha");
+  assert.strictEqual(await controller.stop(), true);
+  assert.strictEqual(controller.getMediaState(), "stopped");
+  assert.strictEqual(controller.getCurrentStation().name, "Alpha");
+  assert.strictEqual(await controller.setVolume(0.42), 0.42);
+  assert.deepStrictEqual(calls.at(-1), ["volume", 42]);
+  await controller.playStationById("beta");
+  assert.strictEqual(controller.getCurrentStation().id, "beta");
+  assert.strictEqual(controller.getCurrentStation().name, "Beta");
+  assert.strictEqual(await controller.setStationGain("beta", 4.5), true);
+  assert.strictEqual(controller.getCurrentStation().gainDb, 4.5);
+  assert.deepStrictEqual(calls.at(-1), ["gain", 4.5]);
+  assert.strictEqual(await controller.setStationGain("alpha", 2), false);
+  await controller.playStationById("beta-alias");
+  assert.strictEqual(controller.getCurrentStation().id, "beta-alias");
+  assert.strictEqual(controller.getCurrentStation().name, "Beta Alias");
+  await controller.playStationById("alpha");
+  await controller.stop();
+  assert.ok(stationEvents.length >= 7);
+  assert.ok(stateEvents.includes("paused"));
+
+  const windowsActions = [];
+  const windowsCallbacks = new Map();
+  const windowsWarnings = [];
+  const mockGlobalShortcut = {
+    register(accelerator, callback) {
+      windowsCallbacks.set(accelerator, callback);
+      return true;
+    },
+    isRegistered: (accelerator) => windowsCallbacks.has(accelerator),
+    unregister: (accelerator) => windowsCallbacks.delete(accelerator)
+  };
+  const windowsMediaKeys = new WindowsMediaKeys({
+    platform: "win32",
+    globalShortcut: mockGlobalShortcut,
+    controller: {
+      togglePlayPause: () => windowsActions.push("togglePlayPause"),
+      nextPreset: () => windowsActions.push("nextPreset"),
+      previousPreset: () => windowsActions.push("previousPreset"),
+      stop: () => windowsActions.push("stop")
+    },
+    onWarning: (warning) => windowsWarnings.push(warning)
+  });
+  assert.strictEqual(await windowsMediaKeys.start(), true);
+  assert.deepStrictEqual([...windowsCallbacks.keys()], MEDIA_KEY_BINDINGS.map(([accelerator]) => accelerator));
+  windowsCallbacks.get("MediaPlayPause")();
+  windowsCallbacks.get("MediaNextTrack")();
+  windowsCallbacks.get("MediaPreviousTrack")();
+  windowsCallbacks.get("MediaStop")();
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.deepStrictEqual(windowsActions, ["togglePlayPause", "nextPreset", "previousPreset", "stop"]);
+  mockGlobalShortcut.unregister("MediaNextTrack");
+  assert.strictEqual(await windowsMediaKeys.claim(), true);
+  assert.ok(windowsCallbacks.has("MediaNextTrack"));
+  windowsMediaKeys.close();
+  assert.strictEqual(windowsCallbacks.size, 0);
+  assert.deepStrictEqual(windowsWarnings, []);
+
+  const macCallbacks = new Map();
+  const macMediaKeys = new WindowsMediaKeys({
+    platform: "darwin",
+    globalShortcut: {
+      register(accelerator, callback) {
+        macCallbacks.set(accelerator, callback);
+        return true;
+      },
+      isRegistered: (accelerator) => macCallbacks.has(accelerator),
+      unregister: (accelerator) => macCallbacks.delete(accelerator)
+    },
+    controller: {}
+  });
+  assert.strictEqual(await macMediaKeys.start(), true);
+  assert.deepStrictEqual([...macCallbacks.keys()], MEDIA_KEY_BINDINGS.map(([accelerator]) => accelerator));
+  macMediaKeys.close();
+  assert.strictEqual(macCallbacks.size, 0);
+
+  assert.strictEqual(stationTrackPath({ id: "alpha-one" }), "/com/a17press/wavedeck/station/alpha_one");
+  const metadata = metadataForStation(controller.getCurrentStation());
+  assert.strictEqual(metadata["xesam:title"].value, "Alpha");
+  assert.strictEqual(metadata["xesam:artist"].value[0], "WaveDeck");
+
+  const mpris = new MprisPlayerInterface({ controller });
+  const introspection = mpris.$introspect();
+  const methodNames = introspection.method.map((method) => method.$.name);
+  assert.ok(methodNames.includes("PlayPause"));
+  assert.ok(methodNames.includes("Next"));
+  assert.ok(methodNames.includes("Previous"));
+  mpris.update(controller.getStatus(), controller.getCurrentStation(), controller.getPresets().length);
+  assert.strictEqual(mpris.PlaybackStatus, "Stopped");
+  assert.strictEqual(mpris.CanGoNext, true);
+  await mpris.Play();
+  assert.strictEqual(controller.getMediaState(), "playing");
+  await mpris.Next();
+  assert.strictEqual(controller.getCurrentStation().name, "Beta");
+  await mpris.Previous();
+  assert.strictEqual(controller.getCurrentStation().name, "Alpha");
+  await mpris.PlayPause();
+  assert.strictEqual(controller.getMediaState(), "paused");
+
+  class SlowMediaKeysInterface extends EventEmitter {
+    async GrabMediaPlayerKeys() {}
+    async ReleaseMediaPlayerKeys() {}
+  }
+  const slowInterface = new SlowMediaKeysInterface();
+  let resolveSlowProxy;
+  let slowProxyRequests = 0;
+  let slowDisconnects = 0;
+  const slowBus = {
+    getProxyObject() {
+      slowProxyRequests += 1;
+      return new Promise((resolve) => { resolveSlowProxy = resolve; });
+    },
+    disconnect() { slowDisconnects += 1; }
+  };
+  const singleFlightMediaKeys = new CinnamonMediaKeys({
+    platform: "linux",
+    busFactory: () => slowBus,
+    controller
+  });
+  const firstStart = singleFlightMediaKeys.start();
+  const concurrentClaim = singleFlightMediaKeys.claim({ reconnect: true });
+  const secondStart = singleFlightMediaKeys.start();
+  assert.strictEqual(slowProxyRequests, 1);
+  resolveSlowProxy({ getInterface: () => slowInterface });
+  assert.deepStrictEqual(await Promise.all([firstStart, concurrentClaim, secondStart]), [true, true, true]);
+  singleFlightMediaKeys.close();
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.strictEqual(slowDisconnects, 1);
+
+  class MockMediaKeysInterface extends EventEmitter {
+    constructor() {
+      super();
+      this.grabs = [];
+      this.releases = [];
+      this.failNextGrab = false;
+    }
+
+    async GrabMediaPlayerKeys(application, time) {
+      this.grabs.push([application, time]);
+      if (this.failNextGrab) {
+        this.failNextGrab = false;
+        throw new Error("media-key service connection lost");
+      }
+    }
+
+    async ReleaseMediaPlayerKeys(application) {
+      this.releases.push(application);
+    }
+  }
+
+  const mockMediaKeys = new MockMediaKeysInterface();
+  let disconnectCount = 0;
+  const mockBus = {
+    async getProxyObject(serviceName, objectPath) {
+      assert.strictEqual(serviceName, SERVICE_NAME);
+      assert.strictEqual(objectPath, CINNAMON_MEDIA_KEYS_PATH);
+      return {
+        getInterface(interfaceName) {
+          assert.strictEqual(interfaceName, INTERFACE_NAME);
+          return mockMediaKeys;
+        }
+      };
+    },
+    disconnect() { disconnectCount += 1; }
+  };
+  const cinnamonMediaKeys = new CinnamonMediaKeys({
+    platform: "linux",
+    applicationName: "WaveDeck-test",
+    busFactory: () => mockBus,
+    controller
+  });
+
+  assert.strictEqual(await cinnamonMediaKeys.start(), true);
+  assert.deepStrictEqual(mockMediaKeys.grabs, [["WaveDeck-test", 0]]);
+  mockMediaKeys.emit("MediaPlayerKeyPressed", "Some Other Player", "Next");
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.strictEqual(controller.getCurrentStation().name, "Beta");
+  mockMediaKeys.emit("MediaPlayerKeyPressed", "WaveDeck-test", "Previous");
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.strictEqual(controller.getCurrentStation().name, "Alpha");
+  await mpris.Next();
+  assert.strictEqual(controller.getCurrentStation().name, "Beta");
+  await cinnamonMediaKeys.claim();
+  assert.strictEqual(mockMediaKeys.grabs.length, 2);
+  mockMediaKeys.failNextGrab = true;
+  await assert.rejects(cinnamonMediaKeys.claim(), /connection lost/);
+  assert.strictEqual(disconnectCount, 1);
+  assert.strictEqual(await cinnamonMediaKeys.claim({ reconnect: true }), true);
+  assert.strictEqual(mockMediaKeys.grabs.length, 4);
+  cinnamonMediaKeys.close();
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.deepStrictEqual(mockMediaKeys.releases, ["WaveDeck-test"]);
+  assert.strictEqual(disconnectCount, 2);
+
+  await controller.playRecording({
+    id: "Virgin Radio Rock '70 - 2026-09-20 09-15-00.mp3",
+    fileName: "Virgin Radio Rock '70 - 2026-09-20 09-15-00.mp3",
+    name: "Virgin Radio Rock '70",
+    path: "/recordings/virgin-rock.mp3",
+    modifiedAt: "2026-09-20T09:15:00.000Z",
+    size: 1234
+  });
+  assert.strictEqual(controller.getCurrentStation(), null);
+  assert.strictEqual(controller.getStatus().currentRecording.name, "Virgin Radio Rock '70");
+  assert.deepStrictEqual(calls.at(-2), ["gain", 0]);
+  assert.deepStrictEqual(calls.at(-1), ["play", "/recordings/virgin-rock.mp3"]);
+}
+
+validateMediaControls().then(() => {
+  console.log(`WaveDeck validation passed: v${packageJson.version} player layout, Simple/Advanced Features, portable data, and packaging verified.`);
+}).catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
