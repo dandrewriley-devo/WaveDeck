@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "id": "grunge-era-rock",
+  "name": "Grunge Era Rock",
+  "description": "The guitar-driven alternative and hard-rock lane of 1991–1998: Seattle grunge at the center, with compatible post-grunge and alternative radio around it.",
+  "researchStatus": "researched-first-draft",
+  "formatPolicy": {
+    "trackYear": { "from": 1991, "to": 1998 },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly",
+    "notes": [
+      "This is intentionally broader than pure grunge, but it is not a general 1990s pop or nu-metal station.",
+      "The core is Seattle grunge and its closest contemporaries; approved artists represent compatible alternative-rock expansion.",
+      "Material after 1998 belongs in a later format unless explicitly reviewed."
+    ]
+  },
+  "sourceBasis": [
+    {
+      "source": "RockLists — 107.7 The End Countdowns",
+      "finding": "Documents Seattle alternative-radio programming from the period; the station launched in 1991 as the Seattle grunge scene became national.",
+      "url": "https://www.rocklists.com/stations/the-end/"
+    },
+    {
+      "source": "RockLists — Alternative & Modern Rock Radio Countdowns",
+      "finding": "Provides cross-market alternative-radio evidence spanning grunge, post-punk, indie, and modern rock rather than relying on one city or one retrospective playlist.",
+      "url": "https://www.rocklists.com/formats/alternative/"
+    },
+    {
+      "source": "Pitchfork — Radio-Friendly Unit Shifters",
+      "finding": "Provides a historical account of the modern-rock format's transition through 1991 and the subsequent dominance of grunge-derived rock radio.",
+      "url": "https://pitchfork.com/features/article/9214-radio-friendly-unit-shifters-25-years-of-billboards-alternative-music-chart/"
+    },
+    {
+      "source": "AccuRadio — 90s Rock and Grunge",
+      "finding": "Used as a contemporary format cross-check for a 1990s rock/grunge programming lane.",
+      "url": "https://www.accuradio.com/featured/90srockandgrunge/"
+    }
+  ],
+  "coreArtists": [
+    "Alice in Chains", "Bush", "Candlebox", "Collective Soul", "Days of the New", "Foo Fighters", "Live", "Local H", "Mother Love Bone", "Nirvana", "Our Lady Peace", "Pearl Jam", "Screaming Trees", "Silverchair", "Soundgarden", "Stone Temple Pilots", "Temple of the Dog", "The Smashing Pumpkins", "Veruca Salt"
+  ],
+  "approvedArtists": [
+    "Better Than Ezra", "Blur", "Counting Crows", "Filter", "Garbage", "Gin Blossoms", "Hole", "Jane's Addiction", "L7", "Matthew Sweet", "Meat Puppets", "Nine Inch Nails", "No Doubt", "Oasis", "Radiohead", "Rage Against the Machine", "Red Hot Chili Peppers", "Seven Mary Three", "Soul Asylum", "The Breeders", "The Cranberries", "The Offspring", "Toadies", "Tool", "Weezer"
+  ],
+  "artistRules": [
+    { "artist": "Alice in Chains", "fromYear": 1991, "toYear": 1998 },
+    { "artist": "Nirvana", "fromYear": 1991, "toYear": 1994 },
+    { "artist": "Pearl Jam", "fromYear": 1991, "toYear": 1998 },
+    { "artist": "Soundgarden", "fromYear": 1991, "toYear": 1997 },
+    { "artist": "Stone Temple Pilots", "fromYear": 1992, "toYear": 1998 },
+    { "artist": "The Smashing Pumpkins", "fromYear": 1991, "toYear": 1998 },
+    { "artist": "Foo Fighters", "fromYear": 1995, "toYear": 1998 },
+    { "artist": "Red Hot Chili Peppers", "fromYear": 1991, "toYear": 1998, "tier": "approved" },
+    { "artist": "Radiohead", "fromYear": 1993, "toYear": 1998, "tier": "approved" },
+    { "artist": "Tool", "fromYear": 1993, "toYear": 1998, "tier": "approved" }
+  ],
+  "excludedArtists": [
+    { "artist": "Creed", "reason": "Primarily later than this station's period." },
+    { "artist": "Linkin Park", "reason": "Nu metal; outside the era and format." },
+    { "artist": "Nickelback", "reason": "Outside the era and format." },
+    { "artist": "Limp Bizkit", "reason": "Nu metal; outside this station's intended lane." }
+  ],
+  "seedSuggestions": [
+    ["Nirvana", "Come as You Are"], ["Pearl Jam", "Even Flow"], ["Alice in Chains", "Would?"], ["Soundgarden", "Black Hole Sun"], ["Stone Temple Pilots", "Interstate Love Song"], ["The Smashing Pumpkins", "Cherub Rock"], ["Foo Fighters", "This Is a Call"], ["Live", "I Alone"], ["Bush", "Machinehead"], ["Candlebox", "Far Behind"], ["Screaming Trees", "Nearly Lost You"], ["Temple of the Dog", "Hunger Strike"], ["Silverchair", "Tomorrow"], ["Local H", "Bound for the Floor"], ["Veruca Salt", "Seether"], ["Hole", "Violet"], ["Garbage", "Stupid Girl"], ["Filter", "Hey Man Nice Shot"], ["Toadies", "Possum Kingdom"], ["Our Lady Peace", "Superman's Dead"]
+  ],
+  "maintenanceNotes": [
+    "Keep this mix distinct from a future '90s Alternative' mix by maintaining the guitar-driven, grunge-centered rule.",
+    "The user’s ratings and Favorites should decide emphasis among eligible tracks; they should not make an ineligible later/nu-metal track eligible.",
+    "Use excludedTracks for particular songs that are too pop, too electronic, or otherwise wrong for the station despite an approved artist."
+  ]
+}

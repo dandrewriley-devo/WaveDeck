@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.7.21");
-assert.strictEqual(packageJson.wavedeckVersion, "0.7.21");
+assert.strictEqual(packageJson.version, "0.7.22");
+assert.strictEqual(packageJson.wavedeckVersion, "0.7.22");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -179,6 +179,14 @@ assert.ok(defaultLibrary.stations.every((station) => (
   !Object.hasOwn(station, "presetOrder")
 )));
 assert.ok(!fs.existsSync(path.join(defaultsDir, "preferences.json")));
+const formatBookDirectory = path.join(defaultsDir, "local-mixes");
+const formatBooks = fs.readdirSync(formatBookDirectory).filter(name => name.endsWith('.json')).sort();
+assert.deepStrictEqual(formatBooks, ["classic-rock.json", "grunge-era-rock.json", "yacht-rock.json"]);
+for (const name of formatBooks) {
+  const mix = JSON.parse(fs.readFileSync(path.join(formatBookDirectory, name), "utf8"));
+  assert.ok(mix.id && mix.name && mix.description, `${name} must identify its Local Mix`);
+  assert.ok(Array.isArray(mix.sourceBasis) && mix.sourceBasis.length >= 3, `${name} must retain its research basis`);
+}
 assert.deepStrictEqual(SEARCH_FIELDS, ["name", "group", "subgroup", "country", "description", "url"]);
 assert.strictEqual(normalizeSearchText("  RÁDIO Zürich  "), "radio zurich");
 const searchableStation = {

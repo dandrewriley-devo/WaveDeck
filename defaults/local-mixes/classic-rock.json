@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "id": "classic-rock",
+  "name": "Classic Rock",
+  "description": "Guitar-driven album rock from the late 1960s through 1987: the classic AOR lane, not a catch-all for every older rock song.",
+  "researchStatus": "researched-first-draft",
+  "formatPolicy": {
+    "trackYear": { "from": 1967, "to": 1987 },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly",
+    "notes": [
+      "The core period is the 1970s and 1980s, with deliberate late-1960s exceptions.",
+      "An approved artist is not blanket approval for every track in that artist's catalog.",
+      "Use original recording/release year where available; do not use a compilation or remaster date as the song's era."
+    ]
+  },
+  "sourceBasis": [
+    {
+      "source": "Westwood One — Classic Rock format",
+      "finding": "Centers the format on the greatest rock songs of the 1970s and 1980s, with a dash of late-1960s material.",
+      "url": "https://www.westwoodone.com/formats/music/classic-rock/"
+    },
+    {
+      "source": "Museum of Broadcast Communications — Classic Rock Format",
+      "finding": "Defines Classic Rock as a harder-rock, late-1960s-through-1980s AOR-derived format.",
+      "url": "https://www.museum.tv/radio-encyclopedia-3/classic-rock-format"
+    },
+    {
+      "source": "University of Delaware — AOR/Classic Rock",
+      "finding": "Documents the album-oriented, artist-based character of the format rather than a narrow hit-only playlist.",
+      "url": "https://www1.udel.edu/nero/Radio/readings/AOR.html"
+    }
+  ],
+  "coreArtists": [
+    "AC/DC", "Aerosmith", "Bad Company", "The Beatles", "Black Sabbath", "Blue Öyster Cult", "Bob Seger", "Boston", "Cheap Trick", "Creedence Clearwater Revival", "Deep Purple", "Dire Straits", "The Doobie Brothers", "The Doors", "Eagles", "Electric Light Orchestra", "Emerson, Lake & Palmer", "Fleetwood Mac", "Foghat", "Foreigner", "The Fixx", "Free", "Grateful Dead", "The Guess Who", "Heart", "Jethro Tull", "Journey", "Kansas", "The Kinks", "Led Zeppelin", "Lynyrd Skynyrd", "Molly Hatchet", "Nazareth", "Peter Frampton", "Pink Floyd", "Queen", "The Rolling Stones", "Rush", "Santana", "Steve Miller Band", "Steppenwolf", "Styx", "Supertramp", "Thin Lizzy", "The Who", "Tom Petty and the Heartbreakers", "U2", "UFO", "Uriah Heep", "Van Halen", "The Yardbirds", "Yes", "ZZ Top"
+  ],
+  "approvedArtists": [
+    ".38 Special", "Alan Parsons Project", "Alice Cooper", "Allman Brothers Band", "April Wine", "Bachman-Turner Overdrive", "Big Brother and the Holding Company", "Billy Squier", "Blind Faith", "Bloodrock", "Cactus", "Canned Heat", "Captain Beyond", "Charlie", "Commander Cody", "The Cult", "Derek and the Dominos", "Diamond Head", "Donnie Iris", "Edgar Winter Group", "Elvin Bishop", "Eric Clapton", "Faces", "Firefall", "Grand Funk Railroad", "Humble Pie", "Iron Maiden", "Joe Walsh", "Johnny Winter", "Judas Priest", "Little Feat", "Love", "Mott the Hoople", "Mountain", "Outlaws", "Poco", "Procol Harum", "Rainbow", "REO Speedwagon", "Robin Trower", "Rory Gallagher", "Scorpions", "The Small Faces", "Spirit", "Starz", "Steve Winwood", "Ten Years After", "Toto", "Traffic", "Triumph", "The Tubes", "Wishbone Ash", "Y&T"
+  ],
+  "artistRules": [
+    { "artist": "The Beatles", "fromYear": 1967, "toYear": 1970, "reason": "Late-period Beatles only." },
+    { "artist": "The Rolling Stones", "fromYear": 1968, "toYear": 1987 },
+    { "artist": "The Who", "fromYear": 1967, "toYear": 1987 },
+    { "artist": "U2", "fromYear": 1980, "toYear": 1987, "reason": "Early U2 only." },
+    { "artist": "The Fixx", "fromYear": 1982, "toYear": 1987 },
+    { "artist": "Tom Petty", "fromYear": 1976, "toYear": 1987 },
+    { "artist": "Tom Petty and the Heartbreakers", "fromYear": 1976, "toYear": 1987 },
+    { "artist": "Bruce Springsteen", "fromYear": 1973, "toYear": 1987, "tier": "approved" },
+    { "artist": "David Bowie", "fromYear": 1970, "toYear": 1987, "tier": "approved" },
+    { "artist": "Elton John", "fromYear": 1970, "toYear": 1987, "tier": "approved", "notes": "Only rock-format material should rank highly." },
+    { "artist": "Fleetwood Mac", "fromYear": 1968, "toYear": 1987 },
+    { "artist": "Steve Winwood", "fromYear": 1967, "toYear": 1987, "tier": "approved" }
+  ],
+  "excludedArtists": [
+    { "artist": "Guns N' Roses", "reason": "Outside this station's defined format." },
+    { "artist": "Coldplay", "reason": "Outside the era and format." },
+    { "artist": "Live", "reason": "Outside the era and format." },
+    { "artist": "Kajagoogoo", "reason": "Pop/new-wave rather than this rock format." }
+  ],
+  "seedSuggestions": [
+    ["Boston", "Foreplay/Long Time"], ["Pink Floyd", "Comfortably Numb"], ["Led Zeppelin", "Ramble On"], ["Aerosmith", "Sweet Emotion"], ["Eagles", "One of These Nights"], ["Fleetwood Mac", "The Chain"], ["Heart", "Barracuda"], ["Kansas", "Carry On Wayward Son"], ["Rush", "Tom Sawyer"], ["Styx", "Renegade"], ["Foreigner", "Juke Box Hero"], ["The Fixx", "One Thing Leads to Another"], ["U2", "Sunday Bloody Sunday"], ["Supertramp", "The Logical Song"], ["Creedence Clearwater Revival", "Fortunate Son"], ["The Doors", "Roadhouse Blues"], ["Queen", "Bohemian Rhapsody"], ["Steve Miller Band", "The Joker"], ["Thin Lizzy", "The Boys Are Back in Town"], ["Bad Company", "Can't Get Enough"]
+  ],
+  "maintenanceNotes": [
+    "Add an artist to approvedArtists only after format research, not solely because Last.fm connects it to a core artist.",
+    "Use excludedTracks for a particular song that does not fit even though its artist generally does.",
+    "Do not make a later release eligible merely because it appears on a classic-rock compilation."
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "id": "yacht-rock",
+  "name": "Yacht Rock",
+  "description": "Polished, jazz/R&B-inflected West Coast soft rock and blue-eyed soul from the late 1970s and early 1980s. Song fit matters more than artist name.",
+  "researchStatus": "researched-first-draft",
+  "formatPolicy": {
+    "trackYear": { "from": 1976, "to": 1984 },
+    "unknownYear": "rejectUnlessOnCoreSongs",
+    "songSpecific": true,
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly",
+    "notes": [
+      "This is a song-defined format. A qualifying artist can have many non-qualifying tracks.",
+      "Core songs are safe initial material. Related artists and artists with song rules are a controlled expansion layer.",
+      "Do not treat all soft rock, adult contemporary, disco, or 1970s pop as Yacht Rock."
+    ]
+  },
+  "sourceBasis": [
+    {
+      "source": "Poetics — A deep dive into the collaborative networks of Yacht Rock",
+      "finding": "Places the core scene in a connected Los Angeles studio ecosystem roughly from 1976 to 1984 and identifies its cross-genre musical roots.",
+      "url": "https://doi.org/10.1016/j.poetic.2024.101872"
+    },
+    {
+      "source": "Spotify Newsroom — Yacht Rock history and sound",
+      "finding": "Describes the smooth late-1970s/early-1980s sound and its defining characteristics.",
+      "url": "https://newsroom.spotify.com/2019-07-09/yacht-rock-how-the-smooth-sounds-of-the-70s-and-80s-became-a-genuine-genre/"
+    },
+    {
+      "source": "Yacht or Nyacht / Beyond Yacht Rock ecosystem",
+      "finding": "Provides the most rigorous well-known song-by-song rather than artist-by-artist approach; disputed songs should stay out of the core until deliberately reviewed.",
+      "url": "https://sites.libsyn.com/483279/"
+    },
+    {
+      "source": "Ultimate Classic Rock — Top Yacht Rock Songs",
+      "finding": "Independent editorial list used to cross-check enduring high-confidence songs and artists.",
+      "url": "https://ultimateclassicrock.com/best-yacht-rock-songs/"
+    }
+  ],
+  "coreArtists": [
+    "Ambrosia", "Boz Scaggs", "Christopher Cross", "The Doobie Brothers", "Donald Fagen", "Kenny Loggins", "Little River Band", "Michael McDonald", "Pages", "Player", "Pablo Cruise", "Robbie Dupree", "Steely Dan", "Toto"
+  ],
+  "approvedArtists": [
+    "Al Jarreau", "America", "Bill LaBounty", "Bobby Caldwell", "Carly Simon", "Chicago", "David Pack", "Daryl Hall & John Oates", "England Dan & John Ford Coley", "Gino Vannelli", "Gerry Rafferty", "Jay Graydon", "Ned Doheny", "Orleans", "Rupert Holmes", "Sergio Mendes", "Stephen Bishop", "Walter Egan"
+  ],
+  "artistRules": [
+    { "artist": "The Doobie Brothers", "fromYear": 1976, "toYear": 1982 },
+    { "artist": "Daryl Hall & John Oates", "fromYear": 1976, "toYear": 1984, "tier": "approved", "notes": "Song-specific evaluation remains required." },
+    { "artist": "Chicago", "fromYear": 1976, "toYear": 1984, "tier": "approved", "notes": "Song-specific evaluation remains required." },
+    { "artist": "Eagles", "fromYear": 1976, "toYear": 1980, "tier": "approved", "notes": "Use only specifically reviewed songs." },
+    { "artist": "Fleetwood Mac", "fromYear": 1977, "toYear": 1982, "tier": "approved", "notes": "Use only specifically reviewed songs." },
+    { "artist": "Michael McDonald", "fromYear": 1976, "toYear": 1984 },
+    { "artist": "Kenny Loggins", "fromYear": 1976, "toYear": 1984 },
+    { "artist": "Steely Dan", "fromYear": 1976, "toYear": 1980 },
+    { "artist": "Toto", "fromYear": 1978, "toYear": 1984 }
+  ],
+  "coreSongs": [
+    ["The Doobie Brothers", "What a Fool Believes"], ["The Doobie Brothers", "Minute by Minute"], ["Christopher Cross", "Ride Like the Wind"], ["Christopher Cross", "Sailing"], ["Christopher Cross", "Never Be the Same"], ["Donald Fagen", "I.G.Y. (What a Beautiful World)"], ["Steely Dan", "Peg"], ["Steely Dan", "Deacon Blues"], ["Steely Dan", "Josie"], ["Steely Dan", "Hey Nineteen"], ["Boz Scaggs", "Lowdown"], ["Boz Scaggs", "Jojo"], ["Toto", "Rosanna"], ["Toto", "I Won't Hold You Back"], ["Ambrosia", "Biggest Part of Me"], ["Ambrosia", "How Much I Feel"], ["Kenny Loggins", "This Is It"], ["Kenny Loggins", "Heart to Heart"], ["Michael McDonald", "I Keep Forgettin'"], ["Player", "Baby Come Back"], ["Little River Band", "Reminiscing"], ["Little River Band", "Cool Change"], ["Pablo Cruise", "Love Will Find a Way"], ["Pablo Cruise", "Whatcha Gonna Do?"], ["Robbie Dupree", "Steal Away"], ["Robbie Dupree", "Hot Rod Hearts"], ["Pages", "I Do Believe in You"], ["Bill LaBounty", "Livin' It Up"], ["Ned Doheny", "Get It Up for Love"], ["Al Jarreau", "Mornin'"], ["Al Jarreau", "We're in This Love Together"], ["Bobby Caldwell", "What You Won't Do for Love"], ["Gino Vannelli", "I Just Wanna Stop"], ["Gino Vannelli", "Living Inside Myself"], ["Hall & Oates", "Kiss on My List"], ["Rupert Holmes", "Escape (The Pina Colada Song)"], ["Rupert Holmes", "Him"], ["Orleans", "Dance with Me"], ["Orleans", "Still the One"], ["America", "You Can Do Magic"], ["Walter Egan", "Magnet and Steel"], ["Chicago", "Hard to Say I'm Sorry"], ["Stephen Bishop", "On and On"]
+  ],
+  "excludedArtists": [
+    { "artist": "Air Supply", "reason": "Soft rock/AC, not automatic Yacht Rock." },
+    { "artist": "Bread", "reason": "Soft rock, generally too early and stylistically outside this format." },
+    { "artist": "Coldplay", "reason": "Outside era and format." }
+  ],
+  "maintenanceNotes": [
+    "For future additions, add a song to coreSongs only after it is cross-checked against multiple serious Yacht Rock sources.",
+    "Use an optional reviewedSongs section for debated material rather than relaxing the core rules.",
+    "A station-specific thumbs-down should blacklist only that song in Yacht Rock; it should not affect other Local Mixes."
+  ]
+}

@@ -889,7 +889,7 @@ function installIpcHandlers() {
   ipcMain.handle('music:search', async (_event, query) => { await requireMusic(); return musicLibrary.call('search', String(query || '')); });
   ipcMain.handle('music:scan', async () => { await requireMusic(); return musicLibrary.rescan(); });
   ipcMain.handle('music:play', async (_event, id, mode) => { await requireMusic(); return mediaController.playMusic(String(id), mode); });
-  ipcMain.handle('music:mixes', async () => { await requireMusic(); return listLocalMixes(); });
+  ipcMain.handle('music:mixes', async () => { await requireMusic(); return listLocalMixes(getDataDir()); });
   ipcMain.handle('music:play-mix', async (_event, mixId) => { await requireMusic(); return mediaController.playLocalMix(String(mixId || '')); });
   ipcMain.handle('music:feedback', async (_event, kind) => mediaController.rateMusic(String(kind || '')));
   ipcMain.handle('music:seek', async (_event, seconds) => {
@@ -1092,7 +1092,8 @@ if (!hasSingleInstanceLock) {
       onStationChanged: broadcastStationChanged,
       onStateChanged: broadcastPlayerStatus,
       beforeStationChange: () => recorder?.stop(),
-      beforeStop: () => recorder?.stop()
+      beforeStop: () => recorder?.stop(),
+      dataDir: getDataDir()
     }));
 
     musicLibrary = new MusicLibrary({ dataDir: getDataDir(), additionalMusicFolder: storage.getUiPreferences().additionalMusicFolder, onStatus: status => sendToMain('music:changed', status) });

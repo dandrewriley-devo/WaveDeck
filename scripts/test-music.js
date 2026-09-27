@@ -8,7 +8,7 @@ const { MusicRadio, weight, COOLDOWN } = require('../src/main/music-radio');
 const { extractTrack, radioArtist } = require('../src/main/music-tags');
 const { MediaController, serializeTransport } = require('../src/main/media-controller');
 const { LastFmEnricher, popularityScore } = require('../src/main/lastfm-enricher');
-const { resolveLocalMix } = require('../src/main/local-mixes');
+const { resolveLocalMix, listLocalMixes, isTrackEligibleForMix } = require('../src/main/local-mixes');
 
 function fixture() {
   const frame = (id, value) => { const data = Buffer.concat([Buffer.from([0]), Buffer.from(value)]); const header = Buffer.alloc(10); header.write(id); header.writeUInt32BE(data.length, 4); return Buffer.concat([header, data]); };
@@ -108,12 +108,39 @@ async function run() {
     assert.equal(new MusicRadio({ dataDir: feedbackDir }).feedbackFor('mix:classic-rock')[feedbackB.songKey].up, 1, 'Local Radio feedback persists in portable Data');
 
     const classicSeedTracks = [
-      track('classic-boston', { artist: 'Boston', albumArtist: 'Boston', title: 'Foreplay/Long Time' }),
-      track('classic-pink', { artist: 'Pink Floyd', albumArtist: 'Pink Floyd', title: 'Comfortably Numb' }),
-      track('classic-zeppelin', { artist: 'Led Zeppelin', albumArtist: 'Led Zeppelin', title: 'Ramble On' }),
-      track('classic-aerosmith', { artist: 'Aerosmith', albumArtist: 'Aerosmith', title: 'Sweet Emotion' })
+      track('classic-boston', { artist: 'Boston', albumArtist: 'Boston', title: 'Foreplay/Long Time', year: 1976 }),
+      track('classic-pink', { artist: 'Pink Floyd', albumArtist: 'Pink Floyd', title: 'Comfortably Numb', year: 1979 }),
+      track('classic-zeppelin', { artist: 'Led Zeppelin', albumArtist: 'Led Zeppelin', title: 'Ramble On', year: 1969 }),
+      track('classic-aerosmith', { artist: 'Aerosmith', albumArtist: 'Aerosmith', title: 'Sweet Emotion', year: 1975 })
     ];
-    assert.equal(resolveLocalMix('classic-rock', classicSeedTracks).seeds.length, 4, 'Classic Rock resolves its curated seed tracks from the Local Music library');
+    const portableMixData = path.join(temp, 'mix-format-books');
+    assert.deepEqual(listLocalMixes(portableMixData).map(mix => mix.id), ['classic-rock', 'grunge-era-rock', 'yacht-rock'], 'all shipped Local Mix books copy to portable Data');
+    const classicMix = resolveLocalMix('classic-rock', classicSeedTracks, portableMixData);
+    assert.equal(classicMix.seeds.length, 4, 'Classic Rock resolves its curated seed tracks from the Local Music library');
+    assert.equal(isTrackEligibleForMix(track('early-beatles', { artist: 'The Beatles', title: 'Act Naturally', year: 1965 }), classicMix).eligible, false, 'Classic Rock rejects early Beatles');
+    assert.equal(isTrackEligibleForMix(track('late-aerosmith', { artist: 'Aerosmith', title: 'Under My Skin', year: 2001 }), classicMix).eligible, false, 'Classic Rock rejects post-format Aerosmith');
+    assert.equal(isTrackEligibleForMix(classicSeedTracks[0], classicMix).eligible, true, 'Classic Rock keeps its intended core material');
+    const classicRadio = new MusicRadio({ dataDir: path.join(temp, 'classic-format'), now: () => now, random: () => 0 });
+    const modernColdplay = track('coldplay', { artist: 'Coldplay', artists: ['Coldplay'], title: 'Charlie Brown', year: 2011, rating: 10, similarArtists: ['U2'] });
+    assert.equal(classicRadio.choose([...classicSeedTracks, modernColdplay], classicMix, 'mix').artist, 'Boston', 'Last.fm similarity cannot admit a non-format Classic Rock artist');
+    const yachtTracks = [
+      track('yacht-1', { artist: 'The Doobie Brothers', title: 'What a Fool Believes', year: 1978 }),
+      track('yacht-2', { artist: 'Steely Dan', title: 'Peg', year: 1977 }),
+      track('yacht-3', { artist: 'Toto', title: 'Rosanna', year: 1982 }),
+      track('yacht-4', { artist: 'Christopher Cross', title: 'Sailing', year: 1979 })
+    ];
+    const yachtMix = resolveLocalMix('yacht-rock', yachtTracks, portableMixData);
+    assert.equal(isTrackEligibleForMix(track('nyacht', { artist: 'The Doobie Brothers', title: 'Listen to the Music', year: 1972 }), yachtMix).eligible, false, 'Yacht Rock keeps its song-specific core');
+    assert.equal(isTrackEligibleForMix(yachtTracks[0], yachtMix).eligible, true, 'Yacht Rock admits reviewed core songs');
+    const grungeTracks = [
+      track('grunge-1', { artist: 'Nirvana', title: 'Come as You Are', year: 1991 }),
+      track('grunge-2', { artist: 'Pearl Jam', title: 'Even Flow', year: 1991 }),
+      track('grunge-3', { artist: 'Soundgarden', title: 'Black Hole Sun', year: 1994 }),
+      track('grunge-4', { artist: 'Stone Temple Pilots', title: 'Interstate Love Song', year: 1994 })
+    ];
+    const grungeMix = resolveLocalMix('grunge-era-rock', grungeTracks, portableMixData);
+    assert.equal(isTrackEligibleForMix(track('late-nu-metal', { artist: 'Linkin Park', title: 'In the End', year: 2000 }), grungeMix).eligible, false, 'Grunge Era Rock keeps later nu metal out');
+    assert.equal(isTrackEligibleForMix(grungeTracks[0], grungeMix).eligible, true, 'Grunge Era Rock admits core period material');
 
     const player = { getStatus: () => ({ playing: true, position: 0 }), setStationGain: async () => {}, play: async () => {}, stop: async () => {}, setPaused: async () => {}, seek: async () => {} };
     const tracks = [track('2', { track: 2 }), track('1'), track('3', { album: 'Other' }), track('blocked', { doNotPlay: true })]; const fakeLibrary = { tracks, resolve: async id => { const found = tracks.find(t => t.id === id); if (!found) throw Error('missing'); return { ...found, path: '/' + id }; } };

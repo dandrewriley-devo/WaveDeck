@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { normalize, radioArtist } = require('./music-tags');
+const { isTrackEligibleForMix } = require('./local-mixes');
 
 const COOLDOWN = 4 * 60 * 60 * 1000;
 const COMMON_TAGS = new Set(['rock', 'pop', 'country', 'jazz', 'blues', 'folk', 'metal', 'indie', 'dance', 'electronic', 'hip hop', 'hip-hop', 'rap', 'r&b', 'rnb', 'classical', 'soundtrack', 'alternative', 'soul', 'music']);
@@ -48,13 +49,14 @@ function relationship(track, seed, mode) {
   return { seedArtist, reasons, strength, tags };
 }
 function mixRelationship(track, mix) {
-  const reasons = [];
-  const artist = radioArtist(track) || track?.artist || '';
-  let strength = (mix?.artists || []).some(candidate => matches(candidate, artist)) ? 86 : 0;
-  if (strength) reasons.push('curated Local Mix artist');
+  const eligibility = isTrackEligibleForMix(track, mix || {});
+  if (!eligibility.eligible) return { seedArtist: '', reasons: [], strength: 0, tags: [] };
+  const reasons = [eligibility.reason];
+  let strength = eligibility.tier === 'song' ? 100 : eligibility.tier === 'core' ? 86 : 62;
   for (const seed of mix?.seeds || []) {
     const relation = relationship(track, seed, 'radio');
-    // Shared tags alone are too broad to expand a hand-curated station.
+    // Last.fm and album links can rank an approved candidate, but a Local Mix
+    // format book is the only thing that can make it eligible.
     const usable = relation.strength >= 62 || relation.reasons.includes('same album');
     if (usable && relation.strength > strength) {
       strength = relation.strength;

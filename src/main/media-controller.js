@@ -68,7 +68,8 @@ class MediaController {
     onStationChanged,
     onStateChanged,
     beforeStationChange,
-    beforeStop
+    beforeStop,
+    dataDir = ''
   }) {
     this.player = player;
     this.getStations = getStations;
@@ -76,6 +77,7 @@ class MediaController {
     this.onStateChanged = onStateChanged || (() => {});
     this.beforeStationChange = beforeStationChange || (async () => {});
     this.beforeStop = beforeStop || (async () => {});
+    this.dataDir = dataDir;
     this.currentStation = null;
     this.currentRecording = null;
     this.mediaState = "stopped";
@@ -337,7 +339,7 @@ class MediaController {
   }
 
   async playLocalMix(mixId) {
-    const mix = resolveLocalMix(mixId, this.musicLibrary.tracks);
+    const mix = resolveLocalMix(mixId, this.musicLibrary.tracks, this.dataDir);
     await this.beforeStop({ reason: 'music-playback', station: this.getCurrentStation() });
     this.clearMusic();
     this.musicRadio?.beginSession?.();
