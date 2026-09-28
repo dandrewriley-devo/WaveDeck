@@ -215,7 +215,7 @@ class MusicRadio {
     const context = { last: new Map(), artistLast: new Map(), songCooldown: settings.songRepeatHours * 60 * 60 * 1000, artistCooldown: settings.artistRepeatMinutes * 60 * 1000, setArtist: this.artistSet?.artist || '', feedback: this.feedbackFor(stationKey), secondarySeeds: mode === 'radio' ? this.secondarySeeds(stationKey, tracks) : [] };
     const familiarity = ['hits', 'balanced', 'deep-cuts'].includes(this.getFamiliarity()) ? this.getFamiliarity() : 'balanced';
     this.history.forEach(item => { if (!context.last.has(item.key)) context.last.set(item.key, item); if (!context.artistLast.has(artistKey(item))) context.artistLast.set(artistKey(item), item.at); });
-    const forcedArtist = this.artistSet?.remaining > 0 ? this.artistSet.artist : '';
+    const forcedArtist = this.artistSet?.remaining?.length ? this.artistSet.artist : '';
     const scored = tracks.filter(track => !excluded.has(track.id) && (!forcedArtist || artistKey(track) === forcedArtist)).map(track => ({ track, ...scoreTrack(track, seed, mode, this.history, now, context, familiarity) }));
     const cooldownExcluded = scored.filter(item => item.excluded === 'cooldown').length;
     const artistCooldownExcluded = scored.filter(item => item.excluded === 'artist cooldown').length;
@@ -226,29 +226,51 @@ class MusicRadio {
     const personalCandidates = credibleCandidates.filter(item => hasPersonalSignal(item.track, familiarity));
     const lastFmCandidates = familiarity === 'hits' && !personalCandidates.length
       ? credibleCandidates.filter(item => hasLastFmFamiliarity(item.track)) : [];
-    const candidates = personalCandidates.length ? personalCandidates : (lastFmCandidates.length ? lastFmCandidates : credibleCandidates);
+    let candidates = personalCandidates.length ? personalCandidates : (lastFmCandidates.length ? lastFmCandidates : credibleCandidates);
+    // A two-fer/three-play/four-play is planned before the first song starts.
+    // Do not begin a set unless there are enough playable tracks to complete it.
+    if (!forcedArtist && settings.artistSetSize > 1) {
+      const counts = new Map();
+      for (const item of candidates) counts.set(artistKey(item.track), (counts.get(artistKey(item.track)) || 0) + 1);
+      candidates = candidates.filter(item => (counts.get(artistKey(item.track)) || 0) >= settings.artistSetSize);
+    }
     // A set is intentional, not a reason to pause radio. If its artist has no
     // second eligible track, end the set and immediately choose the next artist.
     if (!candidates.length && forcedArtist) {
       this.artistSet = null;
       return this.choose(tracks, seed, mode, excluded, selectionTrigger, stationKey);
     }
-    let remaining = this.random() * candidates.reduce((sum, item) => sum + item.score, 0);
-    const picked = candidates.find(item => (remaining -= item.score) < 0) || candidates.at(-1) || null;
+    const weightedPick = values => {
+      let remaining = this.random() * values.reduce((sum, item) => sum + item.score, 0);
+      return values.find(item => (remaining -= item.score) < 0) || values.at(-1) || null;
+    };
+    let picked = null;
+    if (forcedArtist) {
+      const nextId = this.artistSet.remaining[0];
+      picked = candidates.find(item => item.track.id === nextId) || null;
+      if (picked) this.artistSet.remaining.shift();
+      else { this.artistSet = null; return this.choose(tracks, seed, mode, excluded, selectionTrigger, stationKey); }
+    } else picked = weightedPick(candidates);
     const selected = picked?.track || null;
     if (selected) {
       if (forcedArtist) {
-        this.artistSet.remaining -= 1;
-        if (this.artistSet.remaining <= 0) this.artistSet = null;
+        if (!this.artistSet.remaining.length) this.artistSet = null;
       } else if (settings.artistSetSize > 1) {
-        this.artistSet = { artist: artistKey(selected), remaining: settings.artistSetSize - 1 };
+        const sameArtist = candidates.filter(item => item.track.id !== selected.id && artistKey(item.track) === artistKey(selected));
+        const planned = [];
+        while (planned.length < settings.artistSetSize - 1 && sameArtist.length) {
+          const next = weightedPick(sameArtist);
+          planned.push(next.track.id);
+          sameArtist.splice(sameArtist.indexOf(next), 1);
+        }
+        this.artistSet = planned.length === settings.artistSetSize - 1 ? { artist: artistKey(selected), remaining: planned } : null;
       }
     } else if (forcedArtist) this.artistSet = null;
     const diagnostic = item => ({ diagnosticId: stableId(item.track), title: item.track.title, artist: item.track.artist, album: item.track.album, eligibilityReasons: item.relationship.reasons, score: item.score, additions: item.additions, multipliers: item.multipliers, favorite: item.track.favorite === true, rating: ratingOutOfTen(item.track), popularity: item.popularity, tags: item.relationship.tags });
     const ranked = [...candidates].sort((a, b) => b.score - a.score).slice(0, 8);
     const threshold = FAMILIARITY_RATINGS[familiarity].minimum;
     const poolLabel = personalCandidates.length ? `personal ${threshold}–10/Favorite` : (lastFmCandidates.length ? 'Last.fm familiar' : 'credible');
-    this.lastDecision = { at: new Date(now).toISOString(), mode, stationKey, selectionTrigger, seed: { diagnosticId: stableId(seed), title: seed?.title || seed?.name || '', artist: seed?.artist || '', album: seed?.album || '', genres: seed?.genres || [] }, policy: 'automatic-local-radio-v2', familiarity, tuning: settings, artistSet: { size: settings.artistSetSize, remaining: this.artistSet?.remaining || 0 }, counts: { totalTracks: tracks.length, skippedByPlaybackError: excluded.size, skippedForCooldown: cooldownExcluded, skippedForArtistCooldown: artistCooldownExcluded, skippedForDoNotPlay: doNotPlayExcluded, credible: credibleCount, personal: personalCandidates.length, personalMinimum: threshold, lastFmFamiliar: lastFmCandidates.length, finalPool: candidates.length }, selected: selected ? diagnostic(picked) : null, diagnostics: { topFinalCandidates: ranked.map(diagnostic), recentHistory: this.history.slice(0, 12).map(item => ({ diagnosticId: stableId({ songKey: item.key }), artist: item.artist, album: item.album, at: new Date(item.at).toISOString() })) }, reason: selected ? `Picked from ${candidates.length} ${poolLabel} Local Radio candidates.` : 'No credible Local Radio song is currently available; waiting rather than making a poor leap.' };
+    this.lastDecision = { at: new Date(now).toISOString(), mode, stationKey, selectionTrigger, seed: { diagnosticId: stableId(seed), title: seed?.title || seed?.name || '', artist: seed?.artist || '', album: seed?.album || '', genres: seed?.genres || [] }, policy: 'automatic-local-radio-v2', familiarity, tuning: settings, artistSet: { size: settings.artistSetSize, remaining: this.artistSet?.remaining?.length || 0 }, counts: { totalTracks: tracks.length, skippedByPlaybackError: excluded.size, skippedForCooldown: cooldownExcluded, skippedForArtistCooldown: artistCooldownExcluded, skippedForDoNotPlay: doNotPlayExcluded, credible: credibleCount, personal: personalCandidates.length, personalMinimum: threshold, lastFmFamiliar: lastFmCandidates.length, finalPool: candidates.length }, selected: selected ? diagnostic(picked) : null, diagnostics: { topFinalCandidates: ranked.map(diagnostic), recentHistory: this.history.slice(0, 12).map(item => ({ diagnosticId: stableId({ songKey: item.key }), artist: item.artist, album: item.album, at: new Date(item.at).toISOString() })) }, reason: selected ? `Picked from ${candidates.length} ${poolLabel} Local Radio candidates.` : 'No credible Local Radio song is currently available; waiting rather than making a poor leap.' };
     try { this.onDecision(this.getLastDecision()); } catch {}
     return selected;
   }

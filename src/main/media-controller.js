@@ -423,7 +423,6 @@ class MediaController {
     const valid = kind === 'up' || kind === 'down';
     if (!valid) throw new Error('Unknown Local Radio feedback.');
     this.musicRadio?.recordFeedback(this.music.radioKey, this.music.current, kind);
-    if (kind === 'down') return this.advanceMusic('thumbs-down');
     return true;
   }
 }

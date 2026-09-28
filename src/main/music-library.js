@@ -1,6 +1,15 @@
 const { Worker } = require('worker_threads');
 const fs = require('fs/promises');
 const path = require('path');
+const { canonicalArtist } = require('./music-tags');
+function canonicalTrack(track) {
+  if (!track || typeof track !== 'object') return track;
+  const artist = canonicalArtist(track.artist);
+  const albumArtist = canonicalArtist(track.albumArtist);
+  const artists = (Array.isArray(track.artists) && track.artists.length ? track.artists : [artist]).map(canonicalArtist);
+  if (artist === track.artist && albumArtist === track.albumArtist && artists.every((value, index) => value === track.artists?.[index])) return track;
+  return { ...track, artist, albumArtist, artists, songKey: `${String(artist).toLowerCase()}\n${String(track.title || '').toLowerCase()}` };
+}
 class MusicLibrary {
   constructor({ dataDir, onStatus = () => {}, additionalMusicFolder = '' }) {
     this.dataDir = dataDir; this.onStatus = onStatus; this.pending = new Map(); this.sequence = 0;
@@ -35,7 +44,7 @@ class MusicLibrary {
   async enable({ scanOnEnable = false } = {}) {
     if (this.enabled) return this.initializing;
     this.enabled = true;
-    this.initializing = this.call('all').then(tracks => { this.tracks = tracks; }).catch(error => { this.enabled = false; throw error; });
+    this.initializing = this.call('all').then(tracks => { this.tracks = tracks.map(canonicalTrack); }).catch(error => { this.enabled = false; throw error; });
     await this.initializing;
     if (!this.enabled) return;
     if (scanOnEnable) void this.rescan().catch(error => this.onStatus({ message: error.message }));
@@ -45,11 +54,11 @@ class MusicLibrary {
     this.additionalMusicFolder = String(folder || '').trim();
     if (this.worker) {
       await this.call('set-roots', this.additionalMusicFolder);
-      this.tracks = await this.call('all');
+      this.tracks = (await this.call('all')).map(canonicalTrack);
     }
   }
   async rescan() {
-    const status = await this.call('scan'); this.tracks = await this.call('all'); this.onStatus(status); return status;
+    const status = await this.call('scan'); this.tracks = (await this.call('all')).map(canonicalTrack); this.onStatus(status); return status;
   }
   async getLastFmStatus() { return this.call('lastfm:status'); }
   async queueLastFmAlbum(id) { return this.call('lastfm:queue-album', id); }
@@ -79,7 +88,7 @@ class MusicLibrary {
   }
   async resolve(id) {
     let track = this.tracks.find(t => t.id === id);
-    if (!track) { this.tracks = await this.call('all'); track = this.tracks.find(t => t.id === id); }
+    if (!track) { this.tracks = (await this.call('all')).map(canonicalTrack); track = this.tracks.find(t => t.id === id); }
     if (!track) throw new Error('That song is no longer indexed. Rescan Music.');
     const rootPath = track.library === 'additional' ? this.additionalMusicFolder : path.join(path.dirname(this.dataDir), 'Music');
     if (!rootPath) throw new Error('The additional music folder is no longer selected.');

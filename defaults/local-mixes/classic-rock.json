@@ -34,12 +34,13 @@
     }
   ],
   "coreArtists": [
-    "AC/DC", "Aerosmith", "Bad Company", "The Beatles", "Black Sabbath", "Blue Öyster Cult", "Bob Seger", "Boston", "Cheap Trick", "Creedence Clearwater Revival", "Deep Purple", "Dire Straits", "The Doobie Brothers", "The Doors", "Eagles", "Electric Light Orchestra", "Emerson, Lake & Palmer", "Fleetwood Mac", "Foghat", "Foreigner", "The Fixx", "Free", "Grateful Dead", "The Guess Who", "Heart", "Jethro Tull", "Journey", "Kansas", "The Kinks", "Led Zeppelin", "Lynyrd Skynyrd", "Molly Hatchet", "Nazareth", "Peter Frampton", "Pink Floyd", "Queen", "The Rolling Stones", "Rush", "Santana", "Steve Miller Band", "Steppenwolf", "Styx", "Supertramp", "Thin Lizzy", "The Who", "Tom Petty and the Heartbreakers", "U2", "UFO", "Uriah Heep", "Van Halen", "The Yardbirds", "Yes", "ZZ Top"
+    "AC/DC", "Aerosmith", "Bad Company", "The Beatles", "Black Sabbath", "Blue Öyster Cult", "Bob Seger", "Boston", "Cheap Trick", "Creedence Clearwater Revival", "Deep Purple", "Dire Straits", "The Doobie Brothers", "The Doors", "Eagles", "Electric Light Orchestra", "Emerson, Lake & Palmer", "Fleetwood Mac", "Foghat", "Foreigner", "The Fixx", "Free", "Grateful Dead", "The Guess Who", "Heart", "Jethro Tull", "John Mellencamp", "Journey", "Kansas", "The Kinks", "Led Zeppelin", "Lynyrd Skynyrd", "Molly Hatchet", "Nazareth", "Peter Frampton", "Pink Floyd", "Queen", "The Rolling Stones", "Rush", "Santana", "Steve Miller Band", "Steppenwolf", "Styx", "Supertramp", "Thin Lizzy", "The Who", "Tom Petty and the Heartbreakers", "U2", "UFO", "Uriah Heep", "Van Halen", "The Yardbirds", "Yes", "ZZ Top"
   ],
   "approvedArtists": [
     ".38 Special", "Alan Parsons Project", "Alice Cooper", "Allman Brothers Band", "April Wine", "Bachman-Turner Overdrive", "Big Brother and the Holding Company", "Billy Squier", "Blind Faith", "Bloodrock", "Cactus", "Canned Heat", "Captain Beyond", "Charlie", "Commander Cody", "The Cult", "Derek and the Dominos", "Diamond Head", "Donnie Iris", "Edgar Winter Group", "Elvin Bishop", "Eric Clapton", "Faces", "Firefall", "Grand Funk Railroad", "Humble Pie", "Iron Maiden", "Joe Walsh", "Johnny Winter", "Judas Priest", "Little Feat", "Love", "Mott the Hoople", "Mountain", "Outlaws", "Poco", "Procol Harum", "Rainbow", "REO Speedwagon", "Robin Trower", "Rory Gallagher", "Scorpions", "The Small Faces", "Spirit", "Starz", "Steve Winwood", "Ten Years After", "Toto", "Traffic", "Triumph", "The Tubes", "Wishbone Ash", "Y&T"
   ],
   "artistRules": [
+    { "artist": "AC/DC", "allowAnyYear": true, "reason": "AC/DC remains fully at home in Classic Rock through Black Ice and beyond." },
     { "artist": "The Beatles", "fromYear": 1967, "toYear": 1970, "reason": "Late-period Beatles only." },
     { "artist": "The Rolling Stones", "fromYear": 1968, "toYear": 1987 },
     { "artist": "The Who", "fromYear": 1967, "toYear": 1987 },

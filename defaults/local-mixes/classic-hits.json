@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "classic-hits",
+  "name": "Classic Hits",
+  "description": "The familiar pop-rock, soft-rock, and crossover hits of the 1970s and 1980s.",
+  "researchStatus": "broad-format-first-draft",
+  "formatPolicy": { "trackYear": { "from": 1970, "to": 1989 }, "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies", "lastFm": "rankApprovedCandidatesOnly", "sharedGenreTags": "neverCreateEligibility", "feedbackScope": "stationOnly" },
+  "sourceBasis": [
+    { "source": "AllMusic — Soft Rock", "url": "https://www.allmusic.com/style/soft-rock-ma0000011841" },
+    { "source": "AllMusic — Adult Contemporary", "url": "https://www.allmusic.com/style/adult-contemporary-ma0000002589" },
+    { "source": "Billboard — Hot 100", "url": "https://www.billboard.com/charts/hot-100/" }
+  ],
+  "coreArtists": ["America", "Ambrosia", "Billy Joel", "Chicago", "Christopher Cross", "Doobie Brothers", "Eagles", "Electric Light Orchestra", "Elton John", "Fleetwood Mac", "Hall & Oates", "Journey", "Little River Band", "Paul McCartney", "REO Speedwagon", "Steely Dan", "Supertramp", "Toto", "The Doobie Brothers", "The Eagles", "The Police", "The Pretenders", "The Romantics", "The Tubes", "The Traveling Wilburys", "The Who", "Van Halen"],
+  "approvedArtists": ["Air Supply", "Asia", "Boz Scaggs", "Bryan Adams", "Commodores", "Dan Fogelberg", "Donald Fagen", "England Dan & John Ford Coley", "Eric Carmen", "Foreigner", "Genesis", "Gino Vannelli", "Heart", "Huey Lewis and the News", "John Mellencamp", "Kenny Loggins", "Kim Carnes", "Loverboy", "Pablo Cruise", "Player", "Quarterflash", "Robert Palmer", "Rupert Holmes", "Steve Winwood", "The Cars", "The Fixx", "The Motels", "The Outfield", "The Power Station", "Tom Petty and the Heartbreakers", "Toto", "Walter Egan"],
+  "artistRules": [
+    { "artist": "The Beatles", "fromYear": 1967, "toYear": 1970, "tier": "approved" },
+    { "artist": "U2", "fromYear": 1980, "toYear": 1989, "tier": "approved" }
+  ],
+  "excludedArtists": [],
+  "seedSuggestions": [["Electric Light Orchestra", "Mr. Blue Sky"], ["Fleetwood Mac", "Dreams"], ["Toto", "Africa"], ["Chicago", "Hard to Say I'm Sorry"], ["Hall & Oates", "I Can't Go for That (No Can Do)"]],
+  "maintenanceNotes": ["This is a broad familiar-hits station, not a Yacht Rock canon.", "Keep it centered on songs people would reasonably expect from a 1970s/1980s hits station."]
+}

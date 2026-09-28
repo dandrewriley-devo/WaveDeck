@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.7.22");
-assert.strictEqual(packageJson.wavedeckVersion, "0.7.22");
+assert.strictEqual(packageJson.version, "0.7.23");
+assert.strictEqual(packageJson.wavedeckVersion, "0.7.23");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -181,7 +181,7 @@ assert.ok(defaultLibrary.stations.every((station) => (
 assert.ok(!fs.existsSync(path.join(defaultsDir, "preferences.json")));
 const formatBookDirectory = path.join(defaultsDir, "local-mixes");
 const formatBooks = fs.readdirSync(formatBookDirectory).filter(name => name.endsWith('.json')).sort();
-assert.deepStrictEqual(formatBooks, ["classic-rock.json", "grunge-era-rock.json", "yacht-rock.json"]);
+assert.deepStrictEqual(formatBooks, ["alternative-80s.json", "classic-country.json", "classic-hits.json", "classic-rock.json", "grunge-era-rock.json", "rock-and-metal.json"]);
 for (const name of formatBooks) {
   const mix = JSON.parse(fs.readFileSync(path.join(formatBookDirectory, name), "utf8"));
   assert.ok(mix.id && mix.name && mix.description, `${name} must identify its Local Mix`);
@@ -1230,7 +1230,7 @@ assert.ok(settingsHtml.includes('data-tab="localmusic" hidden>Local Music</butto
 assert.ok(settingsHtml.indexOf('data-tab="groups"') < settingsHtml.indexOf('data-tab="localmusic"'));
 assert.ok(settingsHtml.indexOf('data-tab="localmusic"') < settingsHtml.indexOf('data-tab="about"'));
 assert.ok(settingsHtml.includes('id="tab-localmusic"'));
-assert.ok(settingsHtml.includes('WaveDeck 0.7.x — Bug Fixes'));
+assert.ok(settingsHtml.includes('WaveDeck 0.7.x — Local Music Update'));
 assert.ok(!settingsHtml.includes('WaveDeck 0.7.9 —'));
 assert.ok(settingsHtml.includes('Enable Advanced Features'));
 assert.ok(settingsHtml.includes('id="localRadioTitle"'));

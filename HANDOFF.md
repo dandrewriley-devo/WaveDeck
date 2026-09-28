@@ -6,8 +6,8 @@ This file is an internal continuity reference for future WaveDeck work. It recor
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `main`
-- Current published version: **0.7.22**
-- Current release: 0.7.22 — portable Local Mix format books and three researched Local Mixes.
+- Current published version: **0.7.23**
+- Current release: 0.7.23 — final 0.7 Local Music cleanup: broad Local Mixes, AC/DC handling, persistent diagnostics, pre-built artist sets, and visual feedback.
 - Previous release commit: `2437af4f1bb585408af111338f8de5a8d44563ec` — five-stop radio tuning, acceptable-pool selection, read-only rating influence, and Last.fm progress bar.
 - 0.7.10 commit: `d2a2a0243165d40e832fa4dbc87f69a71db624c1` — recent stations, Settings relocation, and read-only MP3 rating support.
 - Previous relevant commit: `79fdea48f1f7eff3b71e611625a18e8485c0d689` — project handoff and connector history.
@@ -80,11 +80,11 @@ WaveDeck 0.7.20 adds persistent Local Radio controls in Settings > Local Music: 
 
 WaveDeck 0.7.21 adds Local Mixes, opened from a layers icon beside Local Station Presets. Local Mixes are always available as a curated starting recipe and can be hidden/shown with the toolbar button.
 
-WaveDeck 0.7.22 replaces the hard-coded Classic Rock recipe with portable JSON format books in `Data/local-mixes`. The shipped source defaults live in `defaults/local-mixes`; on launch, WaveDeck copies only missing books into Data and never overwrites a user-edited book. The initial catalog contains Classic Rock, Yacht Rock, and Grunge Era Rock. Format books are data-driven: each defines research basis, core/approved artist rosters, song-specific material where needed, year windows, artist exceptions, and maintenance notes. The Local Mix engine treats the format book as the eligibility authority. A broad tag can never make a candidate eligible; Last.fm can only rank a song already approved by the book. This prevents current behavior such as early Beatles, post-1980s Aerosmith, or Coldplay entering Classic Rock by a loose related-artist relationship. Yacht Rock is deliberately song-specific rather than blanket artist based. Existing global Local Radio familiarity, repeat, artist-set, DNP, ratings, Favorite, and contextual-feedback rules still apply after the format pool is built.
+WaveDeck 0.7.23 is the final 0.7 Local Music update. Portable `Data/local-mixes` books now provide Classic Rock, Grunge Era Rock, Classic Hits, Alternative ’80s, Rock and Metal, and Classic Country; the failed Yacht Rock experiment is removed, including the old portable default. Format books remain the eligibility authority: broad tags never create eligibility and Last.fm can only rank an allowed choice. Classic Rock gains its Southern/Heartland lane and treats all AC/DC as Classic Rock, including later albums. The reader now canonicalizes the legacy `AC` ID3 result as `AC/DC` in existing indexes and new scans. Artist Sets are pre-built before their first song and only begin when the requested full set can play. Compact radio diagnostics persist in `Data/radio-diagnostics.json` with the latest 3,000 selections across restarts. Direct thumb clicks visibly confirm the current vote until the next song; skips remain a softer internal negative without changing either button visually. Crossfade remains deferred to 0.8.x.
 
 The 0.7.21 thumbs buttons now learn Local Radio **in context**, not as global song likes/dislikes. Feedback is stored in `Data/local-radio-feedback.json` by station key and song key. Upvotes lift a candidate a little; downvotes lower it more; Next is a softer negative signal; natural end-of-track completion is neutral but tempers repeated skips. `DO_NOT_PLAY` remains absolute and personal-rating/Favorite pool selection remains ahead of feedback. For Song Radio, a positive song can become one of at most four soft secondary seeds: it can gently broaden the neighborhood, but the original seed remains dominant. Thumbs never stay visually selected.
 
-Still pending: pre-build Artist Sets before their first song (do not start a four-play unless four eligible tracks exist), and persist the compact 3,000-entry diagnostic history across restarts.
+Still pending: crossfade Local Music playback as the first 0.8.x feature.
 
 ## Last.fm integration
 

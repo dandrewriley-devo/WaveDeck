@@ -4,6 +4,9 @@ const { normalize, radioArtist } = require('./music-tags');
 
 const DEFAULT_MIX_DIRECTORY = path.resolve(__dirname, '..', '..', 'defaults', 'local-mixes');
 const DATA_DIRECTORY_NAME = 'local-mixes';
+// These books were shipped as experiments but have since been retired. Removing
+// them here also removes the old copied default from portable Data.
+const RETIRED_FORMAT_BOOKS = new Set(['yacht-rock.json']);
 
 const exact = (left, right) => Boolean(left && right && normalize(left) === normalize(right));
 const uniqueText = values => [...new Map((Array.isArray(values) ? values : [])
@@ -24,6 +27,10 @@ function ensureFormatBooks(dataDir) {
   const destination = mixDirectory(dataDir);
   try {
     fs.mkdirSync(destination, { recursive: true });
+    for (const name of RETIRED_FORMAT_BOOKS) {
+      const target = path.join(destination, name);
+      if (fs.existsSync(target)) fs.rmSync(target);
+    }
     for (const name of fs.readdirSync(DEFAULT_MIX_DIRECTORY)) {
       if (!name.toLowerCase().endsWith('.json')) continue;
       const source = path.join(DEFAULT_MIX_DIRECTORY, name);
@@ -46,7 +53,8 @@ function cleanRule(value) {
     artist,
     fromYear: Number.isInteger(fromYear) ? fromYear : null,
     toYear: Number.isInteger(toYear) ? toYear : null,
-    tier: String(value.tier || '').trim()
+    tier: String(value.tier || '').trim(),
+    allowAnyYear: value.allowAnyYear === true
   };
 }
 
@@ -116,8 +124,8 @@ function isTrackEligibleForMix(track, mix) {
   if (!formatMember) return { eligible: false, reason: 'outside curated Local Mix roster', tier: '' };
   if (mix.policy.songSpecific && !coreSong) return { eligible: false, reason: 'not a reviewed song for this Local Mix', tier: '' };
   const year = yearOf(track);
-  const from = rule?.fromYear ?? mix.policy.fromYear;
-  const to = rule?.toYear ?? mix.policy.toYear;
+  const from = rule?.allowAnyYear ? null : (rule?.fromYear ?? mix.policy.fromYear);
+  const to = rule?.allowAnyYear ? null : (rule?.toYear ?? mix.policy.toYear);
   if (year !== null && ((from !== null && year < from) || (to !== null && year > to))) return { eligible: false, reason: 'outside Local Mix era', tier: '' };
   if (year === null && !coreSong && !(coreArtist && mix.policy.unknownYear === 'allowOnlyForCoreArtistWhenNoExplicitExclusionApplies')) {
     return { eligible: false, reason: 'missing trustworthy era data', tier: '' };

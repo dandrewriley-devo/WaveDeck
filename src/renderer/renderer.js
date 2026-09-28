@@ -69,6 +69,8 @@ let selectedRecordingId = "";
 let draggedPresetId = null;
 let listeningHistory = { version: 1, stations: {} };
 let currentPlayerStatus = null;
+let selectedFeedbackTrackId = '';
+let selectedFeedbackKind = '';
 let expandedStationId = "";
 const collapsedGroups = new Set();
 const collapsedSubgroups = new Set();
@@ -479,8 +481,14 @@ function showMusicPlayback(status) {
   if (status.state === 'error') nowPlaying.textContent = status.message;
   musicContextLabel.textContent = music.label || 'Music';
   const feedbackEnabled = active && ['artist', 'radio', 'mix'].includes(music.mode) && Boolean(track);
+  if (selectedFeedbackTrackId !== String(track?.id || '')) {
+    selectedFeedbackTrackId = '';
+    selectedFeedbackKind = '';
+  }
   localThumbUpBtn.disabled = !feedbackEnabled;
   localThumbDownBtn.disabled = !feedbackEnabled;
+  localThumbUpBtn.classList.toggle('feedback-selected', feedbackEnabled && selectedFeedbackKind === 'up');
+  localThumbDownBtn.classList.toggle('feedback-selected', feedbackEnabled && selectedFeedbackKind === 'down');
   for (const row of listEl.querySelectorAll('[data-music-id]')) row.classList.toggle('active', row.dataset.musicId === track?.id);
   updateActiveHighlight();
 }
@@ -525,13 +533,21 @@ localMixesSectionToggleBtn.addEventListener('click', async () => {
 });
 localThumbUpBtn.addEventListener('click', async () => {
   localThumbUpBtn.disabled = true;
-  try { await window.wavedeck.sendMusicFeedback('up'); }
+  try {
+    await window.wavedeck.sendMusicFeedback('up');
+    selectedFeedbackTrackId = String(currentPlayerStatus?.currentMusic?.track?.id || '');
+    selectedFeedbackKind = 'up';
+  }
   catch (error) { nowPlaying.textContent = error.message; }
   finally { setTimeout(() => showMusicPlayback(currentPlayerStatus), 120); }
 });
 localThumbDownBtn.addEventListener('click', async () => {
   localThumbDownBtn.disabled = true;
-  try { await window.wavedeck.sendMusicFeedback('down'); }
+  try {
+    await window.wavedeck.sendMusicFeedback('down');
+    selectedFeedbackTrackId = String(currentPlayerStatus?.currentMusic?.track?.id || '');
+    selectedFeedbackKind = 'down';
+  }
   catch (error) { nowPlaying.textContent = error.message; }
   finally { setTimeout(() => showMusicPlayback(currentPlayerStatus), 120); }
 });

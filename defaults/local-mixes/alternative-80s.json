@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "alternative-80s",
+  "name": "Alternative ’80s",
+  "description": "New wave, college rock, post-punk, and alternative rock from the 1980s.",
+  "researchStatus": "broad-format-first-draft",
+  "formatPolicy": { "trackYear": { "from": 1978, "to": 1989 }, "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies", "lastFm": "rankApprovedCandidatesOnly", "sharedGenreTags": "neverCreateEligibility", "feedbackScope": "stationOnly" },
+  "sourceBasis": [
+    { "source": "AllMusic — New Wave", "url": "https://www.allmusic.com/style/new-wave-ma0000002750" },
+    { "source": "AllMusic — Post-Punk", "url": "https://www.allmusic.com/style/post-punk-ma0000004456" },
+    { "source": "AllMusic — College Rock", "url": "https://www.allmusic.com/style/college-rock-ma0000002644" }
+  ],
+  "coreArtists": ["The Fixx", "INXS", "New Order", "R.E.M.", "Simple Minds", "The Cars", "The Cure", "The Police", "The Smiths", "The Psychedelic Furs", "The Replacements", "The Smithereens", "The Talking Heads", "Thompson Twins", "U2", "XTC"],
+  "approvedArtists": ["A Flock of Seagulls", "Big Country", "Depeche Mode", "Echo & the Bunnymen", "Elvis Costello", "General Public", "Howard Jones", "Joe Jackson", "Midnight Oil", "Modern English", "Peter Murphy", "Siouxsie and the Banshees", "The B-52's", "The Church", "The English Beat", "The Go-Go's", "The Human League", "The Jam", "The Jesus and Mary Chain", "The Pretenders", "The Psychedelic Furs", "The Romantics", "The Stranglers", "The Style Council", "The Sundays", "Violent Femmes", "Yazoo"],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [["The Fixx", "One Thing Leads to Another"], ["U2", "New Year's Day"], ["R.E.M.", "The One I Love"], ["INXS", "Don't Change"]],
+  "maintenanceNotes": ["Keep this station in the alternative/new-wave lane rather than generic 1980s pop."]
+}

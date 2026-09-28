@@ -2,6 +2,10 @@ const path = require('path');
 const crypto = require('crypto');
 const normalize = (value) => String(value ?? '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 const list = (value) => (Array.isArray(value) ? value : String(value || '').split(/[;|]/)).map(String).map(s => s.trim()).filter(Boolean);
+// Some ID3 readers treat the slash in AC/DC as an artist separator and leave
+// only "AC" in the primary artist field. Canonicalize that known legacy form
+// everywhere WaveDeck displays or matches an artist.
+const canonicalArtist = value => normalize(value) === 'ac' ? 'AC/DC' : String(value || '').trim();
 function extractTrack(metadata, relativePath, library = 'portable') {
   const c = metadata.common || {};
   const custom = {};
@@ -48,10 +52,10 @@ function extractTrack(metadata, relativePath, library = 'portable') {
   // Preserve the historical 0–10 field for compatibility while ratingStars is the canonical 0–5 value.
   const rating = ratingStars === null ? null : Math.round(ratingStars * 2);
   const title = c.title || path.basename(relativePath, path.extname(relativePath));
-  const artist = c.artist || '';
+  const artist = canonicalArtist(c.artist || '');
   return {
     id: crypto.createHash('sha256').update(`${library}\0${relativePath}`).digest('hex'), relativePath, library,
-    title, artist, artists: c.artists || list(artist), album: c.album || '', albumArtist: c.albumartist || '',
+    title, artist, artists: (c.artists || list(artist)).map(canonicalArtist), album: c.album || '', albumArtist: canonicalArtist(c.albumartist || ''),
     year: c.year || c.originalyear || null, genres: c.genre || [], composer: c.composer || [],
     comments: (c.comment || []).map(v => typeof v === 'string' ? v : v.text || ''),
     track: c.track?.no || 0, disc: c.disk?.no || 0, duration: metadata.format?.duration || 0,
@@ -71,5 +75,5 @@ function compilation(track) {
   return /^(various( artists)?|va|v\.a\.|soundtrack|original (motion picture )?(soundtrack|cast))$/i.test(track.albumArtist || '') ||
     /soundtrack|original motion picture/i.test(track.album || '');
 }
-function radioArtist(track) { return !compilation(track) && track.albumArtist || track.artist; }
-module.exports = { extractTrack, normalize, compilation, radioArtist };
+function radioArtist(track) { return canonicalArtist((!compilation(track) && track.albumArtist) || track.artist); }
+module.exports = { extractTrack, normalize, canonicalArtist, compilation, radioArtist };

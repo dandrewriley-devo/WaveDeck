@@ -114,24 +114,17 @@ async function run() {
       track('classic-aerosmith', { artist: 'Aerosmith', albumArtist: 'Aerosmith', title: 'Sweet Emotion', year: 1975 })
     ];
     const portableMixData = path.join(temp, 'mix-format-books');
-    assert.deepEqual(listLocalMixes(portableMixData).map(mix => mix.id), ['classic-rock', 'grunge-era-rock', 'yacht-rock'], 'all shipped Local Mix books copy to portable Data');
+    assert.deepEqual(listLocalMixes(portableMixData).map(mix => mix.id), ['alternative-80s', 'classic-country', 'classic-hits', 'classic-rock', 'grunge-era-rock', 'rock-and-metal'], 'all shipped Local Mix books copy to portable Data');
     const classicMix = resolveLocalMix('classic-rock', classicSeedTracks, portableMixData);
     assert.equal(classicMix.seeds.length, 4, 'Classic Rock resolves its curated seed tracks from the Local Music library');
     assert.equal(isTrackEligibleForMix(track('early-beatles', { artist: 'The Beatles', title: 'Act Naturally', year: 1965 }), classicMix).eligible, false, 'Classic Rock rejects early Beatles');
     assert.equal(isTrackEligibleForMix(track('late-aerosmith', { artist: 'Aerosmith', title: 'Under My Skin', year: 2001 }), classicMix).eligible, false, 'Classic Rock rejects post-format Aerosmith');
+    assert.equal(isTrackEligibleForMix(track('black-ice', { artist: 'AC/DC', title: 'Rock ’n’ Roll Train', year: 2008 }), classicMix).eligible, true, 'Classic Rock keeps later AC/DC eligible');
     assert.equal(isTrackEligibleForMix(classicSeedTracks[0], classicMix).eligible, true, 'Classic Rock keeps its intended core material');
     const classicRadio = new MusicRadio({ dataDir: path.join(temp, 'classic-format'), now: () => now, random: () => 0 });
     const modernColdplay = track('coldplay', { artist: 'Coldplay', artists: ['Coldplay'], title: 'Charlie Brown', year: 2011, rating: 10, similarArtists: ['U2'] });
     assert.equal(classicRadio.choose([...classicSeedTracks, modernColdplay], classicMix, 'mix').artist, 'Boston', 'Last.fm similarity cannot admit a non-format Classic Rock artist');
-    const yachtTracks = [
-      track('yacht-1', { artist: 'The Doobie Brothers', title: 'What a Fool Believes', year: 1978 }),
-      track('yacht-2', { artist: 'Steely Dan', title: 'Peg', year: 1977 }),
-      track('yacht-3', { artist: 'Toto', title: 'Rosanna', year: 1982 }),
-      track('yacht-4', { artist: 'Christopher Cross', title: 'Sailing', year: 1979 })
-    ];
-    const yachtMix = resolveLocalMix('yacht-rock', yachtTracks, portableMixData);
-    assert.equal(isTrackEligibleForMix(track('nyacht', { artist: 'The Doobie Brothers', title: 'Listen to the Music', year: 1972 }), yachtMix).eligible, false, 'Yacht Rock keeps its song-specific core');
-    assert.equal(isTrackEligibleForMix(yachtTracks[0], yachtMix).eligible, true, 'Yacht Rock admits reviewed core songs');
+    assert.throws(() => resolveLocalMix('yacht-rock', classicSeedTracks, portableMixData), /no longer available/, 'the retired Yacht Rock book is removed from portable Data');
     const grungeTracks = [
       track('grunge-1', { artist: 'Nirvana', title: 'Come as You Are', year: 1991 }),
       track('grunge-2', { artist: 'Pearl Jam', title: 'Even Flow', year: 1991 }),

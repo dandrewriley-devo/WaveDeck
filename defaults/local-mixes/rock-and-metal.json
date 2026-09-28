@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "rock-and-metal",
+  "name": "Rock and Metal",
+  "description": "Hard rock and metal from the classic era through the modern legacy bands.",
+  "researchStatus": "broad-format-first-draft",
+  "formatPolicy": { "trackYear": { "from": 1970, "to": 2010 }, "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies", "lastFm": "rankApprovedCandidatesOnly", "sharedGenreTags": "neverCreateEligibility", "feedbackScope": "stationOnly" },
+  "sourceBasis": [
+    { "source": "AllMusic — Hard Rock", "url": "https://www.allmusic.com/style/hard-rock-ma0000002636" },
+    { "source": "AllMusic — Heavy Metal", "url": "https://www.allmusic.com/style/heavy-metal-ma0000002629" },
+    { "source": "AllMusic — Arena Rock", "url": "https://www.allmusic.com/style/arena-rock-ma0000002390" }
+  ],
+  "coreArtists": ["AC/DC", "Aerosmith", "Black Sabbath", "Def Leppard", "Dio", "Iron Maiden", "Judas Priest", "Kiss", "Megadeth", "Metallica", "Motörhead", "Ozzy Osbourne", "Pantera", "Queensrÿche", "Scorpions", "Van Halen"],
+  "approvedArtists": ["Accept", "Anthrax", "Blue Öyster Cult", "Cinderella", "Deep Purple", "Dokken", "Europe", "Great White", "Heaven & Hell", "Helmet", "Living Colour", "Mötley Crüe", "Poison", "Ratt", "Rainbow", "Skid Row", "Slayer", "Tesla", "Twisted Sister", "UFO", "Whitesnake", "Y&T"],
+  "artistRules": [{ "artist": "AC/DC", "allowAnyYear": true }],
+  "excludedArtists": [],
+  "seedSuggestions": [["AC/DC", "Back in Black"], ["Black Sabbath", "Paranoid"], ["Van Halen", "Panama"], ["Metallica", "Enter Sandman"]],
+  "maintenanceNotes": ["This is a broad guitar-driven hard-rock and metal station, not an extreme-metal-only station."]
+}

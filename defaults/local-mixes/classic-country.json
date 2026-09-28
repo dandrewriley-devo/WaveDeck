@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "classic-country",
+  "name": "Classic Country",
+  "description": "The enduring country hits and artists from the traditional, outlaw, and 1980s/early-1990s eras.",
+  "researchStatus": "broad-format-first-draft",
+  "formatPolicy": { "trackYear": { "from": 1955, "to": 1995 }, "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies", "lastFm": "rankApprovedCandidatesOnly", "sharedGenreTags": "neverCreateEligibility", "feedbackScope": "stationOnly" },
+  "sourceBasis": [
+    { "source": "AllMusic — Traditional Country", "url": "https://www.allmusic.com/style/traditional-country-ma0000002685" },
+    { "source": "AllMusic — Outlaw Country", "url": "https://www.allmusic.com/style/outlaw-country-ma0000002800" },
+    { "source": "Country Music Hall of Fame", "url": "https://www.countrymusichalloffame.org/" }
+  ],
+  "coreArtists": ["Alabama", "Charlie Daniels", "Conway Twitty", "Don Williams", "Dwight Yoakam", "George Jones", "George Strait", "Hank Williams Jr.", "Johnny Cash", "Keith Whitley", "Loretta Lynn", "Merle Haggard", "Reba McEntire", "Ronnie Milsap", "Tanya Tucker", "The Judds", "Waylon Jennings", "Willie Nelson"],
+  "approvedArtists": ["Barbara Mandrell", "Billy Joe Shaver", "Clint Black", "Crystal Gayle", "Earl Thomas Conley", "Eddie Rabbitt", "Gary Morris", "John Anderson", "Kathy Mattea", "Kenny Rogers", "Lee Greenwood", "Marty Robbins", "Ricky Skaggs", "Randy Travis", "Restless Heart", "Steve Wariner", "Vern Gosdin", "Vince Gill"],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [["George Strait", "Amarillo by Morning"], ["Alabama", "Mountain Music"], ["Waylon Jennings", "Luckenbach, Texas"], ["Randy Travis", "Forever and Ever, Amen"]],
+  "maintenanceNotes": ["Modern Country is intentionally separate and not included in this first Classic Country format book."]
+}

@@ -214,10 +214,28 @@ function sendToRadioLog(decision) {
   if (decision?.selected) {
     radioDiagnosticSession.push(decision);
     if (radioDiagnosticSession.length > RADIO_DIAGNOSTIC_LIMIT) radioDiagnosticSession.shift();
+    persistRadioDiagnostics();
   }
   if (radioLogWindow && !radioLogWindow.isDestroyed()) {
     radioLogWindow.webContents.send("music:debug-decision", decision);
   }
+}
+
+function radioDiagnosticsPath() { return path.join(getDataDir(), 'radio-diagnostics.json'); }
+function loadRadioDiagnostics() {
+  try {
+    const saved = JSON.parse(fs.readFileSync(radioDiagnosticsPath(), 'utf8'));
+    const selections = Array.isArray(saved?.selections) ? saved.selections : (Array.isArray(saved) ? saved : []);
+    radioDiagnosticSession.splice(0, radioDiagnosticSession.length, ...selections.filter(item => item && typeof item === 'object').slice(-RADIO_DIAGNOSTIC_LIMIT));
+  } catch {}
+}
+function persistRadioDiagnostics() {
+  try {
+    const destination = radioDiagnosticsPath();
+    fs.mkdirSync(path.dirname(destination), { recursive: true });
+    fs.writeFileSync(destination + '.tmp', JSON.stringify({ version: 1, selections: radioDiagnosticSession }) + '\n', 'utf8');
+    fs.renameSync(destination + '.tmp', destination);
+  } catch {}
 }
 
 function sendLastFmStatus(status) { sendToAll('music:lastfm-changed', status); }
@@ -988,6 +1006,7 @@ if (!hasSingleInstanceLock) {
         sendToAll("app:warning", message);
       }
     });
+    loadRadioDiagnostics();
 
     if (process.platform === "win32") {
       windowsSidebar = new WindowsSidebar({

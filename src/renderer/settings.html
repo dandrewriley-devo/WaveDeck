@@ -25,7 +25,7 @@
       <!-- INTERFACE -->
       <section id="tab-interface" class="panel hidden">
         <div class="general-meta">
-          <b>WaveDeck version <span id="aboutVersion">0.7.22</span></b>
+          <b>WaveDeck version <span id="aboutVersion">0.7.23</span></b>
           <span>Station library: <span id="aboutDataDir">Data</span></span>
         </div>
         <div class="general-sections">
@@ -323,113 +323,16 @@
         <div class="changelog">
           <h2>Changelog</h2>
 
-          <h3>WaveDeck 0.7.22 — Local Mix Format Books</h3>
+          <h3>WaveDeck 0.7.x — Local Music Update</h3>
           <ul>
-            <li>Local Mixes now read portable, editable JSON format books from <code>Data/local-mixes</code>.</li>
-            <li>Adds Yacht Rock and Grunge Era Rock alongside a completely rebuilt Classic Rock mix.</li>
-            <li>Each mix uses researched roster, song, era, and exception rules. Last.fm can rank an approved choice, but cannot admit an artist outside the mix.</li>
-            <li>Existing custom format-book edits are preserved on updates; WaveDeck only adds newly shipped books that are missing.</li>
-          </ul>
-
-          <h3>WaveDeck 0.7.21 — Local Mixes & Radio Feedback</h3>
-          <ul>
-            <li>Adds the Local Mixes toolbar button and the first curated Local Mix: Classic Rock.</li>
-            <li>Classic Rock uses a hand-picked core from the Local Music library, controlled artist relationships, and Last.fm only as a careful extension.</li>
-            <li>Thumbs-up and thumbs-down now train Local Radio in context. A skip is a softer thumbs-down; completed songs remain neutral.</li>
-            <li>Feedback is stored in portable Data per station and song. A Song Radio thumbs-up can act as a subtle secondary seed without replacing the original seed.</li>
-          </ul>
-
-          <h3>WaveDeck 0.7.20 — Local Radio Rotation</h3>
-          <ul>
-            <li>Adds persistent Song Repeat Wait, Artist Repeat Wait, and Artist Sets controls for Local Radio.</li>
-            <li>Defaults to 4 hours between the same song, 90 minutes between the same artist, and Single Tracks. Song Familiarity now increases toward Favor the Hits.</li>
-          </ul>
-
-          <h3>WaveDeck 0.7.19 — Local Station Presets</h3>
-          <ul>
-            <li>Lets you star a recently played Local Station to save its Song Radio or Artist Radio seed as a portable Local Station Preset.</li>
-            <li>Adds a Local Station Presets toolbar button, cleaner full-width Local Station rows, and a compact rescan icon.</li>
-          </ul>
-
-          <h3>WaveDeck 0.7.18 — Ten-Point Local Radio Ratings</h3>
-          <ul>
-            <li>Reads the Local Music <code>RATING</code> tag as 0–10, where 5 means 2.5 stars and 10 means 5 stars, then refreshes the portable music index read-only.</li>
-            <li>Uses Favorites and ratings of 7–10 for Favor the Hits, 5–10 for Balanced Mix, and 3–10 for Play Deep Cuts Too. Higher ratings have better odds within each pool.</li>
-          </ul>
-
-          <h3>WaveDeck 0.7.17 — Stronger Favor the Hits</h3>
-          <ul>
-            <li>Makes Favor the Hits first narrow to your Favorites and 3–5-star songs that fit the Local Station. Last.fm familiarity is used only when no such personal ratings exist.</li>
-          </ul>
-
-          <h3>WaveDeck 0.7.16 — Personal Local Radio</h3>
-          <ul>
-            <li>Honors <code>DO_NOT_PLAY=1</code> as an absolute Local Music exclusion, including albums and manually started Local Radio.</li>
-            <li>Copies Favorite and Do Not Play MP3 tags into the portable music index during a one-time metadata refresh.</li>
-            <li>Makes Favor the Hits prioritize your Favorites, highly rated songs, and familiar Last.fm tracks that already fit the Local Station.</li>
-          </ul>
-
-          <h3>WaveDeck 0.7.15 — Song Familiarity</h3>
-          <ul>
-            <li>Adds a three-stop Song Familiarity control for Local Radio: Favor the Hits, Balanced Mix, and Play Deep Cuts Too.</li>
-            <li>Uses Last.fm popularity only after a song has already qualified for the Local Station; missing popularity remains neutral.</li>
-          </ul>
-
-          <h3>WaveDeck 0.7.14 — Automatic Local Radio</h3>
-          <ul>
-            <li>Rebuilds Song Radio and Artist Radio around strong musical relationships instead of tuning sliders.</li>
-            <li>Prefers the seed album and artist, then shared credits, useful Last.fm similarities, and specific shared tags; broad tags alone cannot make a song eligible.</li>
-            <li>Uses Last.fm and read-only MP3 ratings only as helpful signals, and waits when there is no credible next song.</li>
-            <li>Shows recently played Local Stations in Local Music as soon as a generated station starts.</li>
-            <li>Moves the Local Station label below search and places the unboxed rescan icon before the song count.</li>
-          </ul>
-
-          <h3>WaveDeck 0.7.13 — Context Toolbar & Saved Layout</h3>
-          <ul>
-            <li>Keeps Streaming and Local Music toolbar controls separate, so Local Music status and rescan never appear while browsing Streaming.</li>
-            <li>Starts Streaming with Presets hidden and all station groups expanded.</li>
-            <li>Remembers Streaming display choices and expanded/collapsed station groups between restarts.</li>
-            <li>Changes Local Music Rescan to an icon control with an accessible tooltip.</li>
-          </ul>
-
-          <h3>WaveDeck 0.7.12 — Player Layout</h3>
-          <ul>
-            <li>Rebuilds the player controls around Streaming and Local Music tabs, with a context toolbar for each.</li>
-            <li>Moves playback controls into their own row and restores the full-width volume slider.</li>
-            <li>Keeps the Sidebar Mode toggle at the right edge of the toolbar without highlighting it.</li>
-            <li>Removes the Notepad feature.</li>
-          </ul>
-
-          <h3>WaveDeck 0.7.11 — Radio Tuning & Music Data Progress</h3>
-          <ul>
-            <li>Gives every Artist Radio and Song Radio tuning slider five clear stops.</li>
-            <li>Removes Outside Variety. Radio now stays in the acceptable related-music pool and waits when no eligible songs are available.</li>
-            <li>Adds a visual Last.fm progress bar while keeping track and queued-album counts visible.</li>
-            <li>MP3 ratings remain read-only; unrated tracks are still eligible and neutral.</li>
-          </ul>
-
-          <h3>WaveDeck 0.7.10 — Recent Stations & Ratings-Aware Radio</h3>
-          <ul>
-            <li>Shows the 10 most recently played stations in Music whenever search is empty, with one-click replay.</li>
-            <li>Moves Advanced Features and its folder and Last.fm settings to General; the Local Music tab appears only when enabled.</li>
-            <li>Adds a five-stop MP3 rating influence slider. Ratings are read-only; unrated tracks remain neutral.</li>
-          </ul>
-
-          <h3>WaveDeck 0.7.x — Bug Fixes</h3>
-          <ul>
-            <li>Refinements and fixes to Settings scrolling, Last.fm catch-up, Music Radio selection, and diagnostics.</li>
-          </ul>
-
-
-          <h3>WaveDeck 0.7.0 — Local Music Update</h3>
-          <ul>
-            <li>Advanced Features Music button with local MP3 search and read-only tag indexing.</li>
-            <li>Portable Music folder beside Data; one scan at launch and a manual Rescan button.</li>
-            <li>Play Album, continuous Artist Radio and Song Radio.</li>
-            <li>Albums flow into Artist Radio. Automatic selections respect a 120-minute repeat limit across restarts.</li>
-            <li>Flexible song selection, deep cuts, and varied transitions.</li>
-            <li>Artist and Song Radio tuning is available in Settings → Local Music, with sliders plus per-setting resets.</li>
-            <li>Song pause/resume and music-aware media keys. No album art or ReplayGain handling.</li>
+            <li>Adds Local Music: search and play your MP3 library.</li>
+            <li>Adds Last.fm indexing and enrichment of local music library.</li>
+            <li>Reads your MP3 tags into WaveDeck’s portable index.</li>
+            <li>Builds Local Radio around musical relationships using Last.fm data, and your own ratings.</li>
+            <li>Remembers Recently Played Local Stations and Local Station Presets.</li>
+            <li>Adds Local Mixes: broad, curated radio-style mixes using artist and era rules and Last.fm data.</li>
+            <li>Adds contextual thumbs-up and thumbs-down feedback for Local Radio. Votes give WaveDeck gentle, station-specific guidance.</li>
+            <li>Updates the player around separate Streaming and Local Music tabs.</li>
           </ul>
           <h3>WaveDeck 0.6.7 — Stream Recording & Settings Update</h3>
           <ul>

@@ -328,6 +328,8 @@ html, body{
 .transport button.recording svg { animation: recording-pulse 1.4s ease-in-out infinite; }
 .transport .feedback-button { color: #8e95a1; }
 .transport .feedback-button:disabled { color: #5c626c; }
+.transport .feedback-button.feedback-selected { background:rgba(143,234,179,.16); box-shadow:0 0 10px rgba(143,234,179,.36); color:#8feab3; }
+.transport .feedback-button.feedback-selected svg path { fill:currentColor; }
 
 @keyframes recording-pulse {
   0%, 100% { opacity: 1; }
