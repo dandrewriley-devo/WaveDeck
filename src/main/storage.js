@@ -304,6 +304,7 @@ function validatePreferences(value) {
   const localRadioSongRepeatHours = [2, 4, 6].includes(Number(value?.localRadioSongRepeatHours)) ? Number(value.localRadioSongRepeatHours) : 4;
   const localRadioArtistRepeatMinutes = [30, 90, 180].includes(Number(value?.localRadioArtistRepeatMinutes)) ? Number(value.localRadioArtistRepeatMinutes) : 90;
   const localRadioArtistSetSize = [1, 2, 3, 4].includes(Number(value?.localRadioArtistSetSize)) ? Number(value.localRadioArtistSetSize) : 1;
+  const localMusicCrossfadeEnabled = value?.localMusicCrossfadeEnabled !== false;
   const rawStreamingUi = value?.streamingUi && typeof value.streamingUi === "object" && !Array.isArray(value.streamingUi)
     ? value.streamingUi
     : {};
@@ -339,6 +340,7 @@ function validatePreferences(value) {
     localRadioSongRepeatHours,
     localRadioArtistRepeatMinutes,
     localRadioArtistSetSize,
+    localMusicCrossfadeEnabled,
     streamingUi: {
       presets: rawStreamingUi.presets === true,
       localPresets: rawStreamingUi.localPresets === true,
@@ -515,6 +517,7 @@ class PortableStorage {
       localRadioSongRepeatHours: preferences.localRadioSongRepeatHours,
       localRadioArtistRepeatMinutes: preferences.localRadioArtistRepeatMinutes,
       localRadioArtistSetSize: preferences.localRadioArtistSetSize,
+      localMusicCrossfadeEnabled: preferences.localMusicCrossfadeEnabled,
       launchInSidebarMode: preferences.launchInSidebarMode,
       settingsWindowBounds: preferences.settingsWindowBounds
         ? { ...preferences.settingsWindowBounds }
@@ -599,6 +602,13 @@ class PortableStorage {
     if ([2, 4, 6].includes(Number(value.songRepeatHours))) preferences.localRadioSongRepeatHours = Number(value.songRepeatHours);
     if ([30, 90, 180].includes(Number(value.artistRepeatMinutes))) preferences.localRadioArtistRepeatMinutes = Number(value.artistRepeatMinutes);
     if ([1, 2, 3, 4].includes(Number(value.artistSetSize))) preferences.localRadioArtistSetSize = Number(value.artistSetSize);
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences();
+  }
+
+  setLocalMusicCrossfadeEnabled(enabled) {
+    const preferences = this.readPreferences();
+    preferences.localMusicCrossfadeEnabled = enabled === true;
     this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
     return this.getUiPreferences();
   }

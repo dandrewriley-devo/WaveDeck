@@ -69,7 +69,9 @@ class MediaController {
     onStateChanged,
     beforeStationChange,
     beforeStop,
-    dataDir = ''
+    dataDir = '',
+    getCrossfadeEnabled = () => false,
+    onLocalStationStart = () => {}
   }) {
     this.player = player;
     this.getStations = getStations;
@@ -78,12 +80,15 @@ class MediaController {
     this.beforeStationChange = beforeStationChange || (async () => {});
     this.beforeStop = beforeStop || (async () => {});
     this.dataDir = dataDir;
+    this.getCrossfadeEnabled = getCrossfadeEnabled;
+    this.onLocalStationStart = onLocalStationStart;
     this.currentStation = null;
     this.currentRecording = null;
     this.mediaState = "stopped";
     this.music = null;
     this.musicGeneration = 0;
     this.musicRetry = null;
+    this.musicCrossfadeTimer = null;
     this.musicBusy = false;
   }
 
@@ -318,7 +323,7 @@ class MediaController {
   }
 
   clearMusic() {
-    this.musicGeneration++; clearTimeout(this.musicRetry); this.music = null;
+    this.musicGeneration++; clearTimeout(this.musicRetry); clearInterval(this.musicCrossfadeTimer); this.musicCrossfadeTimer = null; this.music = null;
   }
 
   async playMusic(id, mode = 'song') {
@@ -334,6 +339,7 @@ class MediaController {
       .sort((a, b) => a.disc - b.disc || a.track - b.track || a.relativePath.localeCompare(b.relativePath));
     if (mode === 'album' && !album.length) album.push(track);
     this.music = { seed: track, mode, radioKey: `${mode}:${track.songKey || track.id}`, current: null, queue: mode === 'album' ? album.map(t => t.id) : [], back: [], failed: new Set(), waiting: false };
+    this.onLocalStationStart(this.music.radioKey);
     this.onStationChanged(null);
     return this.loadMusic(mode === 'album' ? this.music.queue.shift() : id);
   }
@@ -349,27 +355,82 @@ class MediaController {
       profile: mix, mixId: mix.id, label: mix.name, mode: 'mix', radioKey: `mix:${mix.id}`,
       current: null, queue: [], back: [], failed: new Set(), waiting: false
     };
+    this.onLocalStationStart(this.music.radioKey);
     this.onStationChanged(null);
     return this.advanceMusic('start');
   }
 
   async loadMusic(id) {
+    clearInterval(this.musicCrossfadeTimer); this.musicCrossfadeTimer = null;
     const generation = this.musicGeneration;
     const track = await this.musicLibrary.resolve(id);
     if (track.doNotPlay) throw new Error('This song is marked Do Not Play.');
     if (!this.music || generation !== this.musicGeneration) return false;
-    this.music.current = { ...track }; delete this.music.current.path;
     this.music.waiting = false;
     this.mediaState = 'playing';
     await this.player.setStationGain(0);
     if (!this.music || generation !== this.musicGeneration) return false;
     await this.player.play(track.path);
     if (!this.music || generation !== this.musicGeneration) return false;
+    this.#commitMusicTrack(track, id);
+    this.#scheduleMusicCrossfade(track, generation);
+    return true;
+  }
+
+  #commitMusicTrack(track, id) {
+    this.music.current = { ...track }; delete this.music.current.path;
+    this.music.waiting = false;
+    this.mediaState = 'playing';
     this.music.back.push(id); this.music.back = this.music.back.slice(-100);
     this.musicRadio.record(track);
     try { this.onMusicTrack(track); } catch {}
     this.onStateChanged(this.getStatus());
-    return true;
+  }
+
+  #nextMusicId(reason) {
+    let id = this.music.queue.shift();
+    if (!id && this.music.mode === 'album') this.music.mode = 'artist';
+    if (!id) id = this.musicRadio.choose(this.musicLibrary.tracks, this.music.profile || this.music.seed, this.music.mode, this.music.failed, reason, this.music.radioKey)?.id;
+    return id;
+  }
+
+  #scheduleMusicCrossfade(track, generation) {
+    clearInterval(this.musicCrossfadeTimer); this.musicCrossfadeTimer = null;
+    if (!this.getCrossfadeEnabled() || !this.music || this.music.mode === 'song') return;
+    const fallbackDuration = Number(track?.duration) || 0;
+    if (fallbackDuration <= 1) return;
+    this.musicCrossfadeTimer = setInterval(() => {
+      if (!this.music || generation !== this.musicGeneration || this.mediaState !== 'playing' || this.player.isCrossfading) return;
+      const status = this.player.getStatus();
+      const duration = Number(status.duration) || fallbackDuration;
+      const position = Number(status.position) || 0;
+      const fadeSeconds = Math.min(8, Math.max(1, duration - 0.5));
+      if (duration > 1 && position >= duration - fadeSeconds) {
+        clearInterval(this.musicCrossfadeTimer); this.musicCrossfadeTimer = null;
+        void this.#beginMusicCrossfade(fadeSeconds * 1000, generation).catch(error => this.musicError(error));
+      }
+    }, 250);
+  }
+
+  async #beginMusicCrossfade(durationMs, generation) {
+    if (!this.music || generation !== this.musicGeneration || this.musicBusy) return false;
+    this.musicBusy = true;
+    let id = '';
+    try {
+      id = this.#nextMusicId('crossfade');
+      if (!id) return false;
+      const track = await this.musicLibrary.resolve(id);
+      if (track.doNotPlay) throw new Error('This song is marked Do Not Play.');
+      if (!this.music || generation !== this.musicGeneration) return false;
+      await this.player.crossfadeTo(track.path, durationMs);
+      if (!this.music || generation !== this.musicGeneration) return false;
+      this.#commitMusicTrack(track, id);
+      this.#scheduleMusicCrossfade(track, generation);
+      return true;
+    } catch (error) {
+      if (this.music && generation === this.musicGeneration && id) this.music.failed.add(id);
+      return false;
+    } finally { this.musicBusy = false; }
   }
 
   async advanceMusic(reason = 'next') {
@@ -381,9 +442,7 @@ class MediaController {
       if (reason === 'error' && this.music.current) this.music.failed.add(this.music.current.id);
       if (this.music.mode === 'song') { await this.stop(); return true; }
       while (this.music && generation === this.musicGeneration) {
-        let id = this.music.queue.shift();
-        if (!id && this.music.mode === 'album') this.music.mode = 'artist';
-        if (!id) id = this.musicRadio.choose(this.musicLibrary.tracks, this.music.profile || this.music.seed, this.music.mode, this.music.failed, reason, this.music.radioKey)?.id;
+        const id = this.#nextMusicId(reason);
         if (!id) {
           this.music.waiting = true;
           await this.player.stop();

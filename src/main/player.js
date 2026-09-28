@@ -485,8 +485,156 @@ class MpvPlayer {
   }
 }
 
+// Local Music crossfade needs two independent decoders. Streams continue to use
+// one ordinary MPV lane; the second lane is only started when Local Music needs
+// an overlap. Keeping this here means the rest of WaveDeck still talks to one
+// player-shaped object.
+class CrossfadeMpvPlayer {
+  constructor({ executable, ipcPath, platform = process.platform, onMetadata, onStatus, onEnded }) {
+    this.onMetadata = onMetadata || (() => {});
+    this.onStatus = onStatus || (() => {});
+    this.onEnded = onEnded || (() => {});
+    this.volume = 100;
+    this.muted = false;
+    this.stationGain = 0;
+    this.activeLane = 'a';
+    this.crossfade = null;
+    this.lanes = {};
+    for (const name of ['a', 'b']) {
+      const lanePath = platform === 'win32' ? `${ipcPath}-${name}` : `${ipcPath}-${name}`;
+      this.lanes[name] = new MpvPlayer({
+        executable,
+        ipcPath: lanePath,
+        platform,
+        onMetadata: metadata => { if (this.activeLane === name) this.onMetadata(metadata); },
+        onStatus: () => { if (this.activeLane === name) this.onStatus(this.getStatus()); },
+        onEnded: event => { if (this.activeLane === name) this.onEnded(event); }
+      });
+    }
+  }
+
+  getStatus() {
+    return { ...this.lanes[this.activeLane].getStatus(), volume: this.volume, muted: this.muted };
+  }
+
+  get isCrossfading() { return Boolean(this.crossfade); }
+
+  #otherLane(name = this.activeLane) { return name === 'a' ? 'b' : 'a'; }
+  async #stopLane(name) {
+    const lane = this.lanes[name];
+    if (!lane.process) return;
+    await lane.stop().catch(() => null);
+  }
+  #outputVolume(gain = 1) { return this.muted ? 0 : Math.max(0, Math.min(100, this.volume * gain)); }
+  #applyLaneVolume(name, gain = 1) {
+    const lane = this.lanes[name];
+    if (!lane.process) return;
+    void lane.setVolume(this.#outputVolume(gain)).catch(() => null);
+  }
+  async #cancelCrossfade({ stopBackground = true } = {}) {
+    const fade = this.crossfade;
+    if (!fade) return;
+    clearInterval(fade.timer);
+    this.crossfade = null;
+    this.#applyLaneVolume(this.activeLane, 1);
+    if (stopBackground) await this.#stopLane(this.#otherLane(this.activeLane));
+  }
+
+  async play(url) {
+    await this.#cancelCrossfade();
+    await Promise.all(['a', 'b'].map(name => this.#stopLane(name)));
+    this.activeLane = 'a';
+    await this.lanes.a.setStationGain(this.stationGain);
+    await this.lanes.a.play(url);
+    this.#applyLaneVolume('a', 1);
+    return true;
+  }
+
+  async crossfadeTo(url, durationMs = 8000) {
+    const outgoing = this.activeLane;
+    const incoming = this.#otherLane(outgoing);
+    await this.#cancelCrossfade();
+    await this.#stopLane(incoming);
+    const target = this.lanes[incoming];
+    await target.start();
+    await target.setStationGain(this.stationGain);
+    await target.setVolume(0);
+    try {
+      await target.play(url);
+    } catch (error) {
+      this.#applyLaneVolume(outgoing, 1);
+      await this.#stopLane(incoming);
+      throw error;
+    }
+    this.activeLane = incoming;
+    const duration = Math.max(1000, Math.round(Number(durationMs) || 8000));
+    const startedAt = Date.now();
+    const apply = () => {
+      const progress = Math.min(1, Math.max(0, (Date.now() - startedAt) / duration));
+      // Equal-power curves keep the middle of the blend from sounding weak.
+      this.#applyLaneVolume(outgoing, Math.cos(progress * Math.PI / 2));
+      this.#applyLaneVolume(incoming, Math.sin(progress * Math.PI / 2));
+      if (progress < 1) return;
+      const fade = this.crossfade;
+      if (fade?.timer) clearInterval(fade.timer);
+      this.crossfade = null;
+      this.#applyLaneVolume(incoming, 1);
+      void this.#stopLane(outgoing);
+    };
+    this.crossfade = { outgoing, incoming, timer: setInterval(apply, 100) };
+    apply();
+    this.onStatus(this.getStatus());
+    return true;
+  }
+
+  async setPaused(paused) {
+    const names = this.crossfade ? [this.crossfade.outgoing, this.crossfade.incoming] : [this.activeLane];
+    await Promise.all(names.map(name => this.lanes[name].setPaused(paused)));
+  }
+
+  async seek(seconds) { return this.lanes[this.activeLane].seek(seconds); }
+
+  async stop() {
+    await this.#cancelCrossfade({ stopBackground: false });
+    await Promise.all(['a', 'b'].map(name => this.#stopLane(name)));
+    this.activeLane = 'a';
+    return true;
+  }
+
+  async setVolume(value) {
+    this.volume = Math.min(Math.max(Number(value) || 0, 0), 100);
+    this.#applyLaneVolume(this.activeLane, 1);
+    if (this.crossfade) this.#applyLaneVolume(this.#otherLane(this.activeLane), 1);
+    this.onStatus(this.getStatus());
+    return this.volume;
+  }
+
+  async setStationGain(value) {
+    this.stationGain = Number(value) || 0;
+    const names = this.crossfade ? [this.crossfade.outgoing, this.crossfade.incoming] : [this.activeLane];
+    const results = await Promise.all(names.map(name => this.lanes[name].setStationGain(this.stationGain)));
+    return results[0];
+  }
+
+  async toggleMute() {
+    this.muted = !this.muted;
+    this.#applyLaneVolume(this.activeLane, 1);
+    if (this.crossfade) this.#applyLaneVolume(this.#otherLane(this.activeLane), 1);
+    this.onStatus(this.getStatus());
+    return this.muted;
+  }
+
+  close() {
+    if (this.crossfade?.timer) clearInterval(this.crossfade.timer);
+    this.crossfade = null;
+    this.lanes.a.close();
+    this.lanes.b.close();
+  }
+}
+
 module.exports = {
   MpvPlayer,
+  CrossfadeMpvPlayer,
   bitrateFromMetadata,
   bitrateFromTrackList,
   getIpcPath,

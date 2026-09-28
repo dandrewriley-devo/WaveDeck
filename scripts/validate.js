@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.7.23");
-assert.strictEqual(packageJson.wavedeckVersion, "0.7.23");
+assert.strictEqual(packageJson.version, "0.8.0");
+assert.strictEqual(packageJson.wavedeckVersion, "0.8.0");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -342,6 +342,7 @@ try {
     localRadioSongRepeatHours: 4,
     localRadioArtistRepeatMinutes: 90,
     localRadioArtistSetSize: 1,
+    localMusicCrossfadeEnabled: true,
     streamingUi: {
       presets: false,
       localPresets: false,
@@ -367,6 +368,7 @@ try {
     localRadioSongRepeatHours: 4,
     localRadioArtistRepeatMinutes: 90,
     localRadioArtistSetSize: 1,
+    localMusicCrossfadeEnabled: true,
     launchInSidebarMode: false,
     settingsWindowBounds: null,
     radioLogWindowBounds: null
@@ -378,6 +380,7 @@ try {
   assert.strictEqual(storage.setLastFmSettings({ enabled: true, apiKey: 'test-key' }).lastFmEnabled, true);
   assert.strictEqual(storage.setLocalRadioFamiliarity('hits').localRadioFamiliarity, 'hits');
   assert.deepStrictEqual(storage.setLocalRadioTuning({ songRepeatHours: 6, artistRepeatMinutes: 180, artistSetSize: 2 }).localRadioArtistSetSize, 2);
+  assert.strictEqual(storage.setLocalMusicCrossfadeEnabled(false).localMusicCrossfadeEnabled, false);
   assert.deepStrictEqual(storage.setStreamingUiState({
     presets: true,
     localPresets: true,
@@ -418,6 +421,7 @@ try {
     localRadioSongRepeatHours: 6,
     localRadioArtistRepeatMinutes: 180,
     localRadioArtistSetSize: 2,
+    localMusicCrossfadeEnabled: false,
     launchInSidebarMode: true,
     settingsWindowBounds: { x: 2100, y: 41, width: 1120, height: 841 },
     radioLogWindowBounds: { x: 14, y: 23, width: 864, height: 700 }
@@ -1225,16 +1229,18 @@ assert.ok(settingsHtml.includes('>Replace Library</button>'));
 assert.ok(settingsHtml.includes('id="downloadNewStations"'));
 assert.ok(settingsHtml.includes('id="launchInSidebarMode"'));
 assert.ok(settingsHtml.includes('id="proModeEnabled"'));
-assert.ok(settingsHtml.includes('id="proMusicSettings"'));
+assert.ok(!settingsHtml.includes('id="proMusicSettings"'));
 assert.ok(settingsHtml.includes('data-tab="localmusic" hidden>Local Music</button>'));
 assert.ok(settingsHtml.indexOf('data-tab="groups"') < settingsHtml.indexOf('data-tab="localmusic"'));
 assert.ok(settingsHtml.indexOf('data-tab="localmusic"') < settingsHtml.indexOf('data-tab="about"'));
 assert.ok(settingsHtml.includes('id="tab-localmusic"'));
+assert.ok(settingsHtml.includes('WaveDeck 0.8.0 - Crossfade Local Music'));
 assert.ok(settingsHtml.includes('WaveDeck 0.7.x — Local Music Update'));
 assert.ok(!settingsHtml.includes('WaveDeck 0.7.9 —'));
 assert.ok(settingsHtml.includes('Enable Advanced Features'));
 assert.ok(settingsHtml.includes('id="localRadioTitle"'));
-assert.ok(settingsHtml.includes('WaveDeck never plays a song tagged DO_NOT_PLAY'));
+assert.ok(settingsHtml.includes('Shape Your Local Radio'));
+assert.ok(settingsHtml.includes('Use these sliders to shape your Local Radio and Local Mixes'));
 assert.ok(settingsHtml.includes('id="localRadioFamiliarity"'));
 assert.ok(settingsHtml.includes('Favor the Hits'));
 assert.ok(settingsHtml.includes('Balanced Mix'));
@@ -1245,7 +1251,9 @@ assert.ok(!settingsHtml.includes('id="resetAllRadioRules"'));
 assert.ok(settingsHtml.includes('id="chooseAdditionalMusicFolderBtn"'));
 assert.ok(settingsHtml.includes('id="lastFmEnabled"'));
 assert.ok(settingsHtml.includes('id="lastFmApiKey"'));
-assert.ok(settingsHtml.includes('Ctrl + Alt + Shift + F'));
+assert.ok(settingsHtml.includes('id="queueLastFmRefreshBtn"'));
+assert.ok(settingsHtml.includes('id="openRadioLogBtn"'));
+assert.ok(settingsHtml.includes('id="localMusicCrossfade"'));
 assert.ok(settingsHtml.includes("WaveDeck_Library.json"));
 assert.ok(settingsHtml.indexOf('id="stationEditorHome"') < settingsHtml.indexOf('class="listening-history-bar"'));
 assert.ok(settingsHtml.includes('id="resetListeningBtn"'));

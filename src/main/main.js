@@ -4,7 +4,7 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 
-const { MpvPlayer, getIpcPath, getMpvExecutable } = require("./player");
+const { CrossfadeMpvPlayer, getIpcPath, getMpvExecutable } = require("./player");
 const { MediaController, serializeTransport } = require("./media-controller");
 const {
   StreamRecorder,
@@ -89,6 +89,7 @@ let settingsWindow = null;
 let radioLogWindow = null;
 const radioDiagnosticSession = [];
 const RADIO_DIAGNOSTIC_LIMIT = 3000;
+let radioDiagnosticStationKey = '';
 let storage = null;
 let player = null;
 let recordingLibrary = null;
@@ -210,6 +211,13 @@ function sendToAll(channel, payload) {
   }
 }
 
+function beginRadioDiagnosticSession(stationKey = '') {
+  radioDiagnosticStationKey = String(stationKey || '');
+  radioDiagnosticSession.splice(0, radioDiagnosticSession.length);
+  persistRadioDiagnostics();
+  if (radioLogWindow && !radioLogWindow.isDestroyed()) radioLogWindow.webContents.send('music:debug:reset');
+}
+
 function sendToRadioLog(decision) {
   if (decision?.selected) {
     radioDiagnosticSession.push(decision);
@@ -226,6 +234,7 @@ function loadRadioDiagnostics() {
   try {
     const saved = JSON.parse(fs.readFileSync(radioDiagnosticsPath(), 'utf8'));
     const selections = Array.isArray(saved?.selections) ? saved.selections : (Array.isArray(saved) ? saved : []);
+    radioDiagnosticStationKey = String(saved?.stationKey || selections.at(-1)?.stationKey || '');
     radioDiagnosticSession.splice(0, radioDiagnosticSession.length, ...selections.filter(item => item && typeof item === 'object').slice(-RADIO_DIAGNOSTIC_LIMIT));
   } catch {}
 }
@@ -233,7 +242,7 @@ function persistRadioDiagnostics() {
   try {
     const destination = radioDiagnosticsPath();
     fs.mkdirSync(path.dirname(destination), { recursive: true });
-    fs.writeFileSync(destination + '.tmp', JSON.stringify({ version: 1, selections: radioDiagnosticSession }) + '\n', 'utf8');
+    fs.writeFileSync(destination + '.tmp', JSON.stringify({ version: 1, stationKey: radioDiagnosticStationKey, selections: radioDiagnosticSession }) + '\n', 'utf8');
     fs.renameSync(destination + '.tmp', destination);
   } catch {}
 }
@@ -859,6 +868,12 @@ function installIpcHandlers() {
     sendToAll('ui:preferences-changed', preferences);
     return preferences;
   });
+  ipcMain.handle('music:local-radio:set-crossfade', (_event, enabled) => {
+    requireAdvancedFeatures();
+    const preferences = storage.setLocalMusicCrossfadeEnabled(enabled === true);
+    sendToAll('ui:preferences-changed', preferences);
+    return preferences;
+  });
 
   const requireAdvancedFeatures = () => {
     if (!storage.getUiPreferences().proModeEnabled) {
@@ -866,6 +881,8 @@ function installIpcHandlers() {
     }
   };
   ipcMain.handle('music:debug:get-last-decision', () => musicRadio?.getLastDecision() || null);
+  ipcMain.handle('music:debug:get-log', () => radioDiagnosticSession.map(item => JSON.parse(JSON.stringify(item))));
+  ipcMain.handle('music:debug:open-log', () => { openRadioLogWindow(); return true; });
   ipcMain.handle('music:debug:save-log', async () => {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const defaultPath = path.join(getDataDir(), `WaveDeck_Radio_Diagnostics_${timestamp}.json`);
@@ -1097,7 +1114,7 @@ if (!hasSingleInstanceLock) {
       projectRoot: PROJECT_ROOT
     });
 
-    player = new MpvPlayer({
+    player = new CrossfadeMpvPlayer({
       executable,
       ipcPath,
       onMetadata: (metadata) => sendToMain("player:metadata", metadata),
@@ -1112,7 +1129,9 @@ if (!hasSingleInstanceLock) {
       onStateChanged: broadcastPlayerStatus,
       beforeStationChange: () => recorder?.stop(),
       beforeStop: () => recorder?.stop(),
-      dataDir: getDataDir()
+      dataDir: getDataDir(),
+      getCrossfadeEnabled: () => storage.getUiPreferences().localMusicCrossfadeEnabled === true,
+      onLocalStationStart: stationKey => beginRadioDiagnosticSession(stationKey)
     }));
 
     musicLibrary = new MusicLibrary({ dataDir: getDataDir(), additionalMusicFolder: storage.getUiPreferences().additionalMusicFolder, onStatus: status => sendToMain('music:changed', status) });

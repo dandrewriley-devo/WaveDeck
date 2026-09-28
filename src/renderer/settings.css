@@ -5,6 +5,8 @@
   --text:#e0e0e0;
   --muted:#9a9a9a;
   --border:#3a3a3a;
+  --green:#8feab3;
+  --green-dark:#527b24;
 }
 
 *{ box-sizing:border-box; }
@@ -162,7 +164,7 @@ main{
 .lastfm-details{ display:grid; gap:8px; }
 .lastfm-status{ color:var(--muted); font-size:12px; overflow-wrap:anywhere; }
 .lastfm-progress-wrap{ align-items:center; display:flex; gap:10px; margin-top:4px; }
-.lastfm-progress{ accent-color:#68a9df; flex:1 1 auto; height:12px; min-width:100px; }
+.lastfm-progress{ accent-color:var(--green); flex:1 1 auto; height:12px; min-width:100px; }
 .lastfm-progress-label{ color:var(--muted); font-size:12px; font-variant-numeric:tabular-nums; min-width:38px; text-align:right; }
 
 .radio-tuning{
@@ -173,7 +175,7 @@ main{
 
 .local-radio-familiarity{ display:grid; gap:7px; margin-top:16px; }
 .local-radio-familiarity > label{ font-size:13px; font-weight:600; }
-.local-radio-familiarity input{ accent-color:#8feab3; width:100%; }
+.local-radio-familiarity input{ width:100%; }
 .local-radio-familiarity-stops{ color:var(--muted); display:grid; font-size:11px; gap:8px; grid-template-columns:1fr 1fr 1fr; }
 .local-radio-familiarity-stops.four{ grid-template-columns:repeat(4, minmax(0, 1fr)); }
 .local-radio-familiarity-stops.four span:nth-child(3){ text-align:center; }
@@ -217,8 +219,8 @@ main{
   padding:9px 10px;
 }
 .radio-rule-control .radio-rule-name{ color:#c1ddf5; }
-.radio-rule-control .radio-rule-range input{ accent-color:#68a9df; }
-.radio-rule-control .radio-rule-value{ color:#a9d4f5; }
+.radio-rule-control .radio-rule-range input{ accent-color:var(--green); }
+.radio-rule-control .radio-rule-value{ color:var(--green); }
 
 .radio-rule-heading{
   align-items:center;
@@ -245,10 +247,24 @@ main{
   margin-top:7px;
 }
 
-.radio-rule-range input{ accent-color:#68a9df; min-width:0; width:100%; }
+.radio-rule-range input{ accent-color:var(--green); min-width:0; width:100%; }
 .radio-rule-endpoint{ color:var(--muted); font-size:10px; line-height:1.2; }
 .radio-rule-endpoint.right{ text-align:right; }
-.radio-rule-value{ color:#a9d4f5; font-size:11px; margin-top:5px; text-align:center; }
+.radio-rule-value{ color:var(--green); font-size:11px; margin-top:5px; text-align:center; }
+
+input[type="range"]{
+  -webkit-appearance:none;
+  appearance:none;
+  background:transparent;
+  cursor:pointer;
+  height:18px;
+}
+input[type="range"]::-webkit-slider-runnable-track{ background:#505050; border-radius:999px; height:4px; }
+input[type="range"]::-webkit-slider-thumb{ -webkit-appearance:none; appearance:none; background:var(--green); border:2px solid #d8f7b7; border-radius:50%; height:14px; margin-top:-5px; width:14px; }
+input[type="range"]::-moz-range-track{ background:#505050; border-radius:999px; height:4px; }
+input[type="range"]::-moz-range-progress{ background:#505050; height:4px; }
+input[type="range"]::-moz-range-thumb{ background:var(--green); border:2px solid #d8f7b7; border-radius:50%; height:14px; width:14px; }
+input[type="range"]:focus-visible{ outline:2px solid var(--green); outline-offset:3px; }
 .radio-reset-all{ margin-top:3px; }
 
 .panel-help{
@@ -612,19 +628,19 @@ select:focus{
 
 .library-update-toggle input:checked + .toggle-switch,
 .preference-toggle input:checked + .toggle-switch{
-  background:#527b24;
+  background:var(--green-dark);
   border-color:#76a83f;
 }
 
 .library-update-toggle input:checked + .toggle-switch::after,
 .preference-toggle input:checked + .toggle-switch::after{
-  background:#d8f7b7;
+  background:var(--green);
   transform:translateX(16px);
 }
 
 .library-update-toggle input:focus-visible + .toggle-switch,
 .preference-toggle input:focus-visible + .toggle-switch{
-  outline:2px solid #8abf50;
+  outline:2px solid var(--green);
   outline-offset:2px;
 }
 
@@ -706,6 +722,8 @@ select:focus{
 .mt-6{ margin-top: 6px; }
 .mt-10{ margin-top: 10px; }
 .status-error{ color: #ffb3b3 !important; }
+.subtle-link{ align-self:flex-start; background:none; border:0; color:var(--green); cursor:pointer; font:inherit; font-size:12px; margin:4px 0 0; padding:0; text-decoration:underline; text-underline-offset:2px; }
+.subtle-link:hover{ color:#d8f7b7; }
 
 .launcher-box{
   display:flex;

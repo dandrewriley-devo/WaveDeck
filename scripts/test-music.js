@@ -139,6 +139,28 @@ async function run() {
     const tracks = [track('2', { track: 2 }), track('1'), track('3', { album: 'Other' }), track('blocked', { doNotPlay: true })]; const fakeLibrary = { tracks, resolve: async id => { const found = tracks.find(t => t.id === id); if (!found) throw Error('missing'); return { ...found, path: '/' + id }; } };
     const controller = serializeTransport(new MediaController({ player, getStations: () => [{ id: 's', url: 'https://example.org', name: 'Streaming', preset: true }] })); controller.configureMusic(fakeLibrary, new MusicRadio({ dataDir: path.join(temp, 'playback'), now: () => now }));
     await controller.playMusic('2', 'album'); assert.equal(controller.getStatus().currentMusic.track.id, '1'); await controller.handleEnded({ reason: 'eof' }); assert.equal(controller.getStatus().currentMusic.track.id, '2'); await controller.handleEnded({ reason: 'eof' }); assert.equal(controller.getStatus().currentMusic.mode, 'artist'); await controller.playMusic('1', 'radio'); assert.equal(controller.getStatus().currentMusic.seed.id, '1'); await assert.rejects(controller.playMusic('blocked', 'radio'), /marked Do Not Play/); await controller.playStationById('s'); assert.equal(controller.getStatus().currentMusic, null);
+    let position = 0; const crossfades = [];
+    const crossfadePlayer = {
+      isCrossfading: false,
+      getStatus: () => ({ playing: true, position, duration: 2 }),
+      setStationGain: async () => {}, play: async () => {}, stop: async () => {}, setPaused: async () => {}, seek: async () => {},
+      crossfadeTo: async (file, duration) => { crossfades.push({ file, duration }); position = 0; }
+    };
+    const crossfadeTracks = [
+      track('crossfade-a', { artist: 'Crossfade Artist', artists: ['Crossfade Artist'], duration: 2 }),
+      track('crossfade-b', { artist: 'Crossfade Artist', artists: ['Crossfade Artist'], duration: 2 })
+    ];
+    const crossfadeLibrary = { tracks: crossfadeTracks, resolve: async id => {
+      const found = crossfadeTracks.find(item => item.id === id); return { ...found, path: `/${id}` };
+    } };
+    const crossfadeController = serializeTransport(new MediaController({ player: crossfadePlayer, getStations: () => [], getCrossfadeEnabled: () => true }));
+    crossfadeController.configureMusic(crossfadeLibrary, new MusicRadio({ dataDir: path.join(temp, 'crossfade'), now: () => now, random: () => 0 }));
+    await crossfadeController.playMusic('crossfade-a', 'artist'); position = 1.5;
+    await new Promise(resolve => setTimeout(resolve, 350));
+    assert.equal(crossfades.length, 1, 'Local Music preselects and starts the next song during a crossfade');
+    assert.equal(crossfades[0].file, '/crossfade-b');
+    assert.equal(crossfadeController.getStatus().currentMusic.track.id, 'crossfade-b');
+    await crossfadeController.stop();
     console.log('Music tests passed: read-only MP3 scan, Last.fm enrichment, Local Radio tuning, repeat protection, diagnostics, album handoff, and source switching.');
   } finally { library?.close(); await fs.rm(temp, { recursive: true, force: true }); }
 }

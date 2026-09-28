@@ -46,7 +46,6 @@ const installLauncherBtn = document.getElementById("installLauncherBtn");
 const removeLauncherBtn = document.getElementById("removeLauncherBtn");
 const launchInSidebarMode = document.getElementById("launchInSidebarMode");
 const proModeEnabled = document.getElementById("proModeEnabled");
-const proMusicSettings = document.getElementById('proMusicSettings');
 const advancedFeaturesOff = document.getElementById('advancedFeaturesOff');
 const additionalMusicFolder = document.getElementById('additionalMusicFolder');
 const chooseAdditionalMusicFolderBtn = document.getElementById('chooseAdditionalMusicFolderBtn');
@@ -67,6 +66,9 @@ const localRadioArtistRepeat = document.getElementById('localRadioArtistRepeat')
 const localRadioArtistRepeatHelp = document.getElementById('localRadioArtistRepeatHelp');
 const localRadioArtistSet = document.getElementById('localRadioArtistSet');
 const localRadioArtistSetHelp = document.getElementById('localRadioArtistSetHelp');
+const localMusicCrossfade = document.getElementById('localMusicCrossfade');
+const queueLastFmRefreshBtn = document.getElementById('queueLastFmRefreshBtn');
+const openRadioLogBtn = document.getElementById('openRadioLogBtn');
 const sidebarStartupHint = document.getElementById("sidebarStartupHint");
 const resetListeningBtn = document.getElementById("resetListeningBtn");
 const platform = window.wavedeck.platform;
@@ -99,7 +101,6 @@ const LOCAL_RADIO_FAMILIARITY_COPY = {
 function renderProMusicSettings(preferences) {
   const proEnabled = preferences?.proModeEnabled === true;
   const folder = String(preferences?.additionalMusicFolder || '');
-  proMusicSettings.hidden = !proEnabled;
   advancedFeaturesOff.hidden = proEnabled;
   localMusicTab.hidden = !proEnabled;
   panels.get('localmusic').hidden = !proEnabled;
@@ -108,6 +109,7 @@ function renderProMusicSettings(preferences) {
   clearAdditionalMusicFolderBtn.disabled = !folder;
   lastFmEnabled.checked = preferences?.lastFmEnabled === true;
   lastFmApiKey.value = String(preferences?.lastFmApiKey || '');
+  localMusicCrossfade.checked = preferences?.localMusicCrossfadeEnabled !== false;
   lastFmDetails.hidden = !lastFmEnabled.checked;
   const familiarity = LOCAL_RADIO_FAMILIARITY.includes(preferences?.localRadioFamiliarity)
     ? preferences.localRadioFamiliarity
@@ -978,9 +980,9 @@ chooseAdditionalMusicFolderBtn.addEventListener('click', async () => {
     const folder = await window.wavedeck.chooseAdditionalMusicFolder();
     if (!folder) return;
     renderProMusicSettings(await window.wavedeck.setAdditionalMusicFolder(folder));
-    setStatus(statusInterface, 'Additional music folder saved. Use Music’s Rescan button when you want to index it.');
+    setStatus(statusLocalMusic, 'Additional music folder saved. Use Music’s Rescan button when you want to index it.');
   } catch (error) {
-    setStatus(statusInterface, `Could not save the music folder: ${error.message}`, false);
+    setStatus(statusLocalMusic, `Could not save the music folder: ${error.message}`, false);
   } finally {
     chooseAdditionalMusicFolderBtn.disabled = false;
   }
@@ -990,9 +992,9 @@ clearAdditionalMusicFolderBtn.addEventListener('click', async () => {
   clearAdditionalMusicFolderBtn.disabled = true;
   try {
     renderProMusicSettings(await window.wavedeck.setAdditionalMusicFolder(''));
-    setStatus(statusInterface, 'Additional music folder removed.');
+    setStatus(statusLocalMusic, 'Additional music folder removed.');
   } catch (error) {
-    setStatus(statusInterface, `Could not remove the music folder: ${error.message}`, false);
+    setStatus(statusLocalMusic, `Could not remove the music folder: ${error.message}`, false);
   }
 });
 
@@ -1001,10 +1003,10 @@ lastFmEnabled.addEventListener('change', async () => {
   try {
     const preferences = await window.wavedeck.setLastFmSettings({ enabled: lastFmEnabled.checked, apiKey: lastFmApiKey.value });
     renderProMusicSettings(preferences);
-    setStatus(statusInterface, lastFmEnabled.checked ? 'Last.fm music-data refresh is on.' : 'Last.fm music-data refresh is off.');
+    setStatus(statusLocalMusic, lastFmEnabled.checked ? 'Last.fm music-data refresh is on.' : 'Last.fm music-data refresh is off.');
   } catch (error) {
     lastFmEnabled.checked = !lastFmEnabled.checked;
-    setStatus(statusInterface, `Could not save Last.fm settings: ${error.message}`, false);
+    setStatus(statusLocalMusic, `Could not save Last.fm settings: ${error.message}`, false);
   } finally { lastFmEnabled.disabled = false; }
 });
 
@@ -1012,17 +1014,39 @@ lastFmApiKey.addEventListener('change', async () => {
   try {
     const preferences = await window.wavedeck.setLastFmSettings({ enabled: lastFmEnabled.checked, apiKey: lastFmApiKey.value });
     renderProMusicSettings(preferences);
-    setStatus(statusInterface, 'Last.fm API key saved.');
-  } catch (error) { setStatus(statusInterface, `Could not save the Last.fm API key: ${error.message}`, false); }
+    setStatus(statusLocalMusic, 'Last.fm API key saved.');
+  } catch (error) { setStatus(statusLocalMusic, `Could not save the Last.fm API key: ${error.message}`, false); }
 });
 
 testLastFmBtn.addEventListener('click', async () => {
   testLastFmBtn.disabled = true;
   try {
     renderLastFmStatus(await window.wavedeck.testLastFm());
-    setStatus(statusInterface, 'Last.fm background refresh is ready.');
-  } catch (error) { setStatus(statusInterface, `Last.fm connection could not start: ${error.message}`, false); }
+    setStatus(statusLocalMusic, 'Last.fm background refresh is ready.');
+  } catch (error) { setStatus(statusLocalMusic, `Last.fm connection could not start: ${error.message}`, false); }
   finally { testLastFmBtn.disabled = false; }
+});
+
+queueLastFmRefreshBtn.addEventListener('click', async () => {
+  queueLastFmRefreshBtn.disabled = true;
+  try {
+    renderLastFmStatus(await window.wavedeck.queueFullLastFmRefresh());
+    setStatus(statusLocalMusic, 'Last.fm catch-up refresh queued.');
+  } catch (error) { setStatus(statusLocalMusic, `Could not queue Last.fm refresh: ${error.message}`, false); }
+  finally { queueLastFmRefreshBtn.disabled = false; }
+});
+
+openRadioLogBtn.addEventListener('click', () => { void window.wavedeck.openMusicDebugLog(); });
+
+localMusicCrossfade.addEventListener('change', async () => {
+  localMusicCrossfade.disabled = true;
+  try {
+    renderProMusicSettings(await window.wavedeck.setLocalMusicCrossfade(localMusicCrossfade.checked));
+    setStatus(statusLocalMusic, localMusicCrossfade.checked ? 'Local Music crossfade is on.' : 'Local Music crossfade is off.');
+  } catch (error) {
+    localMusicCrossfade.checked = !localMusicCrossfade.checked;
+    setStatus(statusLocalMusic, `Could not save crossfade: ${error.message}`, false);
+  } finally { localMusicCrossfade.disabled = false; }
 });
 
 localRadioFamiliarity.addEventListener('input', () => {
