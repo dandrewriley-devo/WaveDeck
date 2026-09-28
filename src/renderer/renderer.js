@@ -359,10 +359,12 @@ async function renderMusic() {
       if (localMixesSectionVisible) {
         const mixes = await window.wavedeck.getLocalMixes();
         if (!musicVisible || sequence !== musicRenderSequence || query !== musicSearch.value) return;
-        listEl.append(createSectionTitle('Local Mixes', 'Curated Local Radio that learns what fits each station.'));
-        const block = element('div', 'local-mix-list');
-        block.append(...mixes.map(createLocalMixRow));
-        listEl.append(block);
+        if (mixes.length) {
+          listEl.append(createSectionTitle('Local Mixes', 'Curated Local Radio that learns what fits each station.'));
+          const block = element('div', 'local-mix-list');
+          block.append(...mixes.map(createLocalMixRow));
+          listEl.append(block);
+        }
       }
       const recent = (Array.isArray(history?.recentLocalStations) ? history.recentLocalStations : [])
         .filter(station => !localPresetSectionVisible || !savedKeys.has(station.key)).slice(0, 10);
@@ -1539,6 +1541,7 @@ window.wavedeck.onListeningHistoryChanged((history) => {
   if (mostPlayedSectionVisible) queueRender();
   if (musicVisible && !musicSearch.value.trim()) void renderMusic();
 });
+window.wavedeck.onLocalMixesChanged(() => { if (musicVisible && !musicSearch.value.trim()) void renderMusic(); });
 
 window.wavedeck.onSectionVisibilityChanged(setSectionVisibilityUi);
 window.wavedeck.onUiPreferencesChanged(setProModeUi);

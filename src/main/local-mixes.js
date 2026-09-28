@@ -4,6 +4,7 @@ const { normalize, radioArtist } = require('./music-tags');
 
 const DEFAULT_MIX_DIRECTORY = path.resolve(__dirname, '..', '..', 'defaults', 'local-mixes');
 const DATA_DIRECTORY_NAME = 'local-mixes';
+const MINIMUM_LOCAL_MIX_TRACKS = 20;
 // These books were shipped as experiments but have since been retired. Removing
 // them here also removes the old copied default from portable Data.
 const RETIRED_FORMAT_BOOKS = new Set(['yacht-rock.json']);
@@ -90,24 +91,84 @@ function cleanMix(raw, sourceFile) {
   };
 }
 
-function loadLocalMixes(dataDir) {
+function loadLocalMixInventory(dataDir) {
   const directory = dataDir ? ensureFormatBooks(dataDir) : DEFAULT_MIX_DIRECTORY;
   const mixes = [];
-  const seen = new Set();
   for (const name of fs.readdirSync(directory).sort((left, right) => left.localeCompare(right))) {
     if (!name.toLowerCase().endsWith('.json')) continue;
-    let mix;
-    try { mix = cleanMix(JSON.parse(fs.readFileSync(path.join(directory, name), 'utf8')), name); }
-    catch (error) { throw new Error(`Local Mix format book ${name} could not be read: ${error.message}`); }
-    if (seen.has(mix.id)) throw new Error(`Local Mix id ${mix.id} appears more than once in Data.`);
-    seen.add(mix.id); mixes.push(mix);
+    try {
+      const mix = cleanMix(JSON.parse(fs.readFileSync(path.join(directory, name), 'utf8')), name);
+      mixes.push({ ...mix, valid: true, builtIn: fs.existsSync(path.join(DEFAULT_MIX_DIRECTORY, name)) });
+    } catch (error) {
+      mixes.push({
+        id: `invalid:${name}`,
+        name: path.basename(name, path.extname(name)),
+        description: '', sourceFile: name, valid: false, builtIn: false,
+        error: `Could not read this Local Mix book: ${error.message}`
+      });
+    }
   }
-  if (!mixes.length) throw new Error('No Local Mix format books are available in Data.');
+  const duplicateIds = new Set();
+  const seen = new Set();
+  for (const mix of mixes) {
+    if (!mix.valid) continue;
+    if (seen.has(mix.id)) duplicateIds.add(mix.id);
+    seen.add(mix.id);
+  }
+  for (const mix of mixes) {
+    if (!mix.valid || !duplicateIds.has(mix.id)) continue;
+    mix.valid = false;
+    mix.error = `This Local Mix id appears more than once in Data.`;
+  }
+  return mixes;
+}
+
+function loadLocalMixes(dataDir) {
+  const mixes = loadLocalMixInventory(dataDir).filter(mix => mix.valid);
+  if (!mixes.length) throw new Error('No usable Local Mix format books are available in Data.');
   return mixes;
 }
 
 function listLocalMixes(dataDir) {
   return loadLocalMixes(dataDir).map(({ id, name, description, sourceFile }) => ({ id, name, description, sourceFile }));
+}
+
+function qualityForTrackCount(count) {
+  if (count < MINIMUM_LOCAL_MIX_TRACKS) return 'Needs more music';
+  if (count < 50) return 'Growing mix';
+  if (count < 150) return 'Solid mix';
+  if (count < 400) return 'Strong mix';
+  return 'Excellent mix';
+}
+
+function mixBookSignature(dataDir) {
+  const directory = dataDir ? ensureFormatBooks(dataDir) : DEFAULT_MIX_DIRECTORY;
+  try {
+    return fs.readdirSync(directory).filter(name => name.toLowerCase().endsWith('.json')).sort((left, right) => left.localeCompare(right))
+      .map(name => {
+        const stat = fs.statSync(path.join(directory, name));
+        return `${name}:${stat.size}:${stat.mtimeMs}`;
+      }).join('|');
+  } catch (error) {
+    return `unavailable:${error.message}`;
+  }
+}
+
+function getLocalMixAvailability(dataDir, tracks = [], enabledById = {}) {
+  const enabled = enabledById && typeof enabledById === 'object' ? enabledById : {};
+  return loadLocalMixInventory(dataDir).map(mix => {
+    if (!mix.valid) return { ...mix, enabled: false, eligibleTrackCount: 0, ready: false, quality: 'Unavailable' };
+    const eligibleTrackCount = tracks.reduce((count, track) => count + (!track?.doNotPlay && isTrackEligibleForMix(track, mix).eligible ? 1 : 0), 0);
+    const explicitlyEnabled = typeof enabled[mix.id] === 'boolean' ? enabled[mix.id] : null;
+    return {
+      id: mix.id, name: mix.name, description: mix.description, sourceFile: mix.sourceFile,
+      valid: true, builtIn: mix.builtIn,
+      enabled: explicitlyEnabled === null ? mix.builtIn : explicitlyEnabled,
+      eligibleTrackCount,
+      ready: eligibleTrackCount >= MINIMUM_LOCAL_MIX_TRACKS,
+      quality: qualityForTrackCount(eligibleTrackCount)
+    };
+  });
 }
 
 function matchingRule(track, mix) {
@@ -148,10 +209,10 @@ function resolveLocalMix(id, tracks = [], dataDir) {
   const definition = loadLocalMixes(dataDir).find(mix => mix.id === String(id || ''));
   if (!definition) throw new Error('That Local Mix is no longer available.');
   const eligibleTracks = tracks.filter(track => !track?.doNotPlay && isTrackEligibleForMix(track, definition).eligible);
-  if (eligibleTracks.length < 4) throw new Error(`${definition.name} needs at least four eligible songs in your Local Music library before it can play.`);
+  if (eligibleTracks.length < MINIMUM_LOCAL_MIX_TRACKS) throw new Error(`${definition.name} needs at least ${MINIMUM_LOCAL_MIX_TRACKS} eligible songs in your Local Music library before it can play.`);
   const seeds = definition.seeds.map(([artist, title]) => tracks.find(track => trackMatches(track, artist, title))).filter(Boolean);
   const fallbackSeeds = definition.coreSongs.map(([artist, title]) => tracks.find(track => trackMatches(track, artist, title))).filter(Boolean);
   return { ...definition, artists: uniqueText([...definition.coreArtists, ...definition.approvedArtists]), seeds: uniqueTracks([...seeds, ...fallbackSeeds]).slice(0, 30) };
 }
 
-module.exports = { listLocalMixes, resolveLocalMix, isTrackEligibleForMix, loadLocalMixes, ensureFormatBooks, trackArtists, yearOf };
+module.exports = { MINIMUM_LOCAL_MIX_TRACKS, listLocalMixes, loadLocalMixInventory, getLocalMixAvailability, mixBookSignature, qualityForTrackCount, resolveLocalMix, isTrackEligibleForMix, loadLocalMixes, ensureFormatBooks, trackArtists, yearOf };

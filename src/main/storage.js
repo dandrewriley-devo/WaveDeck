@@ -305,6 +305,14 @@ function validatePreferences(value) {
   const localRadioArtistRepeatMinutes = [30, 60, 90, 120, 180].includes(Number(value?.localRadioArtistRepeatMinutes)) ? Number(value.localRadioArtistRepeatMinutes) : 90;
   const localRadioArtistSetSize = [1, 2, 3, 4].includes(Number(value?.localRadioArtistSetSize)) ? Number(value.localRadioArtistSetSize) : 1;
   const localMusicCrossfadeEnabled = value?.localMusicCrossfadeEnabled !== false;
+  const localMixEnabled = {};
+  const rawLocalMixEnabled = value?.localMixEnabled;
+  if (rawLocalMixEnabled && typeof rawLocalMixEnabled === 'object' && !Array.isArray(rawLocalMixEnabled)) {
+    for (const [rawId, enabled] of Object.entries(rawLocalMixEnabled)) {
+      const id = String(rawId || '').trim();
+      if (/^[a-z0-9-]+$/.test(id) && typeof enabled === 'boolean') localMixEnabled[id] = enabled;
+    }
+  }
   const rawStreamingUi = value?.streamingUi && typeof value.streamingUi === "object" && !Array.isArray(value.streamingUi)
     ? value.streamingUi
     : {};
@@ -341,6 +349,7 @@ function validatePreferences(value) {
     localRadioArtistRepeatMinutes,
     localRadioArtistSetSize,
     localMusicCrossfadeEnabled,
+    localMixEnabled,
     streamingUi: {
       presets: rawStreamingUi.presets === true,
       localPresets: rawStreamingUi.localPresets === true,
@@ -518,6 +527,7 @@ class PortableStorage {
       localRadioArtistRepeatMinutes: preferences.localRadioArtistRepeatMinutes,
       localRadioArtistSetSize: preferences.localRadioArtistSetSize,
       localMusicCrossfadeEnabled: preferences.localMusicCrossfadeEnabled,
+      localMixEnabled: { ...preferences.localMixEnabled },
       launchInSidebarMode: preferences.launchInSidebarMode,
       settingsWindowBounds: preferences.settingsWindowBounds
         ? { ...preferences.settingsWindowBounds }
@@ -559,6 +569,15 @@ class PortableStorage {
     };
     this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
     return this.getStreamingUiState();
+  }
+
+  setLocalMixEnabled(id, enabled) {
+    const mixId = String(id || '').trim();
+    if (!/^[a-z0-9-]+$/.test(mixId)) throw new Error('That Local Mix is not valid.');
+    const preferences = this.readPreferences();
+    preferences.localMixEnabled = { ...preferences.localMixEnabled, [mixId]: Boolean(enabled) };
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences();
   }
 
   setLaunchInSidebarMode(enabled) {

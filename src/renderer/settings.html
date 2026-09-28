@@ -25,7 +25,7 @@
       <!-- INTERFACE -->
       <section id="tab-interface" class="panel hidden">
         <div class="general-meta">
-          <b>WaveDeck version <span id="aboutVersion">0.8.2</span></b>
+          <b>WaveDeck version <span id="aboutVersion">0.9.0</span></b>
           <span>Station library: <span id="aboutDataDir">Data</span></span>
         </div>
         <div class="general-sections">
@@ -319,6 +319,11 @@
           </div>
           <button id="openRadioLogBtn" class="subtle-link" type="button">Open Live Radio Log</button>
         </section>
+        <section class="local-music-section" aria-labelledby="localMixManagerTitle">
+          <div class="pro-music-settings-title" id="localMixManagerTitle">Manage Local Mixes</div>
+          <div class="hint">Choose which installed Local Mix books appear in Local Music. A mix needs at least 20 eligible songs before it can be played. Add optional books to <b>Data/local-mixes</b>; they stay off until you choose them.</div>
+          <div id="localMixManager" class="local-mix-manager" aria-live="polite">Checking installed Local Mixes…</div>
+        </section>
         <div id="statusLocalMusic" class="status"></div>
       </section>
 
@@ -335,6 +340,15 @@
         <div class="about-divider"></div>
         <div class="changelog">
           <h2>Changelog</h2>
+
+          <h3>WaveDeck 0.9.0 - Local Mix Expansion</h3>
+          <ul>
+            <li>Adds a Local Music settings page for managing every installed Local Mix book.</li>
+            <li>Shows each mix’s eligible-song count and a simple readiness guide, from Growing Mix to Excellent Mix.</li>
+            <li>Local Mixes now need at least 20 eligible songs before they appear for playback.</li>
+            <li>Optional JSON books added to <b>Data/local-mixes</b> are discovered automatically and stay hidden until you enable them.</li>
+            <li>Classic Hits appears first whenever it is ready to play.</li>
+          </ul>
 
           <h3>WaveDeck 0.8.0 - Crossfade Local Music</h3>
           <ul>

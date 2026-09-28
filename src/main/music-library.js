@@ -13,7 +13,7 @@ function canonicalTrack(track) {
 class MusicLibrary {
   constructor({ dataDir, onStatus = () => {}, additionalMusicFolder = '' }) {
     this.dataDir = dataDir; this.onStatus = onStatus; this.pending = new Map(); this.sequence = 0;
-    this.tracks = []; this.enabled = false; this.worker = null;
+    this.tracks = []; this.enabled = false; this.worker = null; this.revision = 0;
     this.additionalMusicFolder = additionalMusicFolder;
   }
   startWorker() {
@@ -44,7 +44,7 @@ class MusicLibrary {
   async enable({ scanOnEnable = false } = {}) {
     if (this.enabled) return this.initializing;
     this.enabled = true;
-    this.initializing = this.call('all').then(tracks => { this.tracks = tracks.map(canonicalTrack); }).catch(error => { this.enabled = false; throw error; });
+    this.initializing = this.call('all').then(tracks => { this.tracks = tracks.map(canonicalTrack); this.revision += 1; }).catch(error => { this.enabled = false; throw error; });
     await this.initializing;
     if (!this.enabled) return;
     if (scanOnEnable) void this.rescan().catch(error => this.onStatus({ message: error.message }));
@@ -54,11 +54,11 @@ class MusicLibrary {
     this.additionalMusicFolder = String(folder || '').trim();
     if (this.worker) {
       await this.call('set-roots', this.additionalMusicFolder);
-      this.tracks = (await this.call('all')).map(canonicalTrack);
+      this.tracks = (await this.call('all')).map(canonicalTrack); this.revision += 1;
     }
   }
   async rescan() {
-    const status = await this.call('scan'); this.tracks = (await this.call('all')).map(canonicalTrack); this.onStatus(status); return status;
+    const status = await this.call('scan'); this.tracks = (await this.call('all')).map(canonicalTrack); this.revision += 1; this.onStatus(status); return status;
   }
   async getLastFmStatus() { return this.call('lastfm:status'); }
   async queueLastFmAlbum(id) { return this.call('lastfm:queue-album', id); }

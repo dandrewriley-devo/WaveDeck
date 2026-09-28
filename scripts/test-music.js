@@ -8,7 +8,7 @@ const { MusicRadio, weight, COOLDOWN } = require('../src/main/music-radio');
 const { extractTrack, radioArtist } = require('../src/main/music-tags');
 const { MediaController, serializeTransport } = require('../src/main/media-controller');
 const { LastFmEnricher, popularityScore } = require('../src/main/lastfm-enricher');
-const { resolveLocalMix, listLocalMixes, isTrackEligibleForMix } = require('../src/main/local-mixes');
+const { resolveLocalMix, listLocalMixes, getLocalMixAvailability, isTrackEligibleForMix } = require('../src/main/local-mixes');
 
 function fixture() {
   const frame = (id, value) => { const data = Buffer.concat([Buffer.from([0]), Buffer.from(value)]); const header = Buffer.alloc(10); header.write(id); header.writeUInt32BE(data.length, 4); return Buffer.concat([header, data]); };
@@ -115,10 +115,18 @@ async function run() {
       track('classic-boston', { artist: 'Boston', albumArtist: 'Boston', title: 'Foreplay/Long Time', year: 1976 }),
       track('classic-pink', { artist: 'Pink Floyd', albumArtist: 'Pink Floyd', title: 'Comfortably Numb', year: 1979 }),
       track('classic-zeppelin', { artist: 'Led Zeppelin', albumArtist: 'Led Zeppelin', title: 'Ramble On', year: 1969 }),
-      track('classic-aerosmith', { artist: 'Aerosmith', albumArtist: 'Aerosmith', title: 'Sweet Emotion', year: 1975 })
+      track('classic-aerosmith', { artist: 'Aerosmith', albumArtist: 'Aerosmith', title: 'Sweet Emotion', year: 1975 }),
+      ...Array.from({ length: 16 }, (_value, index) => track(`classic-boston-${index}`, { artist: 'Boston', albumArtist: 'Boston', title: `Boston Song ${index}`, year: 1976 }))
     ];
     const portableMixData = path.join(temp, 'mix-format-books');
     assert.deepEqual(listLocalMixes(portableMixData).map(mix => mix.id), ['alternative-80s', 'classic-country', 'classic-hits', 'classic-rock', 'grunge-era-rock', 'rock-and-metal'], 'all shipped Local Mix books copy to portable Data');
+    let mixAvailability = getLocalMixAvailability(portableMixData, classicSeedTracks);
+    const classicAvailability = mixAvailability.find(mix => mix.id === 'classic-rock');
+    assert.equal(classicAvailability.ready, true, 'Local Mixes need at least twenty eligible songs before they can appear');
+    assert.equal(classicAvailability.enabled, true, 'shipped Local Mixes are available by default');
+    await fs.writeFile(path.join(portableMixData, 'local-mixes', 'outside-book.json'), JSON.stringify({ id: 'outside-book', name: 'Outside Book', description: 'Test optional book', coreArtists: ['Boston'] }));
+    mixAvailability = getLocalMixAvailability(portableMixData, classicSeedTracks);
+    assert.equal(mixAvailability.find(mix => mix.id === 'outside-book').enabled, false, 'new externally added Local Mix books start hidden');
     const classicMix = resolveLocalMix('classic-rock', classicSeedTracks, portableMixData);
     assert.equal(classicMix.seeds.length, 4, 'Classic Rock resolves its curated seed tracks from the Local Music library');
     assert.equal(isTrackEligibleForMix(track('early-beatles', { artist: 'The Beatles', title: 'Act Naturally', year: 1965 }), classicMix).eligible, false, 'Classic Rock rejects early Beatles');
@@ -133,7 +141,8 @@ async function run() {
       track('grunge-1', { artist: 'Nirvana', title: 'Come as You Are', year: 1991 }),
       track('grunge-2', { artist: 'Pearl Jam', title: 'Even Flow', year: 1991 }),
       track('grunge-3', { artist: 'Soundgarden', title: 'Black Hole Sun', year: 1994 }),
-      track('grunge-4', { artist: 'Stone Temple Pilots', title: 'Interstate Love Song', year: 1994 })
+      track('grunge-4', { artist: 'Stone Temple Pilots', title: 'Interstate Love Song', year: 1994 }),
+      ...Array.from({ length: 16 }, (_value, index) => track(`grunge-nirvana-${index}`, { artist: 'Nirvana', title: `Nirvana Song ${index}`, year: 1991 }))
     ];
     const grungeMix = resolveLocalMix('grunge-era-rock', grungeTracks, portableMixData);
     assert.equal(isTrackEligibleForMix(track('late-nu-metal', { artist: 'Linkin Park', title: 'In the End', year: 2000 }), grungeMix).eligible, false, 'Grunge Era Rock keeps later nu metal out');

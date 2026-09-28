@@ -69,6 +69,7 @@ const localRadioArtistRepeatHelp = document.getElementById('localRadioArtistRepe
 const localRadioArtistSet = document.getElementById('localRadioArtistSet');
 const localRadioArtistSetHelp = document.getElementById('localRadioArtistSetHelp');
 const localMusicCrossfade = document.getElementById('localMusicCrossfade');
+const localMixManager = document.getElementById('localMixManager');
 const queueLastFmRefreshBtn = document.getElementById('queueLastFmRefreshBtn');
 const openRadioLogBtn = document.getElementById('openRadioLogBtn');
 const sidebarStartupHint = document.getElementById("sidebarStartupHint");
@@ -129,7 +130,7 @@ function renderProMusicSettings(preferences) {
   renderSongRepeatStop(songRepeatHours);
   localRadioArtistRepeatHelp.textContent = `${artistRepeatMinutes} minutes. The artist cannot return until this wait has passed.`;
   localRadioArtistSetHelp.textContent = artistSetSize === 1 ? 'Single Tracks is the default. An artist rests after each song.' : `${LOCAL_RADIO_ARTIST_SET_LABELS[artistSetSize - 1]} plays before the artist's repeat wait begins.`;
-  if (proEnabled) void loadLastFmStatus();
+  if (proEnabled) { void loadLastFmStatus(); void loadLocalMixManager(); }
 }
 
 function renderLastFmStatus(status) {
@@ -163,6 +164,60 @@ function element(tag, className, text) {
   if (className) node.className = className;
   if (text !== undefined) node.textContent = text;
   return node;
+}
+
+let localMixManagerLoadVersion = 0;
+function localMixStatusText(mix) {
+  if (!mix.valid) return mix.error || 'This Local Mix book is unavailable.';
+  const count = Number(mix.eligibleTrackCount || 0);
+  if (!mix.ready) return `Needs 20 eligible songs · ${count.toLocaleString()} found`;
+  return `${mix.quality} · ${count.toLocaleString()} eligible songs`;
+}
+
+function renderLocalMixManager(mixes) {
+  localMixManager.replaceChildren();
+  if (!mixes.length) {
+    localMixManager.textContent = 'No Local Mix books are installed yet.';
+    return;
+  }
+  for (const mix of mixes) {
+    const row = element('label', `local-mix-manager-row${mix.valid ? '' : ' unavailable'}`);
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = mix.enabled === true;
+    checkbox.disabled = !mix.valid;
+    checkbox.setAttribute('aria-label', `Show ${mix.name || 'Local Mix'} in Local Music`);
+    const copy = element('span', 'local-mix-manager-copy');
+    copy.append(
+      element('span', 'local-mix-manager-name', mix.name || mix.sourceFile || 'Untitled Local Mix'),
+      mix.description ? element('span', 'local-mix-manager-description', mix.description) : document.createTextNode(''),
+      element('span', 'local-mix-manager-status', localMixStatusText(mix))
+    );
+    checkbox.addEventListener('change', async () => {
+      checkbox.disabled = true;
+      try {
+        await window.wavedeck.setLocalMixEnabled(mix.id, checkbox.checked);
+      } catch (error) {
+        checkbox.checked = !checkbox.checked;
+        setStatus(statusLocalMusic, `Could not update ${mix.name}: ${error.message}`, false);
+        checkbox.disabled = false;
+      }
+    });
+    row.append(checkbox, copy);
+    localMixManager.append(row);
+  }
+}
+
+async function loadLocalMixManager() {
+  const version = ++localMixManagerLoadVersion;
+  try {
+    const mixes = await window.wavedeck.getLocalMixInventory();
+    if (version !== localMixManagerLoadVersion) return;
+    renderLocalMixManager(mixes);
+  } catch (error) {
+    if (version !== localMixManagerLoadVersion) return;
+    localMixManager.textContent = `Could not check Local Mixes: ${error.message}`;
+  }
 }
 
 function lowerKey(value) {
@@ -1152,6 +1207,7 @@ window.wavedeck.onUiPreferencesChanged((preferences) => {
   if (sidebarPlatform) launchInSidebarMode.checked = preferences?.launchInSidebarMode === true;
 });
 window.wavedeck.onLastFmChanged(renderLastFmStatus);
+window.wavedeck.onLocalMixesChanged(() => { if (!localMusicTab.hidden) void loadLocalMixManager(); });
 
 (async function initialize() {
   showTab(document.querySelector(".tab.active")?.dataset.tab || "interface");

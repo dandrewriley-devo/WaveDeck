@@ -176,6 +176,14 @@ main{
 .lastfm-updating{ color:var(--green); font-size:10px; font-weight:700; grid-column:1 / -1; letter-spacing:.08em; text-transform:uppercase; }
 .lastfm-progress{ accent-color:var(--green); height:12px; min-width:100px; width:100%; }
 .lastfm-progress-label{ color:var(--muted); font-size:12px; font-variant-numeric:tabular-nums; min-width:38px; text-align:right; }
+.local-mix-manager{ display:grid; gap:7px; }
+.local-mix-manager-row{ align-items:flex-start; background:#1f1f1f; border:1px solid #383838; display:flex; gap:10px; padding:9px 10px; }
+.local-mix-manager-row input{ accent-color:var(--green); flex:0 0 auto; height:16px; margin:2px 0 0; width:16px; }
+.local-mix-manager-copy{ display:grid; gap:3px; min-width:0; }
+.local-mix-manager-name{ color:#e3e3e3; font-size:12px; font-weight:650; }
+.local-mix-manager-description{ color:var(--muted); font-size:11px; line-height:1.35; }
+.local-mix-manager-status{ color:var(--green); font-size:11px; font-variant-numeric:tabular-nums; }
+.local-mix-manager-row.unavailable .local-mix-manager-status{ color:#d6a15d; }
 
 .radio-tuning{
   margin-top:14px;

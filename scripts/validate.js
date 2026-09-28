@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.8.2");
-assert.strictEqual(packageJson.wavedeckVersion, "0.8.2");
+assert.strictEqual(packageJson.version, "0.9.0");
+assert.strictEqual(packageJson.wavedeckVersion, "0.9.0");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -343,6 +343,7 @@ try {
     localRadioArtistRepeatMinutes: 90,
     localRadioArtistSetSize: 1,
     localMusicCrossfadeEnabled: true,
+    localMixEnabled: {},
     streamingUi: {
       presets: false,
       localPresets: false,
@@ -369,6 +370,7 @@ try {
     localRadioArtistRepeatMinutes: 90,
     localRadioArtistSetSize: 1,
     localMusicCrossfadeEnabled: true,
+    localMixEnabled: {},
     launchInSidebarMode: false,
     settingsWindowBounds: null,
     radioLogWindowBounds: null
@@ -381,6 +383,7 @@ try {
   assert.strictEqual(storage.setLocalRadioFamiliarity('hits').localRadioFamiliarity, 'hits');
   assert.deepStrictEqual(storage.setLocalRadioTuning({ songRepeatHours: 6, artistRepeatMinutes: 180, artistSetSize: 2 }).localRadioArtistSetSize, 2);
   assert.strictEqual(storage.setLocalMusicCrossfadeEnabled(false).localMusicCrossfadeEnabled, false);
+  assert.strictEqual(storage.setLocalMixEnabled('classic-rock', false).localMixEnabled['classic-rock'], false);
   assert.deepStrictEqual(storage.setStreamingUiState({
     presets: true,
     localPresets: true,
@@ -422,6 +425,7 @@ try {
     localRadioArtistRepeatMinutes: 180,
     localRadioArtistSetSize: 2,
     localMusicCrossfadeEnabled: false,
+    localMixEnabled: { "classic-rock": false },
     launchInSidebarMode: true,
     settingsWindowBounds: { x: 2100, y: 41, width: 1120, height: 841 },
     radioLogWindowBounds: { x: 14, y: 23, width: 864, height: 700 }
@@ -1200,6 +1204,8 @@ assert.ok(preloadSource.includes('ipcRenderer.invoke("player:play-pause")'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("player:previous-preset")'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("player:next-preset")'));
 assert.ok(preloadSource.includes("ipcRenderer.invoke('music:mixes')"));
+assert.ok(preloadSource.includes("ipcRenderer.invoke('music:mixes:manage')"));
+assert.ok(preloadSource.includes("ipcRenderer.invoke('music:mixes:set-enabled', id, enabled)"));
 assert.ok(preloadSource.includes("ipcRenderer.invoke('music:feedback', kind)"));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("recording:get-state")'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("recording:toggle")'));
@@ -1235,6 +1241,8 @@ assert.ok(settingsHtml.indexOf('data-tab="groups"') < settingsHtml.indexOf('data
 assert.ok(settingsHtml.indexOf('data-tab="localmusic"') < settingsHtml.indexOf('data-tab="about"'));
 assert.ok(settingsHtml.includes('id="tab-localmusic"'));
 assert.ok(settingsHtml.includes('WaveDeck 0.8.0 - Crossfade Local Music'));
+assert.ok(settingsHtml.includes('WaveDeck 0.9.0 - Local Mix Expansion'));
+assert.ok(settingsHtml.includes('id="localMixManager"'));
 assert.ok(settingsHtml.includes('WaveDeck 0.7.x — Local Music Update'));
 assert.ok(!settingsHtml.includes('WaveDeck 0.7.9 —'));
 assert.ok(settingsHtml.includes('Enable Advanced Features'));
