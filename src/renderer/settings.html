@@ -25,7 +25,7 @@
       <!-- INTERFACE -->
       <section id="tab-interface" class="panel hidden">
         <div class="general-meta">
-          <b>WaveDeck version <span id="aboutVersion">0.8.0</span></b>
+          <b>WaveDeck version <span id="aboutVersion">0.8.1</span></b>
           <span>Station library: <span id="aboutDataDir">Data</span></span>
         </div>
         <div class="general-sections">
@@ -249,7 +249,7 @@
 
       <!-- LOCAL MUSIC -->
       <section id="tab-localmusic" class="panel hidden" hidden>
-        <section class="local-music-settings">
+        <section class="local-music-settings local-music-section">
           <div class="pro-music-settings-title">Additional Music Folder <span>(optional)</span></div>
           <div class="pro-music-settings-row">
             <input id="additionalMusicFolder" class="input" type="text" readonly placeholder="Portable Music folder only" />
@@ -258,15 +258,16 @@
           </div>
           <div class="hint">WaveDeck always includes the portable <b>Music</b> folder beside <b>Data</b>. This adds one other folder to Music search and playback. Files and tags are never changed. Choose a folder, then use Music’s <b>Rescan</b> button when you’re ready to index it.</div>
         </section>
-        <section class="local-music-settings">
+        <section class="local-music-settings local-music-section">
+          <div class="pro-music-settings-title">Crossfade Local Music</div>
           <label class="preference-toggle">
             <input id="localMusicCrossfade" type="checkbox" />
             <span class="toggle-switch" aria-hidden="true"></span>
-            <span>Crossfade Local Music</span>
+            <span>Enable 8-second crossfade</span>
           </label>
           <div class="hint">Smoothly blend songs with an 8-second crossfade.</div>
         </section>
-        <section class="radio-tuning" aria-labelledby="localRadioTitle">
+        <section class="radio-tuning local-music-section" aria-labelledby="localRadioTitle">
                   <div class="pro-music-settings-title" id="localRadioTitle">Shape Your Local Radio</div>
                   <div class="hint">Use these sliders to shape your Local Radio and Local Mixes—favor familiar favorites, adjust how long songs and artists rest before repeating, and choose whether artists play single tracks or short sets.</div>
                   <div class="local-radio-familiarity">
@@ -294,7 +295,7 @@
                     <div id="localRadioArtistSetHelp" class="hint">Single Tracks is the default. A set plays before the artist's repeat wait begins.</div>
                   </div>
         </section>
-        <section class="lastfm-settings" aria-labelledby="lastFmTitle">
+        <section class="lastfm-settings local-music-section" aria-labelledby="lastFmTitle">
           <div class="pro-music-settings-title" id="lastFmTitle">Last.fm Music Data</div>
           <label class="preference-toggle">
             <input id="lastFmEnabled" type="checkbox" />

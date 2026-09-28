@@ -517,6 +517,11 @@ class CrossfadeMpvPlayer {
     return { ...this.lanes[this.activeLane].getStatus(), volume: this.volume, muted: this.muted };
   }
 
+  async refreshPlaybackState() {
+    await this.lanes[this.activeLane].refreshPlaybackState();
+    return this.getStatus();
+  }
+
   get isCrossfading() { return Boolean(this.crossfade); }
 
   #otherLane(name = this.activeLane) { return name === 'a' ? 'b' : 'a'; }
