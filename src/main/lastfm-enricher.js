@@ -30,7 +30,7 @@ class LastFmEnricher {
     let database = {};
     try { if (this.library?.worker) database = await this.library.getLastFmStatus(); } catch {}
     const preferences = this.preferences();
-    this.status = { ...this.status, ...database, enabled: preferences.enabled, configured: Boolean(preferences.apiKey), message };
+    this.status = { ...this.status, ...database, enabled: preferences.enabled, configured: Boolean(preferences.apiKey), processing: this.running, message };
     this.onStatus({ ...this.status });
     return this.status;
   }
@@ -138,7 +138,10 @@ class LastFmEnricher {
       await this.refreshStatus(`Last.fm refresh paused: ${error.message}`);
       this.schedule(RETRY_MS);
       return;
-    } finally { this.running = false; }
+    } finally {
+      this.running = false;
+      await this.refreshStatus();
+    }
     this.schedule();
   }
   stop() { clearTimeout(this.timer); this.timer = null; }

@@ -25,7 +25,7 @@
       <!-- INTERFACE -->
       <section id="tab-interface" class="panel hidden">
         <div class="general-meta">
-          <b>WaveDeck version <span id="aboutVersion">0.8.1</span></b>
+          <b>WaveDeck version <span id="aboutVersion">0.8.2</span></b>
           <span>Station library: <span id="aboutDataDir">Data</span></span>
         </div>
         <div class="general-sections">
@@ -278,20 +278,20 @@
                   </div>
                   <div class="local-radio-familiarity">
                     <label for="localRadioSongRepeat">Song repeat wait</label>
-                    <input id="localRadioSongRepeat" type="range" min="0" max="2" step="1" value="1" aria-describedby="localRadioSongRepeatHelp" />
-                    <div class="local-radio-familiarity-stops" aria-hidden="true"><span>2 hours</span><span>4 hours</span><span>6 hours</span></div>
+                    <input id="localRadioSongRepeat" type="range" min="1" max="24" step="1" value="4" aria-describedby="localRadioSongRepeatHelp" />
+                    <div class="local-radio-song-repeat-stops" aria-hidden="true"><span>1 hour</span><output id="localRadioSongRepeatValue"></output><span>24 hours</span></div>
                     <div id="localRadioSongRepeatHelp" class="hint">4 hours is the default. A song cannot return until this wait has passed.</div>
                   </div>
                   <div class="local-radio-familiarity">
                     <label for="localRadioArtistRepeat">Artist repeat wait</label>
-                    <input id="localRadioArtistRepeat" type="range" min="0" max="2" step="1" value="1" aria-describedby="localRadioArtistRepeatHelp" />
-                    <div class="local-radio-familiarity-stops" aria-hidden="true"><span>30 minutes</span><span>90 minutes</span><span>180 minutes</span></div>
+                    <input id="localRadioArtistRepeat" type="range" min="0" max="4" step="1" value="2" aria-describedby="localRadioArtistRepeatHelp" />
+                    <div class="local-radio-familiarity-stops five" aria-hidden="true"><span>30 min</span><span>60 min</span><span>90 min</span><span>120 min</span><span>180 min</span></div>
                     <div id="localRadioArtistRepeatHelp" class="hint">90 minutes is the default. The artist cannot return until this wait has passed.</div>
                   </div>
                   <div class="local-radio-familiarity">
                     <label for="localRadioArtistSet">Artist sets</label>
                     <input id="localRadioArtistSet" type="range" min="0" max="3" step="1" value="0" aria-describedby="localRadioArtistSetHelp" />
-                    <div class="local-radio-familiarity-stops four" aria-hidden="true"><span>Single Tracks</span><span>Two-Fers</span><span>Three Plays</span><span>Four Plays</span></div>
+                    <div class="local-radio-familiarity-stops four" aria-hidden="true"><span>Single Tracks</span><span>Two-fers</span><span>Three-way</span><span>Four-play</span></div>
                     <div id="localRadioArtistSetHelp" class="hint">Single Tracks is the default. A set plays before the artist's repeat wait begins.</div>
                   </div>
         </section>
@@ -311,6 +311,7 @@
             <button id="queueLastFmRefreshBtn" class="btn" type="button">Refresh Last.fm Music Data</button>
             <div class="hint">Checks missing or older music data and skips songs checked within the past week.</div>
             <div id="lastFmProgressWrap" class="lastfm-progress-wrap" hidden>
+              <div id="lastFmUpdating" class="lastfm-updating" hidden>Updating Music Data</div>
               <progress id="lastFmProgress" class="lastfm-progress" max="100" value="0" aria-label="Last.fm music data progress"></progress>
               <span id="lastFmProgressLabel" class="lastfm-progress-label">0%</span>
             </div>

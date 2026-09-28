@@ -89,6 +89,10 @@ async function run() {
     assert.equal(personalizedHits.getLastDecision().counts.skippedForDoNotPlay, 1);
     radio.record(sameAlbum); assert.equal(radio.choose([sameAlbum], seed, 'radio'), null, 'exact song repeats wait two hours'); now += COOLDOWN;
     assert.equal(radio.choose([sameAlbum], seed, 'radio').id, sameAlbum.id); assert.equal(radio.getLastDecision().policy, 'automatic-local-radio-v2');
+    const dayWaitRadio = new MusicRadio({ dataDir: path.join(temp, 'day-wait'), now: () => now, random: () => 0, getTuning: () => ({ songRepeatHours: 24, artistRepeatMinutes: 30, artistSetSize: 1 }) });
+    assert.equal(dayWaitRadio.choose([sameAlbum], seed, 'radio').id, sameAlbum.id); dayWaitRadio.record(sameAlbum); now += 23 * 60 * 60 * 1000;
+    assert.equal(dayWaitRadio.choose([sameAlbum], seed, 'radio'), null, 'the 24-hour song-repeat stop is honored'); now += 60 * 60 * 1000;
+    assert.equal(dayWaitRadio.choose([sameAlbum], seed, 'radio').id, sameAlbum.id, 'the 24-hour song-repeat stop releases at 24 hours');
     const rotationA = track('rotation-a', { artist: 'David Gilmour', artists: ['David Gilmour'], albumArtist: 'David Gilmour', album: 'A' });
     const rotationB = track('rotation-b', { artist: 'David Gilmour', artists: ['David Gilmour'], albumArtist: 'David Gilmour', album: 'B' });
     const artistWaitRadio = new MusicRadio({ dataDir: path.join(temp, 'artist-wait'), now: () => now, random: () => 0, getTuning: () => ({ songRepeatHours: 2, artistRepeatMinutes: 90, artistSetSize: 1 }) });

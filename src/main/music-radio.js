@@ -17,8 +17,8 @@ function localRadioTuning(value = {}) {
   const artistRepeatMinutes = Number(value.artistRepeatMinutes ?? value.localRadioArtistRepeatMinutes);
   const artistSetSize = Number(value.artistSetSize ?? value.localRadioArtistSetSize);
   return {
-    songRepeatHours: [2, 4, 6].includes(songRepeatHours) ? songRepeatHours : 4,
-    artistRepeatMinutes: [30, 90, 180].includes(artistRepeatMinutes) ? artistRepeatMinutes : 90,
+    songRepeatHours: Number.isInteger(songRepeatHours) && songRepeatHours >= 1 && songRepeatHours <= 24 ? songRepeatHours : 4,
+    artistRepeatMinutes: [30, 60, 90, 120, 180].includes(artistRepeatMinutes) ? artistRepeatMinutes : 90,
     artistSetSize: [1, 2, 3, 4].includes(artistSetSize) ? artistSetSize : 1
   };
 }

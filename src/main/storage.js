@@ -301,8 +301,8 @@ function validatePreferences(value) {
   const localRadioFamiliarity = ['hits', 'balanced', 'deep-cuts'].includes(value?.localRadioFamiliarity)
     ? value.localRadioFamiliarity
     : 'balanced';
-  const localRadioSongRepeatHours = [2, 4, 6].includes(Number(value?.localRadioSongRepeatHours)) ? Number(value.localRadioSongRepeatHours) : 4;
-  const localRadioArtistRepeatMinutes = [30, 90, 180].includes(Number(value?.localRadioArtistRepeatMinutes)) ? Number(value.localRadioArtistRepeatMinutes) : 90;
+  const localRadioSongRepeatHours = Number.isInteger(Number(value?.localRadioSongRepeatHours)) && Number(value.localRadioSongRepeatHours) >= 1 && Number(value.localRadioSongRepeatHours) <= 24 ? Number(value.localRadioSongRepeatHours) : 4;
+  const localRadioArtistRepeatMinutes = [30, 60, 90, 120, 180].includes(Number(value?.localRadioArtistRepeatMinutes)) ? Number(value.localRadioArtistRepeatMinutes) : 90;
   const localRadioArtistSetSize = [1, 2, 3, 4].includes(Number(value?.localRadioArtistSetSize)) ? Number(value.localRadioArtistSetSize) : 1;
   const localMusicCrossfadeEnabled = value?.localMusicCrossfadeEnabled !== false;
   const rawStreamingUi = value?.streamingUi && typeof value.streamingUi === "object" && !Array.isArray(value.streamingUi)
@@ -599,8 +599,8 @@ class PortableStorage {
 
   setLocalRadioTuning(value = {}) {
     const preferences = this.readPreferences();
-    if ([2, 4, 6].includes(Number(value.songRepeatHours))) preferences.localRadioSongRepeatHours = Number(value.songRepeatHours);
-    if ([30, 90, 180].includes(Number(value.artistRepeatMinutes))) preferences.localRadioArtistRepeatMinutes = Number(value.artistRepeatMinutes);
+    if (Number.isInteger(Number(value.songRepeatHours)) && Number(value.songRepeatHours) >= 1 && Number(value.songRepeatHours) <= 24) preferences.localRadioSongRepeatHours = Number(value.songRepeatHours);
+    if ([30, 60, 90, 120, 180].includes(Number(value.artistRepeatMinutes))) preferences.localRadioArtistRepeatMinutes = Number(value.artistRepeatMinutes);
     if ([1, 2, 3, 4].includes(Number(value.artistSetSize))) preferences.localRadioArtistSetSize = Number(value.artistSetSize);
     this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
     return this.getUiPreferences();

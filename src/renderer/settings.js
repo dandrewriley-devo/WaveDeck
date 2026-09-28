@@ -58,10 +58,12 @@ const lastFmStatus = document.getElementById('lastFmStatus');
 const lastFmProgressWrap = document.getElementById('lastFmProgressWrap');
 const lastFmProgress = document.getElementById('lastFmProgress');
 const lastFmProgressLabel = document.getElementById('lastFmProgressLabel');
+const lastFmUpdating = document.getElementById('lastFmUpdating');
 const localRadioFamiliarity = document.getElementById('localRadioFamiliarity');
 const localRadioFamiliarityHelp = document.getElementById('localRadioFamiliarityHelp');
 const localRadioSongRepeat = document.getElementById('localRadioSongRepeat');
 const localRadioSongRepeatHelp = document.getElementById('localRadioSongRepeatHelp');
+const localRadioSongRepeatValue = document.getElementById('localRadioSongRepeatValue');
 const localRadioArtistRepeat = document.getElementById('localRadioArtistRepeat');
 const localRadioArtistRepeatHelp = document.getElementById('localRadioArtistRepeatHelp');
 const localRadioArtistSet = document.getElementById('localRadioArtistSet');
@@ -89,9 +91,10 @@ let pendingEditId = "";
 let activeSubgroupRename = null;
 
 const LOCAL_RADIO_FAMILIARITY = ['deep-cuts', 'balanced', 'hits'];
-const LOCAL_RADIO_SONG_REPEAT_HOURS = [2, 4, 6];
-const LOCAL_RADIO_ARTIST_REPEAT_MINUTES = [30, 90, 180];
+const LOCAL_RADIO_SONG_REPEAT_HOURS = Array.from({ length: 24 }, (_value, index) => index + 1);
+const LOCAL_RADIO_ARTIST_REPEAT_MINUTES = [30, 60, 90, 120, 180];
 const LOCAL_RADIO_ARTIST_SET_SIZES = [1, 2, 3, 4];
+const LOCAL_RADIO_ARTIST_SET_LABELS = ['Single Tracks', 'Two-fers', 'Three-way', 'Four-play'];
 const LOCAL_RADIO_FAMILIARITY_COPY = {
   hits: 'Favor the Hits — chooses first from Favorites and 7–10 ratings, with the strongest odds for 9–10. Last.fm is the fallback.',
   balanced: 'Balanced Mix — chooses first from Favorites and 5–10 ratings, while giving every qualifying rating a useful chance. This is the default.',
@@ -119,12 +122,13 @@ function renderProMusicSettings(preferences) {
   const songRepeatHours = LOCAL_RADIO_SONG_REPEAT_HOURS.includes(preferences?.localRadioSongRepeatHours) ? preferences.localRadioSongRepeatHours : 4;
   const artistRepeatMinutes = LOCAL_RADIO_ARTIST_REPEAT_MINUTES.includes(preferences?.localRadioArtistRepeatMinutes) ? preferences.localRadioArtistRepeatMinutes : 90;
   const artistSetSize = LOCAL_RADIO_ARTIST_SET_SIZES.includes(preferences?.localRadioArtistSetSize) ? preferences.localRadioArtistSetSize : 1;
-  localRadioSongRepeat.value = String(LOCAL_RADIO_SONG_REPEAT_HOURS.indexOf(songRepeatHours));
+  localRadioSongRepeat.value = String(songRepeatHours);
   localRadioArtistRepeat.value = String(LOCAL_RADIO_ARTIST_REPEAT_MINUTES.indexOf(artistRepeatMinutes));
   localRadioArtistSet.value = String(LOCAL_RADIO_ARTIST_SET_SIZES.indexOf(artistSetSize));
   localRadioSongRepeatHelp.textContent = `${songRepeatHours} hours. A song cannot return until this wait has passed.`;
+  renderSongRepeatStop(songRepeatHours);
   localRadioArtistRepeatHelp.textContent = `${artistRepeatMinutes} minutes. The artist cannot return until this wait has passed.`;
-  localRadioArtistSetHelp.textContent = artistSetSize === 1 ? 'Single Tracks is the default. An artist rests after each song.' : `${artistSetSize === 2 ? 'Two-Fer' : `${artistSetSize} songs`} plays before the artist's repeat wait begins.`;
+  localRadioArtistSetHelp.textContent = artistSetSize === 1 ? 'Single Tracks is the default. An artist rests after each song.' : `${LOCAL_RADIO_ARTIST_SET_LABELS[artistSetSize - 1]} plays before the artist's repeat wait begins.`;
   if (proEnabled) void loadLastFmStatus();
 }
 
@@ -140,9 +144,13 @@ function renderLastFmStatus(status) {
     lastFmProgressLabel.textContent = `${Math.round((current / total) * 100)}%`;
     lastFmProgress.setAttribute('aria-valuetext', `${current.toLocaleString()} of ${total.toLocaleString()} tracks have current Last.fm data`);
   }
+  const queued = Number(status.queuedAlbums || 0);
+  const updating = status.processing === true || queued > 0;
+  lastFmUpdating.hidden = !updating;
+  queueLastFmRefreshBtn.disabled = updating;
+  queueLastFmRefreshBtn.textContent = updating ? 'Updating Music Data…' : 'Refresh Last.fm Music Data';
   if (!status.enabled) { lastFmStatus.textContent = 'Last.fm music data is off.'; return; }
   if (!status.configured) { lastFmStatus.textContent = 'Add a Last.fm API key to begin refreshing music data.'; return; }
-  const queued = Number(status.queuedAlbums || 0);
   lastFmStatus.textContent = `Last.fm: ${current.toLocaleString()} of ${total.toLocaleString()} tracks current${queued ? ` · ${queued.toLocaleString()} albums queued` : ''}${status.message ? ` · ${status.message}` : ''}`;
 }
 
@@ -1032,8 +1040,14 @@ queueLastFmRefreshBtn.addEventListener('click', async () => {
   try {
     renderLastFmStatus(await window.wavedeck.queueFullLastFmRefresh());
     setStatus(statusLocalMusic, 'Last.fm catch-up refresh queued.');
-  } catch (error) { setStatus(statusLocalMusic, `Could not queue Last.fm refresh: ${error.message}`, false); }
-  finally { queueLastFmRefreshBtn.disabled = false; }
+  } catch (error) {
+    queueLastFmRefreshBtn.disabled = false;
+    queueLastFmRefreshBtn.textContent = 'Refresh Last.fm Music Data';
+    setStatus(statusLocalMusic, `Could not queue Last.fm refresh: ${error.message}`, false);
+  }
+  finally {
+    if (!queueLastFmRefreshBtn.disabled) queueLastFmRefreshBtn.textContent = 'Refresh Last.fm Music Data';
+  }
 });
 
 openRadioLogBtn.addEventListener('click', () => { void window.wavedeck.openMusicDebugLog(); });
@@ -1066,16 +1080,23 @@ localRadioFamiliarity.addEventListener('change', async () => {
 
 function tuningFromControls() {
   return {
-    songRepeatHours: LOCAL_RADIO_SONG_REPEAT_HOURS[Number(localRadioSongRepeat.value)] || 4,
+    songRepeatHours: Number(localRadioSongRepeat.value) || 4,
     artistRepeatMinutes: LOCAL_RADIO_ARTIST_REPEAT_MINUTES[Number(localRadioArtistRepeat.value)] || 90,
     artistSetSize: LOCAL_RADIO_ARTIST_SET_SIZES[Number(localRadioArtistSet.value)] || 1
   };
 }
+function renderSongRepeatStop(hours) {
+  const value = Math.min(24, Math.max(1, Number(hours) || 4));
+  localRadioSongRepeatValue.hidden = value === 1 || value === 24;
+  localRadioSongRepeatValue.textContent = `${value} hours`;
+  localRadioSongRepeatValue.style.setProperty('--repeat-stop', `${((value - 1) / 23) * 100}%`);
+}
 function showTuningHelp() {
   const value = tuningFromControls();
   localRadioSongRepeatHelp.textContent = `${value.songRepeatHours} hours. A song cannot return until this wait has passed.`;
+  renderSongRepeatStop(value.songRepeatHours);
   localRadioArtistRepeatHelp.textContent = `${value.artistRepeatMinutes} minutes. The artist cannot return until this wait has passed.`;
-  localRadioArtistSetHelp.textContent = value.artistSetSize === 1 ? 'Single Tracks is the default. An artist rests after each song.' : `${value.artistSetSize === 2 ? 'Two-Fer' : `${value.artistSetSize} songs`} plays before the artist's repeat wait begins.`;
+  localRadioArtistSetHelp.textContent = value.artistSetSize === 1 ? 'Single Tracks is the default. An artist rests after each song.' : `${LOCAL_RADIO_ARTIST_SET_LABELS[value.artistSetSize - 1]} plays before the artist's repeat wait begins.`;
 }
 for (const control of [localRadioSongRepeat, localRadioArtistRepeat, localRadioArtistSet]) {
   control.addEventListener('input', showTuningHelp);

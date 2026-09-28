@@ -3,6 +3,7 @@ const fs = require('fs/promises');
 const path = require('path');
 const { extractTrack, normalize } = require('./music-tags');
 let db, parseFile, scanning = null;
+let workerOperation = Promise.resolve();
 let lastFmWrites = 0;
 const SIX_MONTHS_MS = 183 * 24 * 60 * 60 * 1000;
 const FULL_REFRESH_RECHECK_MS = 7 * 24 * 60 * 60 * 1000;
@@ -177,7 +178,7 @@ async function initialize() {
 }
 const ready = initialize();
 ready.catch(() => {});
-parentPort.on('message', async ({ id, method, args = [] }) => {
+async function handleRequest({ id, method, args = [] }) {
   try {
     await ready;
     let value;
@@ -261,4 +262,13 @@ parentPort.on('message', async ({ id, method, args = [] }) => {
     } else throw new Error('Unknown music request.');
     parentPort.postMessage({ id, value });
   } catch (error) { parentPort.postMessage({ id, error: error.message }); }
+}
+// Every command can mutate and persist the same in-memory SQLite database.
+// Keep them in order so a background update, scan, and manual refresh cannot
+// race over music.sqlite.tmp.
+parentPort.on('message', message => {
+  workerOperation = workerOperation.then(
+    () => handleRequest(message),
+    () => handleRequest(message)
+  ).catch(() => {});
 });
