@@ -11,9 +11,12 @@ function canonicalTrack(track) {
   return { ...track, artist, albumArtist, artists, songKey: `${String(artist).toLowerCase()}\n${String(track.title || '').toLowerCase()}` };
 }
 class MusicLibrary {
-  constructor({ dataDir, onStatus = () => {}, additionalMusicFolder = '' }) {
+  constructor({ dataDir, onStatus = () => {}, onLocalMixAvailability = () => {}, additionalMusicFolder = '' }) {
     this.dataDir = dataDir; this.onStatus = onStatus; this.pending = new Map(); this.sequence = 0;
     this.tracks = []; this.enabled = false; this.worker = null; this.revision = 0;
+    this.onLocalMixAvailability = onLocalMixAvailability;
+    this.localMixAvailability = { analyzing: false, completed: 0, total: 0, mixes: [] };
+    this.mixAnalysisPromise = null;
     this.additionalMusicFolder = additionalMusicFolder;
   }
   startWorker() {
@@ -21,6 +24,15 @@ class MusicLibrary {
     this.worker = new Worker(path.join(__dirname, 'music-worker.js'), { workerData: { dataDir: this.dataDir, additionalMusicFolder: this.additionalMusicFolder } });
     this.worker.on('message', message => {
       if (message.event === 'status') { this.onStatus(message.value); return; }
+      if (message.event === 'local-mixes') {
+        this.localMixAvailability = {
+          ...message.value,
+          sourceSignature: this.localMixAvailability.sourceSignature || '',
+          libraryRevision: this.localMixAvailability.libraryRevision || 0
+        };
+        this.onLocalMixAvailability(this.localMixAvailability);
+        return;
+      }
       const pending = this.pending.get(message.id);
       if (!pending) return;
       this.pending.delete(message.id);
@@ -59,6 +71,25 @@ class MusicLibrary {
   }
   async rescan() {
     const status = await this.call('scan'); this.tracks = (await this.call('all')).map(canonicalTrack); this.revision += 1; this.onStatus(status); return status;
+  }
+  getLocalMixAvailability() { return this.localMixAvailability; }
+  async analyzeLocalMixes(sourceSignature = '') {
+    if (this.mixAnalysisPromise) return this.mixAnalysisPromise;
+    const current = this.localMixAvailability;
+    if (!current.analyzing && !current.error && current.total && current.sourceSignature === sourceSignature && current.libraryRevision === this.revision) {
+      return current;
+    }
+    this.localMixAvailability = { ...current, analyzing: true, error: '', sourceSignature, libraryRevision: this.revision };
+    this.onLocalMixAvailability(this.localMixAvailability);
+    this.mixAnalysisPromise = this.call('local-mixes:analyze').then(value => {
+      this.localMixAvailability = { ...value, sourceSignature, libraryRevision: this.revision };
+      return this.localMixAvailability;
+    }).catch(error => {
+      this.localMixAvailability = { ...this.localMixAvailability, analyzing: false, error: error.message };
+      this.onLocalMixAvailability(this.localMixAvailability);
+      throw error;
+    }).finally(() => { this.mixAnalysisPromise = null; });
+    return this.mixAnalysisPromise;
   }
   async getLastFmStatus() { return this.call('lastfm:status'); }
   async queueLastFmAlbum(id) { return this.call('lastfm:queue-album', id); }

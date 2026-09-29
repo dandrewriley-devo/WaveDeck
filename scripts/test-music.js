@@ -8,7 +8,7 @@ const { MusicRadio, weight, COOLDOWN } = require('../src/main/music-radio');
 const { extractTrack, radioArtist } = require('../src/main/music-tags');
 const { MediaController, serializeTransport } = require('../src/main/media-controller');
 const { LastFmEnricher, popularityScore } = require('../src/main/lastfm-enricher');
-const { resolveLocalMix, listLocalMixes, getLocalMixAvailability, isTrackEligibleForMix } = require('../src/main/local-mixes');
+const { resolveLocalMix, listLocalMixes, loadLocalMixes, getLocalMixAvailability, isTrackEligibleForMix } = require('../src/main/local-mixes');
 
 function fixture() {
   const frame = (id, value) => { const data = Buffer.concat([Buffer.from([0]), Buffer.from(value)]); const header = Buffer.alloc(10); header.write(id); header.writeUInt32BE(data.length, 4); return Buffer.concat([header, data]); };
@@ -30,6 +30,10 @@ async function run() {
     assert.equal(library.tracks[0].ratingStars, 4, 'ratings are copied into the local index');
     assert.equal(library.tracks[0].favorite, true, 'Favorite tags are copied into the local index');
     assert.equal(library.tracks[0].doNotPlay, true, 'Do Not Play tags are copied into the local index');
+    const initialMixAnalysis = await library.analyzeLocalMixes();
+    assert.equal(initialMixAnalysis.analyzing, false, 'Local Mix availability analysis completes in the music worker');
+    assert.equal(initialMixAnalysis.mixes.length, 6, 'the worker discovers shipped Local Mix books');
+    await fs.access(path.join(dataDir, 'local-mix-availability.json'));
     assert.equal(await digest(), before, 'scanning never changes MP3 bytes');
     assert.equal((await library.call('search', "' OR 1=1 --")).total, 0);
     assert.equal(extractTrack({ common: { rating: [{ rating: 0.8 }] }, native: {} }, 'fallback.mp3').ratingStars, 4);
@@ -127,6 +131,10 @@ async function run() {
     await fs.writeFile(path.join(portableMixData, 'local-mixes', 'outside-book.json'), JSON.stringify({ id: 'outside-book', name: 'Outside Book', description: 'Test optional book', coreArtists: ['Boston'] }));
     mixAvailability = getLocalMixAvailability(portableMixData, classicSeedTracks);
     assert.equal(mixAvailability.find(mix => mix.id === 'outside-book').enabled, false, 'new externally added Local Mix books start hidden');
+    await fs.writeFile(path.join(portableMixData, 'local-mixes', 'holiday-christmas.json'), JSON.stringify({ id: 'holiday-christmas', name: 'Holiday & Christmas', description: 'Holiday tag test', coreArtists: ['The Beach Boys'], formatPolicy: { genreTags: ['Christmas', 'Holiday', 'Xmas'] } }));
+    const holidayMix = loadLocalMixes(portableMixData).find(mix => mix.id === 'holiday-christmas');
+    assert.equal(isTrackEligibleForMix(track('holiday-tagged', { artist: 'Unknown Artist', genres: ['Christmas Music'], year: 2020 }), holidayMix).eligible, true, 'Holiday & Christmas admits an explicit Christmas genre tag');
+    assert.equal(isTrackEligibleForMix(track('not-holiday', { artist: 'The Beach Boys', genres: ['Pop'], year: 1966 }), holidayMix).eligible, false, 'Holiday & Christmas never admits an ordinary song by a listed artist');
     const classicMix = resolveLocalMix('classic-rock', classicSeedTracks, portableMixData);
     assert.equal(classicMix.seeds.length, 4, 'Classic Rock resolves its curated seed tracks from the Local Music library');
     assert.equal(isTrackEligibleForMix(track('early-beatles', { artist: 'The Beatles', title: 'Act Naturally', year: 1965 }), classicMix).eligible, false, 'Classic Rock rejects early Beatles');

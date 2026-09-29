@@ -208,12 +208,32 @@ function renderLocalMixManager(mixes) {
   }
 }
 
+function renderLocalMixAnalysis(status) {
+  localMixManager.replaceChildren();
+  const progress = element('div', 'local-mix-analysis');
+  const completed = Number(status?.completed || 0);
+  const total = Number(status?.total || 0);
+  progress.append(
+    element('div', 'local-mix-analysis-title', 'Analyzing Local Mixes'),
+    element('div', 'local-mix-analysis-copy', total ? `Checking your library for ${total.toLocaleString()} installed mixes… ${completed.toLocaleString()} of ${total.toLocaleString()} complete` : 'Checking your installed Local Mix books…')
+  );
+  if (total) {
+    const meter = document.createElement('progress');
+    meter.max = total; meter.value = Math.min(total, completed);
+    meter.setAttribute('aria-label', `Analyzing ${completed} of ${total} Local Mixes`);
+    progress.append(meter);
+  }
+  localMixManager.append(progress);
+}
+
 async function loadLocalMixManager() {
   const version = ++localMixManagerLoadVersion;
   try {
-    const mixes = await window.wavedeck.getLocalMixInventory();
+    const availability = await window.wavedeck.getLocalMixInventory();
     if (version !== localMixManagerLoadVersion) return;
-    renderLocalMixManager(mixes);
+    if (availability?.analyzing) { renderLocalMixAnalysis(availability); return; }
+    if (availability?.error) { localMixManager.textContent = `Could not check Local Mixes: ${availability.error}`; return; }
+    renderLocalMixManager(Array.isArray(availability?.mixes) ? availability.mixes : []);
   } catch (error) {
     if (version !== localMixManagerLoadVersion) return;
     localMixManager.textContent = `Could not check Local Mixes: ${error.message}`;

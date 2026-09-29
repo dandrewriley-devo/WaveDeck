@@ -177,6 +177,10 @@ main{
 .lastfm-progress{ accent-color:var(--green); height:12px; min-width:100px; width:100%; }
 .lastfm-progress-label{ color:var(--muted); font-size:12px; font-variant-numeric:tabular-nums; min-width:38px; text-align:right; }
 .local-mix-manager{ display:grid; gap:7px; }
+.local-mix-analysis{ background:#1f1f1f; border:1px solid #383838; display:grid; gap:6px; padding:10px; }
+.local-mix-analysis-title{ color:#e3e3e3; font-size:12px; font-weight:650; }
+.local-mix-analysis-copy{ color:var(--muted); font-size:11px; }
+.local-mix-analysis progress{ accent-color:var(--green); height:8px; width:100%; }
 .local-mix-manager-row{ align-items:flex-start; background:#1f1f1f; border:1px solid #383838; display:flex; gap:10px; padding:9px 10px; }
 .local-mix-manager-row input{ accent-color:var(--green); flex:0 0 auto; height:16px; margin:2px 0 0; width:16px; }
 .local-mix-manager-copy{ display:grid; gap:3px; min-width:0; }

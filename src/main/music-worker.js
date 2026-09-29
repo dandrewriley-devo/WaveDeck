@@ -1,7 +1,9 @@
 const { parentPort, workerData } = require('worker_threads');
 const fs = require('fs/promises');
+const fsSync = require('fs');
 const path = require('path');
 const { extractTrack, normalize } = require('./music-tags');
+const { loadLocalMixInventory, isTrackEligibleForMix, MINIMUM_LOCAL_MIX_TRACKS, qualityForTrackCount } = require('./local-mixes');
 let db, parseFile, scanning = null;
 let workerOperation = Promise.resolve();
 let lastFmWrites = 0;
@@ -11,6 +13,7 @@ const MUSIC_INDEX_VERSION = 3;
 const portableRoot = path.join(path.dirname(workerData.dataDir), 'Music');
 let additionalMusicFolder = String(workerData.additionalMusicFolder || '').trim();
 const dbPath = path.join(workerData.dataDir, 'music.sqlite');
+const localMixCachePath = path.join(workerData.dataDir, 'local-mix-availability.json');
 let status = { scanning: false, count: 0, checked: 0, errors: 0, folder: portableRoot, message: '' };
 let refreshAllTrackMetadata = false;
 const rows = (sql, params = []) => {
@@ -19,6 +22,7 @@ const rows = (sql, params = []) => {
   finally { statement.free(); }
 };
 const emit = () => parentPort.postMessage({ event: 'status', value: status });
+const emitLocalMixes = value => parentPort.postMessage({ event: 'local-mixes', value });
 const albumKey = track => {
   const artist = normalize(track.albumArtist || track.artist);
   const album = normalize(track.album || track.title);
@@ -95,10 +99,77 @@ async function persist() {
   await fs.writeFile(dbPath + '.tmp', db.export());
   await fs.rename(dbPath + '.tmp', dbPath);
 }
+
+function localMixTrackRevision() {
+  return Number(rows('SELECT value FROM music_index_meta WHERE key = ?', ['local_mix_track_revision'])[0]?.value) || 0;
+}
+function bumpLocalMixTrackRevision() {
+  const revision = localMixTrackRevision() + 1;
+  db.run('INSERT OR REPLACE INTO music_index_meta (key, value) VALUES (?, ?)', ['local_mix_track_revision', String(revision)]);
+  return revision;
+}
+function localMixFileSignature(mix) {
+  try {
+    const stat = fsSync.statSync(path.join(workerData.dataDir, 'local-mixes', mix.sourceFile));
+    return `${stat.size}:${stat.mtimeMs}`;
+  } catch { return 'missing'; }
+}
+async function readLocalMixCache() {
+  try {
+    const value = JSON.parse(await fs.readFile(localMixCachePath, 'utf8'));
+    return value && value.version === 1 && value.books && typeof value.books === 'object' ? value : { version: 1, trackRevision: -1, books: {} };
+  } catch { return { version: 1, trackRevision: -1, books: {} }; }
+}
+async function writeLocalMixCache(value) {
+  const temporary = `${localMixCachePath}.tmp`;
+  await fs.writeFile(temporary, `${JSON.stringify(value)}\n`, 'utf8');
+  await fs.rename(temporary, localMixCachePath);
+}
+function publicMixAvailability(mix, eligibleTrackCount = 0) {
+  if (!mix.valid) return { id: mix.id, name: mix.name, description: mix.description, sourceFile: mix.sourceFile, valid: false, builtIn: false, error: mix.error, eligibleTrackCount: 0, ready: false, quality: 'Unavailable' };
+  return {
+    id: mix.id, name: mix.name, description: mix.description, sourceFile: mix.sourceFile,
+    valid: true, builtIn: mix.builtIn, eligibleTrackCount,
+    ready: eligibleTrackCount >= MINIMUM_LOCAL_MIX_TRACKS,
+    quality: qualityForTrackCount(eligibleTrackCount)
+  };
+}
+async function analyzeLocalMixes() {
+  const inventory = loadLocalMixInventory(workerData.dataDir);
+  const cache = await readLocalMixCache();
+  const trackRevision = localMixTrackRevision();
+  const tracks = storedTracks();
+  const total = inventory.length;
+  let completed = 0;
+  const nextCache = { version: 1, trackRevision, books: {} };
+  const mixes = [];
+  emitLocalMixes({ analyzing: true, completed, total, mixes: [] });
+  for (const mix of inventory) {
+    const sourceSignature = localMixFileSignature(mix);
+    const saved = cache.books[mix.id];
+    let eligibleTrackCount = 0;
+    if (mix.valid && cache.trackRevision === trackRevision && saved?.sourceSignature === sourceSignature && Number.isInteger(saved.eligibleTrackCount)) {
+      eligibleTrackCount = saved.eligibleTrackCount;
+    } else if (mix.valid) {
+      eligibleTrackCount = tracks.reduce((count, track) => count + (!track?.doNotPlay && isTrackEligibleForMix(track, mix).eligible ? 1 : 0), 0);
+    }
+    if (mix.valid) nextCache.books[mix.id] = { sourceSignature, eligibleTrackCount };
+    mixes.push(publicMixAvailability(mix, eligibleTrackCount));
+    completed += 1;
+    await writeLocalMixCache(nextCache);
+    emitLocalMixes({ analyzing: true, completed, total, mixes: [] });
+    await new Promise(resolve => setImmediate(resolve));
+  }
+  await writeLocalMixCache(nextCache);
+  const value = { analyzing: false, completed: total, total, mixes };
+  emitLocalMixes(value);
+  return value;
+}
 async function scan() {
   if (scanning) return scanning;
   scanning = (async () => {
     status = { ...status, scanning: true, checked: 0, errors: 0, message: '' }; emit();
+    let indexChanged = false;
     try {
       await fs.mkdir(portableRoot, { recursive: true });
       const seen = new Set();
@@ -129,6 +200,7 @@ async function scan() {
                 ...track.genres, ...track.composer, ...track.comments, track.track, track.disc, relative].join(' '));
               db.run('INSERT OR REPLACE INTO tracks VALUES (?, ?, ?, ?, ?, ?)',
                 [key, track.id, stat.size, stat.mtimeMs, JSON.stringify(track), search]);
+              indexChanged = true;
             }
           } catch { status.errors++; }
           status.checked++;
@@ -143,13 +215,14 @@ async function scan() {
         const library = /^(portable|additional):/.test(String(row.path))
           ? String(row.path).split(':', 1)[0]
           : 'portable';
-        if (completeRoots.has(library) && !seen.has(row.path)) db.run('DELETE FROM tracks WHERE path = ?', [row.path]);
+        if (completeRoots.has(library) && !seen.has(row.path)) { db.run('DELETE FROM tracks WHERE path = ?', [row.path]); indexChanged = true; }
       }
       db.run('DELETE FROM lastfm_tracks WHERE id NOT IN (SELECT id FROM tracks)');
       if (refreshAllTrackMetadata && completeRoots.size === roots.length) {
         db.run('INSERT OR REPLACE INTO music_index_meta (key, value) VALUES (?, ?)', ['track_metadata_version', String(MUSIC_INDEX_VERSION)]);
         refreshAllTrackMetadata = false;
       }
+      if (indexChanged) bumpLocalMixTrackRevision();
       await persist();
       status.count = rows('SELECT COUNT(*) AS n FROM tracks')[0].n;
       status.message = status.errors ? `${status.errors} files or folders could not be read; rescan to retry.` : '';
@@ -187,6 +260,7 @@ async function handleRequest({ id, method, args = [] }) {
     else if (method === 'set-roots') {
       additionalMusicFolder = String(args[0] || '').trim();
       db.run("DELETE FROM tracks WHERE path LIKE 'additional:%'");
+      bumpLocalMixTrackRevision();
       await persist();
       status.count = rows('SELECT COUNT(*) AS n FROM tracks')[0].n;
       value = status;
@@ -200,6 +274,8 @@ async function handleRequest({ id, method, args = [] }) {
       const total = rows('SELECT COUNT(*) AS n FROM tracks' + where, words)[0].n;
       const maps = lastFmMaps();
       value = { total, tracks: words.length ? rows('SELECT json FROM tracks' + where + ' ORDER BY search LIMIT 200', words).map(r => withLastFm(JSON.parse(r.json), maps)) : [] };
+    } else if (method === 'local-mixes:analyze') {
+      value = await analyzeLocalMixes();
     } else if (method === 'lastfm:queue-album') {
       const track = trackById(args[0]);
       if (!track) throw new Error('That song is no longer indexed. Rescan Music.');

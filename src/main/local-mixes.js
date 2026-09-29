@@ -86,7 +86,8 @@ function cleanMix(raw, sourceFile) {
       fromYear: Number.isInteger(from) ? from : null,
       toYear: Number.isInteger(to) ? to : null,
       unknownYear: String(policy.unknownYear || '').trim() || 'allowOnlyForCoreArtistWhenNoExplicitExclusionApplies',
-      songSpecific: Boolean(policy.songSpecific)
+      songSpecific: Boolean(policy.songSpecific) || id === 'holiday-christmas',
+      genreTags: uniqueText(policy.genreTags || (id === 'holiday-christmas' ? ['Christmas', 'Holiday', 'Xmas'] : []))
     }
   };
 }
@@ -181,17 +182,22 @@ function isTrackEligibleForMix(track, mix) {
   const coreArtist = artists.some(artist => mix.coreArtists.some(candidate => exact(candidate, artist)));
   const approvedArtist = artists.some(artist => mix.approvedArtists.some(candidate => exact(candidate, artist)));
   const rule = matchingRule(track, mix);
-  const formatMember = coreSong || coreArtist || approvedArtist || Boolean(rule);
+  const tagMatch = (track?.genres || []).some(trackTag => mix.policy.genreTags.some(tag => {
+    const candidate = normalize(trackTag); const expected = normalize(tag);
+    return candidate === expected || candidate.includes(expected);
+  }));
+  const formatMember = coreSong || coreArtist || approvedArtist || Boolean(rule) || tagMatch;
   if (!formatMember) return { eligible: false, reason: 'outside curated Local Mix roster', tier: '' };
-  if (mix.policy.songSpecific && !coreSong) return { eligible: false, reason: 'not a reviewed song for this Local Mix', tier: '' };
+  if (mix.policy.songSpecific && !coreSong && !tagMatch) return { eligible: false, reason: 'not a reviewed song for this Local Mix', tier: '' };
   const year = yearOf(track);
   const from = rule?.allowAnyYear ? null : (rule?.fromYear ?? mix.policy.fromYear);
   const to = rule?.allowAnyYear ? null : (rule?.toYear ?? mix.policy.toYear);
   if (year !== null && ((from !== null && year < from) || (to !== null && year > to))) return { eligible: false, reason: 'outside Local Mix era', tier: '' };
-  if (year === null && !coreSong && !(coreArtist && mix.policy.unknownYear === 'allowOnlyForCoreArtistWhenNoExplicitExclusionApplies')) {
+  if (year === null && !coreSong && !tagMatch && !(coreArtist && mix.policy.unknownYear === 'allowOnlyForCoreArtistWhenNoExplicitExclusionApplies')) {
     return { eligible: false, reason: 'missing trustworthy era data', tier: '' };
   }
   if (coreSong) return { eligible: true, reason: 'reviewed Local Mix song', tier: 'song' };
+  if (tagMatch) return { eligible: true, reason: 'Local Mix genre tag', tier: 'tag' };
   if (coreArtist) return { eligible: true, reason: 'core Local Mix artist', tier: 'core' };
   return { eligible: true, reason: 'approved Local Mix artist', tier: 'approved' };
 }

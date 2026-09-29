@@ -20,7 +20,7 @@ const { copyLegacyData } = require("./data-migration");
 const { RecordingLibrary } = require("./recording-library");
 const { MusicLibrary } = require('./music-library');
 const { MusicRadio } = require('./music-radio');
-const { getLocalMixAvailability, mixBookSignature } = require('./local-mixes');
+const { mixBookSignature } = require('./local-mixes');
 const { LastFmEnricher } = require('./lastfm-enricher');
 const {
   getLauncherStatus,
@@ -115,7 +115,6 @@ let floatingBounds = null;
 let sectionVisibility = { presets: false, localPresets: false, localMixes: true, favoritesOnly: false, mostPlayed: false, collapsedGroups: [], collapsedSubgroups: [] };
 let quitFinalizingRecording = false;
 let cleanupComplete = false;
-let localMixAvailabilityCache = { libraryRevision: -1, signature: '', mixes: [] };
 const startupWarnings = [];
 
 function getDataDir() {
@@ -221,15 +220,17 @@ function sortLocalMixes(mixes) {
 }
 
 function localMixAvailability() {
-  const signature = mixBookSignature(getDataDir());
-  const libraryRevision = musicLibrary?.revision || 0;
-  if (localMixAvailabilityCache.signature === signature && localMixAvailabilityCache.libraryRevision === libraryRevision) {
-    return localMixAvailabilityCache.mixes;
-  }
+  const state = musicLibrary?.getLocalMixAvailability() || { analyzing: false, completed: 0, total: 0, mixes: [] };
   const preferences = storage.getUiPreferences();
-  const mixes = sortLocalMixes(getLocalMixAvailability(getDataDir(), musicLibrary?.tracks || [], preferences.localMixEnabled));
-  localMixAvailabilityCache = { signature, libraryRevision, mixes };
-  return mixes;
+  const mixes = sortLocalMixes((state.mixes || []).map(mix => ({
+    ...mix,
+    enabled: typeof preferences.localMixEnabled[mix.id] === 'boolean' ? preferences.localMixEnabled[mix.id] : mix.builtIn
+  })));
+  return { ...state, mixes };
+}
+
+function analyzeLocalMixes() {
+  return musicLibrary?.analyzeLocalMixes(mixBookSignature(getDataDir())) || Promise.resolve(localMixAvailability());
 }
 
 function beginRadioDiagnosticSession(stationKey = '') {
@@ -854,8 +855,7 @@ function installIpcHandlers() {
     }
     const preferences = storage.setAdditionalMusicFolder(selected);
     await musicLibrary?.setAdditionalMusicFolder(preferences.additionalMusicFolder);
-    localMixAvailabilityCache = { libraryRevision: -1, signature: '', mixes: [] };
-    sendToAll('music:mixes-changed');
+    void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
     sendToAll('ui:preferences-changed', preferences);
     return preferences;
   });
@@ -948,28 +948,34 @@ function installIpcHandlers() {
   ipcMain.handle('music:scan', async () => {
     await requireMusic();
     const status = await musicLibrary.rescan();
-    localMixAvailabilityCache = { libraryRevision: -1, signature: '', mixes: [] };
-    sendToAll('music:mixes-changed');
+    void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
     return status;
   });
   ipcMain.handle('music:play', async (_event, id, mode) => { await requireMusic(); return mediaController.playMusic(String(id), mode); });
   ipcMain.handle('music:mixes', async () => {
     await requireMusic();
-    return localMixAvailability().filter(mix => mix.valid && mix.enabled && mix.ready);
+    void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
+    const availability = localMixAvailability();
+    return availability.analyzing ? [] : availability.mixes.filter(mix => mix.valid && mix.enabled && mix.ready);
   });
-  ipcMain.handle('music:mixes:manage', async () => { await requireMusic(); return localMixAvailability(); });
+  ipcMain.handle('music:mixes:manage', async () => {
+    await requireMusic();
+    void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
+    return localMixAvailability();
+  });
   ipcMain.handle('music:mixes:set-enabled', async (_event, mixId, enabled) => {
     await requireMusic();
-    const mix = localMixAvailability().find(item => item.id === String(mixId || ''));
+    await analyzeLocalMixes();
+    const mix = localMixAvailability().mixes.find(item => item.id === String(mixId || ''));
     if (!mix?.valid) throw new Error('That Local Mix cannot be enabled until its JSON book is fixed.');
     storage.setLocalMixEnabled(mix.id, enabled === true);
-    localMixAvailabilityCache = { libraryRevision: -1, signature: '', mixes: [] };
     sendToAll('music:mixes-changed');
     return localMixAvailability();
   });
   ipcMain.handle('music:play-mix', async (_event, mixId) => {
     await requireMusic();
-    const mix = localMixAvailability().find(item => item.id === String(mixId || ''));
+    await analyzeLocalMixes();
+    const mix = localMixAvailability().mixes.find(item => item.id === String(mixId || ''));
     if (!mix?.valid) throw new Error('That Local Mix cannot be played until its JSON book is fixed.');
     if (!mix.enabled) throw new Error('Enable this Local Mix in Settings before playing it.');
     if (!mix.ready) throw new Error(`${mix.name} needs at least 20 eligible songs in your Local Music library before it can play.`);
@@ -1183,7 +1189,11 @@ if (!hasSingleInstanceLock) {
       onLocalStationStart: stationKey => beginRadioDiagnosticSession(stationKey)
     }));
 
-    musicLibrary = new MusicLibrary({ dataDir: getDataDir(), additionalMusicFolder: storage.getUiPreferences().additionalMusicFolder, onStatus: status => sendToMain('music:changed', status) });
+    musicLibrary = new MusicLibrary({
+      dataDir: getDataDir(), additionalMusicFolder: storage.getUiPreferences().additionalMusicFolder,
+      onStatus: status => sendToMain('music:changed', status),
+      onLocalMixAvailability: () => sendToAll('music:mixes-changed')
+    });
     musicRadio = new MusicRadio({ dataDir: getDataDir(), onDecision: sendToRadioLog,
       getFamiliarity: () => storage.getUiPreferences().localRadioFamiliarity,
       getTuning: () => storage.getUiPreferences() });
