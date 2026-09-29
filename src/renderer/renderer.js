@@ -19,6 +19,7 @@ const favoritesOnlyToggleBtn = document.getElementById("favoritesOnlyToggleBtn")
 const mostPlayedSectionToggleBtn = document.getElementById("mostPlayedSectionToggleBtn");
 const recordingsSectionToggleBtn = document.getElementById("recordingsSectionToggleBtn");
 const localPresetSectionToggleBtn = document.getElementById('localPresetSectionToggleBtn');
+const localFavoritesOnlyToggleBtn = document.getElementById('localFavoritesOnlyToggleBtn');
 const localMixesSectionToggleBtn = document.getElementById('localMixesSectionToggleBtn');
 const sidebarModeBtn = document.getElementById("sidebarModeBtn");
 const streamingToolbar = document.getElementById("streamingToolbar");
@@ -56,6 +57,7 @@ let searchSectionVisible = false;
 let presetSectionVisible = true;
 let localPresetSectionVisible = false;
 let localMixesSectionVisible = true;
+let localFavoritesOnlyVisible = false;
 let favoritesOnlyVisible = false;
 let mostPlayedSectionVisible = false;
 let recordingsSectionVisible = false;
@@ -268,6 +270,7 @@ function updateSectionToolbarHighlights() {
   mostPlayedSectionToggleBtn.classList.toggle("active", !showingRecordings && mostPlayedSectionVisible);
   recordingsSectionToggleBtn.classList.toggle("active", recordingsSectionVisible);
   localPresetSectionToggleBtn.classList.toggle('active', musicVisible && localPresetSectionVisible);
+  localFavoritesOnlyToggleBtn.classList.toggle('active', musicVisible && localFavoritesOnlyVisible);
   localMixesSectionToggleBtn.classList.toggle('active', musicVisible && localMixesSectionVisible);
   musicToggleBtn.classList.toggle('active', musicVisible);
   streamingTabBtn.classList.toggle('active', !musicVisible);
@@ -280,14 +283,16 @@ function setSectionVisibilityUi(state = {}) {
   const presets = state.presets !== false;
   const localPresets = state.localPresets === true;
   const localMixes = state.localMixes !== false;
+  const localFavoritesOnly = state.localFavoritesOnly === true;
   const favoritesOnly = state.favoritesOnly === true;
   const mostPlayed = state.mostPlayed === true;
-  const changed = searchSectionVisible !== search || presetSectionVisible !== presets || localPresetSectionVisible !== localPresets || localMixesSectionVisible !== localMixes ||
+  const changed = searchSectionVisible !== search || presetSectionVisible !== presets || localPresetSectionVisible !== localPresets || localMixesSectionVisible !== localMixes || localFavoritesOnlyVisible !== localFavoritesOnly ||
     favoritesOnlyVisible !== favoritesOnly || mostPlayedSectionVisible !== mostPlayed;
   searchSectionVisible = search;
   presetSectionVisible = presets;
   localPresetSectionVisible = localPresets;
   localMixesSectionVisible = localMixes;
+  localFavoritesOnlyVisible = localFavoritesOnly;
   favoritesOnlyVisible = favoritesOnly;
   mostPlayedSectionVisible = mostPlayed;
 
@@ -307,6 +312,8 @@ function setSectionVisibilityUi(state = {}) {
   localPresetSectionToggleBtn.setAttribute('aria-label', localPresets ? 'Hide Local Station Presets' : 'Show Local Station Presets');
   localMixesSectionToggleBtn.setAttribute('aria-pressed', String(localMixes));
   localMixesSectionToggleBtn.setAttribute('aria-label', localMixes ? 'Hide Local Mixes' : 'Show Local Mixes');
+  localFavoritesOnlyToggleBtn.setAttribute('aria-pressed', String(localFavoritesOnly));
+  localFavoritesOnlyToggleBtn.setAttribute('aria-label', localFavoritesOnly ? 'Show all Local Music' : 'Show favorite Local Music only');
   favoritesOnlyToggleBtn.setAttribute("aria-pressed", String(favoritesOnly));
   favoritesOnlyToggleBtn.setAttribute("aria-label", favoritesOnly ? "Show all Stations" : "Show Favorites only");
   mostPlayedSectionToggleBtn.setAttribute("aria-pressed", String(mostPlayed));
@@ -389,11 +396,13 @@ async function renderMusic() {
       if (!musicVisible || sequence !== musicRenderSequence || query !== musicSearch.value) return;
       const saved = Array.isArray(history?.localStationPresets) ? history.localStationPresets : [];
       const savedKeys = new Set(saved.map(station => station.key));
-      const mixes = localMixesSectionVisible ? await window.wavedeck.getLocalMixes() : [];
+      const allMixes = localMixesSectionVisible ? await window.wavedeck.getLocalMixes() : [];
       if (!musicVisible || sequence !== musicRenderSequence || query !== musicSearch.value) return;
-      const recent = (Array.isArray(history?.recentLocalStations) ? history.recentLocalStations : [])
-        .filter(station => !localPresetSectionVisible || !savedKeys.has(station.key)).slice(0, 10);
-      if (localPresetSectionVisible) {
+      const showSaved = localPresetSectionVisible || localFavoritesOnlyVisible;
+      const mixes = localFavoritesOnlyVisible ? allMixes.filter(mix => mix.favorite) : allMixes;
+      const recent = localFavoritesOnlyVisible ? [] : (Array.isArray(history?.recentLocalStations) ? history.recentLocalStations : [])
+        .filter(station => !showSaved || !savedKeys.has(station.key)).slice(0, 10);
+      if (showSaved) {
         listEl.append(createSectionTitle('Local Station Presets', saved.length ? '' : 'None yet — star a Local Station to save it.'));
         if (saved.length) {
           const block = element('div', 'local-station-list');
@@ -406,7 +415,7 @@ async function renderMusic() {
         const block = element('div', 'local-station-list');
         block.append(...recent.map(station => createLocalStationRow(station, savedKeys.has(station.key))));
         listEl.append(block);
-      } else if ((!saved.length || !localPresetSectionVisible) && !mixes.length) {
+      } else if ((!saved.length || !showSaved) && !mixes.length) {
         listEl.append(element('div', 'music-empty-state', 'Search for local music, or start a Local Station to see it here.'));
       }
       if (mixes.length) {
@@ -558,6 +567,13 @@ localPresetSectionToggleBtn.addEventListener('click', async () => {
     setSectionVisibilityUi(await window.wavedeck.setSectionVisibility({ localPresets: !localPresetSectionVisible }));
   } catch (error) { musicStatus.textContent = error.message; }
   finally { localPresetSectionToggleBtn.disabled = false; }
+});
+localFavoritesOnlyToggleBtn.addEventListener('click', async () => {
+  localFavoritesOnlyToggleBtn.disabled = true;
+  try {
+    setSectionVisibilityUi(await window.wavedeck.setSectionVisibility({ localFavoritesOnly: !localFavoritesOnlyVisible }));
+  } catch (error) { musicStatus.textContent = error.message; }
+  finally { localFavoritesOnlyToggleBtn.disabled = false; }
 });
 localMixesSectionToggleBtn.addEventListener('click', async () => {
   localMixesSectionToggleBtn.disabled = true;

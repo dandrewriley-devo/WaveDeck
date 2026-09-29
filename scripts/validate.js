@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.10.0");
-assert.strictEqual(packageJson.wavedeckVersion, "0.10.0");
+assert.strictEqual(packageJson.version, "0.10.1");
+assert.strictEqual(packageJson.wavedeckVersion, "0.10.1");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -349,6 +349,7 @@ try {
       presets: false,
       localPresets: false,
       localMixes: true,
+      localFavoritesOnly: false,
       favoritesOnly: false,
       mostPlayed: false,
       collapsedGroups: [],
@@ -393,6 +394,7 @@ try {
     presets: true,
     localPresets: true,
     localMixes: false,
+    localFavoritesOnly: true,
     favoritesOnly: true,
     mostPlayed: true,
     collapsedGroups: ["Rock"],
@@ -401,6 +403,7 @@ try {
     presets: true,
     localPresets: true,
     localMixes: false,
+    localFavoritesOnly: true,
     favoritesOnly: true,
     mostPlayed: true,
     collapsedGroups: ["Rock"],
@@ -1364,7 +1367,7 @@ assert.ok(mainSource.includes('ipcMain.handle("launcher:remove"'));
 assert.ok(mainSource.includes('ipcMain.handle("listening:get"'));
 assert.ok(mainSource.includes('ipcMain.handle("listening:reset"'));
 assert.ok(mainSource.includes('ipcMain.handle("listening:toggle-local-preset"'));
-assert.ok(mainSource.includes('let sectionVisibility = { presets: false, localPresets: false, localMixes: true, favoritesOnly: false, mostPlayed: false, collapsedGroups: [], collapsedSubgroups: [] }'));
+assert.ok(mainSource.includes('let sectionVisibility = { presets: false, localPresets: false, localMixes: true, localFavoritesOnly: false, favoritesOnly: false, mostPlayed: false, collapsedGroups: [], collapsedSubgroups: [] }'));
 assert.ok(mainSource.includes('ipcMain.handle("sections:get-state"'));
 assert.ok(mainSource.includes('ipcMain.handle("sections:set-state"'));
 assert.ok(mainSource.includes('storage.getStreamingUiState()'));
