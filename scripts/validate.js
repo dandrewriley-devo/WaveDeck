@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.11.0");
-assert.strictEqual(packageJson.wavedeckVersion, "0.11.0");
+assert.strictEqual(packageJson.version, "0.11.1");
+assert.strictEqual(packageJson.wavedeckVersion, "0.11.1");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -1396,6 +1396,8 @@ assert.ok(mainSource.includes('"WaveDeck_Library.json"'));
 assert.ok(mainSource.includes("createLibraryUpdater"));
 assert.ok(mainSource.includes("net.fetch"));
 assert.ok(mainSource.includes("isPaused: () => Boolean(settingsWindow"));
+assert.ok(mainSource.includes("function closeAuxiliaryWindows()"));
+assert.ok(mainSource.includes("if (mainWindow === window) closeAuxiliaryWindows();"));
 assert.ok(mainSource.includes('ipcMain.handle("player:play-station"'));
 assert.ok(mainSource.includes('ipcMain.handle("recording:toggle"'));
 assert.ok(mainSource.includes('ipcMain.handle("recordings:list"'));

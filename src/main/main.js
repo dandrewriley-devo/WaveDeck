@@ -352,6 +352,12 @@ function delay(milliseconds) {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
+function closeAuxiliaryWindows() {
+  for (const auxiliary of [settingsWindow, radioLogWindow]) {
+    if (auxiliary && !auxiliary.isDestroyed()) auxiliary.close();
+  }
+}
+
 function createMainWindow({
   sidebar = false,
   bounds = null,
@@ -389,6 +395,10 @@ function createMainWindow({
 
   window.on("move", rememberFloatingBounds);
   window.on("resize", rememberFloatingBounds);
+
+  window.on("close", () => {
+    if (mainWindow === window) closeAuxiliaryWindows();
+  });
 
   window.on("closed", () => {
     if (mainWindow === window) mainWindow = null;
