@@ -411,15 +411,29 @@ async function renderMusic() {
 }
 
 function createLocalMixRow(mix) {
-  const row = element('button', 'local-mix-row local-mix-play', mix.name);
-  row.type = 'button';
-  row.title = `Play ${mix.name}`;
-  row.addEventListener('click', async () => {
-    row.disabled = true;
+  const row = element('div', 'local-mix-row');
+  const play = element('button', 'local-mix-play', mix.name);
+  play.type = 'button';
+  play.title = `Play ${mix.name}`;
+  play.addEventListener('click', async () => {
+    play.disabled = true;
     try { await window.wavedeck.playLocalMix(mix.id); }
     catch (error) { musicStatus.textContent = error.message; }
-    finally { row.disabled = false; }
+    finally { play.disabled = false; }
   });
+  const star = element('button', `local-station-star${mix.favorite ? ' saved' : ''}`);
+  star.type = 'button';
+  star.setAttribute('aria-label', mix.favorite ? `Remove ${mix.name} from favorite Local Mixes` : `Add ${mix.name} to favorite Local Mixes`);
+  star.title = mix.favorite ? 'Remove favorite Local Mix' : 'Favorite Local Mix';
+  star.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.78 5.63 6.22.9-4.5 4.39 1.06 6.2L12 17.2l-5.56 2.92 1.06-6.2L3 9.53l6.22-.9L12 3Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>';
+  star.addEventListener('click', async event => {
+    event.stopPropagation();
+    star.disabled = true;
+    try { await window.wavedeck.setLocalMixFavorite(mix.id, !mix.favorite); await renderMusic(); }
+    catch (error) { musicStatus.textContent = error.message; }
+    finally { star.disabled = false; }
+  });
+  row.append(play, star);
   return row;
 }
 

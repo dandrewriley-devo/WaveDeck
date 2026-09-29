@@ -213,6 +213,7 @@ function sendToAll(channel, payload) {
 
 function sortLocalMixes(mixes) {
   return [...mixes].sort((left, right) => {
+    if (left.favorite !== right.favorite) return left.favorite ? -1 : 1;
     if (left.id === 'classic-hits') return -1;
     if (right.id === 'classic-hits') return 1;
     return String(left.name).localeCompare(String(right.name), undefined, { sensitivity: 'base' });
@@ -224,7 +225,8 @@ function localMixAvailability() {
   const preferences = storage.getUiPreferences();
   const mixes = sortLocalMixes((state.mixes || []).map(mix => ({
     ...mix,
-    enabled: typeof preferences.localMixEnabled[mix.id] === 'boolean' ? preferences.localMixEnabled[mix.id] : mix.builtIn
+    enabled: typeof preferences.localMixEnabled[mix.id] === 'boolean' ? preferences.localMixEnabled[mix.id] : mix.builtIn,
+    favorite: preferences.localMixFavorites[mix.id] === true
   })));
   return { ...state, mixes };
 }
@@ -969,6 +971,15 @@ function installIpcHandlers() {
     const mix = localMixAvailability().mixes.find(item => item.id === String(mixId || ''));
     if (!mix?.valid) throw new Error('That Local Mix cannot be enabled until its JSON book is fixed.');
     storage.setLocalMixEnabled(mix.id, enabled === true);
+    sendToAll('music:mixes-changed');
+    return localMixAvailability();
+  });
+  ipcMain.handle('music:mixes:set-favorite', async (_event, mixId, favorite) => {
+    await requireMusic();
+    await analyzeLocalMixes();
+    const mix = localMixAvailability().mixes.find(item => item.id === String(mixId || ''));
+    if (!mix?.valid) throw new Error('That Local Mix cannot be favorited until its JSON book is fixed.');
+    storage.setLocalMixFavorite(mix.id, favorite === true);
     sendToAll('music:mixes-changed');
     return localMixAvailability();
   });

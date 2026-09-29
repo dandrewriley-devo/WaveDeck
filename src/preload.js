@@ -16,6 +16,7 @@ contextBridge.exposeInMainWorld("wavedeck", {
   getLocalMixes: () => ipcRenderer.invoke('music:mixes'),
   getLocalMixInventory: () => ipcRenderer.invoke('music:mixes:manage'),
   setLocalMixEnabled: (id, enabled) => ipcRenderer.invoke('music:mixes:set-enabled', id, enabled),
+  setLocalMixFavorite: (id, favorite) => ipcRenderer.invoke('music:mixes:set-favorite', id, favorite),
   playLocalMix: id => ipcRenderer.invoke('music:play-mix', id),
   sendMusicFeedback: kind => ipcRenderer.invoke('music:feedback', kind),
   seekMusic: seconds => ipcRenderer.invoke('music:seek', seconds),

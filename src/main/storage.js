@@ -313,6 +313,14 @@ function validatePreferences(value) {
       if (/^[a-z0-9-]+$/.test(id) && typeof enabled === 'boolean') localMixEnabled[id] = enabled;
     }
   }
+  const localMixFavorites = {};
+  const rawLocalMixFavorites = value?.localMixFavorites;
+  if (rawLocalMixFavorites && typeof rawLocalMixFavorites === 'object' && !Array.isArray(rawLocalMixFavorites)) {
+    for (const [rawId, favorite] of Object.entries(rawLocalMixFavorites)) {
+      const id = String(rawId || '').trim();
+      if (/^[a-z0-9-]+$/.test(id) && favorite === true) localMixFavorites[id] = true;
+    }
+  }
   const rawStreamingUi = value?.streamingUi && typeof value.streamingUi === "object" && !Array.isArray(value.streamingUi)
     ? value.streamingUi
     : {};
@@ -350,6 +358,7 @@ function validatePreferences(value) {
     localRadioArtistSetSize,
     localMusicCrossfadeEnabled,
     localMixEnabled,
+    localMixFavorites,
     streamingUi: {
       presets: rawStreamingUi.presets === true,
       localPresets: rawStreamingUi.localPresets === true,
@@ -528,6 +537,7 @@ class PortableStorage {
       localRadioArtistSetSize: preferences.localRadioArtistSetSize,
       localMusicCrossfadeEnabled: preferences.localMusicCrossfadeEnabled,
       localMixEnabled: { ...preferences.localMixEnabled },
+      localMixFavorites: { ...preferences.localMixFavorites },
       launchInSidebarMode: preferences.launchInSidebarMode,
       settingsWindowBounds: preferences.settingsWindowBounds
         ? { ...preferences.settingsWindowBounds }
@@ -576,6 +586,18 @@ class PortableStorage {
     if (!/^[a-z0-9-]+$/.test(mixId)) throw new Error('That Local Mix is not valid.');
     const preferences = this.readPreferences();
     preferences.localMixEnabled = { ...preferences.localMixEnabled, [mixId]: Boolean(enabled) };
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences();
+  }
+
+  setLocalMixFavorite(id, favorite) {
+    const mixId = String(id || '').trim();
+    if (!/^[a-z0-9-]+$/.test(mixId)) throw new Error('That Local Mix is not valid.');
+    const preferences = this.readPreferences();
+    const favorites = { ...preferences.localMixFavorites };
+    if (favorite === true) favorites[mixId] = true;
+    else delete favorites[mixId];
+    preferences.localMixFavorites = favorites;
     this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
     return this.getUiPreferences();
   }

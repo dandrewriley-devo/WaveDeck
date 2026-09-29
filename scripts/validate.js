@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.9.3");
-assert.strictEqual(packageJson.wavedeckVersion, "0.9.3");
+assert.strictEqual(packageJson.version, "0.9.4");
+assert.strictEqual(packageJson.wavedeckVersion, "0.9.4");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -344,6 +344,7 @@ try {
     localRadioArtistSetSize: 1,
     localMusicCrossfadeEnabled: true,
     localMixEnabled: {},
+    localMixFavorites: {},
     streamingUi: {
       presets: false,
       localPresets: false,
@@ -371,6 +372,7 @@ try {
     localRadioArtistSetSize: 1,
     localMusicCrossfadeEnabled: true,
     localMixEnabled: {},
+    localMixFavorites: {},
     launchInSidebarMode: false,
     settingsWindowBounds: null,
     radioLogWindowBounds: null
@@ -384,6 +386,9 @@ try {
   assert.deepStrictEqual(storage.setLocalRadioTuning({ songRepeatHours: 6, artistRepeatMinutes: 180, artistSetSize: 2 }).localRadioArtistSetSize, 2);
   assert.strictEqual(storage.setLocalMusicCrossfadeEnabled(false).localMusicCrossfadeEnabled, false);
   assert.strictEqual(storage.setLocalMixEnabled('classic-rock', false).localMixEnabled['classic-rock'], false);
+  assert.strictEqual(storage.setLocalMixFavorite('classic-rock', true).localMixFavorites['classic-rock'], true);
+  assert.deepStrictEqual(storage.setLocalMixFavorite('classic-rock', false).localMixFavorites, {});
+  assert.strictEqual(storage.setLocalMixFavorite('classic-rock', true).localMixFavorites['classic-rock'], true);
   assert.deepStrictEqual(storage.setStreamingUiState({
     presets: true,
     localPresets: true,
@@ -426,6 +431,7 @@ try {
     localRadioArtistSetSize: 2,
     localMusicCrossfadeEnabled: false,
     localMixEnabled: { "classic-rock": false },
+    localMixFavorites: { "classic-rock": true },
     launchInSidebarMode: true,
     settingsWindowBounds: { x: 2100, y: 41, width: 1120, height: 841 },
     radioLogWindowBounds: { x: 14, y: 23, width: 864, height: 700 }

@@ -921,9 +921,9 @@ html, body{
 .local-station-star.saved svg path { fill:currentColor; }
 .local-station-star:disabled, .local-station-play:disabled { cursor:default; opacity:.6; }
 .local-mix-list { display:grid; gap:6px; margin:0 8px 12px; }
-.local-mix-row { background:linear-gradient(90deg,#202522,#1c1d1d); border:1px solid rgba(143,234,179,.24); border-radius:5px; min-width:0; padding:7px 8px; }
-.local-mix-play { color:#dce7df; cursor:pointer; font-size:12px; font-weight:750; overflow:hidden; text-align:left; text-overflow:ellipsis; white-space:nowrap; width:100%; }
-.local-mix-play:hover, .local-mix-play:focus-visible { border-color:rgba(143,234,179,.58); color:#8feab3; outline:none; }
+.local-mix-row { align-items:center; background:linear-gradient(90deg,#202522,#1c1d1d); border:1px solid rgba(143,234,179,.24); border-radius:5px; display:flex; min-width:0; }
+.local-mix-play { background:transparent; border:0; color:#dce7df; cursor:pointer; flex:1 1 auto; font-size:12px; font-weight:750; min-width:0; overflow:hidden; padding:7px 8px; text-align:left; text-overflow:ellipsis; white-space:nowrap; }
+.local-mix-play:hover, .local-mix-play:focus-visible { color:#8feab3; outline:none; }
 .local-mix-play:disabled { cursor:default; opacity:.6; }
 .toolbar { flex-wrap: nowrap; }
 .toolbar button { flex: 0 1 34px; min-width: 0; }

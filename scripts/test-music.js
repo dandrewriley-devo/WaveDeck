@@ -147,13 +147,14 @@ async function run() {
     assert.equal(isTrackEligibleForMix(track('black-ice', { artist: 'AC/DC', title: 'Rock ’n’ Roll Train', year: 2008 }), classicMix).eligible, true, 'Classic Rock keeps later AC/DC eligible');
     assert.equal(isTrackEligibleForMix(classicSeedTracks[0], classicMix).eligible, true, 'Classic Rock keeps its intended core material');
     const bestMix = resolveLocalMix('your-best-music', classicSeedTracks, portableMixData);
-    assert.equal(isTrackEligibleForMix(track('anything', { artist: 'Miles Davis', genres: ['Jazz'] }), bestMix).eligible, true, 'Your Best Music can use any artist in the personal library');
+    assert.equal(bestMix.name, 'Wild Card Radio', 'the seedless personal Local Mix has its listener-facing name');
+    assert.equal(isTrackEligibleForMix(track('anything', { artist: 'Miles Davis', genres: ['Jazz'] }), bestMix).eligible, true, 'Wild Card Radio can use any artist in the personal library');
     const bestMixRadio = new MusicRadio({ dataDir: path.join(temp, 'best-music-format'), now: () => now, random: () => 0, getFamiliarity: () => 'hits' });
     const ratedFavorite = track('best-rated', { artist: 'Metallica', artists: ['Metallica'], rating: 8, popularity: 5 });
     const bestMixPopular = track('best-popular', { artist: 'Miles Davis', artists: ['Miles Davis'], popularity: 95 });
-    assert.equal(bestMixRadio.choose([ratedFavorite, bestMixPopular], bestMix, 'mix').id, ratedFavorite.id, 'Your Best Music uses personal ratings before Last.fm popularity');
+    assert.equal(bestMixRadio.choose([ratedFavorite, bestMixPopular], bestMix, 'mix').id, ratedFavorite.id, 'Wild Card Radio uses personal ratings before Last.fm popularity');
     const fallbackRadio = new MusicRadio({ dataDir: path.join(temp, 'best-music-fallback'), now: () => now, random: () => 0, getFamiliarity: () => 'balanced' });
-    assert.equal(fallbackRadio.choose([bestMixPopular, track('unrated-obscure', { artist: 'Frank Zappa', artists: ['Frank Zappa'], popularity: 10 })], bestMix, 'mix').id, bestMixPopular.id, 'Your Best Music falls back to Last.fm familiarity when no personal ratings or Favorites exist');
+    assert.equal(fallbackRadio.choose([bestMixPopular, track('unrated-obscure', { artist: 'Frank Zappa', artists: ['Frank Zappa'], popularity: 10 })], bestMix, 'mix').id, bestMixPopular.id, 'Wild Card Radio falls back to Last.fm familiarity when no personal ratings or Favorites exist');
     const classicRadio = new MusicRadio({ dataDir: path.join(temp, 'classic-format'), now: () => now, random: () => 0 });
     const modernColdplay = track('coldplay', { artist: 'Coldplay', artists: ['Coldplay'], title: 'Charlie Brown', year: 2011, rating: 10, similarArtists: ['U2'] });
     assert.equal(classicRadio.choose([...classicSeedTracks, modernColdplay], classicMix, 'mix').artist, 'Boston', 'Last.fm similarity cannot admit a non-format Classic Rock artist');
