@@ -186,7 +186,12 @@ main{
 .local-mix-manager-copy{ display:grid; gap:3px; min-width:0; }
 .local-mix-manager-name{ color:#e3e3e3; font-size:12px; font-weight:650; }
 .local-mix-manager-description{ color:var(--muted); font-size:11px; line-height:1.35; }
-.local-mix-manager-status{ color:var(--green); font-size:11px; font-variant-numeric:tabular-nums; }
+.local-mix-manager-status{ font-size:11px; font-variant-numeric:tabular-nums; }
+.local-mix-manager-status.quality-not-enough{ color:#d9534f; }
+.local-mix-manager-status.quality-weak{ color:#e67e22; }
+.local-mix-manager-status.quality-solid{ color:#d6a323; }
+.local-mix-manager-status.quality-strong{ color:#8eae3a; }
+.local-mix-manager-status.quality-excellent{ color:#49a35c; }
 .local-mix-manager-row.unavailable .local-mix-manager-status{ color:#d6a15d; }
 
 .radio-tuning{

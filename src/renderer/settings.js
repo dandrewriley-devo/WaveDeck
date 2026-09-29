@@ -170,8 +170,12 @@ let localMixManagerLoadVersion = 0;
 function localMixStatusText(mix) {
   if (!mix.valid) return mix.error || 'This Local Mix book is unavailable.';
   const count = Number(mix.eligibleTrackCount || 0);
-  if (!mix.ready) return `Needs 20 eligible songs · ${count.toLocaleString()} found`;
+  if (!mix.ready) return `${mix.quality} · ${count.toLocaleString()} found (20 needed)`;
   return `${mix.quality} · ${count.toLocaleString()} eligible songs`;
+}
+
+function localMixQualityClass(mix) {
+  return `quality-${String(mix?.quality || 'unavailable').toLowerCase().replace(/[^a-z]+/g, '-')}`;
 }
 
 function renderLocalMixManager(mixes) {
@@ -191,7 +195,7 @@ function renderLocalMixManager(mixes) {
     copy.append(
       element('span', 'local-mix-manager-name', mix.name || mix.sourceFile || 'Untitled Local Mix'),
       mix.description ? element('span', 'local-mix-manager-description', mix.description) : document.createTextNode(''),
-      element('span', 'local-mix-manager-status', localMixStatusText(mix))
+      element('span', `local-mix-manager-status ${localMixQualityClass(mix)}`, localMixStatusText(mix))
     );
     checkbox.addEventListener('change', async () => {
       checkbox.disabled = true;

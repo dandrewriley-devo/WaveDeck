@@ -135,11 +135,11 @@ function listLocalMixes(dataDir) {
 }
 
 function qualityForTrackCount(count) {
-  if (count < MINIMUM_LOCAL_MIX_TRACKS) return 'Needs more music';
-  if (count < 50) return 'Growing mix';
-  if (count < 150) return 'Solid mix';
-  if (count < 400) return 'Strong mix';
-  return 'Excellent mix';
+  if (count < MINIMUM_LOCAL_MIX_TRACKS) return 'Not Enough';
+  if (count < 50) return 'Weak';
+  if (count < 150) return 'Solid';
+  if (count < 400) return 'Strong';
+  return 'Excellent';
 }
 
 function mixBookSignature(dataDir) {

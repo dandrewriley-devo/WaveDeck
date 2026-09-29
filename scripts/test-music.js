@@ -8,7 +8,7 @@ const { MusicRadio, weight, COOLDOWN } = require('../src/main/music-radio');
 const { extractTrack, radioArtist } = require('../src/main/music-tags');
 const { MediaController, serializeTransport } = require('../src/main/media-controller');
 const { LastFmEnricher, popularityScore } = require('../src/main/lastfm-enricher');
-const { resolveLocalMix, listLocalMixes, loadLocalMixes, getLocalMixAvailability, isTrackEligibleForMix } = require('../src/main/local-mixes');
+const { resolveLocalMix, listLocalMixes, loadLocalMixes, getLocalMixAvailability, isTrackEligibleForMix, qualityForTrackCount } = require('../src/main/local-mixes');
 
 function fixture() {
   const frame = (id, value) => { const data = Buffer.concat([Buffer.from([0]), Buffer.from(value)]); const header = Buffer.alloc(10); header.write(id); header.writeUInt32BE(data.length, 4); return Buffer.concat([header, data]); };
@@ -21,6 +21,11 @@ function fixture() {
 function track(id, more = {}) { return { id, songKey: id, title: id, artist: 'Artist', artists: ['Artist'], albumArtist: 'Artist', album: 'Album', track: Number(id) || 1, disc: 1, relativePath: `${id}.mp3`, genres: ['Pop'], similarArtists: [], rating: null, ...more }; }
 
 async function run() {
+  assert.equal(qualityForTrackCount(19), 'Not Enough');
+  assert.equal(qualityForTrackCount(20), 'Weak');
+  assert.equal(qualityForTrackCount(50), 'Solid');
+  assert.equal(qualityForTrackCount(150), 'Strong');
+  assert.equal(qualityForTrackCount(400), 'Excellent');
   const temp = await fs.mkdtemp(path.join(os.tmpdir(), 'wavedeck-music-test-')); let library;
   try {
     const dataDir = path.join(temp, 'Data'); const musicDir = path.join(temp, 'Music'); await fs.mkdir(musicDir, { recursive: true });
