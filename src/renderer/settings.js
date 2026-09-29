@@ -50,6 +50,8 @@ const advancedFeaturesOff = document.getElementById('advancedFeaturesOff');
 const additionalMusicFolder = document.getElementById('additionalMusicFolder');
 const chooseAdditionalMusicFolderBtn = document.getElementById('chooseAdditionalMusicFolderBtn');
 const clearAdditionalMusicFolderBtn = document.getElementById('clearAdditionalMusicFolderBtn');
+const musicLibraryStatus = document.getElementById('musicLibraryStatus');
+const rescanMusicBtn = document.getElementById('rescanMusicBtn');
 const lastFmEnabled = document.getElementById('lastFmEnabled');
 const lastFmDetails = document.getElementById('lastFmDetails');
 const lastFmApiKey = document.getElementById('lastFmApiKey');
@@ -102,6 +104,19 @@ const LOCAL_RADIO_FAMILIARITY_COPY = {
   'deep-cuts': 'Play Deep Cuts Too — chooses first from Favorites and 3–10 ratings. Hits stay in rotation while 3–6 get more opportunity.'
 };
 
+function renderMusicLibraryStatus(status = {}) {
+  const count = Number(status.count || 0);
+  musicLibraryStatus.textContent = status.message || (status.scanning
+    ? `Scanning Local Music… ${Number(status.checked || 0).toLocaleString()} checked`
+    : `${count.toLocaleString()} songs in your Local Music library`);
+  rescanMusicBtn.disabled = status.scanning === true;
+  rescanMusicBtn.textContent = status.scanning ? 'Scanning…' : 'Rescan';
+}
+
+async function loadMusicLibraryStatus() {
+  try { renderMusicLibraryStatus(await window.wavedeck.getMusicStatus()); } catch {}
+}
+
 function renderProMusicSettings(preferences) {
   const proEnabled = preferences?.proModeEnabled === true;
   const folder = String(preferences?.additionalMusicFolder || '');
@@ -130,7 +145,7 @@ function renderProMusicSettings(preferences) {
   renderSongRepeatStop(songRepeatHours);
   localRadioArtistRepeatHelp.textContent = `${artistRepeatMinutes} minutes. The artist cannot return until this wait has passed.`;
   localRadioArtistSetHelp.textContent = artistSetSize === 1 ? 'Single Tracks is the default. An artist rests after each song.' : `${LOCAL_RADIO_ARTIST_SET_LABELS[artistSetSize - 1]} plays before the artist's repeat wait begins.`;
-  if (proEnabled) { void loadLastFmStatus(); void loadLocalMixManager(); }
+  if (proEnabled) { void loadLastFmStatus(); void loadLocalMixManager(); void loadMusicLibraryStatus(); }
 }
 
 function renderLastFmStatus(status) {
@@ -1085,6 +1100,18 @@ clearAdditionalMusicFolderBtn.addEventListener('click', async () => {
   }
 });
 
+rescanMusicBtn.addEventListener('click', async () => {
+  rescanMusicBtn.disabled = true;
+  try {
+    renderMusicLibraryStatus(await window.wavedeck.scanMusic());
+    setStatus(statusLocalMusic, 'Local Music rescan started.');
+  } catch (error) {
+    setStatus(statusLocalMusic, `Could not rescan Local Music: ${error.message}`, false);
+  } finally {
+    if (!rescanMusicBtn.disabled) rescanMusicBtn.disabled = false;
+  }
+});
+
 lastFmEnabled.addEventListener('change', async () => {
   lastFmEnabled.disabled = true;
   try {
@@ -1231,6 +1258,7 @@ window.wavedeck.onUiPreferencesChanged((preferences) => {
   if (sidebarPlatform) launchInSidebarMode.checked = preferences?.launchInSidebarMode === true;
 });
 window.wavedeck.onLastFmChanged(renderLastFmStatus);
+window.wavedeck.onMusicChanged(renderMusicLibraryStatus);
 window.wavedeck.onLocalMixesChanged(() => { if (!localMusicTab.hidden) void loadLocalMixManager(); });
 
 (async function initialize() {

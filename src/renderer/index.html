@@ -32,14 +32,6 @@
     <nav class="tabbar" aria-label="WaveDeck sections">
       <button id="streamingTabBtn" class="tab-button active" type="button" aria-pressed="true">Streaming</button>
       <button id="musicToggleBtn" class="tab-button" data-pro-only type="button" aria-pressed="false" hidden>Local Music</button>
-      <span class="tabbar-spacer" aria-hidden="true"></span>
-      <button id="openSettingsBtn" class="settings-tab" type="button" aria-label="Open settings" title="Settings">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.09a2 2 0 0 1 1 1.74v.5a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2Z"
-                fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-          <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.7"/>
-        </svg>
-      </button>
     </nav>
 
     <nav class="toolbar" aria-label="Current section tools">
@@ -94,14 +86,14 @@
             <circle cx="15.5" cy="16" r="2.25" fill="none" stroke="currentColor" stroke-width="1.7"/>
           </svg>
         </button>
-        <button id="musicRescan" type="button" aria-label="Rescan Local Music" title="Rescan Local Music">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M20 11a8 8 0 1 0 2.1 5.4M20 4v7h-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-        <span id="musicStatus" class="music-toolbar-status" role="status"></span>
       </div>
       <span class="toolbar-spacer" aria-hidden="true"></span>
+      <button id="openSettingsBtn" type="button" aria-label="Open settings" title="Settings">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.09a2 2 0 0 1 1 1.74v.5a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.7"/>
+        </svg>
+      </button>
       <button id="sidebarModeBtn" type="button" aria-label="Turn Sidebar Mode on"
               aria-pressed="false" title="Sidebar Mode">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
@@ -129,12 +121,8 @@
       <button id="nextPresetBtn" type="button" aria-label="Next Preset" title="Next Preset">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 5v14M6 6.5l9 5.5-9 5.5z" fill="currentColor"/></svg>
       </button>
-      <span class="transport-spacer" aria-hidden="true"></span>
       <button id="localThumbUpBtn" class="feedback-button" type="button" aria-label="Local Radio thumbs up" title="Local Radio thumbs up" disabled>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 10.5v9H4.75a1.25 1.25 0 0 1-1.25-1.25v-6.5A1.25 1.25 0 0 1 4.75 10.5H7.5Zm0 9h8.4a2 2 0 0 0 1.95-1.55l1.3-5.5A2 2 0 0 0 17.2 10H13l.5-3.1a2.55 2.55 0 0 0-2.5-2.9L7.5 10.5Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
-      </button>
-      <button id="localThumbDownBtn" class="feedback-button" type="button" aria-label="Local Radio thumbs down" title="Local Radio thumbs down" disabled>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 13.5v-9H4.75A1.25 1.25 0 0 0 3.5 5.75v6.5a1.25 1.25 0 0 0 1.25 1.25H7.5Zm0-9h8.4a2 2 0 0 1 1.95 1.55l1.3 5.5A2 2 0 0 1 17.2 14H13l.5 3.1a2.55 2.55 0 0 1-2.5 2.9l-3.5-6.5Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
       </button>
     </div>
 
@@ -160,14 +148,11 @@
 
     <section id="musicPanel" class="station-search-panel" aria-label="Local music search" hidden>
       <div class="station-search-field">
-        <input id="musicSearch" class="station-search-input" type="search" placeholder="Search your music…" aria-label="Search local music" autocomplete="off">
+        <input id="musicSearch" class="station-search-input" type="search" placeholder="Search Local Music…" aria-label="Search local music" autocomplete="off">
         <button id="clearMusicSearchBtn" class="station-search-clear" type="button"
                 aria-label="Clear music search" title="Clear search" hidden>×</button>
       </div>
-      <div id="musicContext" class="music-station-context" aria-label="Current Local Station" hidden>
-        <span class="music-station-context-label">Playing:</span>
-        <span id="musicContextLabel"></span>
-      </div>
+      <span id="musicStatus" hidden></span>
     </section>
     <main class="list"></main>
 

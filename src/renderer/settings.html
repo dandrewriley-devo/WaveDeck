@@ -25,7 +25,7 @@
       <!-- INTERFACE -->
       <section id="tab-interface" class="panel hidden">
         <div class="general-meta">
-          <b>WaveDeck version <span id="aboutVersion">0.9.4</span></b>
+          <b>WaveDeck version <span id="aboutVersion">0.9.5</span></b>
           <span>Station library: <span id="aboutDataDir">Data</span></span>
         </div>
         <div class="general-sections">
@@ -256,7 +256,11 @@
             <button id="chooseAdditionalMusicFolderBtn" class="btn" type="button">Choose Folder…</button>
             <button id="clearAdditionalMusicFolderBtn" class="btn" type="button">Remove</button>
           </div>
-          <div class="hint">WaveDeck always includes the portable <b>Music</b> folder beside <b>Data</b>. This adds one other folder to Music search and playback. Files and tags are never changed. Choose a folder, then use Music’s <b>Rescan</b> button when you’re ready to index it.</div>
+          <div class="hint">WaveDeck always includes the portable <b>Music</b> folder beside <b>Data</b>. This adds one other folder to Music search and playback. Files and tags are never changed.</div>
+          <div class="music-library-status-row">
+            <span id="musicLibraryStatus" role="status">Checking Local Music…</span>
+            <button id="rescanMusicBtn" class="btn" type="button">Rescan</button>
+          </div>
         </section>
         <section class="local-music-settings local-music-section">
           <div class="pro-music-settings-title">Crossfade Local Music</div>
