@@ -358,8 +358,7 @@ select:focus{
 
 .btn,
 .add-row button,
-.mini,
-.fav-star {
+.mini {
   padding: 8px 10px;
   border: 1px solid var(--border);
   background: var(--panel-2);
@@ -369,8 +368,7 @@ select:focus{
 
 .btn:hover,
 .add-row button:hover,
-.mini:hover,
-.fav-star:hover{
+.mini:hover{
   background: #333;
 }
 
@@ -386,6 +384,17 @@ select:focus{
 .fav-star.has-preroll{
   color:#e65324;
 }
+
+.fav-star{
+  background:transparent;
+  border:0;
+  color:#dca52c;
+  cursor:pointer;
+  font-size:17px;
+  line-height:1;
+  padding:4px;
+}
+.fav-star:hover{ color:#f2ca52; }
 
 /* Groups list */
 
@@ -515,6 +524,7 @@ select:focus{
 .group-name{
   flex: 1;
   font-weight: 600;
+  text-align:left;
 }
 
 /* Table */
@@ -554,11 +564,15 @@ select:focus{
   background: #2a2a2a;
 }
 
-.col-fav{ width: 54px; }
-.col-group{ width: 160px; }
-.col-country{ width: 140px; }
-.col-listened{ width: 90px; }
-.col-actions{ width: 220px; }
+.col-fav{ width:30px; }
+.col-group{ width:34%; }
+.col-listened{ text-align:center !important; width:48px; }
+.col-listened svg{ display:block; height:15px; margin:auto; width:15px; }
+.col-actions{ width:1%; white-space:nowrap; }
+.table tbody td:first-child{ padding-left:7px; padding-right:3px; text-align:center; }
+.table tbody td:nth-child(4){ padding-left:8px; padding-right:8px; text-align:center; }
+.table tbody td:last-child{ padding-left:8px; padding-right:8px; white-space:nowrap; }
+.table tbody td:last-child .mini{ padding:7px 8px; }
 
 .listened-total{
   color: var(--muted);
@@ -821,6 +835,40 @@ section#tab-about p {
   height:1px;
   margin:24px 0 20px;
 }
+
+.user-guide{
+  max-width:900px;
+}
+
+.user-guide h2{
+  color:var(--text);
+  font-size:18px;
+  margin:0 0 12px;
+}
+
+.user-guide details{
+  background:#242424;
+  border:1px solid var(--border);
+  margin:7px 0;
+}
+
+.user-guide summary{
+  color:#e0e0e0;
+  cursor:pointer;
+  font-size:13px;
+  font-weight:650;
+  padding:10px 12px;
+}
+
+.user-guide details p{
+  color:#bdbdbd;
+  font-size:13px !important;
+  line-height:1.5 !important;
+  margin:0;
+  padding:0 12px 12px;
+}
+
+.legacy-changelog{ display:none; }
 
 .changelog{
   color:#c8c8c8;

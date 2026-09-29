@@ -25,14 +25,12 @@
       <!-- INTERFACE -->
       <section id="tab-interface" class="panel hidden">
         <div class="general-meta">
-          <b>WaveDeck version <span id="aboutVersion">0.10.1</span></b>
-          <span>Station library: <span id="aboutDataDir">Data</span></span>
+          <b>WaveDeck version <span id="aboutVersion">0.10.2</span></b>
         </div>
         <div class="general-sections">
         <section class="general-card">
         <div class="general-card-header">
-          <div class="label">Startup</div>
-          <div class="hint">Choose how WaveDeck opens when it starts.</div>
+          <div class="label">General</div>
         </div>
         <div class="general-card-body">
           <label class="preference-toggle" title="Automatically enter Sidebar Mode whenever WaveDeck starts">
@@ -40,47 +38,30 @@
             <span class="toggle-switch" aria-hidden="true"></span>
             <span>Launch in Sidebar Mode</span>
           </label>
-          <div id="sidebarStartupHint" class="hint mt-6">
-            When enabled, WaveDeck automatically reserves the right edge of the desktop at startup.
-          </div>
-        </div>
-        </section>
-
-        <section class="general-card">
-          <div class="general-card-header">
-            <div class="label">Advanced Features</div>
-            <div class="hint">Enable extra controls and Local Music features.</div>
-          </div>
-          <div class="general-card-body">
             <label class="preference-toggle" title="Show WaveDeck's advanced controls and features">
               <input id="proModeEnabled" type="checkbox" />
               <span class="toggle-switch" aria-hidden="true"></span>
               <span>Enable Advanced Features</span>
             </label>
-            <div id="advancedFeaturesOff" class="hint mt-6">Turn this on to configure Local Music and Last.fm music data.</div>
           </div>
         </section>
 
         <section class="general-card linux-launcher-only">
         <div class="general-card-header">
-          <div class="label">Linux Mint Panel Shortcut</div>
+          <div class="label">Linux Application Shortcut</div>
           <div class="hint">
-            WaveDeck can add this portable AppImage to Linux Mint's Applications
-            menu without installing or moving the app itself.
+            Adds WaveDeck to your Applications menu without installing or moving the AppImage. It should work on Cinnamon/Mint, GNOME, KDE Plasma, Xfce, and most other mainstream Linux desktops.
           </div>
         </div>
         <div class="general-card-body">
           <div id="launcherState" class="launcher-state">Checking launcher…</div>
           <div class="launcher-actions">
             <button id="installLauncherBtn" class="btn" type="button">Add WaveDeck to Applications Menu</button>
-            <button id="removeLauncherBtn" class="btn danger" type="button">Remove WaveDeck Launcher</button>
+            <button id="removeLauncherBtn" class="btn danger" type="button">Remove WaveDeck Application Shortcut</button>
           </div>
         <div class="panel-help">
-          <div class="label">Add it to the bottom panel</div>
           <div class="hint launcher-instructions">
-            After adding the launcher, open the Mint menu, find <b>WaveDeck</b>,
-            right-click it, and choose <b>Add to panel</b>. If you later move the
-            AppImage, launch it directly and return here to update the launcher.
+            After adding the shortcut, find <b>WaveDeck</b> in your Applications menu. From there, you can pin it to your panel, dock, favorites, or launcher using your desktop's normal method. If you later move the AppImage, launch it directly and return here to update the shortcut.
           </div>
         </div>
         </div>
@@ -88,29 +69,25 @@
 
         <section class="general-card">
         <div class="general-card-header">
-          <div class="label">Import / Export</div>
-          <div class="hint">
-            A WaveDeck library file contains stations, groups, subgroups, ordering, and assignments.
-            Your personal Favorites and Presets are kept separately and are never imported or exported.
-          </div>
+          <div class="label">Import / Export Library</div>
         </div>
         <div class="general-card-body io-actions">
         <div class="io-box">
           <button id="exportLibraryBtn" class="btn">Export</button>
           <div class="muted mt-6">
-            Creates <b>WaveDeck_Library.json</b>, a shareable station library with its update timestamp added automatically.
+            Download your station listings as a json file.
           </div>
         </div>
         <div class="io-box">
           <button id="importLibraryAddBtn" class="btn">Import Stations</button>
           <div class="muted mt-6">
-            Adds only new stations, groups, and subgroups. Existing listings are left untouched.
+            Upload a json file. Adds to existing stations.
           </div>
         </div>
         <div class="io-box">
           <button id="importLibraryReplaceBtn" class="btn danger">Replace Library</button>
           <div class="muted mt-6">
-            Completely replaces the station library after confirmation. Favorites and Presets are preserved.
+            Upload a json file. Removes and replaces existing stations.
           </div>
         </div>
         </div>
@@ -124,11 +101,7 @@
       <!-- STATIONS -->
       <section id="tab-stations" class="panel">
         <div class="row">
-          <div class="label">Stations</div>
-          <div class="hint">
-            Add, edit, or remove stations. Changes save in WaveDeck's portable
-            <b>Data</b> folder and the main window updates automatically.
-          </div>
+          <div class="label">Streaming Stations</div>
         </div>
 
         <div class="stations-toolbar">
@@ -159,8 +132,7 @@
                 <th class="col-fav">Fav</th>
                 <th>Name</th>
                 <th class="col-group">Group</th>
-                <th class="col-country">Country</th>
-                <th class="col-listened">Listened</th>
+                <th class="col-listened" title="Listening time" aria-label="Listening time"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.5V12l3 1.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></th>
                 <th class="col-actions">Actions</th>
               </tr>
             </thead>
@@ -337,12 +309,36 @@
           <img class="about-logo" src="../../assets/logo.png" alt="WaveDeck logo" />
           <div class="about-copy">
             <h2>About WaveDeck</h2>
-            <p class="muted">WaveDeck is a lightweight, portable player for quick, organized access to streaming stations and local music. It lets you arrange streaming stations into customizable groups and subgroups, create personal Presets and Favorites, search across your library, track listening history, and adjust individual station volume levels. Advanced Features adds Favorites filtering, Your Top Five, expanded playback controls, stream recording, and Local Music. WaveDeck keeps its library and personal settings in a portable Data folder, making it easy to carry between computers while preserving your stations and preferences.</p>
+            <p class="muted">WaveDeck is a portable home for Streaming Radio and Local Music. It keeps your stations, presets, listening history, Local Radio settings, and music data together in its own portable Data folder.</p>
           </div>
         </div>
 
         <div class="about-divider"></div>
-        <div class="changelog">
+        <div class="user-guide">
+          <h2>User Guide</h2>
+          <details open><summary>Getting Started</summary><p>Choose <b>Streaming</b> for internet radio or <b>Local Music</b> for your MP3 library. Click any station, Local Station, or Local Mix to begin playback. The row beneath the player always shows what is currently playing.</p></details>
+          <details><summary>Streaming Radio</summary><p>Use Search to find stations by name, group, subgroup, country, description, or URL. Star a station to add it to Favorites; Presets give you a personal ordered list for Previous and Next. Open a station briefly to read its details or adjust its Station Gain.</p></details>
+          <details><summary>Local Music &amp; Local Radio</summary><p>Turn on Advanced Features to use Local Music. WaveDeck reads your MP3 library without changing your files. Start Song Radio, Artist Radio, an album, or a Local Mix from Local Music. Your ratings, Favorite tags, Do Not Play tags, and useful Last.fm data help Local Radio choose music that fits.</p></details>
+          <details><summary>Local Mixes and Feedback</summary><p>Local Mixes are curated radio formats built from the music you have. Star a Local Mix or Local Station to save it, then use the Local Music star filter to see only your saved choices. A thumbs-up gently teaches the active Local Radio station what you want more of; skipping is a softer negative signal.</p></details>
+          <details><summary>Local Radio Controls</summary><p>In Settings → Local Music, use Song Familiarity, Song Repeat Wait, Artist Repeat Wait, and Artist Sets to shape Local Radio and Local Mixes. Local Music crossfade is an optional eight-second blend between songs.</p></details>
+          <details><summary>Settings and Library</summary><p>Streaming Stations lets you add, edit, search, and organize streams. Groups controls the main groups and subgroups. Export downloads your station listings as JSON; Import Stations adds listings, while Replace Library replaces the station library after confirmation. Personal Favorites, Presets, and listening history stay separate.</p></details>
+          <details class="linux-launcher-only"><summary>Linux Application Shortcut</summary><p>Add WaveDeck to your Applications menu without installing or moving the AppImage. It should work on Cinnamon/Mint, GNOME, KDE Plasma, Xfce, and most other mainstream Linux desktops. Then pin it using your desktop's normal panel, dock, favorites, or launcher method.</p></details>
+          <details><summary>Help and Troubleshooting</summary><p>If a stream will not play, try another station first; one station may simply be offline or have changed its address. For a portable backup, copy the Data folder. On Linux, the AppImage needs permission to execute and playback requires mpv.</p></details>
+        </div>
+
+        <div class="about-divider"></div>
+        <div class="changelog current-changelog">
+          <h2>Changelog</h2>
+          <h3>WaveDeck 0.10.2 — Settings &amp; User Guide</h3><ul><li>Refined Settings and added an in-app User Guide.</li></ul>
+          <h3>WaveDeck 0.10.1</h3><ul><li>Improved Streaming Station grouping and Local Music Favorites filtering.</li></ul>
+          <h3>WaveDeck 0.10.0 — Interface Tuning</h3><ul><li>Refined player layout, station listings, preset dragging, and Settings presentation.</li></ul>
+          <h3>WaveDeck 0.9.x — Local Mixes</h3><ul><li>Added Local Mix format books, mix management, favorites, and readiness ratings.</li></ul>
+          <h3>WaveDeck 0.8.0 — Crossfade Local Music</h3><ul><li>Added optional eight-second Local Music crossfade.</li></ul>
+          <h3>WaveDeck 0.7.x — Local Music Update</h3><ul><li>Added Local Music, Local Radio, Local Station presets, Last.fm enrichment, and local feedback.</li><li>Added separate Streaming and Local Music views.</li></ul>
+          <h3>WaveDeck 0.6.5</h3><ul><li>Added per-station Gain adjustment.</li><li>Improved station search.</li></ul>
+        </div>
+
+        <div class="changelog legacy-changelog">
           <h2>Changelog</h2>
 
           <h3>WaveDeck 0.9.0 - Local Mix Expansion</h3>

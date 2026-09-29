@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.10.1");
-assert.strictEqual(packageJson.wavedeckVersion, "0.10.1");
+assert.strictEqual(packageJson.version, "0.10.2");
+assert.strictEqual(packageJson.wavedeckVersion, "0.10.2");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -1257,7 +1257,8 @@ assert.ok(settingsHtml.indexOf('data-tab="groups"') < settingsHtml.indexOf('data
 assert.ok(settingsHtml.indexOf('data-tab="localmusic"') < settingsHtml.indexOf('data-tab="about"'));
 assert.ok(settingsHtml.includes('id="tab-localmusic"'));
 assert.ok(settingsHtml.includes('WaveDeck 0.8.0 - Crossfade Local Music'));
-assert.ok(settingsHtml.includes('WaveDeck 0.9.0 - Local Mix Expansion'));
+assert.ok(settingsHtml.includes('class="user-guide"'));
+assert.ok(settingsHtml.includes('WaveDeck 0.10.0 — Interface Tuning'));
 assert.ok(settingsHtml.includes('id="localMixManager"'));
 assert.ok(settingsHtml.includes('WaveDeck 0.7.x — Local Music Update'));
 assert.ok(!settingsHtml.includes('WaveDeck 0.7.9 —'));
@@ -1282,10 +1283,10 @@ assert.ok(settingsHtml.includes('>Three-way<'));
 assert.ok(settingsHtml.includes('>Four-play<'));
 assert.ok(settingsHtml.includes('id="openRadioLogBtn"'));
 assert.ok(settingsHtml.includes('id="localMusicCrossfade"'));
-assert.ok(settingsHtml.includes("WaveDeck_Library.json"));
+assert.ok(settingsHtml.includes("Download your station listings as a json file."));
 assert.ok(settingsHtml.indexOf('id="stationEditorHome"') < settingsHtml.indexOf('class="listening-history-bar"'));
 assert.ok(settingsHtml.includes('id="resetListeningBtn"'));
-assert.ok(settingsHtml.includes("Listened"));
+assert.ok(settingsHtml.includes('title="Listening time"'));
 assert.ok(settingsHtml.includes('id="st_subgroup"'));
 assert.ok(settingsHtml.includes('id="st_description"'));
 assert.ok(settingsHtml.includes('id="st_favorite"'));

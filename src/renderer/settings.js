@@ -74,13 +74,11 @@ const localMusicCrossfade = document.getElementById('localMusicCrossfade');
 const localMixManager = document.getElementById('localMixManager');
 const queueLastFmRefreshBtn = document.getElementById('queueLastFmRefreshBtn');
 const openRadioLogBtn = document.getElementById('openRadioLogBtn');
-const sidebarStartupHint = document.getElementById("sidebarStartupHint");
 const resetListeningBtn = document.getElementById("resetListeningBtn");
 const platform = window.wavedeck.platform;
 
 const sidebarPlatform = platform === "linux" || platform === "win32";
 if (platform !== "linux") document.querySelectorAll(".linux-launcher-only").forEach((node) => { node.hidden = true; });
-if (platform === "win32") sidebarStartupHint.textContent = "When enabled, WaveDeck automatically reserves the right edge of the Windows desktop at startup.";
 
 let stations = [];
 let groups = [];
@@ -120,7 +118,7 @@ async function loadMusicLibraryStatus() {
 function renderProMusicSettings(preferences) {
   const proEnabled = preferences?.proModeEnabled === true;
   const folder = String(preferences?.additionalMusicFolder || '');
-  advancedFeaturesOff.hidden = proEnabled;
+  if (advancedFeaturesOff) advancedFeaturesOff.hidden = proEnabled;
   localMusicTab.hidden = !proEnabled;
   panels.get('localmusic').hidden = !proEnabled;
   if (!proEnabled && document.querySelector('.tab.active')?.dataset.tab === 'localmusic') showTab('interface');
@@ -474,7 +472,7 @@ function formatListeningTotal(seconds) {
 function appendEditorRow(afterRow = null) {
   const editorRow = element("tr", "station-editor-row");
   const editorCell = element("td");
-  editorCell.colSpan = 6;
+  editorCell.colSpan = 5;
   stationEditor.hidden = false;
   editorCell.append(stationEditor);
   editorRow.append(editorCell);
@@ -493,7 +491,7 @@ function renderStationsTable() {
   if (!filtered.length) {
     const row = element("tr");
     const cell = element("td", "muted", "No stations match.");
-    cell.colSpan = 6;
+    cell.colSpan = 5;
     row.append(cell);
     stationsTbody.append(row);
     return;
@@ -515,7 +513,6 @@ function renderStationsTable() {
     nameCell.append(element("b", "", station.name));
     const groupCell = element("td", "", normalizeGroupName(station.group));
     if (station.subgroup) groupCell.append(element("div", "table-subgroup", station.subgroup));
-    const countryCell = element("td", "", station.country || "");
     const listenedCell = element(
       "td",
       "listened-total",
@@ -527,7 +524,7 @@ function renderStationsTable() {
       miniButton("Delete", "danger", () => deleteStation(station.id))
     );
     row.dataset.stationId = String(station.id);
-    row.append(favoriteCell, nameCell, groupCell, countryCell, listenedCell, actionsCell);
+    row.append(favoriteCell, nameCell, groupCell, listenedCell, actionsCell);
     stationsTbody.append(row);
     if (editorVisible && editingId === station.id) appendEditorRow(row);
   }
@@ -1015,7 +1012,7 @@ installLauncherBtn.addEventListener("click", async () => {
   setStatus(statusLauncher, "Adding WaveDeck to the Applications menu…");
   try {
     renderLauncherStatus(await window.wavedeck.installLauncher());
-    setStatus(statusLauncher, "Added. Open the Mint menu, find WaveDeck, right-click it, and choose Add to panel.");
+    setStatus(statusLauncher, "Added. Find WaveDeck in your Applications menu and pin it using your desktop's normal method.");
   } catch (error) {
     setStatus(statusLauncher, `Could not add the launcher: ${error.message}`, false);
     await loadLauncherStatus();
@@ -1279,7 +1276,5 @@ window.wavedeck.onLocalMixesChanged(() => { if (!localMusicTab.hidden) void load
 
   const info = await window.wavedeck.getAppInfo();
   const version = document.getElementById("aboutVersion");
-  const dataDir = document.getElementById("aboutDataDir");
   if (version) version.textContent = info.version;
-  if (dataDir) dataDir.textContent = info.dataDir;
 })();
