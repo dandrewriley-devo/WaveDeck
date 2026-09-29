@@ -356,16 +356,8 @@ async function renderMusic() {
       if (!musicVisible || sequence !== musicRenderSequence || query !== musicSearch.value) return;
       const saved = Array.isArray(history?.localStationPresets) ? history.localStationPresets : [];
       const savedKeys = new Set(saved.map(station => station.key));
-      if (localMixesSectionVisible) {
-        const mixes = await window.wavedeck.getLocalMixes();
-        if (!musicVisible || sequence !== musicRenderSequence || query !== musicSearch.value) return;
-        if (mixes.length) {
-          listEl.append(createSectionTitle('Local Mixes', 'Curated Local Radio that learns what fits each station.'));
-          const block = element('div', 'local-mix-list');
-          block.append(...mixes.map(createLocalMixRow));
-          listEl.append(block);
-        }
-      }
+      const mixes = localMixesSectionVisible ? await window.wavedeck.getLocalMixes() : [];
+      if (!musicVisible || sequence !== musicRenderSequence || query !== musicSearch.value) return;
       const recent = (Array.isArray(history?.recentLocalStations) ? history.recentLocalStations : [])
         .filter(station => !localPresetSectionVisible || !savedKeys.has(station.key)).slice(0, 10);
       if (localPresetSectionVisible) {
@@ -381,8 +373,14 @@ async function renderMusic() {
         const block = element('div', 'local-station-list');
         block.append(...recent.map(station => createLocalStationRow(station, savedKeys.has(station.key))));
         listEl.append(block);
-      } else if (!saved.length || !localPresetSectionVisible) {
+      } else if ((!saved.length || !localPresetSectionVisible) && !mixes.length) {
         listEl.append(element('div', 'music-empty-state', 'Search for local music, or start a Local Station to see it here.'));
+      }
+      if (mixes.length) {
+        listEl.append(createSectionTitle('Local Mixes', 'Curated Local Radio that learns what fits each station.'));
+        const block = element('div', 'local-mix-list');
+        block.append(...mixes.map(createLocalMixRow));
+        listEl.append(block);
       }
     } else if (!result.tracks.length) listEl.append(element('div', 'placeholder', 'No matching songs.'));
     for (const track of result.tracks) {
@@ -413,19 +411,15 @@ async function renderMusic() {
 }
 
 function createLocalMixRow(mix) {
-  const row = element('div', 'local-mix-row');
-  const content = element('div', 'local-mix-copy');
-  content.append(element('div', 'local-mix-name', mix.name), element('div', 'local-mix-description', mix.description));
-  const play = element('button', 'recording-action', 'Play');
-  play.type = 'button';
-  play.title = `Play ${mix.name}`;
-  play.addEventListener('click', async () => {
-    play.disabled = true;
+  const row = element('button', 'local-mix-row local-mix-play', mix.name);
+  row.type = 'button';
+  row.title = `Play ${mix.name}`;
+  row.addEventListener('click', async () => {
+    row.disabled = true;
     try { await window.wavedeck.playLocalMix(mix.id); }
     catch (error) { musicStatus.textContent = error.message; }
-    finally { play.disabled = false; }
+    finally { row.disabled = false; }
   });
-  row.append(content, play);
   return row;
 }
 

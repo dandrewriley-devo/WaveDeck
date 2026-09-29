@@ -52,7 +52,7 @@ function mixRelationship(track, mix) {
   const eligibility = isTrackEligibleForMix(track, mix || {});
   if (!eligibility.eligible) return { seedArtist: '', reasons: [], strength: 0, tags: [] };
   const reasons = [eligibility.reason];
-  let strength = eligibility.tier === 'song' ? 100 : eligibility.tier === 'core' ? 86 : 62;
+  let strength = eligibility.tier === 'song' ? 100 : eligibility.tier === 'core' ? 86 : eligibility.tier === 'personal' ? 70 : 62;
   for (const seed of mix?.seeds || []) {
     const relation = relationship(track, seed, 'radio');
     // Last.fm and album links can rank an approved candidate, but a Local Mix
@@ -224,7 +224,8 @@ class MusicRadio {
     // Each familiarity stop starts with the listener's own quality threshold.
     // Unrated songs stay neutral, but cannot displace qualifying rated/Favorite music.
     const personalCandidates = credibleCandidates.filter(item => hasPersonalSignal(item.track, familiarity));
-    const lastFmCandidates = familiarity === 'hits' && !personalCandidates.length
+    const personalLibraryMix = mode === 'mix' && seed?.policy?.personalLibrary === true;
+    const lastFmCandidates = !personalCandidates.length && (personalLibraryMix || familiarity === 'hits')
       ? credibleCandidates.filter(item => hasLastFmFamiliarity(item.track)) : [];
     let candidates = personalCandidates.length ? personalCandidates : (lastFmCandidates.length ? lastFmCandidates : credibleCandidates);
     // A two-fer/three-play/four-play is planned before the first song starts.

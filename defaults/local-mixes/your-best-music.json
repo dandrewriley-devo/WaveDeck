@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "your-best-music",
+  "name": "Your Best Music",
+  "description": "Your Favorites and highly rated music from across your entire Local Music library.",
+  "researchStatus": "personal-library-format",
+  "formatPolicy": {
+    "personalLibrary": true,
+    "lastFm": "useOnlyWhenNoFavoriteOrRatedTracksAreAvailable",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    { "source": "MP3 RATING tag", "purpose": "Your 0–10 personal ratings define the main pool." },
+    { "source": "MP3 FAVORITE tag", "purpose": "Favorites stay strongly preferred at every familiarity setting." },
+    { "source": "Last.fm popularity", "purpose": "Fallback ranking only when no usable personal signals exist." }
+  ],
+  "coreArtists": [],
+  "approvedArtists": [],
+  "artistRules": [],
+  "coreSongs": [],
+  "excludedArtists": [],
+  "seedSuggestions": []
+}

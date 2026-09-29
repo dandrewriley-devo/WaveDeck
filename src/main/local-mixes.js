@@ -87,7 +87,8 @@ function cleanMix(raw, sourceFile) {
       toYear: Number.isInteger(to) ? to : null,
       unknownYear: String(policy.unknownYear || '').trim() || 'allowOnlyForCoreArtistWhenNoExplicitExclusionApplies',
       songSpecific: Boolean(policy.songSpecific) || id === 'holiday-christmas',
-      genreTags: uniqueText(policy.genreTags || (id === 'holiday-christmas' ? ['Christmas', 'Holiday', 'Xmas'] : []))
+      genreTags: uniqueText(policy.genreTags || (id === 'holiday-christmas' ? ['Christmas', 'Holiday', 'Xmas'] : [])),
+      personalLibrary: policy.personalLibrary === true
     }
   };
 }
@@ -177,6 +178,7 @@ function matchingRule(track, mix) {
 }
 
 function isTrackEligibleForMix(track, mix) {
+  if (mix?.policy?.personalLibrary) return { eligible: true, reason: 'personal library mix', tier: 'personal' };
   const artists = trackArtists(track);
   const coreSong = mix.coreSongs.some(([artist, title]) => trackMatches(track, artist, title));
   const coreArtist = artists.some(artist => mix.coreArtists.some(candidate => exact(candidate, artist)));

@@ -37,7 +37,7 @@ async function run() {
     assert.equal(library.tracks[0].doNotPlay, true, 'Do Not Play tags are copied into the local index');
     const initialMixAnalysis = await library.analyzeLocalMixes();
     assert.equal(initialMixAnalysis.analyzing, false, 'Local Mix availability analysis completes in the music worker');
-    assert.equal(initialMixAnalysis.mixes.length, 6, 'the worker discovers shipped Local Mix books');
+    assert.equal(initialMixAnalysis.mixes.length, 7, 'the worker discovers shipped Local Mix books');
     await fs.access(path.join(dataDir, 'local-mix-availability.json'));
     assert.equal(await digest(), before, 'scanning never changes MP3 bytes');
     assert.equal((await library.call('search', "' OR 1=1 --")).total, 0);
@@ -128,7 +128,7 @@ async function run() {
       ...Array.from({ length: 16 }, (_value, index) => track(`classic-boston-${index}`, { artist: 'Boston', albumArtist: 'Boston', title: `Boston Song ${index}`, year: 1976 }))
     ];
     const portableMixData = path.join(temp, 'mix-format-books');
-    assert.deepEqual(listLocalMixes(portableMixData).map(mix => mix.id), ['alternative-80s', 'classic-country', 'classic-hits', 'classic-rock', 'grunge-era-rock', 'rock-and-metal'], 'all shipped Local Mix books copy to portable Data');
+    assert.deepEqual(listLocalMixes(portableMixData).map(mix => mix.id), ['alternative-80s', 'classic-country', 'classic-hits', 'classic-rock', 'grunge-era-rock', 'rock-and-metal', 'your-best-music'], 'all shipped Local Mix books copy to portable Data');
     let mixAvailability = getLocalMixAvailability(portableMixData, classicSeedTracks);
     const classicAvailability = mixAvailability.find(mix => mix.id === 'classic-rock');
     assert.equal(classicAvailability.ready, true, 'Local Mixes need at least twenty eligible songs before they can appear');
@@ -146,6 +146,14 @@ async function run() {
     assert.equal(isTrackEligibleForMix(track('late-aerosmith', { artist: 'Aerosmith', title: 'Under My Skin', year: 2001 }), classicMix).eligible, false, 'Classic Rock rejects post-format Aerosmith');
     assert.equal(isTrackEligibleForMix(track('black-ice', { artist: 'AC/DC', title: 'Rock ’n’ Roll Train', year: 2008 }), classicMix).eligible, true, 'Classic Rock keeps later AC/DC eligible');
     assert.equal(isTrackEligibleForMix(classicSeedTracks[0], classicMix).eligible, true, 'Classic Rock keeps its intended core material');
+    const bestMix = resolveLocalMix('your-best-music', classicSeedTracks, portableMixData);
+    assert.equal(isTrackEligibleForMix(track('anything', { artist: 'Miles Davis', genres: ['Jazz'] }), bestMix).eligible, true, 'Your Best Music can use any artist in the personal library');
+    const bestMixRadio = new MusicRadio({ dataDir: path.join(temp, 'best-music-format'), now: () => now, random: () => 0, getFamiliarity: () => 'hits' });
+    const ratedFavorite = track('best-rated', { artist: 'Metallica', artists: ['Metallica'], rating: 8, popularity: 5 });
+    const bestMixPopular = track('best-popular', { artist: 'Miles Davis', artists: ['Miles Davis'], popularity: 95 });
+    assert.equal(bestMixRadio.choose([ratedFavorite, bestMixPopular], bestMix, 'mix').id, ratedFavorite.id, 'Your Best Music uses personal ratings before Last.fm popularity');
+    const fallbackRadio = new MusicRadio({ dataDir: path.join(temp, 'best-music-fallback'), now: () => now, random: () => 0, getFamiliarity: () => 'balanced' });
+    assert.equal(fallbackRadio.choose([bestMixPopular, track('unrated-obscure', { artist: 'Frank Zappa', artists: ['Frank Zappa'], popularity: 10 })], bestMix, 'mix').id, bestMixPopular.id, 'Your Best Music falls back to Last.fm familiarity when no personal ratings or Favorites exist');
     const classicRadio = new MusicRadio({ dataDir: path.join(temp, 'classic-format'), now: () => now, random: () => 0 });
     const modernColdplay = track('coldplay', { artist: 'Coldplay', artists: ['Coldplay'], title: 'Charlie Brown', year: 2011, rating: 10, similarArtists: ['U2'] });
     assert.equal(classicRadio.choose([...classicSeedTracks, modernColdplay], classicMix, 'mix').artist, 'Boston', 'Last.fm similarity cannot admit a non-format Classic Rock artist');
