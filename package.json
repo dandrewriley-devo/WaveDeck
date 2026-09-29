@@ -1,7 +1,7 @@
 {
   "name": "wavedeck",
-  "version": "0.9.5",
-  "wavedeckVersion": "0.9.5",
+  "version": "0.10.0",
+  "wavedeckVersion": "0.10.0",
   "description": "WaveDeck portable internet-radio player for Linux, Windows, and macOS",
   "author": "Andrew Riley",
   "license": "MIT",

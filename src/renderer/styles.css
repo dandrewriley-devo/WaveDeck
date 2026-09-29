@@ -193,7 +193,8 @@ html, body{
 
 .tabbar,
 .toolbar,
-.transport {
+.transport,
+.current-source-row {
   align-items: center;
   background: var(--panel);
   border-bottom: 1px solid var(--border);
@@ -284,6 +285,22 @@ html, body{
   padding: 0 7px;
 }
 
+.current-source-row {
+  color:#f2ca52;
+  flex:0 0 30px;
+  font-size:12px;
+  font-weight:800;
+  gap:7px;
+  justify-content:center;
+  letter-spacing:.04em;
+  min-height:30px;
+  padding:0 12px;
+  text-transform:uppercase;
+}
+.current-source-row[hidden]{ display:none; }
+.current-source-icon{ flex:0 0 16px; height:16px; width:16px; }
+#currentSourceName{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
 .transport button {
   align-items: center;
   background: transparent;
@@ -354,7 +371,6 @@ html, body{
   text-transform: uppercase;
   color: var(--muted);
 }
-.music-playing-title .section-main{ color:#f2ca52; }
 
 .section-title-row{
   align-items:center;
@@ -575,36 +591,14 @@ html, body{
 }
 
 .group{
-  border:1px solid rgba(255,255,255,0.10);
-  border-radius:4px;
-  overflow: hidden;
-  background:#1b1b1b;
+  margin:10px 0 12px;
 }
 
-.group-header{
-  width: 100%;
+.group-heading{
   display:flex;
   align-items:center;
-  gap: 7px;
-  min-height:30px;
-  padding: 0 8px;
-  background:#202020;
-  border: 0;
-  color: var(--text);
-  cursor: pointer;
-  text-align: left;
-}
-
-.group-header:hover{
-  background:#292929;
-}
-
-.caret{
-  width: 12px;
-  color: #9ca2ae;
-  display:inline-block;
-  opacity: 0.9;
-  margin-right: 0;
+  gap:8px;
+  padding:0 2px 5px;
 }
 
 .group-name{
@@ -626,8 +620,28 @@ html, body{
 .group-body{
   display:grid;
   gap:5px;
-  padding:5px;
+  padding:0;
 }
+
+.subgroup{ display:grid; gap:5px; margin-top:4px; }
+.subgroup-header{
+  align-items:center;
+  background:transparent;
+  border:0;
+  color:var(--muted);
+  cursor:pointer;
+  display:flex;
+  font:inherit;
+  gap:5px;
+  padding:4px 2px 2px;
+  text-align:left;
+  width:100%;
+}
+.subgroup-header:hover, .subgroup-header:focus-visible{ color:#d7dae1; }
+.subgroup-caret{ color:#9ca2ae; display:inline-block; font-size:11px; width:10px; }
+.subgroup-name{ flex:1; font-size:11px; font-weight:700; text-transform:uppercase; }
+.subgroup-count{ font-size:10px; }
+.subgroup-body{ display:grid; gap:5px; }
 
 .station{
   align-items:center;

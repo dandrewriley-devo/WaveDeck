@@ -1,5 +1,8 @@
 const headerStationName = document.querySelector(".station-name");
 const nowPlaying = document.getElementById("nowPlaying");
+const currentSourceRow = document.getElementById("currentSourceRow");
+const currentSourceIcon = document.getElementById("currentSourceIcon");
+const currentSourceName = document.getElementById("currentSourceName");
 const muteBtn = document.getElementById("muteBtn");
 const muteIcon = document.getElementById("muteIcon");
 const previousPresetBtn = document.getElementById("previousPresetBtn");
@@ -41,6 +44,7 @@ if (platform !== "linux" && platform !== "win32") sidebarModeBtn.hidden = true;
 
 let currentStationId = null;
 let currentRecordingId = null;
+let currentStreamingStation = null;
 let isMuted = false;
 let renderQueued = false;
 let volumeTimer = null;
@@ -94,6 +98,35 @@ function element(tag, className, text) {
   if (className) node.className = className;
   if (text !== undefined) node.textContent = text;
   return node;
+}
+
+const ICON_LOCAL_MUSIC = `
+  <path d="M4 8.5h16v10.25A1.25 1.25 0 0 1 18.75 20h-13.5A1.25 1.25 0 0 1 4 18.75V8.5Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+  <path d="M7 8.5V5.75A1.75 1.75 0 0 1 8.75 4h6.5A1.75 1.75 0 0 1 17 5.75V8.5M7.25 12h3.5M13.25 12h3.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+  <circle cx="8.5" cy="16" r="2.25" fill="none" stroke="currentColor" stroke-width="1.7"/>
+  <circle cx="15.5" cy="16" r="2.25" fill="none" stroke="currentColor" stroke-width="1.7"/>`;
+const ICON_STREAMING_RADIO = `
+  <path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9M7.8 16.2a6 6 0 0 1 0-8.5M16.2 7.8a6 6 0 0 1 0 8.5M19.1 4.9C23 8.8 23 15.1 19.1 19" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+  <circle cx="12" cy="12" r="2" fill="none" stroke="currentColor" stroke-width="1.7"/>`;
+
+function updateCurrentSource(status = currentPlayerStatus) {
+  const music = status?.currentMusic;
+  if (music && status?.mediaState !== 'stopped') {
+    currentSourceRow.hidden = false;
+    currentSourceName.textContent = music.label || 'Local Music';
+    currentSourceIcon.innerHTML = ICON_LOCAL_MUSIC;
+    return;
+  }
+  const station = status?.currentStation || currentStreamingStation;
+  if (station && status?.mediaState !== 'stopped') {
+    currentSourceRow.hidden = false;
+    currentSourceName.textContent = station.name || 'Streaming Radio';
+    currentSourceIcon.innerHTML = ICON_STREAMING_RADIO;
+    return;
+  }
+  currentSourceRow.hidden = true;
+  currentSourceName.textContent = '';
+  currentSourceIcon.replaceChildren();
 }
 
 function normalizeGroupName(value) {
@@ -341,14 +374,6 @@ function setMusicStatus(status) {
   musicSearch.placeholder = count ? `Search ${count.toLocaleString()} songs…` : 'Search Local Music…';
 }
 
-function localMusicHeading() {
-  const music = currentPlayerStatus?.currentMusic;
-  const active = Boolean(music && currentPlayerStatus?.mediaState !== 'stopped');
-  return active && ['artist', 'radio', 'mix'].includes(music.mode)
-    ? `Playing: ${music.label || 'Local Music'}`
-    : 'Local Music';
-}
-
 async function renderMusic() {
   const sequence = ++musicRenderSequence;
   const query = musicSearch.value;
@@ -358,7 +383,7 @@ async function renderMusic() {
     const result = await window.wavedeck.searchMusic(query);
     if (!musicVisible || sequence !== musicRenderSequence || query !== musicSearch.value) return;
     listEl.replaceChildren();
-    listEl.append(createSectionTitle(localMusicHeading(), query.trim() ? `${result.total} matches` : '', null, 'music-playing-title'));
+    if (query.trim()) listEl.append(createSectionTitle('Local Music', `${result.total} matches`));
     if (!query.trim()) {
       const history = await window.wavedeck.getListeningHistory();
       if (!musicVisible || sequence !== musicRenderSequence || query !== musicSearch.value) return;
@@ -495,8 +520,7 @@ function showMusicPlayback(status) {
       (status.mediaState === 'paused' ? 'Paused — ' : '') + (track.artist || 'Unknown artist');
   }
   if (status.state === 'error') nowPlaying.textContent = status.message;
-  const musicHeading = listEl.querySelector('.music-playing-title .section-main');
-  if (musicHeading) musicHeading.textContent = localMusicHeading();
+  updateCurrentSource(status);
   const feedbackEnabled = active && ['artist', 'radio', 'mix'].includes(music.mode) && Boolean(track);
   if (selectedFeedbackTrackId !== String(track?.id || '')) {
     selectedFeedbackTrackId = '';
@@ -624,7 +648,8 @@ function createStationRow(station, { presetSection = false, listenedSeconds = 0 
   }
   if (presetSection) {
     row.classList.add("preset-row");
-    row.draggable = true;
+    meta.draggable = true;
+    meta.title = 'Drag to reorder preset';
   }
   row.append(meta, favorite);
   const info = element("div", "station-info");
@@ -696,23 +721,39 @@ function createSubgroupBlock(groupName, subgroupName, stations) {
   return subgroup;
 }
 
-function createGroupBlock(groupName, stations) {
+function createGroupBlock(groupName, stations, subgroupConfig) {
   const group = element("div", "group");
   group.dataset.group = groupName;
-
-  const header = element("button", "group-header");
-  header.type = "button";
-  header.dataset.group = groupName;
-  header.setAttribute("aria-label", `Toggle ${groupName} group`);
+  const header = element("div", "group-heading");
   header.append(
-    element("span", "caret", collapsedGroups.has(groupName) ? "▸" : "▾"),
     element("span", "group-name", groupName),
     element("span", "group-count", String(stations.length))
   );
-
   const body = element("div", "group-body");
-  body.hidden = collapsedGroups.has(groupName);
-  body.append(...stations.map(createStationRow));
+  const bySubgroup = new Map();
+  const ungrouped = [];
+  for (const station of stations) {
+    const name = String(station.subgroup || '').trim();
+    if (!name) ungrouped.push(station);
+    else {
+      if (!bySubgroup.has(name)) bySubgroup.set(name, []);
+      bySubgroup.get(name).push(station);
+    }
+  }
+  if (ungrouped.length) body.append(...ungrouped.map(createStationRow));
+  const configured = Array.isArray(subgroupConfig?.groups)
+    ? subgroupConfig.groups.find((entry) => normalizeGroupName(entry.group).toLocaleLowerCase() === groupName.toLocaleLowerCase())
+    : null;
+  const orderedNames = [];
+  const seen = new Set();
+  for (const name of configured?.subgroups || []) {
+    const matchingName = [...bySubgroup.keys()].find((candidate) => candidate.toLocaleLowerCase() === String(name).toLocaleLowerCase());
+    if (matchingName && !seen.has(matchingName)) { seen.add(matchingName); orderedNames.push(matchingName); }
+  }
+  for (const name of [...bySubgroup.keys()].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))) {
+    if (!seen.has(name)) orderedNames.push(name);
+  }
+  body.append(...orderedNames.map((name) => createSubgroupBlock(groupName, name, bySubgroup.get(name))));
   group.append(header, body);
   return group;
 }
@@ -897,12 +938,16 @@ async function renderAll() {
   const allGroups = buildGroupsInOrder(stations, groupOrder);
   const groups = buildGroupsInOrder(filteredStations, groupOrder);
   renderedGroupNames = allGroups.map((group) => group.name);
-  renderedSubgroupKeys = [];
-  const currentGroups = new Set(renderedGroupNames);
-  for (const name of collapsedGroups) {
-    if (!currentGroups.has(name)) collapsedGroups.delete(name);
+  renderedSubgroupKeys = allGroups.flatMap((group) => group.items
+    .map((station) => String(station.subgroup || '').trim())
+    .filter(Boolean)
+    .filter((name, index, names) => names.indexOf(name) === index)
+    .map((name) => subgroupKey(group.name, name)));
+  collapsedGroups.clear();
+  const currentSubgroups = new Set(renderedSubgroupKeys);
+  for (const key of collapsedSubgroups) {
+    if (!currentSubgroups.has(key)) collapsedSubgroups.delete(key);
   }
-  collapsedSubgroups.clear();
   if (!collapseStateInitialized) {
     collapseStateInitialized = true;
   }
@@ -932,7 +977,7 @@ async function renderAll() {
     }
   }
 
-  const allExpanded = collapsedGroups.size === 0 && collapsedSubgroups.size === 0;
+  const allExpanded = collapsedSubgroups.size === 0;
   listEl.append(createSectionTitle("stations", "", searchActive ? {
     id: "searchMatchCount",
     label: `${filteredStations.length} ${filteredStations.length === 1 ? "Match" : "Matches"}`,
@@ -949,12 +994,10 @@ async function renderAll() {
   } else {
     const groupsEl = element("div", "groups");
     groupsEl.append(...groups.map((group) => {
-      const block = createGroupBlock(group.name, group.items);
+      const block = createGroupBlock(group.name, group.items, subgroupConfig);
       if (searchActive) {
-        const body = block.querySelector(".group-body");
-        const caret = block.querySelector(".caret");
-        if (body) body.hidden = false;
-        if (caret) caret.textContent = "▾";
+        block.querySelectorAll(".subgroup-body").forEach((body) => { body.hidden = false; });
+        block.querySelectorAll(".subgroup-caret").forEach((caret) => { caret.textContent = "▾"; });
       }
       return block;
     }));
@@ -1112,18 +1155,15 @@ function bindHandlers() {
     });
 
     if (row.classList.contains("preset-row")) {
-      row.addEventListener("dragstart", (event) => {
-        if (event.target.closest('.favBtn')) {
-          event.preventDefault();
-          return;
-        }
+      const dragHandle = row.querySelector(".meta");
+      dragHandle?.addEventListener("dragstart", (event) => {
         draggedPresetId = row.dataset.id;
         row.classList.add("dragging");
         event.dataTransfer.effectAllowed = "move";
         event.dataTransfer.setData("text/plain", draggedPresetId);
       });
 
-      row.addEventListener("dragend", clearPresetDragState);
+      dragHandle?.addEventListener("dragend", clearPresetDragState);
 
       row.addEventListener("dragover", (event) => {
         if (!draggedPresetId || draggedPresetId === row.dataset.id) return;
@@ -1203,9 +1243,11 @@ function bindHandlers() {
         return;
       }
       currentStationId = row.dataset.id;
+      currentStreamingStation = { id: row.dataset.id, name: row.dataset.name };
       headerStationName.textContent = row.dataset.name || "WaveDeck";
       nowPlaying.textContent = "Connecting…";
       currentPlayerStatus = { state: "connecting", bitrateKbps: null, bitrateResolved: false };
+      updateCurrentSource(currentPlayerStatus);
       updateActiveHighlight();
       expandStationInfo(row, { autoCollapse: true });
 
@@ -1216,22 +1258,6 @@ function bindHandlers() {
         updateActiveHighlight();
         nowPlaying.textContent = `Could not play station: ${error.message}`;
       }
-    });
-  });
-
-  listEl.querySelectorAll(".group-header").forEach((button) => {
-    button.addEventListener("click", () => {
-      if (window.WaveDeckSearch.normalizeSearchText(stationSearchQuery)) return;
-      const groupName = button.dataset.group || "Other";
-      if (collapsedGroups.has(groupName)) collapsedGroups.delete(groupName);
-      else collapsedGroups.add(groupName);
-
-      const body = button.closest(".group")?.querySelector(".group-body");
-      const caret = button.querySelector(".caret");
-      const collapsed = collapsedGroups.has(groupName);
-      if (body) body.hidden = collapsed;
-      if (caret) caret.textContent = collapsed ? "▸" : "▾";
-      saveStationGroupState();
     });
   });
 
@@ -1251,11 +1277,9 @@ function bindHandlers() {
   });
 
   document.getElementById("toggleAllGroupsBtn")?.addEventListener("click", () => {
-    const allExpanded = collapsedGroups.size === 0 && collapsedSubgroups.size === 0;
-    collapsedGroups.clear();
+    const allExpanded = collapsedSubgroups.size === 0;
     collapsedSubgroups.clear();
     if (allExpanded) {
-      renderedGroupNames.forEach((name) => collapsedGroups.add(name));
       renderedSubgroupKeys.forEach((key) => collapsedSubgroups.add(key));
     }
     saveStationGroupState();
@@ -1482,9 +1506,11 @@ window.wavedeck.onMetadata((metadata) => {
 
 window.wavedeck.onStationChanged((station) => {
   currentStationId = station?.id || null;
+  currentStreamingStation = station || null;
   if (station) currentRecordingId = null;
   headerStationName.textContent = station?.name || "WaveDeck";
   nowPlaying.textContent = station ? "Connecting…" : "Now Playing: (ready)";
+  updateCurrentSource(currentPlayerStatus);
   updateActiveHighlight();
 });
 
@@ -1498,6 +1524,7 @@ window.wavedeck.onPlayerStatus((status) => {
   if (status?.mediaState === "paused") nowPlaying.textContent = "Paused";
   if (status?.currentRecording && status?.mediaState !== "stopped") {
     currentStationId = null;
+    currentStreamingStation = null;
     currentRecordingId = status.currentRecording.id;
     headerStationName.textContent = status.currentRecording.name || "WaveDeck Recording";
     updateActiveHighlight();
@@ -1505,6 +1532,7 @@ window.wavedeck.onPlayerStatus((status) => {
   if (status?.mediaState === "stopped") {
     currentStationId = null;
     currentRecordingId = null;
+    currentStreamingStation = null;
     headerStationName.textContent = "WaveDeck";
     updateActiveHighlight();
     if (status?.state !== "error") nowPlaying.textContent = "Stopped";
@@ -1515,6 +1543,7 @@ window.wavedeck.onPlayerStatus((status) => {
   }
   updateExpandedStationInfo(status);
   showMusicPlayback(status);
+  updateCurrentSource(status);
 });
 
 window.wavedeck.onSidebarState(setSidebarUi);
@@ -1564,6 +1593,7 @@ window.wavedeck.onWarning((warning) => {
     if (Number.isFinite(status?.volume)) volumeSlider.value = String(Math.round(status.volume));
     if (status?.currentStation && status?.mediaState !== "stopped") {
       currentStationId = status.currentStation.id;
+      currentStreamingStation = status.currentStation;
       headerStationName.textContent = status.currentStation.name || "WaveDeck";
       updateActiveHighlight();
     } else if (status?.currentRecording && status?.mediaState !== "stopped") {
@@ -1577,6 +1607,7 @@ window.wavedeck.onWarning((warning) => {
       nowPlaying.textContent = status?.state === "connecting" ? "Connecting…" : (status.message || "Playing");
     } else nowPlaying.textContent = "Warming up the airwaves...";
     showMusicPlayback(status);
+    updateCurrentSource(status);
   } catch (error) {
     nowPlaying.textContent = `Playback unavailable: ${error.message}`;
   }

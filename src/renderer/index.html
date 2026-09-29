@@ -29,6 +29,34 @@
       </div>
     </header>
 
+    <div id="currentSourceRow" class="current-source-row" hidden aria-live="polite">
+      <svg id="currentSourceIcon" class="current-source-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"></svg>
+      <span id="currentSourceName"></span>
+    </div>
+
+    <div class="transport" aria-label="Playback controls">
+      <button id="previousPresetBtn" type="button" aria-label="Previous Preset" title="Previous Preset">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 5v14M18 6.5 9 12l9 5.5z" fill="currentColor"/>
+        </svg>
+      </button>
+      <button id="playPauseBtn" type="button" aria-label="Play" title="Play">
+        <svg id="playPauseIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7z" fill="currentColor"/></svg>
+      </button>
+      <button id="recordBtn" data-pro-only type="button" aria-label="Start recording" title="Record" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="6.5" fill="currentColor"/></svg>
+      </button>
+      <button id="stopBtn" aria-label="Stop playback" title="Stop">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6h12v12H6z"/></svg>
+      </button>
+      <button id="nextPresetBtn" type="button" aria-label="Next Preset" title="Next Preset">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 5v14M6 6.5l9 5.5-9 5.5z" fill="currentColor"/></svg>
+      </button>
+      <button id="localThumbUpBtn" class="feedback-button" type="button" aria-label="Local Radio thumbs up" title="Local Radio thumbs up" disabled>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 10.5v9H4.75a1.25 1.25 0 0 1-1.25-1.25v-6.5A1.25 1.25 0 0 1 4.75 10.5H7.5Zm0 9h8.4a2 2 0 0 0 1.95-1.55l1.3-5.5A2 2 0 0 0 17.2 10H13l.5-3.1a2.55 2.55 0 0 0-2.5-2.9L7.5 10.5Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+
     <nav class="tabbar" aria-label="WaveDeck sections">
       <button id="streamingTabBtn" class="tab-button active" type="button" aria-pressed="true">Streaming</button>
       <button id="musicToggleBtn" class="tab-button" data-pro-only type="button" aria-pressed="false" hidden>Local Music</button>
@@ -102,29 +130,6 @@
         </svg>
       </button>
     </nav>
-
-    <div class="transport" aria-label="Playback controls">
-      <button id="previousPresetBtn" type="button" aria-label="Previous Preset" title="Previous Preset">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M6 5v14M18 6.5 9 12l9 5.5z" fill="currentColor"/>
-        </svg>
-      </button>
-      <button id="playPauseBtn" type="button" aria-label="Play" title="Play">
-        <svg id="playPauseIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7z" fill="currentColor"/></svg>
-      </button>
-      <button id="recordBtn" data-pro-only type="button" aria-label="Start recording" title="Record" hidden>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="6.5" fill="currentColor"/></svg>
-      </button>
-      <button id="stopBtn" aria-label="Stop playback" title="Stop">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6h12v12H6z"/></svg>
-      </button>
-      <button id="nextPresetBtn" type="button" aria-label="Next Preset" title="Next Preset">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 5v14M6 6.5l9 5.5-9 5.5z" fill="currentColor"/></svg>
-      </button>
-      <button id="localThumbUpBtn" class="feedback-button" type="button" aria-label="Local Radio thumbs up" title="Local Radio thumbs up" disabled>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 10.5v9H4.75a1.25 1.25 0 0 1-1.25-1.25v-6.5A1.25 1.25 0 0 1 4.75 10.5H7.5Zm0 9h8.4a2 2 0 0 0 1.95-1.55l1.3-5.5A2 2 0 0 0 17.2 10H13l.5-3.1a2.55 2.55 0 0 0-2.5-2.9L7.5 10.5Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
-      </button>
-    </div>
 
     <section id="searchPanel" class="station-search-panel" aria-label="Station search" hidden>
       <div class="station-search-field">
