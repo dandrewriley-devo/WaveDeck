@@ -73,29 +73,49 @@ async function run() {
     assert(weight(hit, seed, 'artist', [], now, null, 'hits') > weight(deepCut, seed, 'artist', [], now, null, 'hits'), 'Favor the Hits prefers credible popular songs');
     assert(weight(deepCut, seed, 'artist', [], now, null, 'deep-cuts') > weight(hit, seed, 'artist', [], now, null, 'deep-cuts'), 'Play Deep Cuts Too favors credible lesser-known songs');
     const familiarityRadio = new MusicRadio({ dataDir: path.join(temp, 'familiarity'), now: () => now, random: () => 0, getFamiliarity: () => 'hits' });
-    assert.equal(familiarityRadio.choose([hit, deepCut], seed, 'artist').id, hit.id);
+    assert.equal(familiarityRadio.choose([hit, deepCut], seed, 'radio').id, hit.id);
     assert.equal(familiarityRadio.getLastDecision().familiarity, 'hits');
     const favoriteDeepCut = track('favorite-deep-cut', { artist: 'Pink Floyd', artists: ['Pink Floyd'], album: 'More', popularity: 0, favorite: true });
     const lowRatedHit = track('low-rated-hit', { artist: 'Pink Floyd', artists: ['Pink Floyd'], album: 'The Division Bell', popularity: 100, ratingStars: 1 });
     const personalizedHits = new MusicRadio({ dataDir: path.join(temp, 'personalized-hits'), now: () => now, random: () => 0 });
-    assert.equal(personalizedHits.choose([favoriteDeepCut, lowRatedHit], seed, 'artist').id, favoriteDeepCut.id, 'Favorite tags outrank public popularity in Favor the Hits');
+    assert.equal(personalizedHits.choose([favoriteDeepCut, lowRatedHit], seed, 'radio').id, favoriteDeepCut.id, 'Favorite tags outrank public popularity in Favor the Hits');
     const unratedPopular = track('unrated-popular', { artist: 'Pink Floyd', artists: ['Pink Floyd'], album: 'A Momentary Lapse of Reason', popularity: 100 });
     const ratedSix = track('rated-six', { artist: 'Pink Floyd', artists: ['Pink Floyd'], album: 'Meddle', popularity: 0, rating: 6, ratingStars: 3 });
     const ratedSeven = track('rated-seven', { artist: 'Pink Floyd', artists: ['Pink Floyd'], album: 'The Dark Side of the Moon', popularity: 0, rating: 7, ratingStars: 3.5 });
     const ratedTen = track('rated-ten', { artist: 'Pink Floyd', artists: ['Pink Floyd'], album: 'Wish You Were Here', popularity: 0, rating: 10, ratingStars: 5 });
     const personalPoolRadio = new MusicRadio({ dataDir: path.join(temp, 'personal-pool'), now: () => now, random: () => 0.99, getFamiliarity: () => 'hits' });
-    const personalPoolPick = personalPoolRadio.choose([unratedPopular, ratedSix, ratedSeven, ratedTen], seed, 'artist');
+    const personalPoolPick = personalPoolRadio.choose([unratedPopular, ratedSix, ratedSeven, ratedTen], seed, 'radio');
     assert(['rated-seven', 'rated-ten'].includes(personalPoolPick.id), 'Favor the Hits excludes unrated and 6/10 songs when 7–10 songs are available');
     assert.equal(personalPoolRadio.getLastDecision().counts.personal, 2, 'diagnostics identify the personal pool');
     assert.equal(personalPoolRadio.getLastDecision().counts.lastFmFamiliar, 0, 'Last.fm does not dilute an available personal pool');
     const balancedPoolRadio = new MusicRadio({ dataDir: path.join(temp, 'balanced-pool'), now: () => now, random: () => 0, getFamiliarity: () => 'balanced' });
-    assert(['rated-six', 'rated-seven', 'rated-ten'].includes(balancedPoolRadio.choose([unratedPopular, ratedSix, ratedSeven, ratedTen], seed, 'artist').id), 'Balanced Mix uses its 5–10 personal pool');
+    assert(['rated-six', 'rated-seven', 'rated-ten'].includes(balancedPoolRadio.choose([unratedPopular, ratedSix, ratedSeven, ratedTen], seed, 'radio').id), 'Balanced Mix uses its 5–10 personal pool');
     const deepPoolRadio = new MusicRadio({ dataDir: path.join(temp, 'deep-pool'), now: () => now, random: () => 0, getFamiliarity: () => 'deep-cuts' });
     const ratedThree = track('rated-three', { artist: 'Pink Floyd', artists: ['Pink Floyd'], album: 'More', popularity: 0, rating: 3, ratingStars: 1.5 });
-    assert.equal(deepPoolRadio.choose([unratedPopular, ratedThree, ratedTen], seed, 'artist').id, ratedThree.id, 'Play Deep Cuts Too keeps 3/10 music in the personal pool');
+    assert.equal(deepPoolRadio.choose([unratedPopular, ratedThree, ratedTen], seed, 'radio').id, ratedThree.id, 'Play Deep Cuts Too keeps 3/10 music in the personal pool');
     const blockedHit = track('blocked-hit', { artist: 'Pink Floyd', artists: ['Pink Floyd'], popularity: 100, ratingStars: 5, favorite: true, doNotPlay: true });
-    assert.equal(personalizedHits.choose([blockedHit, hit], seed, 'artist').id, hit.id, 'Do Not Play blocks even a favorite high-rated hit');
+    assert.equal(personalizedHits.choose([blockedHit, hit], seed, 'radio').id, hit.id, 'Do Not Play blocks even a favorite high-rated hit');
     assert.equal(personalizedHits.getLastDecision().counts.skippedForDoNotPlay, 1);
+
+    const metallica = Array.from({ length: 10 }, (_value, index) => track(`metallica-${index}`, {
+      artist: 'Metallica', artists: ['Metallica'], albumArtist: 'Metallica', album: `Metallica ${index}`, rating: index % 2 ? 8 : 4
+    }));
+    const metallicaSeed = metallica[0];
+    metallicaSeed.similarArtists = ['Megadeth'];
+    const megadeth = track('megadeth', { artist: 'Megadeth', artists: ['Megadeth'], albumArtist: 'Megadeth', album: 'Rust in Peace' });
+    const artistStationRadio = new MusicRadio({ dataDir: path.join(temp, 'true-artist-radio'), now: () => now, random: () => 0, getFamiliarity: () => 'hits' });
+    artistStationRadio.beginArtistSession(metallicaSeed);
+    for (let index = 0; index < 8; index++) {
+      const picked = artistStationRadio.choose([...metallica, megadeth], metallicaSeed, 'artist');
+      assert.equal(picked.artist, 'Metallica', 'Artist Radio holds to the selected artist for its first 90% lane');
+      artistStationRadio.record(picked);
+    }
+    assert.equal(artistStationRadio.choose([...metallica, megadeth], metallicaSeed, 'artist').artist, 'Megadeth', 'Artist Radio permits one related-artist palate change after nine Metallica selections');
+    assert.equal(artistStationRadio.getLastDecision().artistRadio.seedTargetPercent, 90);
+    assert.equal(artistStationRadio.getLastDecision().familiarity, 'balanced', 'Artist Radio has a fixed taste profile rather than following Song Familiarity');
+    const sparseArtistRadio = new MusicRadio({ dataDir: path.join(temp, 'sparse-artist-radio'), now: () => now, random: () => 0 });
+    sparseArtistRadio.beginArtistSession(metallicaSeed);
+    assert.equal(sparseArtistRadio.choose([megadeth], metallicaSeed, 'artist'), null, 'Artist Radio waits instead of substituting related music when no seed-artist track is eligible');
     radio.record(sameAlbum); assert.equal(radio.choose([sameAlbum], seed, 'radio'), null, 'exact song repeats wait two hours'); now += COOLDOWN;
     assert.equal(radio.choose([sameAlbum], seed, 'radio').id, sameAlbum.id); assert.equal(radio.getLastDecision().policy, 'automatic-local-radio-v2');
     const dayWaitRadio = new MusicRadio({ dataDir: path.join(temp, 'day-wait'), now: () => now, random: () => 0, getTuning: () => ({ songRepeatHours: 24, artistRepeatMinutes: 30, artistSetSize: 1 }) });
@@ -171,9 +191,9 @@ async function run() {
     assert.equal(isTrackEligibleForMix(grungeTracks[0], grungeMix).eligible, true, 'Grunge Era Rock admits core period material');
 
     const player = { getStatus: () => ({ playing: true, position: 0 }), setStationGain: async () => {}, play: async () => {}, stop: async () => {}, setPaused: async () => {}, seek: async () => {} };
-    const tracks = [track('2', { track: 2 }), track('1'), track('3', { album: 'Other' }), track('blocked', { doNotPlay: true })]; const fakeLibrary = { tracks, resolve: async id => { const found = tracks.find(t => t.id === id); if (!found) throw Error('missing'); return { ...found, path: '/' + id }; } };
+    const tracks = [track('2', { track: 2 }), track('1'), track('3', { album: 'Other' }), track('blocked', { doNotPlay: true }), track('va-1', { album: 'Hits', albumArtist: 'Various Artists', artist: 'Artist One', artists: ['Artist One'] }), track('va-2', { track: 2, album: 'Hits', albumArtist: 'Various Artists', artist: 'Artist Two', artists: ['Artist Two'] })]; const fakeLibrary = { tracks, resolve: async id => { const found = tracks.find(t => t.id === id); if (!found) throw Error('missing'); return { ...found, path: '/' + id }; } };
     const controller = serializeTransport(new MediaController({ player, getStations: () => [{ id: 's', url: 'https://example.org', name: 'Streaming', preset: true }] })); controller.configureMusic(fakeLibrary, new MusicRadio({ dataDir: path.join(temp, 'playback'), now: () => now }));
-    await controller.playMusic('2', 'album'); assert.equal(controller.getStatus().currentMusic.track.id, '1'); await controller.handleEnded({ reason: 'eof' }); assert.equal(controller.getStatus().currentMusic.track.id, '2'); await controller.handleEnded({ reason: 'eof' }); assert.equal(controller.getStatus().currentMusic.mode, 'artist'); await controller.playMusic('1', 'radio'); assert.equal(controller.getStatus().currentMusic.seed.id, '1'); await assert.rejects(controller.playMusic('blocked', 'radio'), /marked Do Not Play/); await controller.playStationById('s'); assert.equal(controller.getStatus().currentMusic, null);
+    await controller.playMusic('2', 'album'); assert.equal(controller.getStatus().currentMusic.track.id, '1'); await controller.handleEnded({ reason: 'eof' }); assert.equal(controller.getStatus().currentMusic.track.id, '2'); await controller.handleEnded({ reason: 'eof' }); assert.equal(controller.getStatus().currentMusic.mode, 'artist'); await controller.playMusic('va-1', 'album'); assert.equal(controller.getStatus().currentMusic.track.id, 'va-1'); await controller.handleEnded({ reason: 'eof' }); assert.equal(controller.getStatus().currentMusic.track.id, 'va-2'); await controller.handleEnded({ reason: 'eof' }); assert.equal(controller.getStatus().currentMusic, null, 'Various Artists albums stop when the album ends'); await controller.playMusic('1', 'radio'); assert.equal(controller.getStatus().currentMusic.seed.id, '1'); await assert.rejects(controller.playMusic('blocked', 'radio'), /marked Do Not Play/); await controller.playStationById('s'); assert.equal(controller.getStatus().currentMusic, null);
     let position = 0; const crossfades = [];
     const crossfadePlayer = {
       isCrossfading: false,
@@ -182,8 +202,8 @@ async function run() {
       crossfadeTo: async (file, duration) => { crossfades.push({ file, duration }); position = 0; }
     };
     const crossfadeTracks = [
-      track('crossfade-a', { artist: 'Crossfade Artist', artists: ['Crossfade Artist'], duration: 2 }),
-      track('crossfade-b', { artist: 'Crossfade Artist', artists: ['Crossfade Artist'], duration: 2 })
+      track('crossfade-a', { artist: 'Crossfade Artist', artists: ['Crossfade Artist'], albumArtist: 'Crossfade Artist', duration: 2 }),
+      track('crossfade-b', { artist: 'Crossfade Artist', artists: ['Crossfade Artist'], albumArtist: 'Crossfade Artist', duration: 2 })
     ];
     const crossfadeLibrary = { tracks: crossfadeTracks, resolve: async id => {
       const found = crossfadeTracks.find(item => item.id === id); return { ...found, path: `/${id}` };

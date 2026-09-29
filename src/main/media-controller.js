@@ -61,6 +61,13 @@ function musicContextLabel(music) {
   return seed.title || 'Song';
 }
 
+function artistRadioSeedForAlbum(track) {
+  if (compilation(track)) return null;
+  const artist = radioArtist(track);
+  if (!artist) return null;
+  return { ...track, artist, albumArtist: artist, artists: [artist] };
+}
+
 class MediaController {
   constructor({
     player,
@@ -338,7 +345,9 @@ class MediaController {
       ((compilation(track) && !track.albumArtist) || normalize(t.albumArtist || t.artist) === normalize(track.albumArtist || track.artist)))
       .sort((a, b) => a.disc - b.disc || a.track - b.track || a.relativePath.localeCompare(b.relativePath));
     if (mode === 'album' && !album.length) album.push(track);
-    this.music = { seed: track, mode, radioKey: `${mode}:${track.songKey || track.id}`, current: null, queue: mode === 'album' ? album.map(t => t.id) : [], back: [], failed: new Set(), waiting: false };
+    const albumArtistSeed = mode === 'album' ? artistRadioSeedForAlbum(track) : null;
+    this.music = { seed: track, albumArtistSeed, mode, radioKey: `${mode}:${track.songKey || track.id}`, current: null, queue: mode === 'album' ? album.map(t => t.id) : [], back: [], failed: new Set(), waiting: false };
+    if (mode === 'artist') this.musicRadio?.beginArtistSession?.(track);
     this.onLocalStationStart(this.music.radioKey);
     this.onStationChanged(null);
     return this.loadMusic(mode === 'album' ? this.music.queue.shift() : id);
@@ -389,7 +398,18 @@ class MediaController {
 
   #nextMusicId(reason) {
     let id = this.music.queue.shift();
-    if (!id && this.music.mode === 'album') this.music.mode = 'artist';
+    if (!id && this.music.mode === 'album') {
+      const artistSeed = this.music.albumArtistSeed;
+      if (!artistSeed) {
+        this.music.albumFinished = true;
+        return '';
+      }
+      this.music.mode = 'artist';
+      this.music.seed = artistSeed;
+      this.music.radioKey = `artist:${artistSeed.songKey || artistSeed.id}`;
+      this.musicRadio?.beginArtistSession?.(artistSeed);
+      this.onLocalStationStart(this.music.radioKey);
+    }
     if (!id) id = this.musicRadio.choose(this.musicLibrary.tracks, this.music.profile || this.music.seed, this.music.mode, this.music.failed, reason, this.music.radioKey)?.id;
     return id;
   }
@@ -444,6 +464,10 @@ class MediaController {
       while (this.music && generation === this.musicGeneration) {
         const id = this.#nextMusicId(reason);
         if (!id) {
+          if (this.music?.albumFinished) {
+            await this.stop();
+            return true;
+          }
           this.music.waiting = true;
           await this.player.stop();
           this.onStateChanged({ ...this.getStatus(), message: 'Waiting for a song that fits this radio seed and is eligible to play.' });
