@@ -80,6 +80,10 @@ const RADIO_LOG_DEFAULT_WIDTH = 860;
 const RADIO_LOG_DEFAULT_HEIGHT = 700;
 const RADIO_LOG_MIN_WIDTH = 560;
 const RADIO_LOG_MIN_HEIGHT = 400;
+const LOCAL_RADIO_CONTROLS_WIDTH = 480;
+const LOCAL_RADIO_CONTROLS_HEIGHT = 650;
+const LOCAL_RADIO_CONTROLS_MIN_WIDTH = 360;
+const LOCAL_RADIO_CONTROLS_MIN_HEIGHT = 480;
 const RADIO_LOG_SHORTCUT = "CommandOrControl+Alt+Shift+L";
 const LASTFM_REFRESH_SHORTCUT = "CommandOrControl+Alt+Shift+F";
 const DISPLAY_VERSION = require("../../package.json").wavedeckVersion || app.getVersion();
@@ -87,6 +91,7 @@ const DISPLAY_VERSION = require("../../package.json").wavedeckVersion || app.get
 let mainWindow = null;
 let settingsWindow = null;
 let radioLogWindow = null;
+let localRadioControlsWindow = null;
 const radioDiagnosticSession = [];
 const RADIO_DIAGNOSTIC_LIMIT = 3000;
 let radioDiagnosticStationKey = '';
@@ -208,6 +213,9 @@ function sendToAll(channel, payload) {
   sendToMain(channel, payload);
   if (settingsWindow && !settingsWindow.isDestroyed()) {
     settingsWindow.webContents.send(channel, payload);
+  }
+  if (localRadioControlsWindow && !localRadioControlsWindow.isDestroyed()) {
+    localRadioControlsWindow.webContents.send(channel, payload);
   }
 }
 
@@ -357,7 +365,7 @@ function delay(milliseconds) {
 }
 
 function closeAuxiliaryWindows() {
-  for (const auxiliary of [settingsWindow, radioLogWindow]) {
+  for (const auxiliary of [settingsWindow, radioLogWindow, localRadioControlsWindow]) {
     if (auxiliary && !auxiliary.isDestroyed()) auxiliary.close();
   }
 }
@@ -510,6 +518,27 @@ function openRadioLogWindow() {
   });
   radioLogWindow.on("closed", () => { radioLogWindow = null; });
   radioLogWindow.loadFile(path.join(__dirname, "..", "renderer", "radio-log.html"));
+}
+
+function openLocalRadioControlsWindow() {
+  if (localRadioControlsWindow && !localRadioControlsWindow.isDestroyed()) {
+    localRadioControlsWindow.show();
+    localRadioControlsWindow.focus();
+    return;
+  }
+  const display = mainWindow && !mainWindow.isDestroyed()
+    ? screen.getDisplayMatching(mainWindow.getBounds())
+    : screen.getPrimaryDisplay();
+  const geometry = calculateCenteredBounds(display, LOCAL_RADIO_CONTROLS_WIDTH, LOCAL_RADIO_CONTROLS_HEIGHT);
+  localRadioControlsWindow = createSecureWindow({
+    ...geometry,
+    minWidth: LOCAL_RADIO_CONTROLS_MIN_WIDTH,
+    minHeight: LOCAL_RADIO_CONTROLS_MIN_HEIGHT,
+    resizable: true,
+    title: "Local Radio Controls"
+  });
+  localRadioControlsWindow.on("closed", () => { localRadioControlsWindow = null; });
+  localRadioControlsWindow.loadFile(path.join(__dirname, "..", "renderer", "local-radio-controls.html"));
 }
 
 function getSidebarState() {
@@ -845,6 +874,7 @@ function installIpcHandlers() {
     const preferences = storage.setProModeEnabled(enabled);
     if (!preferences.proModeEnabled) {
       if (mediaController?.music) await mediaController.stop();
+      if (localRadioControlsWindow && !localRadioControlsWindow.isDestroyed()) localRadioControlsWindow.close();
       musicLibrary?.disable();
       sectionVisibility = storage.setStreamingUiState({
         ...sectionVisibility,
@@ -912,6 +942,11 @@ function installIpcHandlers() {
     const preferences = storage.setLocalMusicCrossfadeEnabled(enabled === true);
     sendToAll('ui:preferences-changed', preferences);
     return preferences;
+  });
+  ipcMain.handle('music:local-radio:open-controls', () => {
+    requireAdvancedFeatures();
+    openLocalRadioControlsWindow();
+    return true;
   });
 
   const requireAdvancedFeatures = () => {

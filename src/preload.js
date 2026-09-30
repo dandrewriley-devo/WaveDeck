@@ -32,6 +32,7 @@ contextBridge.exposeInMainWorld("wavedeck", {
   setLocalRadioFamiliarity: familiarity => ipcRenderer.invoke('music:local-radio:set-familiarity', familiarity),
   setLocalRadioTuning: tuning => ipcRenderer.invoke('music:local-radio:set-tuning', tuning),
   setLocalMusicCrossfade: enabled => ipcRenderer.invoke('music:local-radio:set-crossfade', enabled),
+  openLocalRadioControls: () => ipcRenderer.invoke('music:local-radio:open-controls'),
   onLastFmChanged: callback => subscribe('music:lastfm-changed', callback),
   onMusicDebugLog: callback => subscribe('music:debug-decision', callback),
   onMusicDebugReset: callback => subscribe('music:debug:reset', callback),

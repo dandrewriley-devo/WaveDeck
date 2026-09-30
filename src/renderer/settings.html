@@ -25,7 +25,7 @@
       <!-- INTERFACE -->
       <section id="tab-interface" class="panel hidden">
         <div class="general-meta">
-          <b>WaveDeck version <span id="aboutVersion">0.11.3</span></b>
+          <b>WaveDeck version <span id="aboutVersion">0.11.4</span></b>
         </div>
         <div class="general-sections">
         <section class="general-card">
@@ -234,43 +234,6 @@
             <button id="rescanMusicBtn" class="btn" type="button">Rescan</button>
           </div>
         </section>
-        <section class="local-music-settings local-music-section">
-          <div class="pro-music-settings-title">Crossfade Local Music</div>
-          <label class="preference-toggle">
-            <input id="localMusicCrossfade" type="checkbox" />
-            <span class="toggle-switch" aria-hidden="true"></span>
-            <span>Enable 8-second crossfade</span>
-          </label>
-          <div class="hint">Smoothly blend songs with an 8-second crossfade.</div>
-        </section>
-        <section class="radio-tuning local-music-section" aria-labelledby="localRadioTitle">
-                  <div class="pro-music-settings-title" id="localRadioTitle">Shape Your Local Radio</div>
-                  <div class="hint">Use these sliders to shape your Local Radio and Local Mixes—favor familiar favorites, adjust how long songs and artists rest before repeating, and choose whether artists play single tracks or short sets.</div>
-                  <div class="local-radio-familiarity">
-                    <label for="localRadioFamiliarity">Song familiarity</label>
-                    <input id="localRadioFamiliarity" type="range" min="0" max="2" step="1" value="1" aria-describedby="localRadioFamiliarityHelp" />
-                    <div class="local-radio-familiarity-stops" aria-hidden="true"><span>Play Deep Cuts Too</span><span>Balanced Mix</span><span>Favor the Hits</span></div>
-                    <div id="localRadioFamiliarityHelp" class="hint">Balanced Mix is the default. This adjusts only songs that already fit the Local Station.</div>
-                  </div>
-                  <div class="local-radio-familiarity">
-                    <label for="localRadioSongRepeat">Song repeat wait</label>
-                    <input id="localRadioSongRepeat" type="range" min="1" max="24" step="1" value="4" aria-describedby="localRadioSongRepeatHelp" />
-                    <div class="local-radio-song-repeat-stops" aria-hidden="true"><span>1 hour</span><output id="localRadioSongRepeatValue"></output><span>24 hours</span></div>
-                    <div id="localRadioSongRepeatHelp" class="hint">4 hours is the default. A song cannot return until this wait has passed.</div>
-                  </div>
-                  <div class="local-radio-familiarity">
-                    <label for="localRadioArtistRepeat">Artist repeat wait</label>
-                    <input id="localRadioArtistRepeat" type="range" min="0" max="4" step="1" value="2" aria-describedby="localRadioArtistRepeatHelp" />
-                    <div class="local-radio-familiarity-stops five" aria-hidden="true"><span>30 min</span><span>60 min</span><span>90 min</span><span>120 min</span><span>180 min</span></div>
-                    <div id="localRadioArtistRepeatHelp" class="hint">90 minutes is the default. The artist cannot return until this wait has passed.</div>
-                  </div>
-                  <div class="local-radio-familiarity">
-                    <label for="localRadioArtistSet">Artist sets</label>
-                    <input id="localRadioArtistSet" type="range" min="0" max="3" step="1" value="0" aria-describedby="localRadioArtistSetHelp" />
-                    <div class="local-radio-familiarity-stops four" aria-hidden="true"><span>Single Tracks</span><span>Two-fers</span><span>Three-way</span><span>Four-play</span></div>
-                    <div id="localRadioArtistSetHelp" class="hint">Single Tracks is the default. A set plays before the artist's repeat wait begins.</div>
-                  </div>
-        </section>
         <section class="lastfm-settings local-music-section" aria-labelledby="lastFmTitle">
           <div class="pro-music-settings-title" id="lastFmTitle">Last.fm Music Data</div>
           <label class="preference-toggle">
@@ -353,7 +316,7 @@
             <p>Settings → Local Music → <b>Manage Local Mixes</b> shows every installed book, its eligible-song count, and a readiness label. Enable the mixes you want to see in Local Music; optional books you add later stay hidden until you turn them on. Star a mix to move it to the top of the Local Mixes list.</p>
           </details>
           <details><summary>Local Radio Controls and Crossfade</summary>
-            <p>Settings → Local Music lets you shape Song Radio and Local Mixes. <b>Song Familiarity</b> moves from Play Deep Cuts Too to Balanced Mix to Favor the Hits. It changes the odds among songs that already fit the station; it does not make unrelated music eligible.</p>
+            <p>Open <b>Local Radio Controls</b> from the sliders icon at the left of the Local Music playback controls. It lets you shape Song Radio and Local Mixes. <b>Song Familiarity</b> moves from Play Deep Cuts Too to Balanced Mix to Favor the Hits. It changes the odds among songs that already fit the station; it does not make unrelated music eligible.</p>
             <p><b>Song Repeat Wait</b> sets how long a song rests before it can return. <b>Artist Repeat Wait</b> sets the break before an artist returns. <b>Artist Sets</b> can play Single Tracks, Two-fers, Three-way, or Four-play sets. Artist Radio itself uses its fixed artist-focused behavior rather than these taste controls.</p>
             <p><b>Enable 8-second crossfade</b> blends Local Music tracks, Local Radio, Local Mixes, and albums. It is on by default and does not affect Streaming Radio.</p>
           </details>

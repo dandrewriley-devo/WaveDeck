@@ -121,7 +121,7 @@ saveLog.addEventListener('click', async () => {
 
 window.wavedeck.onMusicDebugLog((decision) => renderDecision(decision));
 window.wavedeck.getMusicDebugHistory().then((decisions) => {
-  for (const decision of Array.isArray(decisions) ? decisions : []) renderDecision(decision, { prepend: false });
+  for (const decision of (Array.isArray(decisions) ? decisions : []).slice().reverse()) renderDecision(decision, { prepend: false });
 }).catch(() => {});
 window.wavedeck.onMusicDebugReset(() => {
   entries.replaceChildren();

@@ -61,16 +61,6 @@ const lastFmProgressWrap = document.getElementById('lastFmProgressWrap');
 const lastFmProgress = document.getElementById('lastFmProgress');
 const lastFmProgressLabel = document.getElementById('lastFmProgressLabel');
 const lastFmUpdating = document.getElementById('lastFmUpdating');
-const localRadioFamiliarity = document.getElementById('localRadioFamiliarity');
-const localRadioFamiliarityHelp = document.getElementById('localRadioFamiliarityHelp');
-const localRadioSongRepeat = document.getElementById('localRadioSongRepeat');
-const localRadioSongRepeatHelp = document.getElementById('localRadioSongRepeatHelp');
-const localRadioSongRepeatValue = document.getElementById('localRadioSongRepeatValue');
-const localRadioArtistRepeat = document.getElementById('localRadioArtistRepeat');
-const localRadioArtistRepeatHelp = document.getElementById('localRadioArtistRepeatHelp');
-const localRadioArtistSet = document.getElementById('localRadioArtistSet');
-const localRadioArtistSetHelp = document.getElementById('localRadioArtistSetHelp');
-const localMusicCrossfade = document.getElementById('localMusicCrossfade');
 const localMixManager = document.getElementById('localMixManager');
 const queueLastFmRefreshBtn = document.getElementById('queueLastFmRefreshBtn');
 const openRadioLogBtn = document.getElementById('openRadioLogBtn');
@@ -90,17 +80,6 @@ let reloadQueued = false;
 let initialized = false;
 let pendingEditId = "";
 let activeSubgroupRename = null;
-
-const LOCAL_RADIO_FAMILIARITY = ['deep-cuts', 'balanced', 'hits'];
-const LOCAL_RADIO_SONG_REPEAT_HOURS = Array.from({ length: 24 }, (_value, index) => index + 1);
-const LOCAL_RADIO_ARTIST_REPEAT_MINUTES = [30, 60, 90, 120, 180];
-const LOCAL_RADIO_ARTIST_SET_SIZES = [1, 2, 3, 4];
-const LOCAL_RADIO_ARTIST_SET_LABELS = ['Single Tracks', 'Two-fers', 'Three-way', 'Four-play'];
-const LOCAL_RADIO_FAMILIARITY_COPY = {
-  hits: 'Favor the Hits — chooses first from Favorites and 7–10 ratings, with the strongest odds for 9–10. Last.fm is the fallback.',
-  balanced: 'Balanced Mix — chooses first from Favorites and 5–10 ratings, while giving every qualifying rating a useful chance. This is the default.',
-  'deep-cuts': 'Play Deep Cuts Too — chooses first from Favorites and 3–10 ratings. Hits stay in rotation while 3–6 get more opportunity.'
-};
 
 function renderMusicLibraryStatus(status = {}) {
   const count = Number(status.count || 0);
@@ -126,23 +105,7 @@ function renderProMusicSettings(preferences) {
   clearAdditionalMusicFolderBtn.disabled = !folder;
   lastFmEnabled.checked = preferences?.lastFmEnabled === true;
   lastFmApiKey.value = String(preferences?.lastFmApiKey || '');
-  localMusicCrossfade.checked = preferences?.localMusicCrossfadeEnabled !== false;
   lastFmDetails.hidden = !lastFmEnabled.checked;
-  const familiarity = LOCAL_RADIO_FAMILIARITY.includes(preferences?.localRadioFamiliarity)
-    ? preferences.localRadioFamiliarity
-    : 'balanced';
-  localRadioFamiliarity.value = String(LOCAL_RADIO_FAMILIARITY.indexOf(familiarity));
-  localRadioFamiliarityHelp.textContent = LOCAL_RADIO_FAMILIARITY_COPY[familiarity];
-  const songRepeatHours = LOCAL_RADIO_SONG_REPEAT_HOURS.includes(preferences?.localRadioSongRepeatHours) ? preferences.localRadioSongRepeatHours : 4;
-  const artistRepeatMinutes = LOCAL_RADIO_ARTIST_REPEAT_MINUTES.includes(preferences?.localRadioArtistRepeatMinutes) ? preferences.localRadioArtistRepeatMinutes : 90;
-  const artistSetSize = LOCAL_RADIO_ARTIST_SET_SIZES.includes(preferences?.localRadioArtistSetSize) ? preferences.localRadioArtistSetSize : 1;
-  localRadioSongRepeat.value = String(songRepeatHours);
-  localRadioArtistRepeat.value = String(LOCAL_RADIO_ARTIST_REPEAT_MINUTES.indexOf(artistRepeatMinutes));
-  localRadioArtistSet.value = String(LOCAL_RADIO_ARTIST_SET_SIZES.indexOf(artistSetSize));
-  localRadioSongRepeatHelp.textContent = `${songRepeatHours} hours. A song cannot return until this wait has passed.`;
-  renderSongRepeatStop(songRepeatHours);
-  localRadioArtistRepeatHelp.textContent = `${artistRepeatMinutes} minutes. The artist cannot return until this wait has passed.`;
-  localRadioArtistSetHelp.textContent = artistSetSize === 1 ? 'Single Tracks is the default. An artist rests after each song.' : `${LOCAL_RADIO_ARTIST_SET_LABELS[artistSetSize - 1]} plays before the artist's repeat wait begins.`;
   if (proEnabled) { void loadLastFmStatus(); void loadLocalMixManager(); void loadMusicLibraryStatus(); }
 }
 
@@ -1156,65 +1119,6 @@ queueLastFmRefreshBtn.addEventListener('click', async () => {
 });
 
 openRadioLogBtn.addEventListener('click', () => { void window.wavedeck.openMusicDebugLog(); });
-
-localMusicCrossfade.addEventListener('change', async () => {
-  localMusicCrossfade.disabled = true;
-  try {
-    renderProMusicSettings(await window.wavedeck.setLocalMusicCrossfade(localMusicCrossfade.checked));
-    setStatus(statusLocalMusic, localMusicCrossfade.checked ? 'Local Music crossfade is on.' : 'Local Music crossfade is off.');
-  } catch (error) {
-    localMusicCrossfade.checked = !localMusicCrossfade.checked;
-    setStatus(statusLocalMusic, `Could not save crossfade: ${error.message}`, false);
-  } finally { localMusicCrossfade.disabled = false; }
-});
-
-localRadioFamiliarity.addEventListener('input', () => {
-  const familiarity = LOCAL_RADIO_FAMILIARITY[Number(localRadioFamiliarity.value)] || 'balanced';
-  localRadioFamiliarityHelp.textContent = LOCAL_RADIO_FAMILIARITY_COPY[familiarity];
-});
-localRadioFamiliarity.addEventListener('change', async () => {
-  const familiarity = LOCAL_RADIO_FAMILIARITY[Number(localRadioFamiliarity.value)] || 'balanced';
-  localRadioFamiliarity.disabled = true;
-  try {
-    renderProMusicSettings(await window.wavedeck.setLocalRadioFamiliarity(familiarity));
-    setStatus(statusLocalMusic, `Local Radio set to ${familiarity === 'hits' ? 'Favor the Hits' : familiarity === 'deep-cuts' ? 'Play Deep Cuts Too' : 'Balanced Mix'}.`);
-  } catch (error) {
-    setStatus(statusLocalMusic, `Could not save Song familiarity: ${error.message}`, false);
-  } finally { localRadioFamiliarity.disabled = false; }
-});
-
-function tuningFromControls() {
-  return {
-    songRepeatHours: Number(localRadioSongRepeat.value) || 4,
-    artistRepeatMinutes: LOCAL_RADIO_ARTIST_REPEAT_MINUTES[Number(localRadioArtistRepeat.value)] || 90,
-    artistSetSize: LOCAL_RADIO_ARTIST_SET_SIZES[Number(localRadioArtistSet.value)] || 1
-  };
-}
-function renderSongRepeatStop(hours) {
-  const value = Math.min(24, Math.max(1, Number(hours) || 4));
-  localRadioSongRepeatValue.hidden = value === 1 || value === 24;
-  localRadioSongRepeatValue.textContent = `${value} hours`;
-  localRadioSongRepeatValue.style.setProperty('--repeat-stop', `${((value - 1) / 23) * 100}%`);
-}
-function showTuningHelp() {
-  const value = tuningFromControls();
-  localRadioSongRepeatHelp.textContent = `${value.songRepeatHours} hours. A song cannot return until this wait has passed.`;
-  renderSongRepeatStop(value.songRepeatHours);
-  localRadioArtistRepeatHelp.textContent = `${value.artistRepeatMinutes} minutes. The artist cannot return until this wait has passed.`;
-  localRadioArtistSetHelp.textContent = value.artistSetSize === 1 ? 'Single Tracks is the default. An artist rests after each song.' : `${LOCAL_RADIO_ARTIST_SET_LABELS[value.artistSetSize - 1]} plays before the artist's repeat wait begins.`;
-}
-for (const control of [localRadioSongRepeat, localRadioArtistRepeat, localRadioArtistSet]) {
-  control.addEventListener('input', showTuningHelp);
-  control.addEventListener('change', async () => {
-    const controls = [localRadioSongRepeat, localRadioArtistRepeat, localRadioArtistSet];
-    controls.forEach(item => { item.disabled = true; });
-    try {
-      renderProMusicSettings(await window.wavedeck.setLocalRadioTuning(tuningFromControls()));
-      setStatus(statusLocalMusic, 'Local Radio rotation settings saved.');
-    } catch (error) { setStatus(statusLocalMusic, `Could not save Local Radio rotation settings: ${error.message}`, false); }
-    finally { controls.forEach(item => { item.disabled = false; }); }
-  });
-}
 
 async function reloadEverything() {
   await loadData();

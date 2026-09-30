@@ -11,6 +11,8 @@ const playPauseIcon = document.getElementById("playPauseIcon");
 const recordBtn = document.getElementById("recordBtn");
 const stopBtn = document.getElementById("stopBtn");
 const nextPresetBtn = document.getElementById("nextPresetBtn");
+const localThumbUpBtn = document.getElementById('localThumbUpBtn');
+const localRadioControlsBtn = document.getElementById('localRadioControlsBtn');
 const volumeSlider = document.getElementById("volSlider");
 const openSettingsBtn = document.getElementById("openSettingsBtn");
 const streamingTabBtn = document.getElementById("streamingTabBtn");
@@ -246,6 +248,7 @@ function setProModeUi(preferences = {}) {
   document.querySelectorAll("[data-pro-only]").forEach((node) => {
     node.hidden = !proModeEnabled;
   });
+  localRadioControlsBtn.hidden = !proModeEnabled || !musicVisible;
   if (!proModeEnabled && recordingsSectionVisible) setRecordingsSectionVisible(false);
   if (!proModeEnabled && musicVisible) setMusicVisible(false);
   if (proModeEnabled && !wasEnabled) {
@@ -376,6 +379,7 @@ function setMusicVisible(visible) {
   searchPanel.setAttribute("aria-hidden", String(musicVisible || recordingsSectionVisible));
   streamingToolbar.hidden = musicVisible;
   localMusicToolbar.hidden = !musicVisible;
+  localRadioControlsBtn.hidden = !musicVisible;
   musicToggleBtn.setAttribute('aria-label', 'Open Local Music');
   updateSectionToolbarHighlights();
   queueRender();
@@ -638,6 +642,7 @@ localThumbUpBtn.addEventListener('click', async () => {
   catch (error) { nowPlaying.textContent = error.message; }
   finally { setTimeout(() => showMusicPlayback(currentPlayerStatus), 120); }
 });
+localRadioControlsBtn.addEventListener('click', () => { void window.wavedeck.openLocalRadioControls(); });
 window.wavedeck.onMusicChanged(status => {
   setMusicStatus(status);
   if (!status.scanning) invalidateLocalMusicView();

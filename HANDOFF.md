@@ -1,14 +1,15 @@
 # WaveDeck Project Handoff
 
-This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **0.11.3**.
+This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **0.11.4**.
 
 ## Current published state
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `main`
-- Current version: **0.11.3**
-- Current release: 0.11.3 — Local Music loading and persistent Live Radio Log.
-- Current commit: the verified 0.11.3 release commit at the head of `main`.
+- Current version: **0.11.4**
+- Current release: 0.11.4 — Local Radio Controls and Live Radio Log ordering.
+- Current commit: the verified 0.11.4 release commit at the head of `main`.
+- 0.11.3 commit: `883bf5f345a4d185b576ed10b99eacc15d34b5b0` — Local Music loading and persistent Live Radio Log.
 - 0.11.2 commit: `edc074cdb908a1f9cdcf5e1c7abbfc2d8ed0bb4b` — expanded in-app User Guide, compact station-list listening totals, and left-aligned subgroups.
 - 0.11.1 commit: `e07a29d219dd93686351f45577ec331c61cd108f` — closing the main window closes Settings and Live Radio Log before fully exiting.
 - 0.11.0 commit: `f3d51b2f42369f6bd301d4677bde14748e1d1da4` — true Artist Radio and album-to-Artist-Radio handoff.
@@ -95,7 +96,7 @@ Important: do **not** let a large base64 file be truncated while creating a GitH
 
 ## Crossfade and playback
 
-- Local Music only has a real equal-power **8-second crossfade**, enabled by default and switchable in Settings → Local Music. Streaming Radio is unaffected.
+- Local Music only has a real equal-power **8-second crossfade**, enabled by default and switchable in Local Radio Controls. Streaming Radio is unaffected.
 - Crossfade applies to Local Music, Local Radio, Local Mixes, and albums. A candidate is selected in advance and committed only after it starts successfully. Skip, stop, error, station change, and exit cancel it safely.
 - Main playback controls and the current-station row are global, above the tabs. The current-source row uses a boombox for Local Music and radio icon for Streaming.
 
@@ -110,7 +111,7 @@ Important: do **not** let a large base64 file be truncated while creating a GitH
 
 - Open with the subtle Local Music Settings link or `Ctrl + Alt + Shift + L`.
 - `Data/radio-diagnostics.json` persistently keeps the last **3,000** selected Local Radio decisions across app restarts and Local Station changes.
-- As of 0.11.3, every selected Song Radio, Artist Radio, or Local Mix decision is appended and saved even while the Live Radio Log window is closed. Opening the window retrieves that full history. Save Log exports that same complete history.
+- As of 0.11.3, every selected Song Radio, Artist Radio, or Local Mix decision is appended and saved even while the Live Radio Log window is closed. As of 0.11.4, opening the window presents that saved history newest first, matching live updates. Save Log exports that same complete history.
 - Starting another Local Station no longer clears history. Clear in the Live Radio Log now clears the real persisted diagnostic history as well as the screen.
 - The obsolete “Waiting for the next radio pick” empty-state box is removed.
 - Diagnostics intentionally omit MP3 file paths. They include selection mode/trigger, seed, tuning, candidate counts/exclusions, qualification reasons, score inputs, top alternatives, and recent Radio history.
@@ -144,7 +145,8 @@ Important: do **not** let a large base64 file be truncated while creating a GitH
 - `src/preload.js` — renderer bridge; keep IPC surface deliberately explicit.
 - `src/renderer/renderer.js` / `styles.css` / `index.html` — main player UI and Local Music warm-up/loading state.
 - `src/renderer/radio-log.js` / `radio-log.html` — diagnostic history UI and export/clear actions.
-- `src/renderer/settings.html` / `settings.js` / `settings.css` — Settings, User Guide, Local Music controls, mix manager.
+- `src/renderer/settings.html` / `settings.js` / `settings.css` — Settings, User Guide, Last.fm controls, and mix manager.
+- `src/renderer/local-radio-controls.html` / `.js` / `.css` — compact Local Radio Controls window for crossfade and Song Radio/Local Mix tuning.
 - `scripts/validate.js` — static validation. This was restored in 0.11.3 and must remain valid UTF-8 JavaScript.
 - `scripts/test-music.js` — music/Local Radio regression tests.
 
@@ -155,6 +157,7 @@ Important: do **not** let a large base64 file be truncated while creating a GitH
 - Test source version in `package.json` and the About version span must match.
 - When reviewing the Live Radio Log, start Local Radio, let several transitions occur with the log closed, then open it and confirm the earlier decisions appear; Save Log should export them all.
 - With a large library, the first Local Music click should immediately show the loading message if warming is unfinished, then show Local Stations/Mixes once ready; later openings should normally be immediate.
+- With Local Music selected, the sliders icon at the left of playback controls opens Local Radio Controls. Check that its crossfade toggle and all four tuning controls persist, and that it closes with the main app or when Advanced Features is disabled.
 
 ## User communication
 
