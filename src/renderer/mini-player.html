@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; style-src 'self'; script-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'" />
+  <title>WaveDeck Mini Player</title>
+  <link rel="stylesheet" href="./mini-player.css" />
+</head>
+<body>
+  <main class="mini-player" aria-label="WaveDeck Mini Player">
+    <div id="track" class="track" title="WaveDeck">
+      <div id="trackTitle" class="track-title">WaveDeck</div>
+      <div id="trackDetail" class="track-detail">Ready</div>
+    </div>
+    <div class="controls" aria-label="Playback controls">
+      <button id="previousBtn" type="button" aria-label="Previous Preset" title="Previous Preset">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5v14M18 6.5 9 12l9 5.5z" fill="currentColor"/></svg>
+      </button>
+      <button id="playPauseBtn" type="button" aria-label="Play" title="Play">
+        <svg id="playPauseIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7z" fill="currentColor"/></svg>
+      </button>
+      <button id="stopBtn" type="button" aria-label="Stop playback" title="Stop playback">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6h12v12H6z" fill="currentColor"/></svg>
+      </button>
+      <button id="nextBtn" type="button" aria-label="Next Preset" title="Next Preset">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 5v14M6 6.5l9 5.5-9 5.5z" fill="currentColor"/></svg>
+      </button>
+      <button id="thumbUpBtn" class="thumb-up" type="button" aria-label="Local Radio thumbs up" title="Local Radio thumbs up" disabled>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 10.5v9H4.75a1.25 1.25 0 0 1-1.25-1.25v-6.5A1.25 1.25 0 0 1 4.75 10.5H7.5Zm0 9h8.4a2 2 0 0 0 1.95-1.55l1.3-5.5A2 2 0 0 0 17.2 10H13l.5-3.1a2.55 2.55 0 0 0-2.5-2.9L7.5 10.5Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </main>
+  <script src="./mini-player.js"></script>
+</body>
+</html>

@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.11.8");
-assert.strictEqual(packageJson.wavedeckVersion, "0.11.8");
+assert.strictEqual(packageJson.version, "0.11.9");
+assert.strictEqual(packageJson.wavedeckVersion, "0.11.9");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -360,6 +360,7 @@ try {
     radioLogWindowBounds: null,
     localRadioControlsWindowBounds: null,
     mainWindowBounds: null,
+    miniPlayerWindowBounds: null,
     lastLibraryUpdate: "",
     deletedOfficialStationIds: []
   });
@@ -380,7 +381,8 @@ try {
     settingsWindowBounds: null,
     radioLogWindowBounds: null,
     localRadioControlsWindowBounds: null,
-    mainWindowBounds: null
+    mainWindowBounds: null,
+    miniPlayerWindowBounds: null
   });
   assert.deepStrictEqual(storage.getUiPreferences(), storage.getLinuxUiPreferences());
   assert.strictEqual(storage.setLaunchInSidebarMode(true).launchInSidebarMode, true);
@@ -437,6 +439,12 @@ try {
     width: 300,
     height: 641
   });
+  assert.deepStrictEqual(storage.setMiniPlayerWindowBounds({ x: 188.6, y: 28.4, width: 560.2, height: 43.6 }), {
+    x: 189,
+    y: 28,
+    width: 560,
+    height: 44
+  });
   const uiPreferenceReload = new PortableStorage({ dataDir, defaultsDir });
   uiPreferenceReload.initialize();
   assert.deepStrictEqual(uiPreferenceReload.getLinuxUiPreferences(), {
@@ -455,7 +463,8 @@ try {
     settingsWindowBounds: { x: 2100, y: 41, width: 1120, height: 841 },
     radioLogWindowBounds: { x: 14, y: 23, width: 864, height: 700 },
     localRadioControlsWindowBounds: { x: 30, y: 49, width: 482, height: 479 },
-    mainWindowBounds: { x: 84, y: 97, width: 300, height: 641 }
+    mainWindowBounds: { x: 84, y: 97, width: 300, height: 641 },
+    miniPlayerWindowBounds: { x: 189, y: 28, width: 560, height: 44 }
   });
 
   const changed = storage.readStations();
@@ -1254,6 +1263,8 @@ const radioLogHtml = fs.readFileSync(path.join(root, "src", "renderer", "radio-l
 const radioLogSource = fs.readFileSync(path.join(root, "src", "renderer", "radio-log.js"), "utf8");
 const localRadioControlsHtml = fs.readFileSync(path.join(root, "src", "renderer", "local-radio-controls.html"), "utf8");
 const localRadioControlsSource = fs.readFileSync(path.join(root, "src", "renderer", "local-radio-controls.js"), "utf8");
+const miniPlayerHtml = fs.readFileSync(path.join(root, "src", "renderer", "mini-player.html"), "utf8");
+const miniPlayerSource = fs.readFileSync(path.join(root, "src", "renderer", "mini-player.js"), "utf8");
 assert.ok(!radioLogHtml.includes("Waiting for the next radio pick"));
 assert.ok(radioLogSource.includes("clearMusicDebugHistory"));
 assert.ok(radioLogSource.includes(".slice().reverse()"));
@@ -1290,6 +1301,7 @@ assert.ok(settingsHtml.indexOf('data-tab="localmusic"') < settingsHtml.indexOf('
 assert.ok(settingsHtml.includes('id="tab-localmusic"'));
 assert.ok(settingsHtml.includes('0.8.0 — Crossfade Local Music'));
 assert.ok(settingsHtml.includes('class="user-guide"'));
+assert.ok(settingsHtml.includes('Ctrl + Alt + Shift + M'));
 assert.ok(settingsHtml.includes('0.10.0 — Interface Tuning'));
 assert.ok(settingsHtml.includes('id="localMixManager"'));
 assert.ok(settingsHtml.includes('0.7.x — Local Music'));
@@ -1327,6 +1339,10 @@ assert.ok(localRadioControlsHtml.includes('id="localMusicCrossfade"'));
 assert.ok(localRadioControlsSource.includes('setLocalRadioTuning'));
 assert.ok(localRadioControlsSource.includes('setLocalMusicCrossfade'));
 assert.ok(!localRadioControlsSource.includes('FAMILIARITY_COPY'));
+assert.ok(miniPlayerHtml.includes('id="playPauseBtn"'));
+assert.ok(miniPlayerHtml.includes('id="thumbUpBtn"'));
+assert.ok(miniPlayerSource.includes('sendMusicFeedback'));
+assert.ok(miniPlayerSource.includes('onPlayerStatus'));
 assert.ok(settingsHtml.includes("Download your station listings as a json file."));
 assert.ok(settingsHtml.indexOf('id="stationEditorHome"') < settingsHtml.indexOf('class="listening-history-bar"'));
 assert.ok(settingsHtml.includes('id="resetListeningBtn"'));
@@ -1461,6 +1477,10 @@ assert.ok(mainSource.includes("localRadioControlsWindowBounds"));
 assert.ok(mainSource.includes("storage.setLocalRadioControlsWindowBounds(bounds)"));
 assert.ok(mainSource.includes("mainWindowBounds"));
 assert.ok(mainSource.includes("storage.setMainWindowBounds(bounds)"));
+assert.ok(mainSource.includes("function toggleMiniPlayer()"));
+assert.ok(mainSource.includes("MINI_PLAYER_SHORTCUT"));
+assert.ok(mainSource.includes("Mini Player"));
+assert.ok(mainSource.includes("storage.setMiniPlayerWindowBounds"));
 assert.ok(mainSource.includes("function createTray()"));
 assert.ok(mainSource.includes("Show WaveDeck"));
 assert.ok(mainSource.includes("Quit WaveDeck"));
@@ -1649,6 +1669,7 @@ for (const file of [
   "src/main/window-layout.js",
   "src/preload.js",
   "src/renderer/search.js",
+  "src/renderer/mini-player.js",
   "src/renderer/renderer.js",
   "src/renderer/settings.js"
 ]) {

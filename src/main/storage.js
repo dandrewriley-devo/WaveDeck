@@ -296,6 +296,7 @@ function validatePreferences(value) {
   const rawRadioLogBounds = value?.radioLogWindowBounds;
   const rawLocalRadioControlsBounds = value?.localRadioControlsWindowBounds;
   const rawMainWindowBounds = value?.mainWindowBounds;
+  const rawMiniPlayerBounds = value?.miniPlayerWindowBounds;
   const additionalMusicFolder = typeof value?.additionalMusicFolder === "string"
     ? value.additionalMusicFolder.trim()
     : "";
@@ -362,6 +363,15 @@ function validatePreferences(value) {
         height: Math.max(1, Math.round(Number(rawMainWindowBounds.height)))
       }
     : null;
+  const miniPlayerWindowBounds = rawMiniPlayerBounds && typeof rawMiniPlayerBounds === "object" && !Array.isArray(rawMiniPlayerBounds) &&
+    ["x", "y", "width", "height"].every((key) => Number.isFinite(Number(rawMiniPlayerBounds[key])))
+    ? {
+        x: Math.round(Number(rawMiniPlayerBounds.x)),
+        y: Math.round(Number(rawMiniPlayerBounds.y)),
+        width: Math.max(1, Math.round(Number(rawMiniPlayerBounds.width))),
+        height: Math.max(1, Math.round(Number(rawMiniPlayerBounds.height)))
+      }
+    : null;
   return {
     version: 1,
     stations,
@@ -394,6 +404,7 @@ function validatePreferences(value) {
     radioLogWindowBounds,
     localRadioControlsWindowBounds,
     mainWindowBounds,
+    miniPlayerWindowBounds,
     lastLibraryUpdate: Number.isFinite(parsedUpdatedAt) ? new Date(parsedUpdatedAt).toISOString() : "",
     deletedOfficialStationIds
   };
@@ -573,6 +584,9 @@ class PortableStorage {
         : null,
       mainWindowBounds: preferences.mainWindowBounds
         ? { ...preferences.mainWindowBounds }
+        : null,
+      miniPlayerWindowBounds: preferences.miniPlayerWindowBounds
+        ? { ...preferences.miniPlayerWindowBounds }
         : null
     };
   }
@@ -711,6 +725,13 @@ class PortableStorage {
     preferences.mainWindowBounds = bounds;
     this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
     return this.getUiPreferences().mainWindowBounds;
+  }
+
+  setMiniPlayerWindowBounds(bounds) {
+    const preferences = this.readPreferences();
+    preferences.miniPlayerWindowBounds = bounds;
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences().miniPlayerWindowBounds;
   }
 
   setStationGain(stationId, value) {

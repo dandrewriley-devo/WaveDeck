@@ -1,0 +1,17 @@
+:root { color-scheme: dark; }
+* { box-sizing: border-box; }
+html, body { background: #161616; color: #f4f4f4; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, sans-serif; height: 100%; margin: 0; overflow: hidden; }
+.mini-player { align-items: stretch; background: #1d1d1d; border: 1px solid #3b3b3b; display: flex; height: 44px; width: 100%; }
+.track { -webkit-app-region: drag; display: grid; gap: 1px; justify-content: center; min-width: 0; padding: 6px 12px 5px; text-align: center; flex: 1 1 auto; }
+.track-title, .track-detail { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.track-title { font-size: 13px; font-weight: 650; line-height: 16px; }
+.track-detail { color: #b9b9b9; font-size: 11px; line-height: 14px; }
+.controls { -webkit-app-region: no-drag; align-items: center; border-left: 1px solid #383838; display: flex; flex: 0 0 auto; padding: 3px; }
+button { -webkit-app-region: no-drag; align-items: center; appearance: none; background: transparent; border: 0; border-radius: 5px; color: #dedede; cursor: pointer; display: inline-flex; height: 36px; justify-content: center; padding: 0; width: 36px; }
+button:hover { background: #303030; color: #ffffff; }
+button:active { background: #3d3d3d; }
+button:focus-visible { outline: 2px solid #75c491; outline-offset: -2px; }
+button:disabled { color: #666; cursor: default; }
+button:disabled:hover { background: transparent; }
+button svg { height: 19px; width: 19px; }
+.thumb-up.feedback-selected { color: #75c491; }

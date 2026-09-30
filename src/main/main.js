@@ -84,8 +84,12 @@ const LOCAL_RADIO_CONTROLS_WIDTH = 480;
 const LOCAL_RADIO_CONTROLS_HEIGHT = 480;
 const LOCAL_RADIO_CONTROLS_MIN_WIDTH = 360;
 const LOCAL_RADIO_CONTROLS_MIN_HEIGHT = 360;
+const MINI_PLAYER_WIDTH = 560;
+const MINI_PLAYER_HEIGHT = 44;
+const MINI_PLAYER_MIN_WIDTH = 360;
 const RADIO_LOG_SHORTCUT = "CommandOrControl+Alt+Shift+L";
 const LASTFM_REFRESH_SHORTCUT = "CommandOrControl+Alt+Shift+F";
+const MINI_PLAYER_SHORTCUT = "CommandOrControl+Alt+Shift+M";
 const DISPLAY_VERSION = require("../../package.json").wavedeckVersion || app.getVersion();
 
 let mainWindow = null;
@@ -93,6 +97,9 @@ let tray = null;
 let settingsWindow = null;
 let radioLogWindow = null;
 let localRadioControlsWindow = null;
+let miniPlayerWindow = null;
+let miniPlayerReturnToSidebar = false;
+let miniPlayerSnapTimer = null;
 const radioDiagnosticSession = [];
 const RADIO_DIAGNOSTIC_LIMIT = 3000;
 let radioDiagnosticStationKey = '';
@@ -210,29 +217,50 @@ function sendToMain(channel, payload) {
   if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(channel, payload);
 }
 
+function sendToMiniPlayer(channel, payload) {
+  if (miniPlayerWindow && !miniPlayerWindow.isDestroyed()) miniPlayerWindow.webContents.send(channel, payload);
+}
+
 function showMainWindow() {
+  if (miniPlayerWindow && !miniPlayerWindow.isDestroyed()) {
+    void closeMiniPlayer();
+    return;
+  }
   if (!mainWindow || mainWindow.isDestroyed()) return;
   if (mainWindow.isMinimized()) mainWindow.restore();
   mainWindow.show();
   mainWindow.focus();
 }
 
-function createTray() {
-  if (tray || !Tray) return;
-  tray = new Tray(path.join(PROJECT_ROOT, "build", "icon.png"));
-  tray.setToolTip("WaveDeck");
+function refreshTrayMenu() {
+  if (!tray) return;
+  const miniPlayerActive = Boolean(miniPlayerWindow && !miniPlayerWindow.isDestroyed());
   tray.setContextMenu(Menu.buildFromTemplate([
     { label: "Show WaveDeck", click: showMainWindow },
+    ...(process.platform === "linux" ? [{
+      label: "Mini Player",
+      type: "checkbox",
+      checked: miniPlayerActive,
+      click: () => { void toggleMiniPlayer(); }
+    }] : []),
     { label: "Play / Pause", click: () => { void mediaController?.togglePlayPause(); } },
     { label: "Stop", click: () => { void mediaController?.stop(); } },
     { type: "separator" },
     { label: "Quit WaveDeck", click: () => app.quit() }
   ]));
+}
+
+function createTray() {
+  if (tray || !Tray) return;
+  tray = new Tray(path.join(PROJECT_ROOT, "build", "icon.png"));
+  tray.setToolTip("WaveDeck");
+  refreshTrayMenu();
   tray.on("click", showMainWindow);
 }
 
 function sendToAll(channel, payload) {
   sendToMain(channel, payload);
+  sendToMiniPlayer(channel, payload);
   if (settingsWindow && !settingsWindow.isDestroyed()) {
     settingsWindow.webContents.send(channel, payload);
   }
@@ -310,13 +338,13 @@ function sendLastFmStatus(status) { sendToAll('music:lastfm-changed', status); }
 function broadcastPlayerStatus(status = player?.getStatus()) {
   const combinedStatus = mediaController ? mediaController.getStatus(status) : status;
   listeningHistory?.handleStatus(combinedStatus);
-  sendToMain("player:status-changed", combinedStatus);
+  sendToAll("player:status-changed", combinedStatus);
   mprisService?.update(combinedStatus);
   return combinedStatus;
 }
 
 function broadcastStationChanged(station) {
-  sendToMain("player:station-changed", station);
+  sendToAll("player:station-changed", station);
   mprisService?.update(mediaController?.getStatus());
   reclaimMediaKeys();
 }
@@ -387,7 +415,7 @@ function delay(milliseconds) {
 }
 
 function closeAuxiliaryWindows() {
-  for (const auxiliary of [settingsWindow, radioLogWindow, localRadioControlsWindow]) {
+  for (const auxiliary of [settingsWindow, radioLogWindow, localRadioControlsWindow, miniPlayerWindow]) {
     if (auxiliary && !auxiliary.isDestroyed()) auxiliary.close();
   }
 }
@@ -598,6 +626,147 @@ function openLocalRadioControlsWindow() {
   });
   localRadioControlsWindow.on("closed", () => { localRadioControlsWindow = null; });
   localRadioControlsWindow.loadFile(path.join(__dirname, "..", "renderer", "local-radio-controls.html"));
+}
+
+function isMiniPlayerActive() {
+  return Boolean(miniPlayerWindow && !miniPlayerWindow.isDestroyed());
+}
+
+function getMiniPlayerBounds() {
+  const savedBounds = storage.getUiPreferences().miniPlayerWindowBounds;
+  const display = savedBounds
+    ? screen.getDisplayMatching(savedBounds)
+    : (mainWindow && !mainWindow.isDestroyed() ? screen.getDisplayMatching(mainWindow.getBounds()) : screen.getPrimaryDisplay());
+  const defaultBounds = {
+    x: display.workArea.x + Math.max(0, Math.round((display.workArea.width - MINI_PLAYER_WIDTH) / 2)),
+    y: display.workArea.y,
+    width: MINI_PLAYER_WIDTH,
+    height: MINI_PLAYER_HEIGHT
+  };
+  const constrained = constrainBoundsToDisplay(display, savedBounds || defaultBounds, {
+    minWidth: MINI_PLAYER_MIN_WIDTH,
+    minHeight: MINI_PLAYER_HEIGHT
+  });
+  return {
+    ...constrained,
+    y: display.workArea.y,
+    width: Math.min(MINI_PLAYER_WIDTH, display.workArea.width),
+    height: Math.min(MINI_PLAYER_HEIGHT, display.workArea.height)
+  };
+}
+
+function rememberMiniPlayerBounds(window = miniPlayerWindow) {
+  if (!window || window.isDestroyed()) return;
+  try {
+    storage.setMiniPlayerWindowBounds(getMiniPlayerBoundsForWindow(window));
+  } catch (error) {
+    console.warn(`Could not remember the Mini Player position: ${error.message}`);
+  }
+}
+
+function getMiniPlayerBoundsForWindow(window) {
+  const currentBounds = window.getBounds();
+  const display = screen.getDisplayMatching(currentBounds);
+  const constrained = constrainBoundsToDisplay(display, currentBounds, {
+    minWidth: MINI_PLAYER_MIN_WIDTH,
+    minHeight: MINI_PLAYER_HEIGHT
+  });
+  return {
+    ...constrained,
+    y: display.workArea.y,
+    width: Math.min(MINI_PLAYER_WIDTH, display.workArea.width),
+    height: Math.min(MINI_PLAYER_HEIGHT, display.workArea.height)
+  };
+}
+
+function snapMiniPlayerToTop() {
+  const window = miniPlayerWindow;
+  if (!window || window.isDestroyed()) return;
+  const snappedBounds = getMiniPlayerBoundsForWindow(window);
+  const currentBounds = window.getBounds();
+  if (currentBounds.x !== snappedBounds.x || currentBounds.y !== snappedBounds.y ||
+      currentBounds.width !== snappedBounds.width || currentBounds.height !== snappedBounds.height) {
+    window.setBounds(snappedBounds, false);
+  }
+  rememberMiniPlayerBounds(window);
+}
+
+async function openMiniPlayer() {
+  if (process.platform !== "linux") throw new Error("Mini Player is available in the Linux edition.");
+  if (isMiniPlayerActive()) {
+    miniPlayerWindow.show();
+    miniPlayerWindow.focus();
+    return true;
+  }
+  if (!mainWindow || mainWindow.isDestroyed()) throw new Error("The WaveDeck window is unavailable.");
+
+  miniPlayerReturnToSidebar = sidebarApplied;
+  if (sidebarApplied) await setSidebarMode(false);
+  else {
+    floatingBounds = mainWindow.getBounds();
+    try { storage.setMainWindowBounds(floatingBounds); } catch {}
+  }
+
+  const geometry = getMiniPlayerBounds();
+  const window = createSecureWindow({
+    ...geometry,
+    alwaysOnTop: true,
+    frame: false,
+    maximizable: false,
+    minimizable: false,
+    minWidth: Math.min(MINI_PLAYER_MIN_WIDTH, geometry.width),
+    maxWidth: geometry.width,
+    minHeight: geometry.height,
+    maxHeight: geometry.height,
+    resizable: false,
+    skipTaskbar: true,
+    title: "WaveDeck Mini Player"
+  });
+  miniPlayerWindow = window;
+  window.setAlwaysOnTop(true, "floating");
+  window.on("move", () => {
+    if (miniPlayerSnapTimer) clearTimeout(miniPlayerSnapTimer);
+    miniPlayerSnapTimer = setTimeout(snapMiniPlayerToTop, 80);
+  });
+  window.on("close", () => {
+    if (miniPlayerSnapTimer) clearTimeout(miniPlayerSnapTimer);
+    miniPlayerSnapTimer = null;
+    rememberMiniPlayerBounds(window);
+  });
+  window.on("closed", () => {
+    if (miniPlayerWindow === window) miniPlayerWindow = null;
+    refreshTrayMenu();
+    if (!cleanupComplete) void restoreFromMiniPlayer();
+  });
+  window.loadFile(path.join(__dirname, "..", "renderer", "mini-player.html"));
+  mainWindow.hide();
+  refreshTrayMenu();
+  return true;
+}
+
+async function restoreFromMiniPlayer() {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  const returnToSidebar = miniPlayerReturnToSidebar;
+  miniPlayerReturnToSidebar = false;
+  try {
+    if (returnToSidebar) await setSidebarMode(true);
+    else showMainWindow();
+  } catch (error) {
+    showMainWindow();
+    const message = `WaveDeck could not return to Sidebar Mode. ${error.message}`;
+    console.warn(message);
+    sendToMain("app:warning", message);
+  }
+}
+
+async function closeMiniPlayer() {
+  if (!isMiniPlayerActive()) return false;
+  miniPlayerWindow.close();
+  return true;
+}
+
+async function toggleMiniPlayer() {
+  return isMiniPlayerActive() ? closeMiniPlayer() : openMiniPlayer();
 }
 
 function getSidebarState() {
@@ -1297,7 +1466,7 @@ if (!hasSingleInstanceLock) {
     player = new CrossfadeMpvPlayer({
       executable,
       ipcPath,
-      onMetadata: (metadata) => sendToMain("player:metadata", metadata),
+      onMetadata: (metadata) => sendToAll("player:metadata", metadata),
       onStatus: (status) => broadcastPlayerStatus(status),
       onEnded: (event) => { void mediaController?.handleEnded(event); }
     });
@@ -1377,6 +1546,11 @@ if (!hasSingleInstanceLock) {
     })) {
       console.warn("WaveDeck could not register the Last.fm refresh shortcut.");
     }
+    if (process.platform === "linux" && !globalShortcut.register(MINI_PLAYER_SHORTCUT, () => {
+      void toggleMiniPlayer().catch((error) => console.warn(`Could not toggle Mini Player: ${error.message}`));
+    })) {
+      console.warn("WaveDeck could not register the Mini Player shortcut.");
+    }
     const supportsStartupSidebar = process.platform === "linux" || process.platform === "win32";
     const launchInSidebarMode = supportsStartupSidebar &&
       storage.getUiPreferences().launchInSidebarMode === true;
@@ -1428,6 +1602,7 @@ function finishShutdown() {
   tray = null;
   try { globalShortcut.unregister(RADIO_LOG_SHORTCUT); } catch {}
   try { globalShortcut.unregister(LASTFM_REFRESH_SHORTCUT); } catch {}
+  try { globalShortcut.unregister(MINI_PLAYER_SHORTCUT); } catch {}
   lastFmEnricher?.stop();
   listeningHistory?.close();
   platformMediaKeys?.close();
