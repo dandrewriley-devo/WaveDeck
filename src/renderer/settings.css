@@ -495,7 +495,9 @@ select:focus{
 }
 
 .subgroup-label{
+  flex:1;
   font-size:13px;
+  text-align:left;
 }
 
 .subgroup-empty{
@@ -583,7 +585,10 @@ select:focus{
   color:var(--muted);
   font-size:11px;
   margin-top:3px;
+  text-align:left;
 }
+
+.group-name{ text-align:left; }
 
 .station-editor-row:hover{
   background: transparent !important;
@@ -867,6 +872,24 @@ section#tab-about p {
   margin:0;
   padding:0 12px 12px;
 }
+
+.user-guide details h3{
+  color:#d7d7d7;
+  font-size:13px;
+  margin:12px 12px 5px;
+}
+
+.user-guide details ul{
+  color:#bdbdbd;
+  font-size:13px;
+  line-height:1.5;
+  margin:0 12px 12px 31px;
+  padding:0;
+}
+
+.user-guide details li{ margin:4px 0; }
+.user-guide code{ color:#d8f7b7; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; font-size:.92em; }
+.user-guide a{ color:var(--green); }
 
 .legacy-changelog{ display:none; }
 

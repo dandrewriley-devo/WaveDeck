@@ -464,9 +464,11 @@ function formatListeningTotal(seconds) {
   if (value < 60) return "<1m";
   const totalMinutes = Math.floor(value / 60);
   if (totalMinutes < 60) return `${totalMinutes}m`;
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  return minutes ? `${hours}h ${minutes}m` : `${hours}h`;
+  const hours = Math.round(totalMinutes / 60);
+  if (hours < 24) return `${hours}h`;
+  const days = Math.round(totalMinutes / (60 * 24));
+  if (days < 1000) return `${days}d`;
+  return `${Math.round(days / 365)}y`;
 }
 
 function appendEditorRow(afterRow = null) {

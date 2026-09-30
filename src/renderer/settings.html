@@ -25,7 +25,7 @@
       <!-- INTERFACE -->
       <section id="tab-interface" class="panel hidden">
         <div class="general-meta">
-          <b>WaveDeck version <span id="aboutVersion">0.11.1</span></b>
+          <b>WaveDeck version <span id="aboutVersion">0.11.2</span></b>
         </div>
         <div class="general-sections">
         <section class="general-card">
@@ -316,28 +316,91 @@
         <div class="about-divider"></div>
         <div class="user-guide">
           <h2>User Guide</h2>
-          <details open><summary>Getting Started</summary><p>Choose <b>Streaming</b> for internet radio or <b>Local Music</b> for your MP3 library. Click any station, Local Station, or Local Mix to begin playback. The row beneath the player always shows what is currently playing.</p></details>
-          <details><summary>Streaming Radio</summary><p>Use Search to find stations by name, group, subgroup, country, description, or URL. Star a station to add it to Favorites; Presets give you a personal ordered list for Previous and Next. Open a station briefly to read its details or adjust its Station Gain.</p></details>
-          <details><summary>Local Music &amp; Local Radio</summary><p>Turn on Advanced Features to use Local Music. WaveDeck reads your MP3 library without changing your files. Start Song Radio, Artist Radio, an album, or a Local Mix from Local Music. Your ratings, Favorite tags, Do Not Play tags, and useful Last.fm data help Local Radio choose music that fits.</p></details>
-          <details><summary>Local Mixes and Feedback</summary><p>Local Mixes are curated radio formats built from the music you have. Star a Local Mix or Local Station to save it, then use the Local Music star filter to see only your saved choices. A thumbs-up gently teaches the active Local Radio station what you want more of; skipping is a softer negative signal.</p></details>
-          <details><summary>Local Radio Controls</summary><p>In Settings → Local Music, use Song Familiarity, Song Repeat Wait, Artist Repeat Wait, and Artist Sets to shape Local Radio and Local Mixes. Local Music crossfade is an optional eight-second blend between songs.</p></details>
-          <details><summary>Settings and Library</summary><p>Streaming Stations lets you add, edit, search, and organize streams. Groups controls the main groups and subgroups. Export downloads your station listings as JSON; Import Stations adds listings, while Replace Library replaces the station library after confirmation. Personal Favorites, Presets, and listening history stay separate.</p></details>
-          <details class="linux-launcher-only"><summary>Linux Application Shortcut</summary><p>Add WaveDeck to your Applications menu without installing or moving the AppImage. It should work on Cinnamon/Mint, GNOME, KDE Plasma, Xfce, and most other mainstream Linux desktops. Then pin it using your desktop's normal panel, dock, favorites, or launcher method.</p></details>
-          <details><summary>Help and Troubleshooting</summary><p>If a stream will not play, try another station first; one station may simply be offline or have changed its address. For a portable backup, copy the Data folder. On Linux, the AppImage needs permission to execute and playback requires mpv.</p></details>
+          <details open><summary>Getting Started and Portable Data</summary>
+            <p>Choose <b>Streaming</b> for internet radio or <b>Local Music</b> for your MP3 library. Click a station, Local Station, Local Mix, or song to begin. The row below the player shows what is playing and whether it came from Streaming or Local Music.</p>
+            <p>WaveDeck keeps your stations, preferences, listening history, Local Radio settings, and music information in a <code>Data</code> folder beside the application. To move WaveDeck to another computer or a USB stick, keep that folder with the app. Updating WaveDeck replaces the application files; it does not replace your existing Data folder.</p>
+          </details>
+          <details><summary>Streaming Radio</summary>
+            <p>Use the Streaming tab to browse internet stations. Search looks through station names, groups, subgroups, countries, descriptions, and URLs. Star a station to mark it as a Favorite. Add a station to Presets when you want it in your personal ordered list for Previous and Next.</p>
+            <p>Open a station row to read its description and adjust its <b>Station Gain</b>. Gain changes only that station, from −12 dB to +12 dB, and WaveDeck remembers it. The main volume slider still controls overall listening volume.</p>
+            <p>Listening time starts after 30 seconds of continuous playback. Stations can appear in Your Top Five after they have accumulated five minutes. Settings shows each station’s total and lets you reset the history.</p>
+          </details>
+          <details><summary>Streaming Toolbar, Presets, and Favorites</summary>
+            <p>The Streaming toolbar opens Search, Presets, Favorites, and Your Top Five. These are views of the same Streaming library; they do not make copies of stations. Presets can be reordered by dragging a station’s title area, and that order is used by the Previous and Next controls and media keys.</p>
+            <p>You can expand a station briefly to read its information or adjust gain. Station details collapse again after a short time to keep the list tidy. Streaming group headings stay open while their subgroups can be expanded or collapsed.</p>
+          </details>
+          <details><summary>Local Music Setup and Music Information</summary>
+            <p>Turn on <b>Enable Advanced Features</b> in Settings → General to make Local Music available. WaveDeck scans the portable <code>Music</code> folder beside the app, and you can add one optional Additional Music Folder in Settings → Local Music. Use <b>Rescan</b> after adding music or changing tags.</p>
+            <p>WaveDeck reads your MP3 information into its own portable index; it does not change your MP3 files. It uses song, artist, album, Album Artist, year, genre, rating, Favorite, and Do Not Play information when available. Your MP3 <code>RATING</code> tag uses a 0–10 scale: 10 is five stars and 5 is two and a half stars. A rating of 0 means unrated.</p>
+            <p>A track marked <code>DO_NOT_PLAY=1</code> is never selected by Local Radio or a Local Mix. A Favorite tag gives that song a stronger chance when it fits the station.</p>
+          </details>
+          <details><summary>Playing Local Music</summary>
+            <p>Search your Local Music library by song, artist, album, or year. Each matching song can start <b>Song Radio</b>, <b>Artist Radio</b>, or <b>Play Album</b>.</p>
+            <ul>
+              <li><b>Song Radio</b> starts from a song and looks for music that belongs with it.</li>
+              <li><b>Artist Radio</b> stays focused on the selected artist—about 90% of its selections are from that artist, with only an occasional related-artist change.</li>
+              <li><b>Play Album</b> plays the album in order, then moves into Artist Radio when the album has a clear Album Artist. Various Artists albums stop when they end.</li>
+            </ul>
+            <p>Recently Played Local Stations appear when the Local Music search box is empty. Star one to save it as a Local Station Preset. The Local Music toolbar can show those presets, Local Mixes, or only your starred Local Stations and Mixes.</p>
+          </details>
+          <details><summary>How Local Radio Chooses Music</summary>
+            <p>Local Radio starts with musical relationships that make sense: the seed song or artist, shared credits, specific genre or tag links, and useful Last.fm similar-artist information. It waits when no credible next song is available instead of jumping to unrelated music.</p>
+            <p>Your own information matters most. Favorite tracks and higher ratings are given better odds; Last.fm popularity is a helpful fallback or tie-breaker, not a replacement for your taste. Ratings and tags are read only from the music you own.</p>
+            <p>Use the thumbs-up button when a Local Radio selection is especially right for that station. A skip is a softer negative signal. Feedback is stored per Local Station or Mix, so it guides that station without globally banning a song you may like elsewhere.</p>
+          </details>
+          <details><summary>Local Mixes</summary>
+            <p>Local Mixes are broad, radio-style formats built from the music you have, such as Classic Rock or Grunge Era Rock. They use editable JSON format books in <code>Data/local-mixes</code> and only appear when they have at least 20 eligible songs.</p>
+            <p>Settings → Local Music → <b>Manage Local Mixes</b> shows every installed book, its eligible-song count, and a readiness label. Enable the mixes you want to see in Local Music; optional books you add later stay hidden until you turn them on. Star a mix to move it to the top of the Local Mixes list.</p>
+          </details>
+          <details><summary>Local Radio Controls and Crossfade</summary>
+            <p>Settings → Local Music lets you shape Song Radio and Local Mixes. <b>Song Familiarity</b> moves from Play Deep Cuts Too to Balanced Mix to Favor the Hits. It changes the odds among songs that already fit the station; it does not make unrelated music eligible.</p>
+            <p><b>Song Repeat Wait</b> sets how long a song rests before it can return. <b>Artist Repeat Wait</b> sets the break before an artist returns. <b>Artist Sets</b> can play Single Tracks, Two-fers, Three-way, or Four-play sets. Artist Radio itself uses its fixed artist-focused behavior rather than these taste controls.</p>
+            <p><b>Enable 8-second crossfade</b> blends Local Music tracks, Local Radio, Local Mixes, and albums. It is on by default and does not affect Streaming Radio.</p>
+          </details>
+          <details><summary>Last.fm Music Data and Live Radio Log</summary>
+            <p>Last.fm is optional. When enabled in Settings → Local Music, WaveDeck can refresh song popularity, useful genre tags, and related artists in its own portable music database. It never writes those details into your MP3 files.</p>
+            <p>Enter a Last.fm API key, test the connection, then use <b>Refresh Last.fm Music Data</b> when you want a catch-up refresh. The progress bar shows when music data is already updating. The subtle <b>Open Live Radio Log</b> link opens selection diagnostics, including prior choices recorded while the log was closed.</p>
+          </details>
+          <details><summary>Settings, Library Management, and Updates</summary>
+            <p>Settings → Streaming Stations lets you add, edit, search, and organize streams. The Groups tab creates, renames, reorders, and removes groups and optional subgroups. Removing a group moves its stations to Other; removing a subgroup leaves its stations in the main group.</p>
+            <p><b>Export Library</b> downloads your Streaming station listings as JSON. <b>Import Stations</b> adds entries from a JSON file without removing what you have. <b>Replace Library</b> replaces the station library after confirmation. Favorites, Presets, station gain, and listening history remain personal and separate.</p>
+            <p>When Download new stations is enabled, WaveDeck quietly checks its master Streaming library at startup. Updates can add stations, groups, and subgroups, or correct URLs and descriptions. They never delete a station, restore one you deleted, or alter your Favorites and Presets.</p>
+          </details>
+          <details><summary>Playback Controls, Recording, and Media Keys</summary>
+            <p>Stop ends the current playback. For Streaming, Previous and Next move through Presets. For Local Music, Next skips to the next song and Previous restarts the current song or returns to the prior one when available. The thumbs-up control is used only for active Local Radio or Local Mixes.</p>
+            <p>On Linux, the Record control can save a Streaming station as a continuous MP3 in the portable <code>Recordings</code> folder. Stop, changing stations, and closing WaveDeck safely finish a recording. Recording uses its own stream connection, so your volume, mute, and Station Gain do not change the saved audio.</p>
+            <p>Media keys follow the same behavior when your operating system gives WaveDeck access to them. If another program has claimed a media key, returning focus to WaveDeck or starting a station can help WaveDeck reclaim it.</p>
+          </details>
+          <details class="linux-launcher-only"><summary>Linux Application Shortcut and Sidebar Mode</summary>
+            <p>The Linux Application Shortcut adds WaveDeck to your Applications menu without installing or moving the AppImage. It should work on Cinnamon/Mint, GNOME, KDE Plasma, Xfce, and most other mainstream Linux desktops. Pin it using your desktop’s normal panel, dock, favorites, or launcher method.</p>
+            <p>When Sidebar Mode is available, its toolbar button docks WaveDeck at the edge of the screen. Settings can also launch WaveDeck in Sidebar Mode automatically.</p>
+          </details>
+          <details><summary>Help, Backup, and Platform Notes</summary>
+            <p>If one stream will not play, try another first. The station may be offline or its URL may have changed. Leave automatic station updates enabled to receive published corrections. If Local Music does not appear, confirm Advanced Features is enabled and use Rescan after checking your Music folder.</p>
+            <p>For a portable backup, copy the entire <code>Data</code> folder. On Linux, the AppImage needs permission to execute and playback requires <b>mpv</b>. On Windows, SmartScreen may require More info → Run anyway. On macOS, extract the ZIP on the Mac, remove quarantine if needed, then Control-click the app and choose Open.</p>
+          </details>
+          <details><summary>Source Code and Notices</summary>
+            <p>WaveDeck source code and project information are available at <a href="https://github.com/dandrewriley-devo/WaveDeck">github.com/dandrewriley-devo/WaveDeck</a>. WaveDeck is released under the MIT License and includes third-party components, including mpv, under their own licenses and notices.</p>
+          </details>
         </div>
 
         <div class="about-divider"></div>
         <div class="changelog current-changelog">
           <h2>Changelog</h2>
-          <h3>WaveDeck 0.11.1</h3><ul><li>Closing the main WaveDeck window now also closes Settings and Live Radio Log, then fully exits the app.</li></ul>
-          <h3>WaveDeck 0.11.0 — Artist Radio Refinement</h3><ul><li>Artist Radio now stays focused on the selected artist, with only occasional related-artist changes.</li><li>Finished albums now transition into Artist Radio when they have a clear album artist; Various Artists albums stop at the end.</li></ul>
-          <h3>WaveDeck 0.10.2 — Settings &amp; User Guide</h3><ul><li>Refined Settings and added an in-app User Guide.</li></ul>
-          <h3>WaveDeck 0.10.1</h3><ul><li>Improved Streaming Station grouping and Local Music Favorites filtering.</li></ul>
-          <h3>WaveDeck 0.10.0 — Interface Tuning</h3><ul><li>Refined player layout, station listings, preset dragging, and Settings presentation.</li></ul>
-          <h3>WaveDeck 0.9.x — Local Mixes</h3><ul><li>Added Local Mix format books, mix management, favorites, and readiness ratings.</li></ul>
-          <h3>WaveDeck 0.8.0 — Crossfade Local Music</h3><ul><li>Added optional eight-second Local Music crossfade.</li></ul>
-          <h3>WaveDeck 0.7.x — Local Music Update</h3><ul><li>Added Local Music, Local Radio, Local Station presets, Last.fm enrichment, and local feedback.</li><li>Added separate Streaming and Local Music views.</li></ul>
-          <h3>WaveDeck 0.6.5</h3><ul><li>Added per-station Gain adjustment.</li><li>Improved station search.</li></ul>
+          <h3>0.11.0 — Various Refinements</h3><ul><li>Artist Radio now stays 90% focused on the selected artist.</li><li>Finished albums now transition into Artist Radio when possible.</li><li>Closing the main WaveDeck window now also closes Settings and Live Radio Log, then fully exits the app.</li></ul>
+          <h3>0.10.0 — Interface Tuning</h3><ul><li>Reorganized player controls, toolbars, station rows, and Station Gain styling.</li><li>Unified Streaming and Local Music row styling.</li><li>Added a built-in User Guide and a simplified in-app changelog.</li></ul>
+          <h3>0.9.0 — Local Mix Expansion</h3><ul><li>Added a Local Music settings page for managing installed Local Mix books.</li><li>Shows each mix’s eligible-song count and a readiness guide, from Growing Mix to Excellent Mix.</li><li>Optional JSON books in Data/local-mixes are discovered automatically and stay hidden until enabled.</li><li>Moved Local Mix eligibility analysis into background batches to keep the app responsive.</li></ul>
+          <h3>0.8.0 — Crossfade Local Music</h3><ul><li>Added optional 8-second Local Music crossfade, enabled by default.</li></ul>
+          <h3>0.7.x — Local Music</h3><ul><li>Added ability to search and play a portable or local MP3 library.</li><li>Added Last.fm indexing and enrichment of the local music library.</li><li>Reads MP3 tags into WaveDeck’s portable index.</li><li>Builds Local Radio around musical relationships using Last.fm data and your own ratings.</li><li>Remembers Recently Played Local Stations and Local Station Presets.</li><li>Added Local Mixes: broad, curated radio-style mixes using artist and era rules and Last.fm data.</li><li>Added contextual thumbs-up and thumbs-down feedback for Local Radio.</li><li>Updated the player around separate Streaming and Local Music tabs.</li></ul>
+          <h3>0.6.7 — Stream Recording</h3><ul><li>Added Advanced Features toggle, with Simple Mode enabled by default.</li><li>Added Linux stream recording.</li><li>Added the portable Recordings folder beside Data, created automatically on startup.</li><li>Added an Advanced-only Recordings view with search.</li><li>Added drag-and-drop subgroup ordering.</li></ul>
+          <h3>0.6.5</h3><ul><li>Added live per-station Station Gain, adjustable from −12 dB to +12 dB.</li><li>Search improvements.</li><li>Brought the Windows version into feature parity with Linux version.</li></ul>
+          <h3>0.6.0</h3><ul><li>Various UI Adjustments.</li><li>Added a show Favorites-only filter.</li><li>Renamed Most Played to Your Top Five and reduced the list to five stations.</li><li>Added an option to launch WaveDeck automatically in Sidebar Mode.</li></ul>
+          <h3>0.5.0</h3><ul><li>Added optional automatic station-library updates.</li><li>Updates can correct station URLs, countries, and descriptions.</li><li>Updates never delete stations or alter Favorites and Presets.</li><li>Deleted master stations remain deleted locally.</li></ul>
+          <h3>0.4.0</h3><ul><li>Linux and Windows share data.</li><li>Added station search.</li><li>Reordered the listing stack.</li><li>Standardized the shared portable data folder as Data.</li><li>Combined stations, groups, and subgroups into library.json.</li><li>Moved Favorites and Presets into the separate preferences.json file.</li><li>Added single-file library import and export.</li><li>Fixed a Linux D-Bus crash when leaving Sidebar Mode.</li><li>Added separate platform-specific runtime storage.</li></ul>
+          <h3>0.3.0</h3><ul><li>Added a portable Windows version.</li><li>Bundled the Windows mpv playback engine.</li><li>Added Windows media-key support with automatic registration retries.</li><li>Made the Windows EXE use the portable Data folder beside the application.</li></ul>
+          <h3>0.2.5</h3><ul><li>Added toolbar toggles.</li><li>Added the startup message “Warming up the airwaves...”.</li><li>Added automatic Linux media-key reclaiming every 15 seconds.</li></ul>
+          <h3>0.2.4</h3><ul><li>Various UI Fixes</li><li>Standardized Linux ZIP extraction into the same portable folder while preserving Data.</li></ul>
+          <h3>0.2.3</h3><ul><li>Separated Presets from Favorites.</li><li>Added key-combo shortcuts.</li><li>Added Expand All and Collapse All controls.</li></ul>
         </div>
 
         <div class="changelog legacy-changelog">
