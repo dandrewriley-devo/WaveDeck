@@ -1,6 +1,5 @@
 const track = document.getElementById('track');
-const trackTitle = document.getElementById('trackTitle');
-const trackDetail = document.getElementById('trackDetail');
+const trackText = document.getElementById('trackText');
 const previousBtn = document.getElementById('previousBtn');
 const playPauseBtn = document.getElementById('playPauseBtn');
 const playPauseIcon = document.getElementById('playPauseIcon');
@@ -12,15 +11,19 @@ let currentStatus = null;
 let streamMetadata = '';
 let feedbackTrackId = '';
 let feedbackSelected = false;
+let displayMode = 'now-playing';
 
 function isActiveMusic(status = currentStatus) {
   return Boolean(status?.currentMusic && status?.mediaState !== 'stopped');
 }
 
-function setTrack(title, detail) {
-  trackTitle.textContent = title || 'WaveDeck';
-  trackDetail.textContent = detail || 'Ready';
-  track.title = [title, detail].filter(Boolean).join(' — ') || 'WaveDeck';
+function setTrack(text, tooltip = text) {
+  trackText.textContent = text || 'WaveDeck';
+  track.title = tooltip || text || 'WaveDeck';
+}
+
+function joinNowPlaying(title, detail) {
+  return [title, detail].filter(Boolean).join(' — ') || 'WaveDeck';
 }
 
 function render(status = currentStatus) {
@@ -39,18 +42,21 @@ function render(status = currentStatus) {
     const detail = music.waiting
       ? 'Waiting for a song that fits this radio seed.'
       : (status?.mediaState === 'paused' ? 'Paused' : (song.artist || 'Local Music'));
-    setTrack(title, detail);
+    const nowPlaying = joinNowPlaying(title, detail);
+    setTrack(displayMode === 'source' ? (music.label || 'Local Music') : nowPlaying, nowPlaying);
   } else if (status?.currentRecording && status?.mediaState !== 'stopped') {
-    setTrack(status.currentRecording.name || 'WaveDeck Recording', status.mediaState === 'paused' ? 'Paused' : 'Playing');
+    const nowPlaying = joinNowPlaying(status.currentRecording.name || 'WaveDeck Recording', status.mediaState === 'paused' ? 'Paused' : 'Playing');
+    setTrack(nowPlaying);
   } else if (status?.currentStation && status?.mediaState !== 'stopped') {
     const detail = status.state === 'connecting'
       ? 'Connecting…'
       : (status.mediaState === 'paused' ? 'Paused' : (streamMetadata || status.message || 'Playing'));
-    setTrack(status.currentStation.name || 'Streaming Radio', detail);
+    const station = status.currentStation.name || 'Streaming Radio';
+    setTrack(displayMode === 'source' ? station : joinNowPlaying(station, detail), joinNowPlaying(station, detail));
   } else if (status?.state === 'error') {
-    setTrack('WaveDeck', status.message || 'Playback error');
+    setTrack(status.message || 'Playback error', `WaveDeck — ${status.message || 'Playback error'}`);
   } else {
-    setTrack('WaveDeck', status?.mediaState === 'paused' ? 'Paused' : 'Stopped');
+    setTrack(status?.mediaState === 'paused' ? 'Paused' : 'Stopped', `WaveDeck — ${status?.mediaState === 'paused' ? 'Paused' : 'Stopped'}`);
   }
 
   const eligibleFeedback = musicActive && ['artist', 'radio', 'mix'].includes(music.mode) && Boolean(music.track);
@@ -72,7 +78,7 @@ async function run(button, action) {
   try {
     await action();
   } catch (error) {
-    setTrack('WaveDeck', error.message || 'That action could not be completed.');
+    setTrack(error.message || 'That action could not be completed.', `WaveDeck — ${error.message || 'That action could not be completed.'}`);
   } finally {
     button.disabled = false;
     setTimeout(() => render(), 100);
@@ -89,7 +95,7 @@ thumbUpBtn.addEventListener('click', async () => {
     await window.wavedeck.sendMusicFeedback('up');
     feedbackSelected = true;
   } catch (error) {
-    setTrack('WaveDeck', error.message || 'Could not save thumbs-up feedback.');
+    setTrack(error.message || 'Could not save thumbs-up feedback.', `WaveDeck — ${error.message || 'Could not save thumbs-up feedback.'}`);
   } finally {
     setTimeout(() => render(), 100);
   }
@@ -111,9 +117,22 @@ window.wavedeck.onPlayerStatus((status) => {
   render(status);
 });
 
+window.wavedeck.onUiPreferencesChanged((preferences) => {
+  const nextMode = preferences?.miniPlayerDisplayMode === 'source' ? 'source' : 'now-playing';
+  if (displayMode !== nextMode) {
+    displayMode = nextMode;
+    render();
+  }
+});
+
 (async function initialize() {
   try {
-    currentStatus = await window.wavedeck.getPlayerStatus();
+    const [status, preferences] = await Promise.all([
+      window.wavedeck.getPlayerStatus(),
+      window.wavedeck.getUiPreferences()
+    ]);
+    currentStatus = status;
+    displayMode = preferences?.miniPlayerDisplayMode === 'source' ? 'source' : 'now-playing';
   } catch (error) {
     currentStatus = { state: 'error', message: error.message, mediaState: 'stopped' };
   }

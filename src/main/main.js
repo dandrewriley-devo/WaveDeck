@@ -85,7 +85,7 @@ const LOCAL_RADIO_CONTROLS_HEIGHT = 480;
 const LOCAL_RADIO_CONTROLS_MIN_WIDTH = 360;
 const LOCAL_RADIO_CONTROLS_MIN_HEIGHT = 360;
 const MINI_PLAYER_WIDTH = 560;
-const MINI_PLAYER_HEIGHT = 44;
+const MINI_PLAYER_HEIGHT = 32;
 const MINI_PLAYER_MIN_WIDTH = 360;
 const RADIO_LOG_SHORTCUT = "CommandOrControl+Alt+Shift+L";
 const LASTFM_REFRESH_SHORTCUT = "CommandOrControl+Alt+Shift+F";
@@ -235,6 +235,7 @@ function showMainWindow() {
 function refreshTrayMenu() {
   if (!tray) return;
   const miniPlayerActive = Boolean(miniPlayerWindow && !miniPlayerWindow.isDestroyed());
+  const miniPlayerDisplayMode = storage?.getUiPreferences().miniPlayerDisplayMode || "now-playing";
   tray.setContextMenu(Menu.buildFromTemplate([
     { label: "Show WaveDeck", click: showMainWindow },
     ...(process.platform === "linux" ? [{
@@ -242,12 +243,35 @@ function refreshTrayMenu() {
       type: "checkbox",
       checked: miniPlayerActive,
       click: () => { void toggleMiniPlayer(); }
+    }, {
+      label: "Mini Player Display",
+      submenu: [
+        {
+          label: "Now Playing",
+          type: "radio",
+          checked: miniPlayerDisplayMode === "now-playing",
+          click: () => setMiniPlayerDisplayMode("now-playing")
+        },
+        {
+          label: "Station / Local Mix",
+          type: "radio",
+          checked: miniPlayerDisplayMode === "source",
+          click: () => setMiniPlayerDisplayMode("source")
+        }
+      ]
     }] : []),
     { label: "Play / Pause", click: () => { void mediaController?.togglePlayPause(); } },
     { label: "Stop", click: () => { void mediaController?.stop(); } },
     { type: "separator" },
     { label: "Quit WaveDeck", click: () => app.quit() }
   ]));
+}
+
+function setMiniPlayerDisplayMode(mode) {
+  const preferences = storage.setMiniPlayerDisplayMode(mode);
+  sendToAll("ui:preferences-changed", preferences);
+  refreshTrayMenu();
+  return preferences;
 }
 
 function createTray() {

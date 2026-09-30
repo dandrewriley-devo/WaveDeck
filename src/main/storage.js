@@ -308,6 +308,7 @@ function validatePreferences(value) {
   const localRadioArtistRepeatMinutes = [30, 60, 90, 120, 180].includes(Number(value?.localRadioArtistRepeatMinutes)) ? Number(value.localRadioArtistRepeatMinutes) : 90;
   const localRadioArtistSetSize = [1, 2, 3, 4].includes(Number(value?.localRadioArtistSetSize)) ? Number(value.localRadioArtistSetSize) : 1;
   const localMusicCrossfadeEnabled = value?.localMusicCrossfadeEnabled !== false;
+  const miniPlayerDisplayMode = value?.miniPlayerDisplayMode === 'source' ? 'source' : 'now-playing';
   const localMixEnabled = {};
   const rawLocalMixEnabled = value?.localMixEnabled;
   if (rawLocalMixEnabled && typeof rawLocalMixEnabled === 'object' && !Array.isArray(rawLocalMixEnabled)) {
@@ -387,6 +388,7 @@ function validatePreferences(value) {
     localRadioArtistRepeatMinutes,
     localRadioArtistSetSize,
     localMusicCrossfadeEnabled,
+    miniPlayerDisplayMode,
     localMixEnabled,
     localMixFavorites,
     streamingUi: {
@@ -570,6 +572,7 @@ class PortableStorage {
       localRadioArtistRepeatMinutes: preferences.localRadioArtistRepeatMinutes,
       localRadioArtistSetSize: preferences.localRadioArtistSetSize,
       localMusicCrossfadeEnabled: preferences.localMusicCrossfadeEnabled,
+      miniPlayerDisplayMode: preferences.miniPlayerDisplayMode,
       localMixEnabled: { ...preferences.localMixEnabled },
       localMixFavorites: { ...preferences.localMixFavorites },
       launchInSidebarMode: preferences.launchInSidebarMode,
@@ -695,6 +698,13 @@ class PortableStorage {
   setLocalMusicCrossfadeEnabled(enabled) {
     const preferences = this.readPreferences();
     preferences.localMusicCrossfadeEnabled = enabled === true;
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences();
+  }
+
+  setMiniPlayerDisplayMode(mode) {
+    const preferences = this.readPreferences();
+    preferences.miniPlayerDisplayMode = mode === 'source' ? 'source' : 'now-playing';
     this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
     return this.getUiPreferences();
   }

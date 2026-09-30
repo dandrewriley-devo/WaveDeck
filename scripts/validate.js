@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.11.9");
-assert.strictEqual(packageJson.wavedeckVersion, "0.11.9");
+assert.strictEqual(packageJson.version, "0.11.10");
+assert.strictEqual(packageJson.wavedeckVersion, "0.11.10");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -343,6 +343,7 @@ try {
     localRadioArtistRepeatMinutes: 90,
     localRadioArtistSetSize: 1,
     localMusicCrossfadeEnabled: true,
+    miniPlayerDisplayMode: "now-playing",
     localMixEnabled: {},
     localMixFavorites: {},
     streamingUi: {
@@ -375,6 +376,7 @@ try {
     localRadioArtistRepeatMinutes: 90,
     localRadioArtistSetSize: 1,
     localMusicCrossfadeEnabled: true,
+    miniPlayerDisplayMode: "now-playing",
     localMixEnabled: {},
     localMixFavorites: {},
     launchInSidebarMode: false,
@@ -392,6 +394,7 @@ try {
   assert.strictEqual(storage.setLocalRadioFamiliarity('hits').localRadioFamiliarity, 'hits');
   assert.deepStrictEqual(storage.setLocalRadioTuning({ songRepeatHours: 6, artistRepeatMinutes: 180, artistSetSize: 2 }).localRadioArtistSetSize, 2);
   assert.strictEqual(storage.setLocalMusicCrossfadeEnabled(false).localMusicCrossfadeEnabled, false);
+  assert.strictEqual(storage.setMiniPlayerDisplayMode('source').miniPlayerDisplayMode, 'source');
   assert.strictEqual(storage.setLocalMixEnabled('classic-rock', false).localMixEnabled['classic-rock'], false);
   assert.strictEqual(storage.setLocalMixFavorite('classic-rock', true).localMixFavorites['classic-rock'], true);
   assert.deepStrictEqual(storage.setLocalMixFavorite('classic-rock', false).localMixFavorites, {});
@@ -439,11 +442,11 @@ try {
     width: 300,
     height: 641
   });
-  assert.deepStrictEqual(storage.setMiniPlayerWindowBounds({ x: 188.6, y: 28.4, width: 560.2, height: 43.6 }), {
+  assert.deepStrictEqual(storage.setMiniPlayerWindowBounds({ x: 188.6, y: 28.4, width: 560.2, height: 31.6 }), {
     x: 189,
     y: 28,
     width: 560,
-    height: 44
+    height: 32
   });
   const uiPreferenceReload = new PortableStorage({ dataDir, defaultsDir });
   uiPreferenceReload.initialize();
@@ -457,6 +460,7 @@ try {
     localRadioArtistRepeatMinutes: 180,
     localRadioArtistSetSize: 2,
     localMusicCrossfadeEnabled: false,
+    miniPlayerDisplayMode: "source",
     localMixEnabled: { "classic-rock": false },
     localMixFavorites: { "classic-rock": true },
     launchInSidebarMode: true,
@@ -464,7 +468,7 @@ try {
     radioLogWindowBounds: { x: 14, y: 23, width: 864, height: 700 },
     localRadioControlsWindowBounds: { x: 30, y: 49, width: 482, height: 479 },
     mainWindowBounds: { x: 84, y: 97, width: 300, height: 641 },
-    miniPlayerWindowBounds: { x: 189, y: 28, width: 560, height: 44 }
+    miniPlayerWindowBounds: { x: 189, y: 28, width: 560, height: 32 }
   });
 
   const changed = storage.readStations();
@@ -1341,8 +1345,10 @@ assert.ok(localRadioControlsSource.includes('setLocalMusicCrossfade'));
 assert.ok(!localRadioControlsSource.includes('FAMILIARITY_COPY'));
 assert.ok(miniPlayerHtml.includes('id="playPauseBtn"'));
 assert.ok(miniPlayerHtml.includes('id="thumbUpBtn"'));
+assert.ok(miniPlayerHtml.includes('id="trackText"'));
 assert.ok(miniPlayerSource.includes('sendMusicFeedback'));
 assert.ok(miniPlayerSource.includes('onPlayerStatus'));
+assert.ok(miniPlayerSource.includes("miniPlayerDisplayMode"));
 assert.ok(settingsHtml.includes("Download your station listings as a json file."));
 assert.ok(settingsHtml.indexOf('id="stationEditorHome"') < settingsHtml.indexOf('class="listening-history-bar"'));
 assert.ok(settingsHtml.includes('id="resetListeningBtn"'));
@@ -1479,7 +1485,10 @@ assert.ok(mainSource.includes("mainWindowBounds"));
 assert.ok(mainSource.includes("storage.setMainWindowBounds(bounds)"));
 assert.ok(mainSource.includes("function toggleMiniPlayer()"));
 assert.ok(mainSource.includes("MINI_PLAYER_SHORTCUT"));
+assert.ok(mainSource.includes("MINI_PLAYER_HEIGHT = 32"));
 assert.ok(mainSource.includes("Mini Player"));
+assert.ok(mainSource.includes("Mini Player Display"));
+assert.ok(mainSource.includes("storage.setMiniPlayerDisplayMode"));
 assert.ok(mainSource.includes("storage.setMiniPlayerWindowBounds"));
 assert.ok(mainSource.includes("function createTray()"));
 assert.ok(mainSource.includes("Show WaveDeck"));
