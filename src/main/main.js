@@ -399,15 +399,23 @@ function createMainWindow({
   makeCurrent = true
 } = {}) {
   const nativeTitle = sidebar ? SIDEBAR_NATIVE_TITLE : FLOATING_NATIVE_TITLE;
-  const geometry = bounds ? {
-    x: Math.round(bounds.x),
-    y: Math.round(bounds.y),
-    width: Math.round(bounds.width),
-    height: Math.round(bounds.height)
-  } : calculateBottomRightBounds(screen.getPrimaryDisplay(), FIXED_WIDTH, 600);
+  const savedBounds = !sidebar && !bounds ? storage?.getUiPreferences().mainWindowBounds : null;
+  const display = savedBounds ? screen.getDisplayMatching(savedBounds) : screen.getPrimaryDisplay();
+  const requestedBounds = bounds || savedBounds || calculateBottomRightBounds(display, FIXED_WIDTH, 600);
+  const geometry = sidebar || bounds
+    ? {
+        x: Math.round(requestedBounds.x),
+        y: Math.round(requestedBounds.y),
+        width: Math.round(requestedBounds.width),
+        height: Math.round(requestedBounds.height)
+      }
+    : {
+        ...constrainBoundsToDisplay(display, requestedBounds, { minWidth: FIXED_WIDTH, minHeight: 400 }),
+        width: Math.min(FIXED_WIDTH, display.workArea.width)
+      };
   const window = createSecureWindow({
     ...geometry,
-    minWidth: FIXED_WIDTH,
+    minWidth: Math.min(FIXED_WIDTH, geometry.width),
     maxWidth: FIXED_WIDTH,
     minHeight: 400,
     resizable: true,
@@ -427,11 +435,25 @@ function createMainWindow({
     if (!window.isDestroyed()) floatingBounds = window.getBounds();
   };
 
+  const saveFloatingBounds = () => {
+    if (sidebar || sidebarApplied || mainWindow !== window || window.isDestroyed()) return;
+    try {
+      const bounds = window.isMaximized() ? window.getNormalBounds() : window.getBounds();
+      floatingBounds = bounds;
+      storage.setMainWindowBounds(bounds);
+    } catch (error) {
+      console.warn(`Could not remember the WaveDeck window position: ${error.message}`);
+    }
+  };
+
   window.on("move", rememberFloatingBounds);
   window.on("resize", rememberFloatingBounds);
 
   window.on("close", () => {
-    if (mainWindow === window) closeAuxiliaryWindows();
+    if (mainWindow === window) {
+      saveFloatingBounds();
+      closeAuxiliaryWindows();
+    }
   });
 
   window.on("closed", () => {
@@ -604,6 +626,11 @@ async function setSidebarMode(enabled) {
       if (enabled) {
         if (sidebarApplied) return getSidebarState();
         floatingBounds = mainWindow.getBounds();
+        try {
+          storage.setMainWindowBounds(floatingBounds);
+        } catch (error) {
+          console.warn(`Could not remember the WaveDeck window position: ${error.message}`);
+        }
         const windowsDockBounds = calculateWindowsSidebarBounds(
           screen.getDisplayMatching(floatingBounds),
           FIXED_WIDTH

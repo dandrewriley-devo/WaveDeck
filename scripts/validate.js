@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.11.6");
-assert.strictEqual(packageJson.wavedeckVersion, "0.11.6");
+assert.strictEqual(packageJson.version, "0.11.7");
+assert.strictEqual(packageJson.wavedeckVersion, "0.11.7");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -359,6 +359,7 @@ try {
     settingsWindowBounds: null,
     radioLogWindowBounds: null,
     localRadioControlsWindowBounds: null,
+    mainWindowBounds: null,
     lastLibraryUpdate: "",
     deletedOfficialStationIds: []
   });
@@ -378,7 +379,8 @@ try {
     launchInSidebarMode: false,
     settingsWindowBounds: null,
     radioLogWindowBounds: null,
-    localRadioControlsWindowBounds: null
+    localRadioControlsWindowBounds: null,
+    mainWindowBounds: null
   });
   assert.deepStrictEqual(storage.getUiPreferences(), storage.getLinuxUiPreferences());
   assert.strictEqual(storage.setLaunchInSidebarMode(true).launchInSidebarMode, true);
@@ -429,6 +431,12 @@ try {
     width: 482,
     height: 479
   });
+  assert.deepStrictEqual(storage.setMainWindowBounds({ x: 84.4, y: 96.6, width: 300.2, height: 640.8 }), {
+    x: 84,
+    y: 97,
+    width: 300,
+    height: 641
+  });
   const uiPreferenceReload = new PortableStorage({ dataDir, defaultsDir });
   uiPreferenceReload.initialize();
   assert.deepStrictEqual(uiPreferenceReload.getLinuxUiPreferences(), {
@@ -446,7 +454,8 @@ try {
     launchInSidebarMode: true,
     settingsWindowBounds: { x: 2100, y: 41, width: 1120, height: 841 },
     radioLogWindowBounds: { x: 14, y: 23, width: 864, height: 700 },
-    localRadioControlsWindowBounds: { x: 30, y: 49, width: 482, height: 479 }
+    localRadioControlsWindowBounds: { x: 30, y: 49, width: 482, height: 479 },
+    mainWindowBounds: { x: 84, y: 97, width: 300, height: 641 }
   });
 
   const changed = storage.readStations();
@@ -1432,7 +1441,9 @@ assert.ok(mainSource.includes("createLibraryUpdater"));
 assert.ok(mainSource.includes("net.fetch"));
 assert.ok(mainSource.includes("isPaused: () => Boolean(settingsWindow"));
 assert.ok(mainSource.includes("function closeAuxiliaryWindows()"));
-assert.ok(mainSource.includes("if (mainWindow === window) closeAuxiliaryWindows();"));
+assert.ok(mainSource.includes("if (mainWindow === window) {"));
+assert.ok(mainSource.includes("saveFloatingBounds();"));
+assert.ok(mainSource.includes("closeAuxiliaryWindows();"));
 assert.ok(mainSource.includes('ipcMain.handle("player:play-station"'));
 assert.ok(mainSource.includes('ipcMain.handle("recording:toggle"'));
 assert.ok(mainSource.includes('ipcMain.handle("recordings:list"'));
@@ -1448,6 +1459,8 @@ assert.ok(mainSource.includes("function openLocalRadioControlsWindow()"));
 assert.ok(mainSource.includes("localRadioControlsWindow"));
 assert.ok(mainSource.includes("localRadioControlsWindowBounds"));
 assert.ok(mainSource.includes("storage.setLocalRadioControlsWindowBounds(bounds)"));
+assert.ok(mainSource.includes("mainWindowBounds"));
+assert.ok(mainSource.includes("storage.setMainWindowBounds(bounds)"));
 assert.ok(mainSource.includes("function createTray()"));
 assert.ok(mainSource.includes("Show WaveDeck"));
 assert.ok(mainSource.includes("Quit WaveDeck"));

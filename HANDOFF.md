@@ -1,14 +1,15 @@
 # WaveDeck Project Handoff
 
-This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **0.11.6**.
+This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **0.11.7**.
 
 ## Current published state
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `main`
-- Current version: **0.11.6**
-- Current release: 0.11.6 — compact Local Radio Controls and remembered window bounds.
-- Current commit: the verified 0.11.6 release commit at the head of `main`.
+- Current version: **0.11.7**
+- Current release: 0.11.7 — monitor-safe main-window bounds persistence and a portable Windows build.
+- Current commit: the verified 0.11.7 release commit at the head of `main`.
+- 0.11.6 commit: `621e44d8c484cd0a4d70eb124106170f6183d0ae` — compact Local Radio Controls and remembered auxiliary-window bounds.
 - 0.11.5 commit: `f6422b1c3fe88b1de62bc1e5bfcf06ce6a35763c` — tray icon and opening Local Radio diagnostic entries.
 - 0.11.4 commit: `7b2abb3a5b6ef5ce2a2a4286664a88f1e293a10b` — Local Radio Controls and Live Radio Log ordering.
 - 0.11.3 commit: `883bf5f345a4d185b576ed10b99eacc15d34b5b0` — Local Music loading and persistent Live Radio Log.
@@ -117,7 +118,7 @@ Important: do **not** let a large base64 file be truncated while creating a GitH
 - Starting another Local Station no longer clears history. Clear in the Live Radio Log now clears the real persisted diagnostic history as well as the screen.
 - The obsolete “Waiting for the next radio pick” empty-state box is removed.
 - Diagnostics intentionally omit MP3 file paths. They include selection mode/trigger, seed, tuning, candidate counts/exclusions, qualification reasons, score inputs, top alternatives, and recent Radio history.
-- Window size and position are remembered.
+- Main, Settings, Live Radio Log, and Local Radio Controls window size and position are remembered. Saved bounds are constrained to the usable display when moving between computers or monitors.
 
 ## Settings and Streaming UI
 
@@ -129,6 +130,7 @@ Important: do **not** let a large base64 file be truncated while creating a GitH
 - Linux Application Shortcut wording is generalized for Cinnamon/Mint, GNOME, KDE Plasma, Xfce, and most mainstream Linux desktops. Remove that Linux-specific section if the app is later repackaged strictly for Windows.
 - WaveDeck has a system tray icon while it is running. Clicking it brings the main window forward; its menu offers Show WaveDeck, Play / Pause, Stop, and Quit WaveDeck. The window close button still fully exits WaveDeck and removes the tray icon.
 - Local Radio Controls has no in-window heading or explanatory paragraphs: its native title provides the context. Song Repeat Wait is labeled “Don't play the same song for how long?” and has only its moving hour value below the slider. Artist Repeat Wait is labeled “Don't play the same artist for how long?” and retains its five stop labels. The window remembers its size and position in portable Data and safely constrains restored bounds to the available display.
+- The portable Windows build bundles the pinned x64 `mpv.exe` playback engine and the compiled Windows Sidebar helper. Both `WaveDeck.exe` and the Linux AppImage use the same sibling `Data` and `Music` folders.
 
 ## About tab
 

@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <wchar.h>
 
 #define APPBAR_CALLBACK (WM_APP + 41)
 #define TIMER_WINDOW_CHECK 1
