@@ -2,10 +2,6 @@
 * { box-sizing:border-box; }
 html, body { background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,sans-serif; margin:0; min-height:100%; }
 .wrap { margin:0 auto; max-width:560px; padding:18px; }
-header { border-bottom:1px solid var(--border); margin-bottom:16px; padding-bottom:14px; }
-h1 { font-size:18px; margin:0; }
-p { margin:7px 0 0; }
-header p { color:var(--muted); font-size:13px; line-height:1.45; }
 .controls-card { background:var(--panel); border:1px solid var(--border); padding:14px; }
 .preference-toggle { align-items:center; cursor:pointer; display:flex; font-size:13px; gap:8px; }
 .preference-toggle input { opacity:0; pointer-events:none; position:absolute; }
@@ -15,7 +11,6 @@ header p { color:var(--muted); font-size:13px; line-height:1.45; }
 .preference-toggle input:checked + .toggle-switch::after { background:var(--green); transform:translateX(16px); }
 .preference-toggle input:focus-visible + .toggle-switch, input[type="range"]:focus-visible { outline:2px solid var(--green); outline-offset:3px; }
 .preference-toggle:has(input:disabled) { cursor:wait; opacity:.6; }
-.hint { color:var(--muted); font-size:12px; line-height:1.4; margin-top:7px; }
 .divider { background:var(--border); height:1px; margin:16px 0; }
 .control { display:grid; gap:7px; margin-top:18px; }
 .control:first-of-type { margin-top:0; }
@@ -32,8 +27,7 @@ input[type="range"]::-moz-range-thumb { background:var(--green); border:2px soli
 .stops.five { grid-template-columns:repeat(5,minmax(0,1fr)); }
 .stops span:not(:first-child):not(:last-child) { text-align:center; }
 .stops span:last-child { text-align:right; }
-.song-repeat-stops { color:var(--muted); display:grid; font-size:11px; grid-template-columns:1fr 1fr; min-height:17px; position:relative; }
-.song-repeat-stops > span:last-child { text-align:right; }
-.song-repeat-stops output { color:var(--green); left:var(--repeat-stop,13.04%); position:absolute; transform:translateX(-50%); white-space:nowrap; }
+.song-repeat-value { color:var(--muted); font-size:11px; min-height:17px; position:relative; }
+.song-repeat-value output { color:var(--green); left:var(--repeat-stop,13.04%); position:absolute; transform:translateX(-50%); white-space:nowrap; }
 .status { color:var(--muted); font-size:12px; min-height:18px; padding-top:11px; }
 .status.error { color:#ffb3b3; }

@@ -294,6 +294,7 @@ function validatePreferences(value) {
   const parsedUpdatedAt = Date.parse(String(value?.lastLibraryUpdate ?? ""));
   const rawSettingsBounds = value?.settingsWindowBounds;
   const rawRadioLogBounds = value?.radioLogWindowBounds;
+  const rawLocalRadioControlsBounds = value?.localRadioControlsWindowBounds;
   const additionalMusicFolder = typeof value?.additionalMusicFolder === "string"
     ? value.additionalMusicFolder.trim()
     : "";
@@ -342,6 +343,15 @@ function validatePreferences(value) {
         height: Math.max(1, Math.round(Number(rawRadioLogBounds.height)))
       }
     : null;
+  const localRadioControlsWindowBounds = rawLocalRadioControlsBounds && typeof rawLocalRadioControlsBounds === "object" && !Array.isArray(rawLocalRadioControlsBounds) &&
+    ["x", "y", "width", "height"].every((key) => Number.isFinite(Number(rawLocalRadioControlsBounds[key])))
+    ? {
+        x: Math.round(Number(rawLocalRadioControlsBounds.x)),
+        y: Math.round(Number(rawLocalRadioControlsBounds.y)),
+        width: Math.max(1, Math.round(Number(rawLocalRadioControlsBounds.width))),
+        height: Math.max(1, Math.round(Number(rawLocalRadioControlsBounds.height)))
+      }
+    : null;
   return {
     version: 1,
     stations,
@@ -372,6 +382,7 @@ function validatePreferences(value) {
     launchInSidebarMode: value?.launchInSidebarMode === true,
     settingsWindowBounds,
     radioLogWindowBounds,
+    localRadioControlsWindowBounds,
     lastLibraryUpdate: Number.isFinite(parsedUpdatedAt) ? new Date(parsedUpdatedAt).toISOString() : "",
     deletedOfficialStationIds
   };
@@ -545,6 +556,9 @@ class PortableStorage {
         : null,
       radioLogWindowBounds: preferences.radioLogWindowBounds
         ? { ...preferences.radioLogWindowBounds }
+        : null,
+      localRadioControlsWindowBounds: preferences.localRadioControlsWindowBounds
+        ? { ...preferences.localRadioControlsWindowBounds }
         : null
     };
   }
@@ -669,6 +683,13 @@ class PortableStorage {
     preferences.radioLogWindowBounds = bounds;
     this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
     return this.getUiPreferences().radioLogWindowBounds;
+  }
+
+  setLocalRadioControlsWindowBounds(bounds) {
+    const preferences = this.readPreferences();
+    preferences.localRadioControlsWindowBounds = bounds;
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences().localRadioControlsWindowBounds;
   }
 
   setStationGain(stationId, value) {

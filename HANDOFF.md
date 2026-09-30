@@ -1,14 +1,15 @@
 # WaveDeck Project Handoff
 
-This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **0.11.5**.
+This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **0.11.6**.
 
 ## Current published state
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `main`
-- Current version: **0.11.5**
-- Current release: 0.11.5 — tray icon and opening Local Radio diagnostic entries.
-- Current commit: the verified 0.11.5 release commit at the head of `main`.
+- Current version: **0.11.6**
+- Current release: 0.11.6 — compact Local Radio Controls and remembered window bounds.
+- Current commit: the verified 0.11.6 release commit at the head of `main`.
+- 0.11.5 commit: `f6422b1c3fe88b1de62bc1e5bfcf06ce6a35763c` — tray icon and opening Local Radio diagnostic entries.
 - 0.11.4 commit: `7b2abb3a5b6ef5ce2a2a4286664a88f1e293a10b` — Local Radio Controls and Live Radio Log ordering.
 - 0.11.3 commit: `883bf5f345a4d185b576ed10b99eacc15d34b5b0` — Local Music loading and persistent Live Radio Log.
 - 0.11.2 commit: `edc074cdb908a1f9cdcf5e1c7abbfc2d8ed0bb4b` — expanded in-app User Guide, compact station-list listening totals, and left-aligned subgroups.
@@ -127,6 +128,7 @@ Important: do **not** let a large base64 file be truncated while creating a GitH
 - Streaming group headings stay present; station lists collapse by subgroup rather than hiding an entire major group. Group/subgroup organization follows Settings ordering.
 - Linux Application Shortcut wording is generalized for Cinnamon/Mint, GNOME, KDE Plasma, Xfce, and most mainstream Linux desktops. Remove that Linux-specific section if the app is later repackaged strictly for Windows.
 - WaveDeck has a system tray icon while it is running. Clicking it brings the main window forward; its menu offers Show WaveDeck, Play / Pause, Stop, and Quit WaveDeck. The window close button still fully exits WaveDeck and removes the tray icon.
+- Local Radio Controls has no in-window heading or explanatory paragraphs: its native title provides the context. Song Repeat Wait is labeled “Don't play the same song for how long?” and has only its moving hour value below the slider. Artist Repeat Wait is labeled “Don't play the same artist for how long?” and retains its five stop labels. The window remembers its size and position in portable Data and safely constrains restored bounds to the available display.
 
 ## About tab
 

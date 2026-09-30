@@ -9,47 +9,37 @@
 </head>
 <body>
   <main class="wrap">
-    <header>
-      <h1>Shape Your Local Radio</h1>
-      <p>Use these sliders to shape your Song Radio and Local Mixes—favor familiar favorites, adjust how long songs and artists rest before repeating, and choose whether artists play single tracks or short sets.</p>
-    </header>
-
     <section class="controls-card">
       <label class="preference-toggle">
         <input id="localMusicCrossfade" type="checkbox" />
         <span class="toggle-switch" aria-hidden="true"></span>
         <span>Enable Crossfade</span>
       </label>
-      <p class="hint">Smoothly blend Local Music songs with an 8-second crossfade.</p>
 
       <div class="divider"></div>
 
       <div class="control">
         <label for="localRadioFamiliarity">Song familiarity</label>
-        <input id="localRadioFamiliarity" type="range" min="0" max="2" step="1" value="1" aria-describedby="localRadioFamiliarityHelp" />
+        <input id="localRadioFamiliarity" type="range" min="0" max="2" step="1" value="1" />
         <div class="stops three" aria-hidden="true"><span>Play Deep Cuts Too</span><span>Balanced Mix</span><span>Favor the Hits</span></div>
-        <div id="localRadioFamiliarityHelp" class="hint"></div>
       </div>
 
       <div class="control">
-        <label for="localRadioSongRepeat">Song repeat wait</label>
-        <input id="localRadioSongRepeat" type="range" min="1" max="24" step="1" value="4" aria-describedby="localRadioSongRepeatHelp" />
-        <div class="song-repeat-stops" aria-hidden="true"><span>1 hour</span><output id="localRadioSongRepeatValue"></output><span>24 hours</span></div>
-        <div id="localRadioSongRepeatHelp" class="hint"></div>
+        <label for="localRadioSongRepeat">Don't play the same song for how long?</label>
+        <input id="localRadioSongRepeat" type="range" min="1" max="24" step="1" value="4" />
+        <div class="song-repeat-value" aria-hidden="true"><output id="localRadioSongRepeatValue"></output></div>
       </div>
 
       <div class="control">
-        <label for="localRadioArtistRepeat">Artist repeat wait</label>
-        <input id="localRadioArtistRepeat" type="range" min="0" max="4" step="1" value="2" aria-describedby="localRadioArtistRepeatHelp" />
+        <label for="localRadioArtistRepeat">Don't play the same artist for how long?</label>
+        <input id="localRadioArtistRepeat" type="range" min="0" max="4" step="1" value="2" />
         <div class="stops five" aria-hidden="true"><span>30 min</span><span>60 min</span><span>90 min</span><span>120 min</span><span>180 min</span></div>
-        <div id="localRadioArtistRepeatHelp" class="hint"></div>
       </div>
 
       <div class="control">
         <label for="localRadioArtistSet">Artist sets</label>
-        <input id="localRadioArtistSet" type="range" min="0" max="3" step="1" value="0" aria-describedby="localRadioArtistSetHelp" />
+        <input id="localRadioArtistSet" type="range" min="0" max="3" step="1" value="0" />
         <div class="stops four" aria-hidden="true"><span>Single Tracks</span><span>Two-fers</span><span>Three-way</span><span>Four-play</span></div>
-        <div id="localRadioArtistSetHelp" class="hint"></div>
       </div>
     </section>
     <div id="status" class="status" role="status"></div>

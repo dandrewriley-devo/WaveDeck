@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.11.5");
-assert.strictEqual(packageJson.wavedeckVersion, "0.11.5");
+assert.strictEqual(packageJson.version, "0.11.6");
+assert.strictEqual(packageJson.wavedeckVersion, "0.11.6");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -358,6 +358,7 @@ try {
     launchInSidebarMode: false,
     settingsWindowBounds: null,
     radioLogWindowBounds: null,
+    localRadioControlsWindowBounds: null,
     lastLibraryUpdate: "",
     deletedOfficialStationIds: []
   });
@@ -376,7 +377,8 @@ try {
     localMixFavorites: {},
     launchInSidebarMode: false,
     settingsWindowBounds: null,
-    radioLogWindowBounds: null
+    radioLogWindowBounds: null,
+    localRadioControlsWindowBounds: null
   });
   assert.deepStrictEqual(storage.getUiPreferences(), storage.getLinuxUiPreferences());
   assert.strictEqual(storage.setLaunchInSidebarMode(true).launchInSidebarMode, true);
@@ -421,6 +423,12 @@ try {
     width: 864,
     height: 700
   });
+  assert.deepStrictEqual(storage.setLocalRadioControlsWindowBounds({ x: 30.4, y: 48.6, width: 482.2, height: 478.8 }), {
+    x: 30,
+    y: 49,
+    width: 482,
+    height: 479
+  });
   const uiPreferenceReload = new PortableStorage({ dataDir, defaultsDir });
   uiPreferenceReload.initialize();
   assert.deepStrictEqual(uiPreferenceReload.getLinuxUiPreferences(), {
@@ -437,7 +445,8 @@ try {
     localMixFavorites: { "classic-rock": true },
     launchInSidebarMode: true,
     settingsWindowBounds: { x: 2100, y: 41, width: 1120, height: 841 },
-    radioLogWindowBounds: { x: 14, y: 23, width: 864, height: 700 }
+    radioLogWindowBounds: { x: 14, y: 23, width: 864, height: 700 },
+    localRadioControlsWindowBounds: { x: 30, y: 49, width: 482, height: 479 }
   });
 
   const changed = storage.readStations();
@@ -1279,12 +1288,20 @@ assert.ok(!settingsHtml.includes('WaveDeck 0.7.9 —'));
 assert.ok(settingsHtml.includes('Enable Advanced Features'));
 assert.ok(!settingsHtml.includes('id="localRadioTitle"'));
 assert.ok(!settingsHtml.includes('id="localMusicCrossfade"'));
-assert.ok(localRadioControlsHtml.includes('Shape Your Local Radio'));
-assert.ok(localRadioControlsHtml.includes('Use these sliders to shape your Song Radio and Local Mixes'));
+assert.ok(!localRadioControlsHtml.includes('Shape Your Local Radio'));
+assert.ok(!localRadioControlsHtml.includes('Use these sliders to shape your Song Radio and Local Mixes'));
 assert.ok(localRadioControlsHtml.includes('id="localRadioFamiliarity"'));
 assert.ok(localRadioControlsHtml.includes('Favor the Hits'));
 assert.ok(localRadioControlsHtml.includes('Balanced Mix'));
 assert.ok(localRadioControlsHtml.includes('Play Deep Cuts Too'));
+assert.ok(localRadioControlsHtml.includes("Don't play the same song for how long?"));
+assert.ok(localRadioControlsHtml.includes("Don't play the same artist for how long?"));
+assert.ok(!localRadioControlsHtml.includes('1 hour'));
+assert.ok(!localRadioControlsHtml.includes('24 hours'));
+assert.ok(!localRadioControlsHtml.includes('localRadioFamiliarityHelp'));
+assert.ok(!localRadioControlsHtml.includes('localRadioSongRepeatHelp'));
+assert.ok(!localRadioControlsHtml.includes('localRadioArtistRepeatHelp'));
+assert.ok(!localRadioControlsHtml.includes('localRadioArtistSetHelp'));
 assert.ok(settingsHtml.includes('id="lastFmProgress"'));
 assert.ok(settingsHtml.includes('id="lastFmUpdating"'));
 assert.ok(!settingsHtml.includes('radio-rule-tab'));
@@ -1300,6 +1317,7 @@ assert.ok(settingsHtml.includes('id="openRadioLogBtn"'));
 assert.ok(localRadioControlsHtml.includes('id="localMusicCrossfade"'));
 assert.ok(localRadioControlsSource.includes('setLocalRadioTuning'));
 assert.ok(localRadioControlsSource.includes('setLocalMusicCrossfade'));
+assert.ok(!localRadioControlsSource.includes('FAMILIARITY_COPY'));
 assert.ok(settingsHtml.includes("Download your station listings as a json file."));
 assert.ok(settingsHtml.indexOf('id="stationEditorHome"') < settingsHtml.indexOf('class="listening-history-bar"'));
 assert.ok(settingsHtml.includes('id="resetListeningBtn"'));
@@ -1428,6 +1446,8 @@ assert.ok(mainSource.includes("function clearRadioDiagnostics()"));
 assert.ok(mainSource.includes("music:debug:clear-log"));
 assert.ok(mainSource.includes("function openLocalRadioControlsWindow()"));
 assert.ok(mainSource.includes("localRadioControlsWindow"));
+assert.ok(mainSource.includes("localRadioControlsWindowBounds"));
+assert.ok(mainSource.includes("storage.setLocalRadioControlsWindowBounds(bounds)"));
 assert.ok(mainSource.includes("function createTray()"));
 assert.ok(mainSource.includes("Show WaveDeck"));
 assert.ok(mainSource.includes("Quit WaveDeck"));

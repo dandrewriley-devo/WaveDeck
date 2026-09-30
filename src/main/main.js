@@ -81,9 +81,9 @@ const RADIO_LOG_DEFAULT_HEIGHT = 700;
 const RADIO_LOG_MIN_WIDTH = 560;
 const RADIO_LOG_MIN_HEIGHT = 400;
 const LOCAL_RADIO_CONTROLS_WIDTH = 480;
-const LOCAL_RADIO_CONTROLS_HEIGHT = 650;
+const LOCAL_RADIO_CONTROLS_HEIGHT = 480;
 const LOCAL_RADIO_CONTROLS_MIN_WIDTH = 360;
-const LOCAL_RADIO_CONTROLS_MIN_HEIGHT = 480;
+const LOCAL_RADIO_CONTROLS_MIN_HEIGHT = 360;
 const RADIO_LOG_SHORTCUT = "CommandOrControl+Alt+Shift+L";
 const LASTFM_REFRESH_SHORTCUT = "CommandOrControl+Alt+Shift+F";
 const DISPLAY_VERSION = require("../../package.json").wavedeckVersion || app.getVersion();
@@ -551,13 +551,28 @@ function openLocalRadioControlsWindow() {
   const display = mainWindow && !mainWindow.isDestroyed()
     ? screen.getDisplayMatching(mainWindow.getBounds())
     : screen.getPrimaryDisplay();
-  const geometry = calculateCenteredBounds(display, LOCAL_RADIO_CONTROLS_WIDTH, LOCAL_RADIO_CONTROLS_HEIGHT);
+  const savedBounds = storage.getUiPreferences().localRadioControlsWindowBounds;
+  const targetDisplay = savedBounds ? screen.getDisplayMatching(savedBounds) : display;
+  const geometry = constrainBoundsToDisplay(targetDisplay, savedBounds || calculateCenteredBounds(
+    display, LOCAL_RADIO_CONTROLS_WIDTH, LOCAL_RADIO_CONTROLS_HEIGHT
+  ), { minWidth: LOCAL_RADIO_CONTROLS_MIN_WIDTH, minHeight: LOCAL_RADIO_CONTROLS_MIN_HEIGHT });
   localRadioControlsWindow = createSecureWindow({
     ...geometry,
     minWidth: LOCAL_RADIO_CONTROLS_MIN_WIDTH,
     minHeight: LOCAL_RADIO_CONTROLS_MIN_HEIGHT,
     resizable: true,
     title: "Local Radio Controls"
+  });
+  localRadioControlsWindow.on("close", () => {
+    if (!localRadioControlsWindow || localRadioControlsWindow.isDestroyed()) return;
+    try {
+      const bounds = localRadioControlsWindow.isMaximized()
+        ? localRadioControlsWindow.getNormalBounds()
+        : localRadioControlsWindow.getBounds();
+      storage.setLocalRadioControlsWindowBounds(bounds);
+    } catch (error) {
+      console.warn(`Could not remember the Local Radio Controls position: ${error.message}`);
+    }
   });
   localRadioControlsWindow.on("closed", () => { localRadioControlsWindow = null; });
   localRadioControlsWindow.loadFile(path.join(__dirname, "..", "renderer", "local-radio-controls.html"));
