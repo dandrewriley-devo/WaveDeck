@@ -1,14 +1,15 @@
 # WaveDeck Project Handoff
 
-This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **0.11.7**.
+This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **0.11.8**.
 
 ## Current published state
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `main`
-- Current version: **0.11.7**
-- Current release: 0.11.7 — monitor-safe main-window bounds persistence and a portable Windows build.
-- Current commit: the verified 0.11.7 release commit at the head of `main`.
+- Current version: **0.11.8**
+- Current release: 0.11.8 — monitor-safe main-window bounds persistence and a portable Windows build.
+- Current commit: the verified 0.11.8 release commit at the head of `main`.
+- 0.11.7 commit: `c8b69b7b8842dd6c310dda05b22b8d52870d3e84` — superseded source correction after the first portable Windows build.
 - 0.11.6 commit: `621e44d8c484cd0a4d70eb124106170f6183d0ae` — compact Local Radio Controls and remembered auxiliary-window bounds.
 - 0.11.5 commit: `f6422b1c3fe88b1de62bc1e5bfcf06ce6a35763c` — tray icon and opening Local Radio diagnostic entries.
 - 0.11.4 commit: `7b2abb3a5b6ef5ce2a2a4286664a88f1e293a10b` — Local Radio Controls and Live Radio Log ordering.
