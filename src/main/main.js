@@ -237,9 +237,7 @@ function analyzeLocalMixes() {
 
 function beginRadioDiagnosticSession(stationKey = '') {
   radioDiagnosticStationKey = String(stationKey || '');
-  radioDiagnosticSession.splice(0, radioDiagnosticSession.length);
   persistRadioDiagnostics();
-  if (radioLogWindow && !radioLogWindow.isDestroyed()) radioLogWindow.webContents.send('music:debug:reset');
 }
 
 function sendToRadioLog(decision) {
@@ -269,6 +267,12 @@ function persistRadioDiagnostics() {
     fs.writeFileSync(destination + '.tmp', JSON.stringify({ version: 1, stationKey: radioDiagnosticStationKey, selections: radioDiagnosticSession }) + '\n', 'utf8');
     fs.renameSync(destination + '.tmp', destination);
   } catch {}
+}
+function clearRadioDiagnostics() {
+  radioDiagnosticStationKey = '';
+  radioDiagnosticSession.splice(0, radioDiagnosticSession.length);
+  persistRadioDiagnostics();
+  if (radioLogWindow && !radioLogWindow.isDestroyed()) radioLogWindow.webContents.send('music:debug:reset');
 }
 
 function sendLastFmStatus(status) { sendToAll('music:lastfm-changed', status); }
@@ -917,6 +921,7 @@ function installIpcHandlers() {
   };
   ipcMain.handle('music:debug:get-last-decision', () => musicRadio?.getLastDecision() || null);
   ipcMain.handle('music:debug:get-log', () => radioDiagnosticSession.map(item => JSON.parse(JSON.stringify(item))));
+  ipcMain.handle('music:debug:clear-log', () => { clearRadioDiagnostics(); return true; });
   ipcMain.handle('music:debug:open-log', () => { openRadioLogWindow(); return true; });
   ipcMain.handle('music:debug:save-log', async () => {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');

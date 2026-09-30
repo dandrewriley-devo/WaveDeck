@@ -1,5 +1,4 @@
 const entries = document.getElementById('entries');
-const empty = document.getElementById('empty');
 const clearLog = document.getElementById('clearLog');
 const saveLog = document.getElementById('saveLog');
 const saveStatus = document.getElementById('saveStatus');
@@ -34,7 +33,6 @@ function addDetails(parent, title, items, fallback) {
 
 function renderDecision(decision, { prepend = true } = {}) {
   if (!decision?.selected) return;
-  empty.hidden = true;
   const selected = decision.selected;
   const entry = element('article', '', 'entry');
   const head = element('div', '', 'entry-head');
@@ -90,9 +88,18 @@ function renderDecision(decision, { prepend = true } = {}) {
   while (entries.children.length > MAX_ENTRIES) entries.lastElementChild.remove();
 }
 
-clearLog.addEventListener('click', () => {
-  entries.replaceChildren();
-  empty.hidden = false;
+clearLog.addEventListener('click', async () => {
+  clearLog.disabled = true;
+  saveStatus.textContent = '';
+  try {
+    await window.wavedeck.clearMusicDebugHistory();
+    entries.replaceChildren();
+    saveStatus.textContent = 'Diagnostic history cleared.';
+  } catch (error) {
+    saveStatus.textContent = `Could not clear the diagnostic history: ${error?.message || 'Unknown error'}`;
+  } finally {
+    clearLog.disabled = false;
+  }
 });
 
 saveLog.addEventListener('click', async () => {
@@ -117,5 +124,5 @@ window.wavedeck.getMusicDebugHistory().then((decisions) => {
   for (const decision of Array.isArray(decisions) ? decisions : []) renderDecision(decision, { prepend: false });
 }).catch(() => {});
 window.wavedeck.onMusicDebugReset(() => {
-  entries.replaceChildren(); empty.hidden = false;
+  entries.replaceChildren();
 });

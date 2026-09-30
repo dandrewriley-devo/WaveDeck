@@ -1,207 +1,161 @@
 # WaveDeck Project Handoff
 
-This file is an internal continuity reference for future WaveDeck work. It records the important product decisions, implementation details, testing evidence, and pending work from the WaveDeck local-music/radio development thread.
+This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **0.11.3**.
 
 ## Current published state
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `main`
-- Current published version: **0.8.0**
-- Current release: 0.8.0 — Crossfade Local Music.
-- Previous release commit: `2437af4f1bb585408af111338f8de5a8d44563ec` — five-stop radio tuning, acceptable-pool selection, read-only rating influence, and Last.fm progress bar.
-- 0.7.10 commit: `d2a2a0243165d40e832fa4dbc87f69a71db624c1` — recent stations, Settings relocation, and read-only MP3 rating support.
-- Previous relevant commit: `79fdea48f1f7eff3b71e611625a18e8485c0d689` — project handoff and connector history.
-- Previous relevant commits:
-  - `ce39d7f` — 0.7.8 single Settings scrollbar attempt
-  - `fec55ae` — 0.7.7 Last.fm catch-up refresh skips tracks checked within seven days
-  - `4077d36` — 0.7.6 first Settings scrolling fix attempt
-  - `a824b1f` — 0.7.5 Last.fm music-data refresh and diagnostic improvements
+- Current version: **0.11.3**
+- Current release: 0.11.3 — Local Music loading and persistent Live Radio Log.
+- Current commit: the verified 0.11.3 release commit at the head of `main`.
+- 0.11.2 commit: `edc074cdb908a1f9cdcf5e1c7abbfc2d8ed0bb4b` — expanded in-app User Guide, compact station-list listening totals, and left-aligned subgroups.
+- 0.11.1 commit: `e07a29d219dd93686351f45577ec331c61cd108f` — closing the main window closes Settings and Live Radio Log before fully exiting.
+- 0.11.0 commit: `f3d51b2f42369f6bd301d4677bde14748e1d1da4` — true Artist Radio and album-to-Artist-Radio handoff.
 
-The local working copy in the original development workspace may be behind GitHub. Always fetch/read `main` before making new changes. Do not assume the local branch contains the most recently API-published commit.
+Always fetch and read remote `main` before changing anything. The original scratch checkout can be stale or have unrelated edits.
 
 ## Standing workflow rules
 
-- Do not change or publish anything unless Andrew explicitly says to ship it. “Ship it” authorizes implementation, testing, version increment, and publishing.
-- Increment the patch version for every shipped update: 0.7.0, 0.7.1, 0.7.2, etc.
-- Run `npm test` before publishing.
-- MP3 files and their tags are read-only. WaveDeck may read tags, but must never write metadata back to music files.
-- Be conservative with changes. Study existing code and preserve working behavior.
-- Andrew tests by pulling/running the development version from GitHub; packaging an AppImage is not normally required unless specifically requested.
+- Andrew must explicitly say **“ship”** or **“ship it”** before any code changes or publishing. That approval covers implementation, testing, version increment, and direct publishing.
+- Publish directly to `main`; do not open a pull request.
+- Increment the patch version for every shipped update.
+- Run both `npm test` and `git diff --check` before publishing.
+- Verify the actual remote `main` version and changed files after publishing.
+- Andrew's normal desktop icon/updater pulls and runs the source from GitHub `main`. Do not build or publish an AppImage unless he specifically asks.
+- MP3 files and their tags are read-only. WaveDeck may index them, but must never write metadata back to them.
+- Do not change `package-lock.json`. It is unusual/binary in this project and is not part of normal source updates.
+- Small internal or cosmetic releases do not need a new visible changelog entry unless Andrew asks. The About tab currently intentionally ends at 0.11.0.
 
-## Product direction
+## Publishing safely
 
-WaveDeck’s local Music feature is part of the existing WaveDeck project and Advanced Features mode. It is not being split into a separate WaveDeck Pro repository.
+Normal `git push` may not have credentials. The reliable route is the GitHub API connector:
 
-WaveDeck includes:
+1. Fetch remote `main` and its tree.
+2. Use a clean detached worktree based on that exact commit.
+3. Create blobs only for intended changed files, create a tree from the current remote tree, create a commit with that remote commit as parent, then update `main` with `force: false`.
+4. Fetch the new remote files and commit to verify the version and critical source text.
 
-- A portable `Music` folder beside `Data`.
-- An optional second music-folder location configured in Settings.
-- Recursive MP3 scanning.
-- Read-only ID3/tag reading.
-- A portable SQLite music index in `Data`.
-- Search-based music UI rather than a folder browser.
-- Song Radio, Artist Radio, and Play Album.
-- Infinite radio queues. The next radio song is selected when needed, not precomputed as a fixed list.
-- Albums play in track order and then hand off to Artist Radio.
-- Song Radio starts with the chosen song, then continues with related/surprising music.
-- Artist Radio strongly favors the seed artist according to Artist Focus and otherwise selects only from the acceptable related-music pool.
+Important: do **not** let a large base64 file be truncated while creating a GitHub blob. The 0.11.2 publish accidentally replaced `scripts/validate.js` with truncated binary data because the command-output budget was too small. 0.11.3 restores the full verified JavaScript file. For a large file, request enough output capacity (at least 60,000 output tokens for the current ~105 KB validation script) and verify the resulting remote file is readable JavaScript before declaring the release complete.
 
-Album art and ReplayGain are intentionally not part of the current feature set.
+## Product language and scope
 
-## Current Local Radio policy
+- Use **Local Music** and **Local Radio** for MP3-library features.
+- Use **Streaming** and **Streaming Radio** for internet streams.
+- Advanced Features controls access to Local Music, recording, and related settings. When it is off, ordinary Streaming playback controls still remain present and work.
+- The Notepad feature is gone and should not be restored.
+- Album art and ReplayGain are intentionally not in scope.
 
-Local Radio is automatic apart from one outcome-focused preference: Song Familiarity. Its three stops are Favor the Hits, Balanced Mix (the default), and Play Deep Cuts Too. Song Radio prioritizes the seed album and seed artist; Artist Radio stays anchored to its seed artist. Shared credited artists, useful Last.fm similar-artist links, and specific shared tags can extend either station. Broad tags such as Rock, Pop, Country, or Jazz are never enough by themselves, so a song like “Comfortably Numb” cannot jump to “The Devil Went Down to Georgia” merely because both carry Rock.
+## Local Music and index
 
-`DO_NOT_PLAY=1` is an absolute exclusion for every Local Music path: Local Radio, album playback, and manual Local Radio starts. `FAVORITE=1` and MP3 ratings are copied into the local index without modifying files and are the strongest personal taste signals. WaveDeck's custom `RATING` tag is 0–10: 5 is 2.5 stars, 10 is 5 stars, and 0/unset is neutral. Favor the Hits first narrows to Favorites and 7–10 ratings; Balanced Mix narrows to Favorites and 5–10; Play Deep Cuts Too narrows to Favorites and 3–10, then gives 3–6 more opportunity while retaining hits. When Favor the Hits has no personal candidates, it falls back to familiar Last.fm tracks, then its normal credible Local Radio pool. Missing popularity remains neutral. When no credible candidate is available, Local Radio waits. Local Radio persists Song Repeat Wait (2/4/6 hours, default 4), Artist Repeat Wait (30/90/180 minutes, default 90), and Artist Sets (single/two/three/four songs, default single). A set intentionally continues its artist before the artist wait begins.
+- WaveDeck scans the portable `Music` folder next to `Data` and one optional Additional Music Folder. Scanning is recursive for MP3s.
+- `Data/music.sqlite` is the portable read-only music index. `src/main/music-worker.js` owns its SQLite access; `src/main/music-library.js` is the main-process wrapper.
+- Indexed useful tags include title, artist, album, Album Artist, year, genre, ratings, Favorite, and Do Not Play.
+- Custom MP3 `RATING` is on a **0–10** scale: 10 = five stars, 5 = 2.5 stars, 0/unset = unrated. Existing MP3 rating values remain read-only.
+- `FAVORITE=1` is a strong personal preference signal.
+- `DO_NOT_PLAY=1` is an absolute exclusion from Local Radio, Local Mixes, albums, and manual Local Radio starts.
+- Local Music is warmed in the background as soon as Advanced Features is enabled. The Local Music tab now immediately shows “Loading your Local Music library…” if the first view is not ready—important for Andrew's 40,000+ track library.
+- Blank Local Music view data (song count/search shell, recent Local Stations, and enabled Local Mixes) is cached after warm-up and invalidated when music, history, mixes, or Local Music toolbar visibility changes.
 
-Recently played Local Stations are stored separately from Streaming Stations and appear in Local Music immediately when an Artist Radio or Song Radio station starts. A recent Local Station replays its original seed and station type.
+## Local Radio policy
 
-## Recently shipped and deferred work
+### Song Radio and Local Mixes
 
-WaveDeck 0.7.11 adds a visual Last.fm progress bar showing current tracks out of the library total while retaining queued-album and status text. Progress is hidden when Last.fm is off, unconfigured, or the library has no tracks.
+- Song Radio begins from its selected seed and only considers credible musical relationships: seed artist/album, shared credited artists, specific useful tags, and useful Last.fm similar-artist links.
+- Broad tags such as Rock, Pop, Country, or Jazz alone never make a song eligible. If no credible choice exists, Local Radio waits rather than making a bad leap.
+- Local Mix format books are the eligibility authority; Last.fm can rank an allowed choice but cannot add an unapproved artist to a mix.
+- Song Familiarity affects odds only among songs that already fit:
+  - Play Deep Cuts Too: Favorites and ratings 3–10 lead when available.
+  - Balanced Mix (default): Favorites and ratings 5–10 lead when available.
+  - Favor the Hits: Favorites and ratings 7–10 lead when available.
+- If that personal pool is empty, Last.fm popularity/familiarity can help; missing popularity is neutral. Personal ratings and Favorite tags take precedence over public popularity.
+- Persistent tuning controls: Song Repeat Wait has 1–24 hour stops (default 4); Artist Repeat Wait has 30, 60, 90, 120, and 180 minute stops (default 90); Artist Sets are Single Tracks, Two-fers, Three-way, and Four-play (default Single Tracks). Artist Sets are planned before the first song and only start when the full requested set is eligible.
+- The Song Familiarity slider increases toward the right: Play Deep Cuts Too → Balanced Mix → Favor the Hits.
 
-WaveDeck 0.7.12 replaces the old combined toolbar with Streaming and Local Music tabs, a context toolbar, a separate playback-controls row, and an always-visible search row for the selected section. The volume slider has its own full-width row beneath the player art. Sidebar Mode stays at the far right of the context toolbar without an active highlight. The Notepad UI, IPC bridge, storage methods, and automatic file creation are removed; an existing `notepad.txt` is left untouched but ignored.
+### Artist Radio and albums
 
-WaveDeck 0.7.13 fixes the context-toolbar visibility rule so Local Music library status and rescan controls are hidden on Streaming. Presets now default to hidden, station groups/subgroups default to expanded, and their display/collapse states persist in portable preferences across restarts. Local Music Rescan uses an icon-only button with an accessible label.
+- Artist Radio is deliberately distinct from Song Radio: it plays about **90%** from the selected artist, with only an occasional eligible related-artist change. It uses a fixed balanced profile rather than Local Radio slider tuning.
+- If the seed artist has no eligible song, Artist Radio waits; related artists never take over.
+- Play Album follows track/disc order. At the end of an album with a clear non-compilation Album Artist, it transitions into Artist Radio. Various Artists albums stop at the end.
 
-WaveDeck 0.7.14 rebuilds Local Radio around relationship-first eligibility and automatic scoring. It removes the slider UI and rule IPCs, uses Last.fm only as an optional quality signal, and logs the selected candidate’s qualifying relationship. Local Music now lists recently played Local Stations (not Streaming Stations), moves the active Local Station label beneath search, and puts the unboxed rescan icon before the song count.
+### Feedback and station memory
 
-WaveDeck 0.7.15 adds the three-stop Song Familiarity slider. It persists in portable preferences, defaults to Balanced Mix, and changes only Last.fm-popularity scoring among eligible Local Radio candidates: Favor the Hits increases the edge for more-popular songs; Play Deep Cuts Too gives lesser-known songs more opportunity.
+- Local Radio feedback is contextual, stored by station key and song key in `Data/local-radio-feedback.json`.
+- Thumbs-up gently improves the odds of the current song for that Local Station/Mix. A skip is a softer negative signal; normal completion is neutral. There is no visible thumbs-down button.
+- In Song Radio, positive tracks can act as soft secondary seeds without replacing the original seed.
+- Recent Local Stations are stored in `Data/listening-history.json`, with Local Station Presets saved by a star. Local Mix stars move favorite mixes to the top. The Local Music toolbar supports Presets, Favorites Only, and Local Mixes.
 
-WaveDeck 0.7.16 reads `DO_NOT_PLAY` as an absolute exclusion and copies both it and `FAVORITE` into the portable music index. The index performs one full metadata refresh after upgrade so existing unchanged files receive these fields.
+## Local Mixes
 
-WaveDeck 0.7.17 makes Favor the Hits choose from personal candidates first: Favorites and 3–5-star tracks. When none are available, it falls back to familiar Last.fm tracks, then to its normal credible Local Radio pool. This prevents an unrated track from being selected over several highly rated songs simply because Last.fm considers it popular.
+- Built-in/portable books live in `Data/local-mixes`. Additional JSON books are detected automatically but remain hidden until enabled in Settings → Local Music.
+- A Local Mix must have at least **20 eligible tracks** to appear. The manager labels readiness: Not Enough (0–19), Weak (20–49), Solid (50–149), Strong (150–399), Excellent (400+), using a red-to-green visual gradient.
+- Current shipped mixes: Classic Rock, Grunge Era Rock, Classic Hits, Alternative ’80s, Rock and Metal, Classic Country, and Wild Card Radio. Yacht Rock was intentionally retired.
+- Classic Rock includes Southern Rock and Heartland Rock material. AC/DC is accepted through all albums, including `Black Ice` (2008); legacy `AC` parsing is normalized to `AC/DC`.
+- Wild Card Radio has no artist roster; it uses the strongest personal ratings/Favorites across the library, then Last.fm popularity if no personal taste data exists.
 
-WaveDeck 0.7.18 corrects custom MP3 `RATING` handling to the library's 0–10 scale and forces a read-only metadata refresh so stored ratings are repaired. It replaces the one-size personal threshold with three familiarity pools: 7–10 for Favor the Hits, 5–10 for Balanced Mix, and 3–10 for Play Deep Cuts Too. Higher values retain better odds in every pool, but the Deep Cuts profile deliberately keeps the odds relatively flat.
+## Crossfade and playback
 
-WaveDeck 0.7.19 adds portable Local Station Presets. A star on a recent Local Station saves its original seed and Song/Artist Radio mode in `Data/listening-history.json`; the Local Music toolbar has a matching Presets button, and saved stations replay with one click. Saved stations do not duplicate the recent list while the preset section is open. The Local Music context now reads `Playing:` and the rescan icon is reduced to the song-count text scale.
+- Local Music only has a real equal-power **8-second crossfade**, enabled by default and switchable in Settings → Local Music. Streaming Radio is unaffected.
+- Crossfade applies to Local Music, Local Radio, Local Mixes, and albums. A candidate is selected in advance and committed only after it starts successfully. Skip, stop, error, station change, and exit cancel it safely.
+- Main playback controls and the current-station row are global, above the tabs. The current-source row uses a boombox for Local Music and radio icon for Streaming.
 
-WaveDeck 0.7.20 adds persistent Local Radio controls in Settings > Local Music: Song Repeat Wait (2/4/6 hours), Artist Repeat Wait (30/90/180 minutes), and Artist Sets (single, two, three, or four songs). Defaults are 4 hours, 90 minutes, and Single Tracks. Song Familiarity is flipped so it increases from Play Deep Cuts Too at left to Favor the Hits at right.
+## Last.fm
 
-WaveDeck 0.7.21 adds Local Mixes, opened from a layers icon beside Local Station Presets. Local Mixes are always available as a curated starting recipe and can be hidden/shown with the toolbar button.
+- Last.fm is optional and uses an API key plus user-controlled toggle in Settings → Local Music.
+- It reads `track.getInfo` and `artist.getSimilar`, storing popularity, tags, and similar artists in `Data/music.sqlite` (`lastfm_tracks`, `lastfm_artists`, and `lastfm_jobs`). It never writes to MP3s.
+- Successful data remains current about six months; network failures retry after about seven days; not-found results retry after six months.
+- A full catch-up refresh is started with the visible Settings button. The progress bar and “Updating Music Data” indicator prevent accidental duplicate refresh attempts.
 
-WaveDeck 0.7.23 is the final 0.7 Local Music update. Portable `Data/local-mixes` books now provide Classic Rock, Grunge Era Rock, Classic Hits, Alternative ’80s, Rock and Metal, and Classic Country; the failed Yacht Rock experiment is removed, including the old portable default. Format books remain the eligibility authority: broad tags never create eligibility and Last.fm can only rank an allowed choice. Classic Rock gains its Southern/Heartland lane and treats all AC/DC as Classic Rock, including later albums. The reader now canonicalizes the legacy `AC` ID3 result as `AC/DC` in existing indexes and new scans. Artist Sets are pre-built before their first song and only begin when the requested full set can play. Direct thumb clicks visibly confirm the current vote until the next song; skips remain a softer internal negative without changing either button visually.
+## Live Radio Log
 
-WaveDeck 0.8.0 adds real Local Music crossfade. It uses two local MPV playback lanes for an equal-power eight-second overlap; only Local Music, Local Radio, Local Mixes, and album playback use it—Streaming is unchanged. Crossfade defaults on but can be disabled in Local Music settings. A new incoming song is selected and starts at zero volume only near the natural end of the previous local track; it is recorded and shown as current only after it successfully starts. Skips, station changes, stop, errors, and app exit cancel an in-progress fade safely. Very short tracks use a shorter safe overlap. The user-facing Local Music settings now keep the additional folder first, crossfade toggle next, radio-shaping controls together, and Last.fm controls at the bottom. Last.fm has a catch-up refresh button. The Live Radio Log records selections whether or not its window is open, persists at most 3,000 current-station selections across restarts, clears on a new Local Station, and can be opened from a subtle Local Music settings link as well as its keyboard shortcut.
+- Open with the subtle Local Music Settings link or `Ctrl + Alt + Shift + L`.
+- `Data/radio-diagnostics.json` persistently keeps the last **3,000** selected Local Radio decisions across app restarts and Local Station changes.
+- As of 0.11.3, every selected Song Radio, Artist Radio, or Local Mix decision is appended and saved even while the Live Radio Log window is closed. Opening the window retrieves that full history. Save Log exports that same complete history.
+- Starting another Local Station no longer clears history. Clear in the Live Radio Log now clears the real persisted diagnostic history as well as the screen.
+- The obsolete “Waiting for the next radio pick” empty-state box is removed.
+- Diagnostics intentionally omit MP3 file paths. They include selection mode/trigger, seed, tuning, candidate counts/exclusions, qualification reasons, score inputs, top alternatives, and recent Radio history.
+- Window size and position are remembered.
 
-The 0.7.21 thumbs buttons now learn Local Radio **in context**, not as global song likes/dislikes. Feedback is stored in `Data/local-radio-feedback.json` by station key and song key. Upvotes lift a candidate a little; downvotes lower it more; Next is a softer negative signal; natural end-of-track completion is neutral but tempers repeated skips. `DO_NOT_PLAY` remains absolute and personal-rating/Favorite pool selection remains ahead of feedback. For Song Radio, a positive song can become one of at most four soft secondary seeds: it can gently broaden the neighborhood, but the original seed remains dominant. Thumbs never stay visually selected.
+## Settings and Streaming UI
 
-No next Local Music release has been scoped yet.
+- General has the app version, Sidebar Mode launch option, and Enable Advanced Features toggle.
+- Streaming Stations supports station editing, search, Favorites, Presets, Station Gain, listening history, import/export/replace, and automatic library updates.
+- Station Gain is per station (−12 dB to +12 dB); the Global volume slider remains separate.
+- Station list rows can expand briefly for details and gain adjustment, then collapse automatically. Dragging Presets is restricted to the station title area so sliders can be adjusted normally.
+- Streaming group headings stay present; station lists collapse by subgroup rather than hiding an entire major group. Group/subgroup organization follows Settings ordering.
+- Linux Application Shortcut wording is generalized for Cinnamon/Mint, GNOME, KDE Plasma, Xfce, and most mainstream Linux desktops. Remove that Linux-specific section if the app is later repackaged strictly for Windows.
 
-## Last.fm integration
+## About tab
 
-Files involved:
+- The About tab has an extensive built-in User Guide, not the old eight short blurbs.
+- It covers portable data, Streaming, Local Music, MP3 tags, Local Radio, Artist Radio, albums, Local Mixes, feedback, tuning, crossfade, Last.fm, Live Radio Log, import/export, recording, media keys, Linux launcher/sidebar behavior, troubleshooting, and notices.
+- It intentionally excludes the removed Notepad feature.
+- The visible simplified changelog is the exact high-level list Andrew supplied, ending at 0.11.0. Do not add a 0.11.2 or 0.11.3 entry unless he asks.
 
-- `src/main/lastfm-enricher.js`
-- `src/main/music-worker.js`
-- `src/main/music-library.js`
-- `src/main/storage.js`
-- `src/renderer/settings.html`
-- `src/renderer/settings.js`
+## Key files
 
-Behavior:
+- `src/main/main.js` — Electron lifecycle, windows, IPC, persistent diagnostics, Last.fm and Local Music wiring.
+- `src/main/media-controller.js` — Streaming/Local playback transitions, album handoff, crossfade scheduling.
+- `src/main/music-radio.js` — eligibility, scoring, repeat/set rules, feedback, and diagnostics.
+- `src/main/music-library.js` / `src/main/music-worker.js` — portable SQLite index, scans, queries, Local Mix analysis.
+- `src/main/local-mixes.js` — format-book discovery and eligibility.
+- `src/main/listening-history.js` — Streaming statistics and recent/preset Local Stations.
+- `src/main/storage.js` — portable preferences and UI state.
+- `src/preload.js` — renderer bridge; keep IPC surface deliberately explicit.
+- `src/renderer/renderer.js` / `styles.css` / `index.html` — main player UI and Local Music warm-up/loading state.
+- `src/renderer/radio-log.js` / `radio-log.html` — diagnostic history UI and export/clear actions.
+- `src/renderer/settings.html` / `settings.js` / `settings.css` — Settings, User Guide, Local Music controls, mix manager.
+- `scripts/validate.js` — static validation. This was restored in 0.11.3 and must remain valid UTF-8 JavaScript.
+- `scripts/test-music.js` — music/Local Radio regression tests.
 
-- Optional user-controlled Last.fm API key and toggle.
-- Uses Last.fm `track.getInfo` for track data and `artist.getSimilar` for related artists.
-- No Last.fm account, password, or API secret is required.
-- Requests are throttled to approximately one every 1.5 seconds.
-- Data is stored in portable `Data/music.sqlite` tables: `lastfm_tracks`, `lastfm_artists`, and `lastfm_jobs`.
-- Fresh Last.fm popularity overrides imported tag popularity in WaveDeck’s index.
-- MP3 files remain untouched.
-- Normal background refresh considers successful data current for approximately 183 days (six months).
-- Network errors retry after about seven days; not-found results retry after six months.
-- Playing a track queues its album at high priority.
-- A secret `Ctrl + Alt + Shift + F` shortcut queues a library catch-up refresh.
-- Since 0.7.7, that catch-up refresh skips tracks checked within the previous seven days. Restarting WaveDeck preserves queued work in the portable database.
+## Verification expectations
 
-Settings shows a visual current/total progress bar, queued-album count, and Last.fm status text.
-
-## Diagnostic logging
-
-The Live Radio Log opens with `Ctrl + Alt + Shift + L`.
-
-The Save Log button exports a diagnostic JSON file. It is intended for analysis and does not include MP3 paths. The diagnostic data includes:
-
-- Selection mode and trigger.
-- Seed track and seed artist.
-- Active radio settings.
-- Candidate counts and cooldown/handoff exclusions.
-- Artist Focus result and random roll.
-- The selected candidate's acceptable-pool match reasons and relevance exclusions.
-- Selected track, score, popularity value, and popularity source.
-- Score additions/multipliers.
-- Recent listening history.
-- Leading alternative candidates.
-
-Window size and position are remembered between launches.
-
-## Diagnostic findings so far
-
-### Earlier Artist Radio run
-
-- 72 picks over about 4.5 hours from a Tom Petty and the Heartbreakers seed.
-- Artist Focus at 85% produced 5 seed-artist picks out of 6 before the setting was changed.
-- Artist Focus at 50% subsequently produced 33 seed-artist picks out of 66 usable decisions.
-- Outside Variety was close to its configured share.
-- Fresh Last.fm scores had a believable range; old embedded tag data was often saturated at 100/100.
-
-### Overnight Song Radio run
-
-Diagnostic file: `WaveDeck_Radio_Diagnostics_2026-09-23T10-46-47-201Z.json`
-
-- Version 0.7.9.
-- 151 selections over roughly 10.25 hours.
-- Seed: The Smashing Pumpkins, with Artist Focus at 10%.
-- 12 seed-artist picks (about 8%), close to target after accounting for the two-hour song cooldown.
-- 116 related-lane picks and 23 outside-lane picks.
-- Outside picks represented roughly 16.5% of non-seed decisions, matching the 16.1% setting.
-- 128 of 151 picks had a genre match.
-- 116 had a release-year match.
-- Only one adjacent same-artist occurrence.
-- One repeated song appeared after about 3.5 hours, respecting the two-hour minimum repeat wait.
-- 99 selected songs used fresh Last.fm data; 49 used old tag data.
-- Fresh Last.fm scores averaged about 64 and had zero 100/100 scores.
-- Tag-based scores averaged about 92 and included 25 100/100 scores.
-- This strongly confirms that the old embedded tag popularity values are the source of the 100/100 saturation problem.
-- The run used a very high Genre Match value (`6162.95051`), so genre matching dominated the selection behavior. This is a tuning issue, not evidence of a code failure.
-- Outside Variety intentionally produced some large genre jumps (country, pop, rap, classical, comedy, jazz) because that setting permits unrelated music.
-
-The next useful controlled experiment is Song Radio with Song Popularity around 50%, keeping other settings unchanged, followed by another diagnostic export. However, do not make code changes solely from this recommendation.
-
-## Recent GitHub connector history
-
-On September 21, 2026, GitHub connector write access was verified without changing `main`:
-
-- Branch `codex-connector-test` was created from `main` at `9099ac9`.
-- `CONNECTOR_TEST.txt` was added with exactly: `GitHub write test - 2026-09-21`.
-- The test branch commit was `3830e074792a21ac775b5ac5b2e3eb953997e409`.
-- No pull request was opened and `main` was unchanged by the connector test.
-
-The Advanced Features update originally existed locally as `5c7bd3e` (`Rename Pro mode and add radio tuning controls`). Because the local history had diverged from GitHub's then-current `main`, the change was replayed cleanly on top of remote `main` rather than force-pushing. The resulting published commit was `f497502938307c3015d2115fa0d27ed32135404d`. `npm test` passed before publication, and the remote tree was verified to match the tested replay.
-
-The reliable GitHub publishing path is therefore:
-
-1. Fetch the current remote `main` and do not trust a stale local branch.
-2. Reapply or reconstruct only the intended change on top of the current remote tree.
-3. Run `npm test` when source code changes are involved.
-4. Create the tree and commit through the GitHub API connector.
-5. Update `main` with `force: false`.
-6. Fetch `main` again and verify the resulting commit, message, and tree.
-
-## Publishing workflow
-
-Normal `git push` may fail because the local workspace does not have GitHub credentials. The reliable publishing path is the GitHub API connector:
-
-1. Fetch the current `main` commit and tree from GitHub.
-2. Read each changed local file and base64-encode it.
-3. Create GitHub blobs.
-4. Create a tree based on the current remote tree.
-5. Create a commit with the current remote commit as parent.
-6. Update `main` with `force: false`.
-7. Fetch `main` again to verify the commit and message.
-
-Always verify the remote head after publishing. Do not overwrite remote work based only on a stale local branch.
+- `npm test` runs `node scripts/validate.js && node scripts/test-music.js`.
+- Also run `git diff --check`.
+- Test source version in `package.json` and the About version span must match.
+- When reviewing the Live Radio Log, start Local Radio, let several transitions occur with the log closed, then open it and confirm the earlier decisions appear; Save Log should export them all.
+- With a large library, the first Local Music click should immediately show the loading message if warming is unfinished, then show Local Stations/Mixes once ready; later openings should normally be immediate.
 
 ## User communication
 
-Andrew prefers direct, informal explanations. He wants explicit confirmation of what changed, what was tested, and the published commit. Do not change or publish anything unless he explicitly says to ship it. Use “Local Music” and “Local Radio” for MP3 features; use “Streaming” and “Streaming Radio” for streams.
+Andrew prefers direct, informal explanations. Always state what changed, what passed, the version, and the direct GitHub commit. Do not overexplain internal machinery unless he asks.

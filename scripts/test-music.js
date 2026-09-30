@@ -62,6 +62,10 @@ async function run() {
     const specificTag = track('prog', { artist: 'King Crimson', artists: ['King Crimson'], album: 'Red', genres: ['Progressive Rock'] });
     const country = track('devil', { title: 'The Devil Went Down to Georgia', artist: 'Charlie Daniels Band', artists: ['Charlie Daniels Band'], album: 'Million Mile Reflections', genres: ['Country', 'Rock'] });
     const radio = new MusicRadio({ dataDir, now: () => now, random: () => 0 });
+    const diagnosticSelections = [];
+    const diagnosticRadio = new MusicRadio({ dataDir: path.join(temp, 'persistent-diagnostics'), now: () => now, random: () => 0, onDecision: decision => diagnosticSelections.push(decision) });
+    assert.equal(diagnosticRadio.choose([sameAlbum], seed, 'radio').id, sameAlbum.id);
+    assert.equal(diagnosticSelections.length, 1, 'Local Radio records every selection through its diagnostic callback without requiring a visible log window');
     assert.equal(radio.choose([country], seed, 'radio'), null, 'a broad Rock tag alone is never enough');
     assert.equal(radio.choose([sameAlbum, country], seed, 'radio').id, sameAlbum.id, 'same-album songs lead Song Radio');
     assert(weight(seedArtist, seed, 'artist', [], now) > weight(similar, seed, 'artist', [], now), 'Artist Radio returns to seed artist');

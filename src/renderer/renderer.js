@@ -40,6 +40,8 @@ const musicStatus = document.getElementById('musicStatus');
 let musicVisible = false;
 let musicSearchTimer;
 let musicRenderSequence = 0;
+let localMusicViewCache = null;
+let localMusicWarmupPromise = null;
 
 if (platform !== "linux" && platform !== "win32") sidebarModeBtn.hidden = true;
 
@@ -239,12 +241,18 @@ function setPlayPauseUi(status = currentPlayerStatus) {
 }
 
 function setProModeUi(preferences = {}) {
+  const wasEnabled = proModeEnabled;
   proModeEnabled = preferences?.proModeEnabled === true;
   document.querySelectorAll("[data-pro-only]").forEach((node) => {
     node.hidden = !proModeEnabled;
   });
   if (!proModeEnabled && recordingsSectionVisible) setRecordingsSectionVisible(false);
   if (!proModeEnabled && musicVisible) setMusicVisible(false);
+  if (proModeEnabled && !wasEnabled) {
+    void warmLocalMusicView().catch(error => {
+      if (musicVisible) musicStatus.textContent = error.message;
+    });
+  }
   setRecordingUi(recordingState);
   queueRender();
 }
@@ -321,7 +329,10 @@ function setSectionVisibilityUi(state = {}) {
 
   updateSectionToolbarHighlights();
 
-  if (changed) queueRender();
+  if (changed) {
+    invalidateLocalMusicView();
+    queueRender();
+  }
 }
 
 function saveStationGroupState() {
@@ -370,6 +381,10 @@ function setMusicVisible(visible) {
   queueRender();
   if (musicVisible) {
     musicSearch.focus();
+    if (!musicSearch.value.trim() && !localMusicViewCache) showLocalMusicLoading();
+    void warmLocalMusicView().then(() => {
+      if (musicVisible && !musicSearch.value.trim()) void renderMusic();
+    }).catch(error => { if (musicVisible) musicStatus.textContent = error.message; });
     window.wavedeck.getMusicStatus().then(setMusicStatus).catch(error => { musicStatus.textContent = error.message; });
   }
 }
@@ -381,22 +396,53 @@ function setMusicStatus(status) {
   musicSearch.placeholder = count ? `Search ${count.toLocaleString()} songs…` : 'Search Local Music…';
 }
 
+function invalidateLocalMusicView() {
+  localMusicViewCache = null;
+  localMusicWarmupPromise = null;
+}
+
+function showLocalMusicLoading() {
+  listEl.replaceChildren();
+  listEl.append(element('div', 'music-empty-state music-loading-state', 'Loading your Local Music library…'));
+}
+
+async function warmLocalMusicView() {
+  if (!proModeEnabled) return null;
+  if (localMusicViewCache) return localMusicViewCache;
+  if (localMusicWarmupPromise) return localMusicWarmupPromise;
+  localMusicWarmupPromise = Promise.all([
+    window.wavedeck.searchMusic(''),
+    window.wavedeck.getListeningHistory(),
+    localMixesSectionVisible ? window.wavedeck.getLocalMixes() : Promise.resolve([])
+  ]).then(([result, history, mixes]) => {
+    localMusicViewCache = { result, history, mixes };
+    return localMusicViewCache;
+  }).catch(error => {
+    localMusicWarmupPromise = null;
+    throw error;
+  });
+  return localMusicWarmupPromise;
+}
+
 async function renderMusic() {
   const sequence = ++musicRenderSequence;
   const query = musicSearch.value;
   const openMusicIds = new Set([...listEl.querySelectorAll('details.music-row[open]')]
     .map(row => row.dataset.musicId));
   try {
-    const result = await window.wavedeck.searchMusic(query);
+    const isBlankQuery = !query.trim();
+    if (isBlankQuery && !localMusicViewCache) showLocalMusicLoading();
+    const initialView = isBlankQuery ? await warmLocalMusicView() : null;
+    const result = initialView?.result || await window.wavedeck.searchMusic(query);
     if (!musicVisible || sequence !== musicRenderSequence || query !== musicSearch.value) return;
     listEl.replaceChildren();
     if (query.trim()) listEl.append(createSectionTitle('Local Music', `${result.total} matches`));
     if (!query.trim()) {
-      const history = await window.wavedeck.getListeningHistory();
+      const history = initialView?.history || await window.wavedeck.getListeningHistory();
       if (!musicVisible || sequence !== musicRenderSequence || query !== musicSearch.value) return;
       const saved = Array.isArray(history?.localStationPresets) ? history.localStationPresets : [];
       const savedKeys = new Set(saved.map(station => station.key));
-      const allMixes = localMixesSectionVisible ? await window.wavedeck.getLocalMixes() : [];
+      const allMixes = initialView?.mixes || (localMixesSectionVisible ? await window.wavedeck.getLocalMixes() : []);
       if (!musicVisible || sequence !== musicRenderSequence || query !== musicSearch.value) return;
       const showSaved = localPresetSectionVisible || localFavoritesOnlyVisible;
       const mixes = localFavoritesOnlyVisible ? allMixes.filter(mix => mix.favorite) : allMixes;
@@ -592,7 +638,11 @@ localThumbUpBtn.addEventListener('click', async () => {
   catch (error) { nowPlaying.textContent = error.message; }
   finally { setTimeout(() => showMusicPlayback(currentPlayerStatus), 120); }
 });
-window.wavedeck.onMusicChanged(status => { setMusicStatus(status); if (musicVisible && !status.scanning) queueRender(); });
+window.wavedeck.onMusicChanged(status => {
+  setMusicStatus(status);
+  if (!status.scanning) invalidateLocalMusicView();
+  if (musicVisible && !status.scanning) queueRender();
+});
 // Browsing Streaming Radio controls does not interrupt Local Music; choosing one does.
 for (const button of [presetSectionToggleBtn, favoritesOnlyToggleBtn, mostPlayedSectionToggleBtn, recordingsSectionToggleBtn]) {
   button.addEventListener('click', () => { if (musicVisible) setMusicVisible(false); }, { capture: true });
@@ -1565,10 +1615,14 @@ window.wavedeck.onPlayerStatus((status) => {
 window.wavedeck.onSidebarState(setSidebarUi);
 window.wavedeck.onListeningHistoryChanged((history) => {
   listeningHistory = history || { version: 1, stations: {} };
+  invalidateLocalMusicView();
   if (mostPlayedSectionVisible) queueRender();
   if (musicVisible && !musicSearch.value.trim()) void renderMusic();
 });
-window.wavedeck.onLocalMixesChanged(() => { if (musicVisible && !musicSearch.value.trim()) void renderMusic(); });
+window.wavedeck.onLocalMixesChanged(() => {
+  invalidateLocalMusicView();
+  if (musicVisible && !musicSearch.value.trim()) void renderMusic();
+});
 
 window.wavedeck.onSectionVisibilityChanged(setSectionVisibilityUi);
 window.wavedeck.onUiPreferencesChanged(setProModeUi);

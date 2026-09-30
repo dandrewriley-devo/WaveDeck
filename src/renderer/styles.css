@@ -838,6 +838,7 @@ html, body{
 .music-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; margin: 10px 0 0; }
 .music-actions .recording-action{ font-size:11px; padding:6px 3px; white-space:nowrap; }
 .music-empty-state{ color:var(--muted); font-size:12px; margin:16px 10px; text-align:center; }
+.music-loading-state{ color:#d8f7b7; }
 .local-station-list { display:grid; gap:5px; margin:0 8px 10px; }
 .local-station-row { align-items:center; background:#202020; border:1px solid rgba(255,255,255,0.14); border-radius:4px; display:flex; min-width:0; }
 .local-station-play { background:transparent; border:0; color:var(--text); cursor:pointer; flex:1 1 auto; font-size:11px; min-width:0; overflow:hidden; padding:7px 8px; text-align:left; text-overflow:ellipsis; white-space:nowrap; }
