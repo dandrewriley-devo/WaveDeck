@@ -34,10 +34,11 @@ function addDetails(parent, title, items, fallback) {
 function renderDecision(decision, { prepend = true } = {}) {
   if (!decision?.selected) return;
   const selected = decision.selected;
+  const manualStart = decision.selectionTrigger === 'start' && decision.policy === 'manual-local-radio-start-v1';
   const entry = element('article', '', 'entry');
   const head = element('div', '', 'entry-head');
   const mode = decision.mode === 'artist' ? 'Artist Radio' : 'Song Radio';
-  head.append(element('b', mode));
+  head.append(element('b', manualStart ? `${mode} — Selected seed track` : mode));
   head.append(element('span', new Date(decision.at).toLocaleString(), 'time'));
   entry.append(head);
   const body = element('div', '', 'entry-body');
@@ -50,7 +51,10 @@ function renderDecision(decision, { prepend = true } = {}) {
     `${decision.seed?.title || 'Unknown song'} — ${decision.seed?.artist || 'Unknown artist'}`,
     decision.seed?.album || 'No album'
   ]);
-  addBox(grid, 'Local Radio policy', [
+  addBox(grid, manualStart ? 'Start type' : 'Local Radio policy', manualStart ? [
+    'You selected this opening track',
+    'The next track will be chosen automatically'
+  ] : [
     `Song familiarity: ${({ hits: 'Favor the Hits', balanced: 'Balanced Mix', 'deep-cuts': 'Play Deep Cuts Too' })[decision.familiarity] || 'Balanced Mix'}`,
     'Strong musical links are required',
     'Poor-fit candidates wait instead of playing'
@@ -67,7 +71,10 @@ function renderDecision(decision, { prepend = true } = {}) {
     'Favorite tags and MP3 ratings lead personal song choice',
     'Exact-song repeat wait: 2 hours'
   ]);
-  addBox(grid, 'Candidates', [
+  addBox(grid, 'Candidates', manualStart ? [
+    'No candidate search was needed',
+    'This track was selected directly'
+  ] : [
     `${decision.counts?.totalTracks ?? 0} total · ${decision.counts?.credible ?? 0} credible`,
     `${decision.counts?.personal ?? 0} personal ${decision.counts?.personalMinimum ?? '—'}–10/Favorite · ${decision.counts?.lastFmFamiliar ?? 0} Last.fm familiar`,
     `${decision.counts?.finalPool ?? 0} in the final pool`,
@@ -80,8 +87,8 @@ function renderDecision(decision, { prepend = true } = {}) {
     ...additions
   ], 'It qualified for the acceptable pool through artist or similarity data.');
   const multipliers = (selected.multipliers || []).map(item => `${item.label}: ×${number(item.value, 3)}${item.source ? ` (${item.source})` : ''}`);
-  multipliers.push(`Final score: ${number(selected.score, 3)}`);
-  addDetails(body, 'Score adjustments', multipliers, 'No score adjustments recorded.');
+  if (!manualStart) multipliers.push(`Final score: ${number(selected.score, 3)}`);
+  addDetails(body, manualStart ? 'Selection details' : 'Score adjustments', multipliers, manualStart ? 'This seed track was selected directly, so no automatic score was calculated.' : 'No score adjustments recorded.');
   body.append(element('div', `${decision.reason || 'A track was selected.'} Trigger: ${decision.selectionTrigger || 'next'}.`, 'reason'));
   entry.append(body);
   if (prepend) entries.prepend(entry); else entries.append(entry);

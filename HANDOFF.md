@@ -1,14 +1,15 @@
 # WaveDeck Project Handoff
 
-This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **0.11.4**.
+This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **0.11.5**.
 
 ## Current published state
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `main`
-- Current version: **0.11.4**
-- Current release: 0.11.4 — Local Radio Controls and Live Radio Log ordering.
-- Current commit: the verified 0.11.4 release commit at the head of `main`.
+- Current version: **0.11.5**
+- Current release: 0.11.5 — tray icon and opening Local Radio diagnostic entries.
+- Current commit: the verified 0.11.5 release commit at the head of `main`.
+- 0.11.4 commit: `7b2abb3a5b6ef5ce2a2a4286664a88f1e293a10b` — Local Radio Controls and Live Radio Log ordering.
 - 0.11.3 commit: `883bf5f345a4d185b576ed10b99eacc15d34b5b0` — Local Music loading and persistent Live Radio Log.
 - 0.11.2 commit: `edc074cdb908a1f9cdcf5e1c7abbfc2d8ed0bb4b` — expanded in-app User Guide, compact station-list listening totals, and left-aligned subgroups.
 - 0.11.1 commit: `e07a29d219dd93686351f45577ec331c61cd108f` — closing the main window closes Settings and Live Radio Log before fully exiting.
@@ -111,7 +112,7 @@ Important: do **not** let a large base64 file be truncated while creating a GitH
 
 - Open with the subtle Local Music Settings link or `Ctrl + Alt + Shift + L`.
 - `Data/radio-diagnostics.json` persistently keeps the last **3,000** selected Local Radio decisions across app restarts and Local Station changes.
-- As of 0.11.3, every selected Song Radio, Artist Radio, or Local Mix decision is appended and saved even while the Live Radio Log window is closed. As of 0.11.4, opening the window presents that saved history newest first, matching live updates. Save Log exports that same complete history.
+- As of 0.11.3, every selected Song Radio, Artist Radio, or Local Mix decision is appended and saved even while the Live Radio Log window is closed. As of 0.11.4, opening the window presents that saved history newest first, matching live updates. As of 0.11.5, the manually selected opening track in Song Radio and Artist Radio is recorded after playback begins and is clearly labeled as the selected seed track. Save Log exports the complete history.
 - Starting another Local Station no longer clears history. Clear in the Live Radio Log now clears the real persisted diagnostic history as well as the screen.
 - The obsolete “Waiting for the next radio pick” empty-state box is removed.
 - Diagnostics intentionally omit MP3 file paths. They include selection mode/trigger, seed, tuning, candidate counts/exclusions, qualification reasons, score inputs, top alternatives, and recent Radio history.
@@ -125,6 +126,7 @@ Important: do **not** let a large base64 file be truncated while creating a GitH
 - Station list rows can expand briefly for details and gain adjustment, then collapse automatically. Dragging Presets is restricted to the station title area so sliders can be adjusted normally.
 - Streaming group headings stay present; station lists collapse by subgroup rather than hiding an entire major group. Group/subgroup organization follows Settings ordering.
 - Linux Application Shortcut wording is generalized for Cinnamon/Mint, GNOME, KDE Plasma, Xfce, and most mainstream Linux desktops. Remove that Linux-specific section if the app is later repackaged strictly for Windows.
+- WaveDeck has a system tray icon while it is running. Clicking it brings the main window forward; its menu offers Show WaveDeck, Play / Pause, Stop, and Quit WaveDeck. The window close button still fully exits WaveDeck and removes the tray icon.
 
 ## About tab
 

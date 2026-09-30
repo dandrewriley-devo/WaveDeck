@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.11.4");
-assert.strictEqual(packageJson.wavedeckVersion, "0.11.4");
+assert.strictEqual(packageJson.version, "0.11.5");
+assert.strictEqual(packageJson.wavedeckVersion, "0.11.5");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -1239,6 +1239,7 @@ const localRadioControlsSource = fs.readFileSync(path.join(root, "src", "rendere
 assert.ok(!radioLogHtml.includes("Waiting for the next radio pick"));
 assert.ok(radioLogSource.includes("clearMusicDebugHistory"));
 assert.ok(radioLogSource.includes(".slice().reverse()"));
+assert.ok(radioLogSource.includes("Selected seed track"));
 assert.ok(!settingsHtml.includes('data-tab="launcher"'));
 assert.ok(!settingsHtml.includes('id="tab-launcher"'));
 assert.ok(settingsHtml.includes('id="tab-interface"'));
@@ -1427,6 +1428,10 @@ assert.ok(mainSource.includes("function clearRadioDiagnostics()"));
 assert.ok(mainSource.includes("music:debug:clear-log"));
 assert.ok(mainSource.includes("function openLocalRadioControlsWindow()"));
 assert.ok(mainSource.includes("localRadioControlsWindow"));
+assert.ok(mainSource.includes("function createTray()"));
+assert.ok(mainSource.includes("Show WaveDeck"));
+assert.ok(mainSource.includes("Quit WaveDeck"));
+assert.ok(mainSource.includes("tray?.destroy()"));
 const desktopLauncherSource = fs.readFileSync(path.join(root, "src", "main", "desktop-launcher.js"), "utf8");
 assert.ok(desktopLauncherSource.includes('.local", "share", "applications"'));
 assert.ok(desktopLauncherSource.includes("X-WaveDeck-Managed=true"));

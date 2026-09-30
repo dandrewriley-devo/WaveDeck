@@ -346,7 +346,7 @@ class MediaController {
       .sort((a, b) => a.disc - b.disc || a.track - b.track || a.relativePath.localeCompare(b.relativePath));
     if (mode === 'album' && !album.length) album.push(track);
     const albumArtistSeed = mode === 'album' ? artistRadioSeedForAlbum(track) : null;
-    this.music = { seed: track, albumArtistSeed, mode, radioKey: `${mode}:${track.songKey || track.id}`, current: null, queue: mode === 'album' ? album.map(t => t.id) : [], back: [], failed: new Set(), waiting: false };
+    this.music = { seed: track, albumArtistSeed, mode, radioKey: `${mode}:${track.songKey || track.id}`, current: null, queue: mode === 'album' ? album.map(t => t.id) : [], back: [], failed: new Set(), waiting: false, initialRadioSelectionPending: ['radio', 'artist'].includes(mode) };
     if (mode === 'artist') this.musicRadio?.beginArtistSession?.(track);
     this.onLocalStationStart(this.music.radioKey);
     this.onStationChanged(null);
@@ -392,6 +392,10 @@ class MediaController {
     this.mediaState = 'playing';
     this.music.back.push(id); this.music.back = this.music.back.slice(-100);
     this.musicRadio.record(track);
+    if (this.music.initialRadioSelectionPending) {
+      this.music.initialRadioSelectionPending = false;
+      this.musicRadio.recordManualStart?.(track, this.music.mode, this.music.radioKey);
+    }
     try { this.onMusicTrack(track); } catch {}
     this.onStateChanged(this.getStatus());
   }

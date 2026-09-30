@@ -202,6 +202,27 @@ class MusicRadio {
     try { fs.mkdirSync(path.dirname(this.file), { recursive: true }); fs.writeFileSync(this.file + '.tmp', JSON.stringify(this.history)); fs.renameSync(this.file + '.tmp', this.file); }
     catch { this.error = 'Music history could not be saved; check that Data is writable.'; }
   }
+  recordManualStart(track, mode, stationKey = '') {
+    if (!track || !['radio', 'artist'].includes(mode)) return null;
+    const now = this.now();
+    const settings = localRadioTuning(this.getTuning());
+    const familiarity = mode === 'artist'
+      ? 'balanced'
+      : (['hits', 'balanced', 'deep-cuts'].includes(this.getFamiliarity()) ? this.getFamiliarity() : 'balanced');
+    this.lastDecision = {
+      at: new Date(now).toISOString(), mode, stationKey, selectionTrigger: 'start',
+      seed: { diagnosticId: stableId(track), title: track.title || track.name || '', artist: track.artist || '', album: track.album || '', genres: track.genres || [] },
+      policy: 'manual-local-radio-start-v1', familiarity, tuning: settings,
+      artistSet: { size: 1, remaining: 0 },
+      artistRadio: mode === 'artist' ? { seedTargetPercent: 90, seedSelectionsSinceRelated: this.artistStation?.seedSelections || 1 } : null,
+      counts: { totalTracks: 0, skippedByPlaybackError: 0, skippedForCooldown: 0, skippedForArtistCooldown: 0, skippedForDoNotPlay: 0, credible: 0, personal: 0, personalMinimum: FAMILIARITY_RATINGS[familiarity].minimum, lastFmFamiliar: 0, finalPool: 0 },
+      selected: { diagnosticId: stableId(track), title: track.title || '', artist: track.artist || '', album: track.album || '', eligibilityReasons: ['Manually selected seed track'], score: null, additions: [], multipliers: [], favorite: track.favorite === true, rating: ratingOutOfTen(track), popularity: Number.isFinite(Number(track.popularity)) ? Number(track.popularity) : null, tags: [] },
+      diagnostics: { topFinalCandidates: [], recentHistory: this.history.slice(0, 12).map(item => ({ diagnosticId: stableId({ songKey: item.key }), artist: item.artist, album: item.album, at: new Date(item.at).toISOString() })) },
+      reason: 'Started from the selected seed track. WaveDeck will make the next Local Radio selection automatically.'
+    };
+    try { this.onDecision(this.getLastDecision()); } catch {}
+    return this.getLastDecision();
+  }
   feedbackFor(stationKey) { return this.feedback.stations[String(stationKey)]?.tracks || {}; }
   recordFeedback(stationKey, track, kind) {
     const key = String(stationKey || '').trim(); const trackKey = String(track?.songKey || track?.id || '').trim();

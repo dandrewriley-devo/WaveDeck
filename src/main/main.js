@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog, globalShortcut, ipcMain, Menu, net, screen, shell } = require("electron");
+const { app, BrowserWindow, dialog, globalShortcut, ipcMain, Menu, net, screen, shell, Tray } = require("electron");
 const { execFile } = require("child_process");
 const fs = require("fs");
 const os = require("os");
@@ -89,6 +89,7 @@ const LASTFM_REFRESH_SHORTCUT = "CommandOrControl+Alt+Shift+F";
 const DISPLAY_VERSION = require("../../package.json").wavedeckVersion || app.getVersion();
 
 let mainWindow = null;
+let tray = null;
 let settingsWindow = null;
 let radioLogWindow = null;
 let localRadioControlsWindow = null;
@@ -207,6 +208,27 @@ function refreshApplicationsMenu() {
 
 function sendToMain(channel, payload) {
   if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(channel, payload);
+}
+
+function showMainWindow() {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  mainWindow.show();
+  mainWindow.focus();
+}
+
+function createTray() {
+  if (tray || !Tray) return;
+  tray = new Tray(path.join(PROJECT_ROOT, "build", "icon.png"));
+  tray.setToolTip("WaveDeck");
+  tray.setContextMenu(Menu.buildFromTemplate([
+    { label: "Show WaveDeck", click: showMainWindow },
+    { label: "Play / Pause", click: () => { void mediaController?.togglePlayPause(); } },
+    { label: "Stop", click: () => { void mediaController?.stop(); } },
+    { type: "separator" },
+    { label: "Quit WaveDeck", click: () => app.quit() }
+  ]));
+  tray.on("click", showMainWindow);
 }
 
 function sendToAll(channel, payload) {
@@ -1317,6 +1339,7 @@ if (!hasSingleInstanceLock) {
     const launchInSidebarMode = supportsStartupSidebar &&
       storage.getUiPreferences().launchInSidebarMode === true;
     const initialWindow = createMainWindow({ showOnReady: !launchInSidebarMode });
+    createTray();
     scheduleLibraryUpdateCheck();
 
     initialWindow.webContents.once("did-finish-load", () => {
@@ -1359,6 +1382,8 @@ function finishShutdown() {
   if (mediaKeyReclaimTimer) clearInterval(mediaKeyReclaimTimer);
   mediaKeyReclaimTimer = null;
   mediaKeyReclaimEnabled = false;
+  tray?.destroy();
+  tray = null;
   try { globalShortcut.unregister(RADIO_LOG_SHORTCUT); } catch {}
   try { globalShortcut.unregister(LASTFM_REFRESH_SHORTCUT); } catch {}
   lastFmEnricher?.stop();
