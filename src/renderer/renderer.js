@@ -320,7 +320,7 @@ function setSectionVisibilityUi(state = {}) {
   presetSectionToggleBtn.setAttribute("aria-pressed", String(presets));
   presetSectionToggleBtn.setAttribute("aria-label", presets ? "Hide Presets" : "Show Presets");
   localPresetSectionToggleBtn.setAttribute('aria-pressed', String(localPresets));
-  localPresetSectionToggleBtn.setAttribute('aria-label', localPresets ? 'Hide Local Station Presets' : 'Show Local Station Presets');
+  localPresetSectionToggleBtn.setAttribute('aria-label', localPresets ? 'Hide Local Music Presets' : 'Show Local Music Presets');
   localMixesSectionToggleBtn.setAttribute('aria-pressed', String(localMixes));
   localMixesSectionToggleBtn.setAttribute('aria-label', localMixes ? 'Hide Local Mixes' : 'Show Local Mixes');
   localFavoritesOnlyToggleBtn.setAttribute('aria-pressed', String(localFavoritesOnly));
@@ -417,7 +417,9 @@ async function warmLocalMusicView() {
   localMusicWarmupPromise = Promise.all([
     window.wavedeck.searchMusic(''),
     window.wavedeck.getListeningHistory(),
-    localMixesSectionVisible ? window.wavedeck.getLocalMixes() : Promise.resolve([])
+    (localMixesSectionVisible || localPresetSectionVisible || localFavoritesOnlyVisible)
+      ? window.wavedeck.getLocalMixes()
+      : Promise.resolve([])
   ]).then(([result, history, mixes]) => {
     localMusicViewCache = { result, history, mixes };
     return localMusicViewCache;
@@ -446,17 +448,24 @@ async function renderMusic() {
       if (!musicVisible || sequence !== musicRenderSequence || query !== musicSearch.value) return;
       const saved = Array.isArray(history?.localStationPresets) ? history.localStationPresets : [];
       const savedKeys = new Set(saved.map(station => station.key));
-      const allMixes = initialView?.mixes || (localMixesSectionVisible ? await window.wavedeck.getLocalMixes() : []);
+      const needsMixes = localMixesSectionVisible || localPresetSectionVisible || localFavoritesOnlyVisible;
+      const allMixes = initialView?.mixes || (needsMixes ? await window.wavedeck.getLocalMixes() : []);
       if (!musicVisible || sequence !== musicRenderSequence || query !== musicSearch.value) return;
       const showSaved = localPresetSectionVisible || localFavoritesOnlyVisible;
-      const mixes = localFavoritesOnlyVisible ? allMixes.filter(mix => mix.favorite) : allMixes;
+      const favoriteMixes = allMixes.filter(mix => mix.favorite);
+      const mixes = localFavoritesOnlyVisible ? favoriteMixes : allMixes;
+      const showMixList = localMixesSectionVisible || localFavoritesOnlyVisible;
       const recent = localFavoritesOnlyVisible ? [] : (Array.isArray(history?.recentLocalStations) ? history.recentLocalStations : [])
         .filter(station => !showSaved || !savedKeys.has(station.key)).slice(0, 10);
       if (showSaved) {
-        listEl.append(createSectionTitle('Local Station Presets', saved.length ? '' : 'None yet — star a Local Station to save it.'));
-        if (saved.length) {
+        const localMusicPresets = [...saved, ...favoriteMixes];
+        listEl.append(createSectionTitle('Local Music Presets', localMusicPresets.length ? '' : 'None yet — star a Local Station or Local Mix to save it.'));
+        if (localMusicPresets.length) {
           const block = element('div', 'local-station-list');
-          block.append(...saved.map(station => createLocalStationRow(station, true)));
+          block.append(
+            ...saved.map(station => createLocalStationRow(station, true)),
+            ...favoriteMixes.map(createLocalMixRow)
+          );
           listEl.append(block);
         }
       }
@@ -465,10 +474,10 @@ async function renderMusic() {
         const block = element('div', 'local-station-list');
         block.append(...recent.map(station => createLocalStationRow(station, savedKeys.has(station.key))));
         listEl.append(block);
-      } else if ((!saved.length || !showSaved) && !mixes.length) {
+      } else if ((!saved.length && !favoriteMixes.length || !showSaved) && (!showMixList || !mixes.length)) {
         listEl.append(element('div', 'music-empty-state', 'Search for local music, or start a Local Station to see it here.'));
       }
-      if (mixes.length) {
+      if (showMixList && mixes.length) {
         listEl.append(createSectionTitle('Local Mixes', 'Curated Local Radio that learns what fits each station.'));
         const block = element('div', 'local-mix-list');
         block.append(...mixes.map(createLocalMixRow));
@@ -503,8 +512,8 @@ async function renderMusic() {
 }
 
 function createLocalMixRow(mix) {
-  const row = element('div', 'local-mix-row');
-  const play = element('button', 'local-mix-play', mix.name);
+  const row = element('div', 'local-station-row');
+  const play = element('button', 'local-station-play', mix.name);
   play.type = 'button';
   play.title = `Play ${mix.name}`;
   play.addEventListener('click', async () => {

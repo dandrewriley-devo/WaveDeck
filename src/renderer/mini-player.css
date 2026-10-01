@@ -2,7 +2,8 @@
 * { box-sizing: border-box; }
 html, body { background: #161616; color: #f4f4f4; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, sans-serif; height: 100%; margin: 0; overflow: hidden; }
 .mini-player { align-items: stretch; background: #1d1d1d; border: 1px solid #3b3b3b; display: flex; height: 32px; width: 100%; }
-.track { -webkit-app-region: drag; align-items: center; display: flex; flex: 1 1 auto; justify-content: center; min-width: 0; padding: 3px 12px; text-align: center; }
+.track { -webkit-app-region: no-drag; align-items: center; cursor: move; display: flex; flex: 1 1 auto; justify-content: center; min-width: 0; padding: 3px 12px; text-align: center; }
+.track:focus-visible { outline: 2px solid #75c491; outline-offset: -2px; }
 .track-text { font-size: 12px; font-weight: 650; line-height: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .controls { -webkit-app-region: no-drag; align-items: center; border-left: 1px solid #383838; display: flex; flex: 0 0 auto; padding: 1px; }
 button { -webkit-app-region: no-drag; align-items: center; appearance: none; background: transparent; border: 0; border-radius: 4px; color: #dedede; cursor: pointer; display: inline-flex; height: 28px; justify-content: center; padding: 0; width: 32px; }

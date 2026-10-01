@@ -1,14 +1,14 @@
 # WaveDeck Project Handoff
 
-This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **0.11.9**.
+This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **0.11.11**.
 
 ## Current published state
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `main`
-- Current version: **0.11.10**
-- Current release: 0.11.10 — title-bar-height Linux Mini Player with a tray-menu display choice.
-- Current commit: the verified 0.11.10 release commit at the head of `main`.
+- Current version: **0.11.11**
+- Current release: 0.11.11 — combined Local Music presets and clickable Mini Player display text.
+- Current commit: the verified 0.11.11 release commit at the head of `main`.
 - 0.11.8 commit: `8118e235eed4b4a18c378f12ced8a86be83ed4b9` — monitor-safe main-window bounds persistence and portable Windows build.
 - 0.11.7 commit: `c8b69b7b8842dd6c310dda05b22b8d52870d3e84` — superseded source correction after the first portable Windows build.
 - 0.11.6 commit: `621e44d8c484cd0a4d70eb124106170f6183d0ae` — compact Local Radio Controls and remembered auxiliary-window bounds.
@@ -89,7 +89,7 @@ Important: do **not** let a large base64 file be truncated while creating a GitH
 - Local Radio feedback is contextual, stored by station key and song key in `Data/local-radio-feedback.json`.
 - Thumbs-up gently improves the odds of the current song for that Local Station/Mix. A skip is a softer negative signal; normal completion is neutral. There is no visible thumbs-down button.
 - In Song Radio, positive tracks can act as soft secondary seeds without replacing the original seed.
-- Recent Local Stations are stored in `Data/listening-history.json`, with Local Station Presets saved by a star. Local Mix stars move favorite mixes to the top. The Local Music toolbar supports Presets, Favorites Only, and Local Mixes.
+- Recent Local Stations are stored in `Data/listening-history.json`, with Local Station Presets saved by a star. Local Mix stars move favorite mixes to the top. The Local Music Presets section combines every starred Local Station and Local Mix in visually identical rows; the originals remain in their normal lists. The Local Music toolbar supports Presets, Favorites Only, and Local Mixes.
 
 ## Local Mixes
 
@@ -131,7 +131,7 @@ Important: do **not** let a large base64 file be truncated while creating a GitH
 - Streaming group headings stay present; station lists collapse by subgroup rather than hiding an entire major group. Group/subgroup organization follows Settings ordering.
 - Linux Application Shortcut wording is generalized for Cinnamon/Mint, GNOME, KDE Plasma, Xfce, and most mainstream Linux desktops. Remove that Linux-specific section if the app is later repackaged strictly for Windows.
 - WaveDeck has a system tray icon while it is running. Clicking it brings the main window forward; its menu offers Show WaveDeck, Play / Pause, Stop, and Quit WaveDeck. The window close button still fully exits WaveDeck and removes the tray icon.
-- Linux also has Mini Player: a 32-pixel, title-bar-height frameless always-on-top bar with Previous, Play/Pause, Stop, Next, and Local Radio thumbs-up. The tray menu and `Ctrl + Alt + Shift + M` toggle it. Its tray menu offers Now Playing (song and artist) or Station / Local Mix display text. It snaps to the top edge, persists its horizontal position in portable Data, and returns to the prior Normal or Sidebar view.
+- Linux also has Mini Player: a 32-pixel, title-bar-height frameless always-on-top bar with Previous, Play/Pause, Stop, Next, and Local Radio thumbs-up. The tray menu and `Ctrl + Alt + Shift + M` toggle it. Clicking the text switches between Now Playing (song and artist) and Station / Local Mix; dragging that text moves it horizontally. It snaps to the top edge, persists its horizontal position in portable Data, and returns to the prior Normal or Sidebar view.
 - Local Radio Controls has no in-window heading or explanatory paragraphs: its native title provides the context. Song Repeat Wait is labeled “Don't play the same song for how long?” and has only its moving hour value below the slider. Artist Repeat Wait is labeled “Don't play the same artist for how long?” and retains its five stop labels. The window remembers its size and position in portable Data and safely constrains restored bounds to the available display.
 - The portable Windows build bundles the pinned x64 `mpv.exe` playback engine and the compiled Windows Sidebar helper. Both `WaveDeck.exe` and the Linux AppImage use the same sibling `Data` and `Music` folders.
 
@@ -168,7 +168,7 @@ Important: do **not** let a large base64 file be truncated while creating a GitH
 - When reviewing the Live Radio Log, start Local Radio, let several transitions occur with the log closed, then open it and confirm the earlier decisions appear; Save Log should export them all.
 - With a large library, the first Local Music click should immediately show the loading message if warming is unfinished, then show Local Stations/Mixes once ready; later openings should normally be immediate.
 - With Local Music selected, the sliders icon at the left of playback controls opens Local Radio Controls. Check that its crossfade toggle and all four tuning controls persist, and that it closes with the main app or when Advanced Features is disabled.
-- On Linux, use the tray menu or `Ctrl + Alt + Shift + M` to enter Mini Player from both Normal and Sidebar views. Confirm its buttons track playback, thumbs-up only enables for eligible Local Radio, dragging the track text moves it horizontally while it stays on the top edge, and toggling it off returns to the view it started from.
+- On Linux, use the tray menu or `Ctrl + Alt + Shift + M` to enter Mini Player from both Normal and Sidebar views. Confirm its buttons track playback, thumbs-up only enables for eligible Local Radio, clicking the track text switches its display, dragging that text moves it horizontally while it stays on the top edge, and toggling it off returns to the view it started from.
 
 ## User communication
 

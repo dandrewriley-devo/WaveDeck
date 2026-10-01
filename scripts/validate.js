@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.11.10");
-assert.strictEqual(packageJson.wavedeckVersion, "0.11.10");
+assert.strictEqual(packageJson.version, "0.11.11");
+assert.strictEqual(packageJson.wavedeckVersion, "0.11.11");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -1349,6 +1349,8 @@ assert.ok(miniPlayerHtml.includes('id="trackText"'));
 assert.ok(miniPlayerSource.includes('sendMusicFeedback'));
 assert.ok(miniPlayerSource.includes('onPlayerStatus'));
 assert.ok(miniPlayerSource.includes("miniPlayerDisplayMode"));
+assert.ok(miniPlayerSource.includes("toggleMiniPlayerDisplay"));
+assert.ok(miniPlayerSource.includes("startMiniPlayerDrag"));
 assert.ok(settingsHtml.includes("Download your station listings as a json file."));
 assert.ok(settingsHtml.indexOf('id="stationEditorHome"') < settingsHtml.indexOf('class="listening-history-bar"'));
 assert.ok(settingsHtml.includes('id="resetListeningBtn"'));
@@ -1487,8 +1489,9 @@ assert.ok(mainSource.includes("function toggleMiniPlayer()"));
 assert.ok(mainSource.includes("MINI_PLAYER_SHORTCUT"));
 assert.ok(mainSource.includes("MINI_PLAYER_HEIGHT = 32"));
 assert.ok(mainSource.includes("Mini Player"));
-assert.ok(mainSource.includes("Mini Player Display"));
 assert.ok(mainSource.includes("storage.setMiniPlayerDisplayMode"));
+assert.ok(mainSource.includes("toggleMiniPlayerDisplayMode"));
+assert.ok(mainSource.includes("mini-player:drag-start"));
 assert.ok(mainSource.includes("storage.setMiniPlayerWindowBounds"));
 assert.ok(mainSource.includes("function createTray()"));
 assert.ok(mainSource.includes("Show WaveDeck"));
@@ -1531,6 +1534,7 @@ assert.ok(rendererSource.includes('onSectionVisibilityChanged(setSectionVisibili
 assert.ok(rendererSource.includes("Warming up the airwaves..."));
 assert.ok(rendererSource.includes("onListeningHistoryChanged"));
 assert.ok(rendererSource.includes("createLocalMixRow"));
+assert.ok(rendererSource.includes("Local Music Presets"));
 assert.ok(rendererSource.includes("sendMusicFeedback('up')"));
 assert.ok(rendererSource.includes("if (mostPlayedSectionVisible) queueRender()"));
 assert.ok(rendererSource.includes("event.shiftKey"));

@@ -100,6 +100,7 @@ let localRadioControlsWindow = null;
 let miniPlayerWindow = null;
 let miniPlayerReturnToSidebar = false;
 let miniPlayerSnapTimer = null;
+let miniPlayerDragOrigin = null;
 const radioDiagnosticSession = [];
 const RADIO_DIAGNOSTIC_LIMIT = 3000;
 let radioDiagnosticStationKey = '';
@@ -235,7 +236,6 @@ function showMainWindow() {
 function refreshTrayMenu() {
   if (!tray) return;
   const miniPlayerActive = Boolean(miniPlayerWindow && !miniPlayerWindow.isDestroyed());
-  const miniPlayerDisplayMode = storage?.getUiPreferences().miniPlayerDisplayMode || "now-playing";
   tray.setContextMenu(Menu.buildFromTemplate([
     { label: "Show WaveDeck", click: showMainWindow },
     ...(process.platform === "linux" ? [{
@@ -243,22 +243,6 @@ function refreshTrayMenu() {
       type: "checkbox",
       checked: miniPlayerActive,
       click: () => { void toggleMiniPlayer(); }
-    }, {
-      label: "Mini Player Display",
-      submenu: [
-        {
-          label: "Now Playing",
-          type: "radio",
-          checked: miniPlayerDisplayMode === "now-playing",
-          click: () => setMiniPlayerDisplayMode("now-playing")
-        },
-        {
-          label: "Station / Local Mix",
-          type: "radio",
-          checked: miniPlayerDisplayMode === "source",
-          click: () => setMiniPlayerDisplayMode("source")
-        }
-      ]
     }] : []),
     { label: "Play / Pause", click: () => { void mediaController?.togglePlayPause(); } },
     { label: "Stop", click: () => { void mediaController?.stop(); } },
@@ -272,6 +256,11 @@ function setMiniPlayerDisplayMode(mode) {
   sendToAll("ui:preferences-changed", preferences);
   refreshTrayMenu();
   return preferences;
+}
+
+function toggleMiniPlayerDisplayMode() {
+  const current = storage.getUiPreferences().miniPlayerDisplayMode;
+  return setMiniPlayerDisplayMode(current === "source" ? "now-playing" : "source");
 }
 
 function createTray() {
@@ -715,6 +704,39 @@ function snapMiniPlayerToTop() {
   rememberMiniPlayerBounds(window);
 }
 
+function startMiniPlayerDrag(screenX) {
+  if (!isMiniPlayerActive() || !Number.isFinite(Number(screenX))) return;
+  miniPlayerDragOrigin = {
+    pointerX: Number(screenX),
+    bounds: miniPlayerWindow.getBounds()
+  };
+}
+
+function moveMiniPlayerDrag(screenX) {
+  if (!isMiniPlayerActive() || !miniPlayerDragOrigin || !Number.isFinite(Number(screenX))) return;
+  const targetX = Math.round(Number(screenX));
+  const desired = {
+    ...miniPlayerDragOrigin.bounds,
+    x: miniPlayerDragOrigin.bounds.x + Math.round(targetX - miniPlayerDragOrigin.pointerX)
+  };
+  const display = screen.getDisplayMatching(desired);
+  const constrained = constrainBoundsToDisplay(display, desired, {
+    minWidth: MINI_PLAYER_MIN_WIDTH,
+    minHeight: MINI_PLAYER_HEIGHT
+  });
+  miniPlayerWindow.setBounds({
+    ...constrained,
+    y: display.workArea.y,
+    width: Math.min(MINI_PLAYER_WIDTH, display.workArea.width),
+    height: Math.min(MINI_PLAYER_HEIGHT, display.workArea.height)
+  }, false);
+}
+
+function endMiniPlayerDrag() {
+  miniPlayerDragOrigin = null;
+  snapMiniPlayerToTop();
+}
+
 async function openMiniPlayer() {
   if (process.platform !== "linux") throw new Error("Mini Player is available in the Linux edition.");
   if (isMiniPlayerActive()) {
@@ -759,6 +781,7 @@ async function openMiniPlayer() {
   });
   window.on("closed", () => {
     if (miniPlayerWindow === window) miniPlayerWindow = null;
+    miniPlayerDragOrigin = null;
     refreshTrayMenu();
     if (!cleanupComplete) void restoreFromMiniPlayer();
   });
@@ -1247,6 +1270,13 @@ function installIpcHandlers() {
   });
 
   ipcMain.handle("player:status", () => mediaController.getStatus());
+  ipcMain.handle("mini-player:toggle-display", () => {
+    if (process.platform !== "linux") throw new Error("Mini Player is available in the Linux edition.");
+    return toggleMiniPlayerDisplayMode();
+  });
+  ipcMain.on("mini-player:drag-start", (_event, screenX) => startMiniPlayerDrag(screenX));
+  ipcMain.on("mini-player:drag-move", (_event, screenX) => moveMiniPlayerDrag(screenX));
+  ipcMain.on("mini-player:drag-end", () => endMiniPlayerDrag());
   const requireMusic = async () => {
     if (!storage.getUiPreferences().proModeEnabled) throw new Error('Enable Advanced Features to use Music.');
     await musicLibrary.enable();

@@ -12,6 +12,7 @@ let streamMetadata = '';
 let feedbackTrackId = '';
 let feedbackSelected = false;
 let displayMode = 'now-playing';
+let trackPointer = null;
 
 function isActiveMusic(status = currentStatus) {
   return Boolean(status?.currentMusic && status?.mediaState !== 'stopped');
@@ -19,8 +20,47 @@ function isActiveMusic(status = currentStatus) {
 
 function setTrack(text, tooltip = text) {
   trackText.textContent = text || 'WaveDeck';
-  track.title = tooltip || text || 'WaveDeck';
+  const detail = tooltip || text || 'WaveDeck';
+  track.title = `Click to switch display • Drag to move\n${detail}`;
+  track.setAttribute('aria-label', `${detail}. Click to switch display; drag to move.`);
 }
+
+async function toggleDisplay() {
+  try {
+    const preferences = await window.wavedeck.toggleMiniPlayerDisplay();
+    displayMode = preferences?.miniPlayerDisplayMode === 'source' ? 'source' : 'now-playing';
+    render();
+  } catch (error) {
+    setTrack(error.message || 'Could not switch display.');
+  }
+}
+
+track.addEventListener('pointerdown', event => {
+  if (event.button !== 0) return;
+  trackPointer = { id: event.pointerId, startX: event.screenX, moved: false };
+  track.setPointerCapture(event.pointerId);
+  window.wavedeck.startMiniPlayerDrag(event.screenX);
+});
+track.addEventListener('pointermove', event => {
+  if (!trackPointer || event.pointerId !== trackPointer.id) return;
+  if (Math.abs(event.screenX - trackPointer.startX) >= 4) trackPointer.moved = true;
+  if (trackPointer.moved) window.wavedeck.moveMiniPlayerDrag(event.screenX);
+});
+function finishTrackPointer(event) {
+  if (!trackPointer || event.pointerId !== trackPointer.id) return;
+  const moved = trackPointer.moved;
+  if (track.hasPointerCapture(event.pointerId)) track.releasePointerCapture(event.pointerId);
+  trackPointer = null;
+  window.wavedeck.endMiniPlayerDrag();
+  if (!moved && event.type === 'pointerup') void toggleDisplay();
+}
+track.addEventListener('pointerup', finishTrackPointer);
+track.addEventListener('pointercancel', finishTrackPointer);
+track.addEventListener('keydown', event => {
+  if (event.key !== 'Enter' && event.key !== ' ') return;
+  event.preventDefault();
+  void toggleDisplay();
+});
 
 function joinNowPlaying(title, detail) {
   return [title, detail].filter(Boolean).join(' — ') || 'WaveDeck';
