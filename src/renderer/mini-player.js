@@ -1,9 +1,12 @@
 const track = document.getElementById('track');
 const trackText = document.getElementById('trackText');
+const dragHandle = document.getElementById('dragHandle');
 const previousBtn = document.getElementById('previousBtn');
 const playPauseBtn = document.getElementById('playPauseBtn');
 const playPauseIcon = document.getElementById('playPauseIcon');
 const stopBtn = document.getElementById('stopBtn');
+const muteBtn = document.getElementById('muteBtn');
+const muteIcon = document.getElementById('muteIcon');
 const nextBtn = document.getElementById('nextBtn');
 const thumbUpBtn = document.getElementById('thumbUpBtn');
 
@@ -20,7 +23,16 @@ function isActiveMusic(status = currentStatus) {
 
 function setTrack(text, detail = text) {
   trackText.textContent = text || 'WaveDeck';
-  track.setAttribute('aria-label', `${detail || text || 'WaveDeck'}. Click to switch display; drag to move.`);
+  track.setAttribute('aria-label', `${detail || text || 'WaveDeck'}. Click to switch display.`);
+}
+
+function setMuteUi(muted) {
+  const label = muted ? 'Unmute' : 'Mute';
+  muteBtn.title = label;
+  muteBtn.setAttribute('aria-label', label);
+  muteIcon.innerHTML = muted
+    ? '<path d="M4 10v4h4l5 4V6l-5 4H4zm12.5-1.5L19 11l2.5-2.5 1.4 1.4-2.5 2.5 2.5 2.5-1.4 1.4-2.5-2.5-2.5 2.5-1.4-1.4 2.5-2.5-2.5-2.5z" fill="currentColor"/>'
+    : '<path d="M4 10v4h4l5 4V6l-5 4zm12.2.4a1 1 0 0 1 1.4 0 2.3 2.3 0 0 1 0 3.2 1 1 0 1 1-1.4-1.4.3.3 0 0 0 0-.4 1 1 0 0 1 0-1.4z" fill="currentColor"/>';
 }
 
 async function toggleDisplay() {
@@ -33,27 +45,26 @@ async function toggleDisplay() {
   }
 }
 
-track.addEventListener('pointerdown', event => {
+dragHandle.addEventListener('pointerdown', event => {
   if (event.button !== 0) return;
   trackPointer = { id: event.pointerId, startX: event.screenX, moved: false };
-  track.setPointerCapture(event.pointerId);
+  dragHandle.setPointerCapture(event.pointerId);
   window.wavedeck.startMiniPlayerDrag(event.screenX);
 });
-track.addEventListener('pointermove', event => {
+dragHandle.addEventListener('pointermove', event => {
   if (!trackPointer || event.pointerId !== trackPointer.id) return;
   if (Math.abs(event.screenX - trackPointer.startX) >= 4) trackPointer.moved = true;
   if (trackPointer.moved) window.wavedeck.moveMiniPlayerDrag(event.screenX);
 });
 function finishTrackPointer(event) {
   if (!trackPointer || event.pointerId !== trackPointer.id) return;
-  const moved = trackPointer.moved;
-  if (track.hasPointerCapture(event.pointerId)) track.releasePointerCapture(event.pointerId);
+  if (dragHandle.hasPointerCapture(event.pointerId)) dragHandle.releasePointerCapture(event.pointerId);
   trackPointer = null;
   window.wavedeck.endMiniPlayerDrag();
-  if (!moved && event.type === 'pointerup') void toggleDisplay();
 }
-track.addEventListener('pointerup', finishTrackPointer);
-track.addEventListener('pointercancel', finishTrackPointer);
+dragHandle.addEventListener('pointerup', finishTrackPointer);
+dragHandle.addEventListener('pointercancel', finishTrackPointer);
+track.addEventListener('click', () => { void toggleDisplay(); });
 track.addEventListener('keydown', event => {
   if (event.key !== 'Enter' && event.key !== ' ') return;
   event.preventDefault();
@@ -75,6 +86,7 @@ function render(status = currentStatus) {
     : '<path d="m8 5 11 7-11 7z" fill="currentColor"/>';
   playPauseBtn.title = playing ? 'Pause' : 'Play';
   playPauseBtn.setAttribute('aria-label', playing ? 'Pause' : 'Play');
+  setMuteUi(status?.muted === true);
 
   const music = status?.currentMusic;
   const musicActive = isActiveMusic(status);
@@ -130,6 +142,10 @@ async function run(button, action) {
 previousBtn.addEventListener('click', () => { void run(previousBtn, () => window.wavedeck.previousPreset()); });
 playPauseBtn.addEventListener('click', () => { void run(playPauseBtn, () => window.wavedeck.playPause()); });
 stopBtn.addEventListener('click', () => { void run(stopBtn, () => window.wavedeck.stop()); });
+muteBtn.addEventListener('click', () => { void run(muteBtn, async () => {
+  const muted = await window.wavedeck.toggleMute();
+  currentStatus = { ...(currentStatus || {}), muted };
+}); });
 nextBtn.addEventListener('click', () => { void run(nextBtn, () => window.wavedeck.nextPreset()); });
 thumbUpBtn.addEventListener('click', async () => {
   thumbUpBtn.disabled = true;

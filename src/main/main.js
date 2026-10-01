@@ -1291,19 +1291,17 @@ function installIpcHandlers() {
     const selected = storage.getUiPreferences().miniPlayerColorScheme;
     const choices = [
       ["Default", "default"],
-      ["Inverted", "inverted"],
-      ["Chiefs Red / Gold", "chiefs"],
-      ["Army Green / Light Gray", "army"],
-      ["Cherry / Coral", "cherry"]
+      ["White", "inverted"],
+      ["Chiefs", "chiefs"],
+      ["Army", "army"],
+      ["Cherry", "cherry"]
     ];
-    const menu = Menu.buildFromTemplate(choices.map(([label, scheme], index) => (
-      index === 2
-        ? [
-            { type: "separator" },
-            { label, type: "radio", checked: selected === scheme, click: () => setMiniPlayerColorScheme(scheme) }
-          ]
-        : { label, type: "radio", checked: selected === scheme, click: () => setMiniPlayerColorScheme(scheme) }
-    )).flat());
+    const menu = Menu.buildFromTemplate(choices.map(([label, scheme]) => ({
+      label,
+      type: "radio",
+      checked: selected === scheme,
+      click: () => setMiniPlayerColorScheme(scheme)
+    })));
     menu.popup({
       window,
       x: Math.max(0, Math.round(Number(position.x) || 0)),

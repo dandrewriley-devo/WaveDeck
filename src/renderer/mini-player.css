@@ -76,7 +76,11 @@
 * { box-sizing: border-box; }
 html, body { background: var(--mini-page-background); color: var(--mini-text); font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, sans-serif; height: 100%; margin: 0; overflow: hidden; }
 .mini-player { align-items: stretch; background: var(--mini-background); border: 1px solid var(--mini-border); display: flex; height: 32px; width: 100%; }
-.track { -webkit-app-region: no-drag; align-items: center; cursor: move; display: flex; flex: 1 1 auto; justify-content: center; min-width: 0; padding: 3px 12px; text-align: center; }
+.drag-handle { -webkit-app-region: no-drag; align-items: center; border-right: 1px solid var(--mini-control-border); color: var(--mini-button); cursor: grab; display: flex; flex: 0 0 22px; justify-content: center; }
+.drag-handle:active { cursor: grabbing; }
+.drag-handle:focus-visible { outline: 2px solid var(--mini-focus); outline-offset: -2px; }
+.drag-handle svg { height: 20px; width: 10px; }
+.track { -webkit-app-region: no-drag; align-items: center; cursor: pointer; display: flex; flex: 1 1 auto; justify-content: center; min-width: 0; padding: 3px 12px; text-align: center; }
 .track:focus-visible { outline: 2px solid var(--mini-focus); outline-offset: -2px; }
 .track-text { font-size: 12px; font-weight: 650; line-height: 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .controls { -webkit-app-region: no-drag; align-items: center; border-left: 1px solid var(--mini-control-border); display: flex; flex: 0 0 auto; padding: 1px; }
