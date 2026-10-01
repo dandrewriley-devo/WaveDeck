@@ -747,7 +747,7 @@ async function openMiniPlayer() {
   if (!mainWindow || mainWindow.isDestroyed()) throw new Error("The WaveDeck window is unavailable.");
 
   miniPlayerReturnToSidebar = sidebarApplied;
-  if (sidebarApplied) await setSidebarMode(false);
+  if (sidebarApplied) await setSidebarMode(false, { showWindow: false });
   else {
     floatingBounds = mainWindow.getBounds();
     try { storage.setMainWindowBounds(floatingBounds); } catch {}
@@ -786,7 +786,7 @@ async function openMiniPlayer() {
     if (!cleanupComplete) void restoreFromMiniPlayer();
   });
   window.loadFile(path.join(__dirname, "..", "renderer", "mini-player.html"));
-  mainWindow.hide();
+  if (mainWindow && !mainWindow.isDestroyed()) mainWindow.hide();
   refreshTrayMenu();
   return true;
 }
@@ -826,7 +826,7 @@ function getSidebarState() {
   };
 }
 
-async function setSidebarMode(enabled) {
+async function setSidebarMode(enabled, { showWindow = true } = {}) {
   if (!mainWindow || mainWindow.isDestroyed()) throw new Error("The WaveDeck window is unavailable.");
   if (sidebarTransitioning) return getSidebarState();
   sidebarTransitioning = true;
@@ -896,8 +896,10 @@ async function setSidebarMode(enabled) {
             minHeight: 400
           }));
         }
-        mainWindow.show();
-        mainWindow.focus();
+        if (showWindow) {
+          mainWindow.show();
+          mainWindow.focus();
+        }
       }
 
       const state = getSidebarState();
@@ -966,8 +968,10 @@ async function setSidebarMode(enabled) {
         await floatingWindow.waveDeckLoadPromise;
         await clearCinnamonReservedSpace(process.pid, false, SIDEBAR_NATIVE_TITLE);
         mainWindow = floatingWindow;
-        floatingWindow.show();
-        floatingWindow.focus();
+        if (showWindow) {
+          floatingWindow.show();
+          floatingWindow.focus();
+        }
         dockWindow.destroy();
       } catch (error) {
         if (floatingWindow && !floatingWindow.isDestroyed()) floatingWindow.destroy();

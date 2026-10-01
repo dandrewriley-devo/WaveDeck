@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.11.11");
-assert.strictEqual(packageJson.wavedeckVersion, "0.11.11");
+assert.strictEqual(packageJson.version, "0.11.12");
+assert.strictEqual(packageJson.wavedeckVersion, "0.11.12");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -1492,6 +1492,8 @@ assert.ok(mainSource.includes("Mini Player"));
 assert.ok(mainSource.includes("storage.setMiniPlayerDisplayMode"));
 assert.ok(mainSource.includes("toggleMiniPlayerDisplayMode"));
 assert.ok(mainSource.includes("mini-player:drag-start"));
+assert.ok(mainSource.includes("setSidebarMode(false, { showWindow: false })"));
+assert.ok(mainSource.includes("async function setSidebarMode(enabled, { showWindow = true } = {})"));
 assert.ok(mainSource.includes("storage.setMiniPlayerWindowBounds"));
 assert.ok(mainSource.includes("function createTray()"));
 assert.ok(mainSource.includes("Show WaveDeck"));
