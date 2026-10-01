@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.11.14");
-assert.strictEqual(packageJson.wavedeckVersion, "0.11.14");
+assert.strictEqual(packageJson.version, "0.11.15");
+assert.strictEqual(packageJson.wavedeckVersion, "0.11.15");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -1352,6 +1352,8 @@ assert.ok(miniPlayerHtml.includes('id="playPauseBtn"'));
 assert.ok(miniPlayerHtml.includes('id="thumbUpBtn"'));
 assert.ok(miniPlayerHtml.includes('id="muteBtn"'));
 assert.ok(miniPlayerHtml.includes('id="dragHandle"'));
+assert.ok(miniPlayerHtml.indexOf('id="nextBtn"') < miniPlayerHtml.indexOf('id="muteBtn"'));
+assert.ok(miniPlayerHtml.indexOf('id="muteBtn"') < miniPlayerHtml.indexOf('id="thumbUpBtn"'));
 assert.ok(miniPlayerHtml.includes('id="trackText"'));
 assert.ok(miniPlayerSource.includes('sendMusicFeedback'));
 assert.ok(miniPlayerSource.includes('onPlayerStatus'));
