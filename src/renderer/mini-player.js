@@ -18,11 +18,9 @@ function isActiveMusic(status = currentStatus) {
   return Boolean(status?.currentMusic && status?.mediaState !== 'stopped');
 }
 
-function setTrack(text, tooltip = text) {
+function setTrack(text, detail = text) {
   trackText.textContent = text || 'WaveDeck';
-  const detail = tooltip || text || 'WaveDeck';
-  track.title = `Click to switch display • Drag to move\n${detail}`;
-  track.setAttribute('aria-label', `${detail}. Click to switch display; drag to move.`);
+  track.setAttribute('aria-label', `${detail || text || 'WaveDeck'}. Click to switch display; drag to move.`);
 }
 
 async function toggleDisplay() {
@@ -60,6 +58,10 @@ track.addEventListener('keydown', event => {
   if (event.key !== 'Enter' && event.key !== ' ') return;
   event.preventDefault();
   void toggleDisplay();
+});
+document.addEventListener('contextmenu', event => {
+  event.preventDefault();
+  void window.wavedeck.showMiniPlayerContextMenu({ x: event.x, y: event.y });
 });
 
 function joinNowPlaying(title, detail) {
@@ -159,6 +161,10 @@ window.wavedeck.onPlayerStatus((status) => {
 
 window.wavedeck.onUiPreferencesChanged((preferences) => {
   const nextMode = preferences?.miniPlayerDisplayMode === 'source' ? 'source' : 'now-playing';
+  const colorScheme = ['inverted', 'chiefs', 'army', 'cherry'].includes(preferences?.miniPlayerColorScheme)
+    ? preferences.miniPlayerColorScheme
+    : 'default';
+  document.documentElement.dataset.colorScheme = colorScheme;
   if (displayMode !== nextMode) {
     displayMode = nextMode;
     render();
@@ -173,6 +179,9 @@ window.wavedeck.onUiPreferencesChanged((preferences) => {
     ]);
     currentStatus = status;
     displayMode = preferences?.miniPlayerDisplayMode === 'source' ? 'source' : 'now-playing';
+    document.documentElement.dataset.colorScheme = ['inverted', 'chiefs', 'army', 'cherry'].includes(preferences?.miniPlayerColorScheme)
+      ? preferences.miniPlayerColorScheme
+      : 'default';
   } catch (error) {
     currentStatus = { state: 'error', message: error.message, mediaState: 'stopped' };
   }

@@ -91,6 +91,7 @@ contextBridge.exposeInMainWorld("wavedeck", {
   toggleMute: () => ipcRenderer.invoke("player:mute"),
   getPlayerStatus: () => ipcRenderer.invoke("player:status"),
   toggleMiniPlayerDisplay: () => ipcRenderer.invoke("mini-player:toggle-display"),
+  showMiniPlayerContextMenu: (position) => ipcRenderer.invoke("mini-player:show-context-menu", position),
   startMiniPlayerDrag: (screenX) => ipcRenderer.send("mini-player:drag-start", screenX),
   moveMiniPlayerDrag: (screenX) => ipcRenderer.send("mini-player:drag-move", screenX),
   endMiniPlayerDrag: () => ipcRenderer.send("mini-player:drag-end"),

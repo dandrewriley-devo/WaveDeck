@@ -258,6 +258,12 @@ function setMiniPlayerDisplayMode(mode) {
   return preferences;
 }
 
+function setMiniPlayerColorScheme(scheme) {
+  const preferences = storage.setMiniPlayerColorScheme(scheme);
+  sendToAll("ui:preferences-changed", preferences);
+  return preferences;
+}
+
 function toggleMiniPlayerDisplayMode() {
   const current = storage.getUiPreferences().miniPlayerDisplayMode;
   return setMiniPlayerDisplayMode(current === "source" ? "now-playing" : "source");
@@ -1277,6 +1283,33 @@ function installIpcHandlers() {
   ipcMain.handle("mini-player:toggle-display", () => {
     if (process.platform !== "linux") throw new Error("Mini Player is available in the Linux edition.");
     return toggleMiniPlayerDisplayMode();
+  });
+  ipcMain.handle("mini-player:show-context-menu", (event, position = {}) => {
+    if (process.platform !== "linux") throw new Error("Mini Player is available in the Linux edition.");
+    const window = BrowserWindow.fromWebContents(event.sender);
+    if (!window || window !== miniPlayerWindow || window.isDestroyed()) return false;
+    const selected = storage.getUiPreferences().miniPlayerColorScheme;
+    const choices = [
+      ["Default", "default"],
+      ["Inverted", "inverted"],
+      ["Chiefs Red / Gold", "chiefs"],
+      ["Army Green / Light Gray", "army"],
+      ["Cherry / Coral", "cherry"]
+    ];
+    const menu = Menu.buildFromTemplate(choices.map(([label, scheme], index) => (
+      index === 2
+        ? [
+            { type: "separator" },
+            { label, type: "radio", checked: selected === scheme, click: () => setMiniPlayerColorScheme(scheme) }
+          ]
+        : { label, type: "radio", checked: selected === scheme, click: () => setMiniPlayerColorScheme(scheme) }
+    )).flat());
+    menu.popup({
+      window,
+      x: Math.max(0, Math.round(Number(position.x) || 0)),
+      y: Math.max(0, Math.round(Number(position.y) || 0))
+    });
+    return true;
   });
   ipcMain.on("mini-player:drag-start", (_event, screenX) => startMiniPlayerDrag(screenX));
   ipcMain.on("mini-player:drag-move", (_event, screenX) => moveMiniPlayerDrag(screenX));

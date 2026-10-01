@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.11.12");
-assert.strictEqual(packageJson.wavedeckVersion, "0.11.12");
+assert.strictEqual(packageJson.version, "0.11.13");
+assert.strictEqual(packageJson.wavedeckVersion, "0.11.13");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -344,6 +344,7 @@ try {
     localRadioArtistSetSize: 1,
     localMusicCrossfadeEnabled: true,
     miniPlayerDisplayMode: "now-playing",
+    miniPlayerColorScheme: "default",
     localMixEnabled: {},
     localMixFavorites: {},
     streamingUi: {
@@ -377,6 +378,7 @@ try {
     localRadioArtistSetSize: 1,
     localMusicCrossfadeEnabled: true,
     miniPlayerDisplayMode: "now-playing",
+    miniPlayerColorScheme: "default",
     localMixEnabled: {},
     localMixFavorites: {},
     launchInSidebarMode: false,
@@ -395,6 +397,7 @@ try {
   assert.deepStrictEqual(storage.setLocalRadioTuning({ songRepeatHours: 6, artistRepeatMinutes: 180, artistSetSize: 2 }).localRadioArtistSetSize, 2);
   assert.strictEqual(storage.setLocalMusicCrossfadeEnabled(false).localMusicCrossfadeEnabled, false);
   assert.strictEqual(storage.setMiniPlayerDisplayMode('source').miniPlayerDisplayMode, 'source');
+  assert.strictEqual(storage.setMiniPlayerColorScheme('chiefs').miniPlayerColorScheme, 'chiefs');
   assert.strictEqual(storage.setLocalMixEnabled('classic-rock', false).localMixEnabled['classic-rock'], false);
   assert.strictEqual(storage.setLocalMixFavorite('classic-rock', true).localMixFavorites['classic-rock'], true);
   assert.deepStrictEqual(storage.setLocalMixFavorite('classic-rock', false).localMixFavorites, {});
@@ -461,6 +464,7 @@ try {
     localRadioArtistSetSize: 2,
     localMusicCrossfadeEnabled: false,
     miniPlayerDisplayMode: "source",
+    miniPlayerColorScheme: "chiefs",
     localMixEnabled: { "classic-rock": false },
     localMixFavorites: { "classic-rock": true },
     launchInSidebarMode: true,
@@ -1269,6 +1273,7 @@ const localRadioControlsHtml = fs.readFileSync(path.join(root, "src", "renderer"
 const localRadioControlsSource = fs.readFileSync(path.join(root, "src", "renderer", "local-radio-controls.js"), "utf8");
 const miniPlayerHtml = fs.readFileSync(path.join(root, "src", "renderer", "mini-player.html"), "utf8");
 const miniPlayerSource = fs.readFileSync(path.join(root, "src", "renderer", "mini-player.js"), "utf8");
+const miniPlayerStyles = fs.readFileSync(path.join(root, "src", "renderer", "mini-player.css"), "utf8");
 assert.ok(!radioLogHtml.includes("Waiting for the next radio pick"));
 assert.ok(radioLogSource.includes("clearMusicDebugHistory"));
 assert.ok(radioLogSource.includes(".slice().reverse()"));
@@ -1351,6 +1356,12 @@ assert.ok(miniPlayerSource.includes('onPlayerStatus'));
 assert.ok(miniPlayerSource.includes("miniPlayerDisplayMode"));
 assert.ok(miniPlayerSource.includes("toggleMiniPlayerDisplay"));
 assert.ok(miniPlayerSource.includes("startMiniPlayerDrag"));
+assert.ok(miniPlayerSource.includes("showMiniPlayerContextMenu"));
+assert.ok(!miniPlayerSource.includes("track.title"));
+assert.ok(!miniPlayerHtml.includes('title="Click to switch display'));
+assert.ok(miniPlayerStyles.includes('data-color-scheme="chiefs"'));
+assert.ok(miniPlayerStyles.includes('data-color-scheme="army"'));
+assert.ok(miniPlayerStyles.includes('data-color-scheme="cherry"'));
 assert.ok(settingsHtml.includes("Download your station listings as a json file."));
 assert.ok(settingsHtml.indexOf('id="stationEditorHome"') < settingsHtml.indexOf('class="listening-history-bar"'));
 assert.ok(settingsHtml.includes('id="resetListeningBtn"'));
@@ -1490,7 +1501,9 @@ assert.ok(mainSource.includes("MINI_PLAYER_SHORTCUT"));
 assert.ok(mainSource.includes("MINI_PLAYER_HEIGHT = 32"));
 assert.ok(mainSource.includes("Mini Player"));
 assert.ok(mainSource.includes("storage.setMiniPlayerDisplayMode"));
+assert.ok(mainSource.includes("storage.setMiniPlayerColorScheme"));
 assert.ok(mainSource.includes("toggleMiniPlayerDisplayMode"));
+assert.ok(mainSource.includes("mini-player:show-context-menu"));
 assert.ok(mainSource.includes("mini-player:drag-start"));
 assert.ok(mainSource.includes("setSidebarMode(false, { showWindow: false })"));
 assert.ok(mainSource.includes("async function setSidebarMode(enabled, { showWindow = true } = {})"));

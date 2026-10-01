@@ -309,6 +309,9 @@ function validatePreferences(value) {
   const localRadioArtistSetSize = [1, 2, 3, 4].includes(Number(value?.localRadioArtistSetSize)) ? Number(value.localRadioArtistSetSize) : 1;
   const localMusicCrossfadeEnabled = value?.localMusicCrossfadeEnabled !== false;
   const miniPlayerDisplayMode = value?.miniPlayerDisplayMode === 'source' ? 'source' : 'now-playing';
+  const miniPlayerColorScheme = ['default', 'inverted', 'chiefs', 'army', 'cherry'].includes(value?.miniPlayerColorScheme)
+    ? value.miniPlayerColorScheme
+    : 'default';
   const localMixEnabled = {};
   const rawLocalMixEnabled = value?.localMixEnabled;
   if (rawLocalMixEnabled && typeof rawLocalMixEnabled === 'object' && !Array.isArray(rawLocalMixEnabled)) {
@@ -389,6 +392,7 @@ function validatePreferences(value) {
     localRadioArtistSetSize,
     localMusicCrossfadeEnabled,
     miniPlayerDisplayMode,
+    miniPlayerColorScheme,
     localMixEnabled,
     localMixFavorites,
     streamingUi: {
@@ -573,6 +577,7 @@ class PortableStorage {
       localRadioArtistSetSize: preferences.localRadioArtistSetSize,
       localMusicCrossfadeEnabled: preferences.localMusicCrossfadeEnabled,
       miniPlayerDisplayMode: preferences.miniPlayerDisplayMode,
+      miniPlayerColorScheme: preferences.miniPlayerColorScheme,
       localMixEnabled: { ...preferences.localMixEnabled },
       localMixFavorites: { ...preferences.localMixFavorites },
       launchInSidebarMode: preferences.launchInSidebarMode,
@@ -705,6 +710,15 @@ class PortableStorage {
   setMiniPlayerDisplayMode(mode) {
     const preferences = this.readPreferences();
     preferences.miniPlayerDisplayMode = mode === 'source' ? 'source' : 'now-playing';
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences();
+  }
+
+  setMiniPlayerColorScheme(scheme) {
+    const preferences = this.readPreferences();
+    preferences.miniPlayerColorScheme = ['default', 'inverted', 'chiefs', 'army', 'cherry'].includes(scheme)
+      ? scheme
+      : 'default';
     this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
     return this.getUiPreferences();
   }
