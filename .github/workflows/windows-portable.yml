@@ -52,7 +52,9 @@ jobs:
             throw "The extracted mpv.exe did not match the pinned SHA-256."
           }
 
-      - run: npm ci
+      # WaveDeck intentionally does not use a standard npm lockfile. Keep it
+      # untouched and install the pinned manifest dependencies for the build.
+      - run: npm install --package-lock=false --no-audit --no-fund
       - run: npm test
       - run: npm run dist:windows -- --publish never
 
