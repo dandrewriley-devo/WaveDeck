@@ -79,12 +79,12 @@ jobs:
           compression-level: 0
           retention-days: 14
 
-      - name: Publish WaveDeck 1.0.2 for Windows
+      - name: Publish WaveDeck 1.0.3 for Windows
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.2
+          tag_name: v1.0.3
           target_commitish: ${{ github.sha }}
-          name: WaveDeck for Windows 1.0.2
+          name: WaveDeck for Windows 1.0.3
           body: Portable Windows x64 build. Keep WaveDeck.exe beside your existing Data and Music folders.
           files: dist/windows/WaveDeck.exe
           overwrite_files: true

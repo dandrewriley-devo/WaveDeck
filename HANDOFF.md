@@ -1,14 +1,14 @@
 # WaveDeck Project Handoff
 
-This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.2**.
+This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.3**.
 
 ## Current published state
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `main`
-- Current version: **1.0.2**
-- Current release: 1.0.2 — Mini Player feature parity on Windows.
-- Current commit: the verified 1.0.2 release commit at the head of `main`.
+- Current version: **1.0.3**
+- Current release: 1.0.3 — repaired the Windows release after a truncated main-process source upload.
+- Current commit: the verified 1.0.3 release commit at the head of `main`.
 - 0.11.8 commit: `8118e235eed4b4a18c378f12ced8a86be83ed4b9` — monitor-safe main-window bounds persistence and portable Windows build.
 - 0.11.7 commit: `c8b69b7b8842dd6c310dda05b22b8d52870d3e84` — superseded source correction after the first portable Windows build.
 - 0.11.6 commit: `621e44d8c484cd0a4d70eb124106170f6183d0ae` — compact Local Radio Controls and remembered auxiliary-window bounds.

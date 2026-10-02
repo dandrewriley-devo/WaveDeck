@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "1.0.2");
-assert.strictEqual(packageJson.wavedeckVersion, "1.0.2");
+assert.strictEqual(packageJson.version, "1.0.3");
+assert.strictEqual(packageJson.wavedeckVersion, "1.0.3");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
