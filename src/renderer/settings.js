@@ -69,6 +69,7 @@ const platform = window.wavedeck.platform;
 
 const sidebarPlatform = platform === "linux" || platform === "win32";
 if (platform !== "linux") document.querySelectorAll(".linux-launcher-only").forEach((node) => { node.hidden = true; });
+if (!sidebarPlatform) document.querySelectorAll(".mini-player-platform-only").forEach((node) => { node.hidden = true; });
 
 let stations = [];
 let groups = [];

@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "1.0.1");
-assert.strictEqual(packageJson.wavedeckVersion, "1.0.1");
+assert.strictEqual(packageJson.version, "1.0.2");
+assert.strictEqual(packageJson.wavedeckVersion, "1.0.2");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -1518,6 +1518,8 @@ assert.ok(mainSource.includes("storage.setLocalRadioControlsWindowBounds(bounds)
 assert.ok(mainSource.includes("mainWindowBounds"));
 assert.ok(mainSource.includes("storage.setMainWindowBounds(bounds)"));
 assert.ok(mainSource.includes("function toggleMiniPlayer()"));
+assert.ok(mainSource.includes("function supportsMiniPlayer()"));
+assert.ok(mainSource.includes('process.platform === "win32"'));
 assert.ok(mainSource.includes("MINI_PLAYER_SHORTCUT"));
 assert.ok(mainSource.includes("MINI_PLAYER_HEIGHT = 32"));
 assert.ok(mainSource.includes("Mini Player"));

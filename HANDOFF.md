@@ -1,14 +1,14 @@
 # WaveDeck Project Handoff
 
-This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.1**.
+This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.2**.
 
 ## Current published state
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `main`
-- Current version: **1.0.1**
-- Current release: 1.0.1 — expanded Mini Player colors and direct exit action.
-- Current commit: the verified 1.0.1 release commit at the head of `main`.
+- Current version: **1.0.2**
+- Current release: 1.0.2 — Mini Player feature parity on Windows.
+- Current commit: the verified 1.0.2 release commit at the head of `main`.
 - 0.11.8 commit: `8118e235eed4b4a18c378f12ced8a86be83ed4b9` — monitor-safe main-window bounds persistence and portable Windows build.
 - 0.11.7 commit: `c8b69b7b8842dd6c310dda05b22b8d52870d3e84` — superseded source correction after the first portable Windows build.
 - 0.11.6 commit: `621e44d8c484cd0a4d70eb124106170f6183d0ae` — compact Local Radio Controls and remembered auxiliary-window bounds.
@@ -131,7 +131,7 @@ Important: do **not** let a large base64 file be truncated while creating a GitH
 - Streaming group headings stay present; station lists collapse by subgroup rather than hiding an entire major group. Group/subgroup organization follows Settings ordering.
 - Linux Application Shortcut wording is generalized for Cinnamon/Mint, GNOME, KDE Plasma, Xfce, and most mainstream Linux desktops. Remove that Linux-specific section if the app is later repackaged strictly for Windows.
 - WaveDeck has a system tray icon while it is running. Clicking it brings the main window forward; its menu offers Show WaveDeck, Play / Pause, Stop, and Quit WaveDeck. The window close button still fully exits WaveDeck and removes the tray icon.
-- Linux also has Mini Player: a 32-pixel, title-bar-height frameless always-on-top bar with Previous, Play/Pause, Stop, Next, Mute, and Local Radio thumbs-up. The tray menu and `Ctrl + Alt + Shift + M` toggle it. Clicking the text switches between Now Playing (song and artist) and Station / Local Mix; only the far-left grip drags it horizontally. Right-click its surface to use Exit Mini Player, then a divider, then one color group: Default, White, Chiefs, Army, Cherry, Gray, Denim, Rosewood, Sapphire, Bamboo, and Aloe. The Mini Player's color selection persists separately from the rest of WaveDeck. It has no track-text hover popup. Entering it from Sidebar Mode creates the ordinary window hidden, so only the Mini Player remains visible. It snaps to the top edge, persists its horizontal position in portable Data, and returns to the prior Normal or Sidebar view.
+- Linux and Windows have Mini Player: a 32-pixel, title-bar-height frameless always-on-top bar with Previous, Play/Pause, Stop, Next, Mute, and Local Radio thumbs-up. The tray menu and `Ctrl + Alt + Shift + M` toggle it. Clicking the text switches between Now Playing (song and artist) and Station / Local Mix; only the far-left grip drags it horizontally. Right-click its surface to use Exit Mini Player, then a divider, then one color group: Default, White, Chiefs, Army, Cherry, Gray, Denim, Rosewood, Sapphire, Bamboo, and Aloe. The Mini Player's color selection persists separately from the rest of WaveDeck. It has no track-text hover popup. Entering it from Sidebar Mode creates the ordinary window hidden, so only the Mini Player remains visible. It snaps to the top edge, persists its horizontal position in portable Data, and returns to the prior Normal or Sidebar view.
 - Local Radio Controls has no in-window heading or explanatory paragraphs: its native title provides the context. Song Repeat Wait is labeled “Don't play the same song for how long?” and has only its moving hour value below the slider. Artist Repeat Wait is labeled “Don't play the same artist for how long?” and retains its five stop labels. The window remembers its size and position in portable Data and safely constrains restored bounds to the available display.
 - The portable Windows build bundles the pinned x64 `mpv.exe` playback engine and the compiled Windows Sidebar helper. Both `WaveDeck.exe` and the Linux AppImage use the same sibling `Data` and `Music` folders.
 
@@ -156,7 +156,7 @@ Important: do **not** let a large base64 file be truncated while creating a GitH
 - `src/renderer/radio-log.js` / `radio-log.html` — diagnostic history UI and export/clear actions.
 - `src/renderer/settings.html` / `settings.js` / `settings.css` — Settings, User Guide, Last.fm controls, and mix manager.
 - `src/renderer/local-radio-controls.html` / `.js` / `.css` — compact Local Radio Controls window for crossfade and Song Radio/Local Mix tuning.
-- `src/renderer/mini-player.html` / `.js` / `.css` — Linux-only always-on-top compact playback controls.
+- `src/renderer/mini-player.html` / `.js` / `.css` — Linux and Windows always-on-top compact playback controls.
 - `scripts/validate.js` — static validation. This was restored in 0.11.3 and must remain valid UTF-8 JavaScript.
 - `scripts/test-music.js` — music/Local Radio regression tests.
 
@@ -168,7 +168,7 @@ Important: do **not** let a large base64 file be truncated while creating a GitH
 - When reviewing the Live Radio Log, start Local Radio, let several transitions occur with the log closed, then open it and confirm the earlier decisions appear; Save Log should export them all.
 - With a large library, the first Local Music click should immediately show the loading message if warming is unfinished, then show Local Stations/Mixes once ready; later openings should normally be immediate.
 - With Local Music selected, the sliders icon at the left of playback controls opens Local Radio Controls. Check that its crossfade toggle and all four tuning controls persist, and that it closes with the main app or when Advanced Features is disabled.
-- Confirm the main Streaming / Local Music tab reopens exactly where it was left; when Local Music is unavailable, it safely opens Streaming instead. On Linux, use the tray menu or `Ctrl + Alt + Shift + M` to enter Mini Player from both Normal and Sidebar views. Confirm its buttons track playback, thumbs-up only enables for eligible Local Radio, clicking the track text switches its display, only the far-left grip moves it horizontally while it stays on the top edge, and toggling it off returns to the view it started from.
+- Confirm the main Streaming / Local Music tab reopens exactly where it was left; when Local Music is unavailable, it safely opens Streaming instead. On Linux and Windows, use the tray menu or `Ctrl + Alt + Shift + M` to enter Mini Player from both Normal and Sidebar views. Confirm its buttons track playback, thumbs-up only enables for eligible Local Radio, clicking the track text switches its display, only the far-left grip moves it horizontally while it stays on the top edge, and toggling it off returns to the view it started from.
 
 ## User communication
 
