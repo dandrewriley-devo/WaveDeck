@@ -1,14 +1,14 @@
 # WaveDeck Project Handoff
 
-This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **0.11.15**.
+This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.0**.
 
 ## Current published state
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `main`
-- Current version: **0.11.15**
-- Current release: 0.11.15 — Mini Player mute placement refinement.
-- Current commit: the verified 0.11.15 release commit at the head of `main`.
+- Current version: **1.0.0**
+- Current release: 1.0.0 — Full Release.
+- Current commit: the verified 1.0.0 release commit at the head of `main`.
 - 0.11.8 commit: `8118e235eed4b4a18c378f12ced8a86be83ed4b9` — monitor-safe main-window bounds persistence and portable Windows build.
 - 0.11.7 commit: `c8b69b7b8842dd6c310dda05b22b8d52870d3e84` — superseded source correction after the first portable Windows build.
 - 0.11.6 commit: `621e44d8c484cd0a4d70eb124106170f6183d0ae` — compact Local Radio Controls and remembered auxiliary-window bounds.
@@ -31,7 +31,7 @@ Always fetch and read remote `main` before changing anything. The original scrat
 - Andrew's normal desktop icon/updater pulls and runs the source from GitHub `main`. Do not build or publish an AppImage unless he specifically asks.
 - MP3 files and their tags are read-only. WaveDeck may index them, but must never write metadata back to them.
 - Do not change `package-lock.json`. It is unusual/binary in this project and is not part of normal source updates.
-- Small internal or cosmetic releases do not need a new visible changelog entry unless Andrew asks. The About tab currently intentionally ends at 0.11.0.
+- Small internal or cosmetic releases do not need a new visible changelog entry unless Andrew asks. The About tab’s newest visible entry is the intentionally blank heading `WaveDeck 1.0 - Full Release - Oct 2, 2026`.
 
 ## Publishing safely
 
@@ -131,7 +131,7 @@ Important: do **not** let a large base64 file be truncated while creating a GitH
 - Streaming group headings stay present; station lists collapse by subgroup rather than hiding an entire major group. Group/subgroup organization follows Settings ordering.
 - Linux Application Shortcut wording is generalized for Cinnamon/Mint, GNOME, KDE Plasma, Xfce, and most mainstream Linux desktops. Remove that Linux-specific section if the app is later repackaged strictly for Windows.
 - WaveDeck has a system tray icon while it is running. Clicking it brings the main window forward; its menu offers Show WaveDeck, Play / Pause, Stop, and Quit WaveDeck. The window close button still fully exits WaveDeck and removes the tray icon.
-- Linux also has Mini Player: a 32-pixel, title-bar-height frameless always-on-top bar with Previous, Play/Pause, Stop, Mute, Next, and Local Radio thumbs-up. The tray menu and `Ctrl + Alt + Shift + M` toggle it. Clicking the text switches between Now Playing (song and artist) and Station / Local Mix; only the far-left grip drags it horizontally. Right-click its surface to choose Default, White, Chiefs, Army, or Cherry in a single menu group; the Mini Player's color selection persists separately from the rest of WaveDeck. It has no track-text hover popup. Entering it from Sidebar Mode creates the ordinary window hidden, so only the Mini Player remains visible. It snaps to the top edge, persists its horizontal position in portable Data, and returns to the prior Normal or Sidebar view.
+- Linux also has Mini Player: a 32-pixel, title-bar-height frameless always-on-top bar with Previous, Play/Pause, Stop, Next, Mute, and Local Radio thumbs-up. The tray menu and `Ctrl + Alt + Shift + M` toggle it. Clicking the text switches between Now Playing (song and artist) and Station / Local Mix; only the far-left grip drags it horizontally. Right-click its surface to choose Default, White, Chiefs, Army, or Cherry in a single menu group; the Mini Player's color selection persists separately from the rest of WaveDeck. It has no track-text hover popup. Entering it from Sidebar Mode creates the ordinary window hidden, so only the Mini Player remains visible. It snaps to the top edge, persists its horizontal position in portable Data, and returns to the prior Normal or Sidebar view.
 - Local Radio Controls has no in-window heading or explanatory paragraphs: its native title provides the context. Song Repeat Wait is labeled “Don't play the same song for how long?” and has only its moving hour value below the slider. Artist Repeat Wait is labeled “Don't play the same artist for how long?” and retains its five stop labels. The window remembers its size and position in portable Data and safely constrains restored bounds to the available display.
 - The portable Windows build bundles the pinned x64 `mpv.exe` playback engine and the compiled Windows Sidebar helper. Both `WaveDeck.exe` and the Linux AppImage use the same sibling `Data` and `Music` folders.
 
@@ -140,7 +140,7 @@ Important: do **not** let a large base64 file be truncated while creating a GitH
 - The About tab has an extensive built-in User Guide, not the old eight short blurbs.
 - It covers portable data, Streaming, Local Music, MP3 tags, Local Radio, Artist Radio, albums, Local Mixes, feedback, tuning, crossfade, Last.fm, Live Radio Log, import/export, recording, media keys, Linux launcher/sidebar/Mini Player behavior, troubleshooting, and notices.
 - It intentionally excludes the removed Notepad feature.
-- The visible simplified changelog is the exact high-level list Andrew supplied, ending at 0.11.0. Do not add a 0.11.2 or 0.11.3 entry unless he asks.
+- The visible simplified changelog is the exact high-level list Andrew supplied, with the intentionally blank top heading `WaveDeck 1.0 - Full Release - Oct 2, 2026`. Do not add release bullets beneath it unless Andrew asks. The centered italic line below the changelog is `"Whatever you do, do it all for the glory of God."`
 
 ## Key files
 
@@ -168,7 +168,7 @@ Important: do **not** let a large base64 file be truncated while creating a GitH
 - When reviewing the Live Radio Log, start Local Radio, let several transitions occur with the log closed, then open it and confirm the earlier decisions appear; Save Log should export them all.
 - With a large library, the first Local Music click should immediately show the loading message if warming is unfinished, then show Local Stations/Mixes once ready; later openings should normally be immediate.
 - With Local Music selected, the sliders icon at the left of playback controls opens Local Radio Controls. Check that its crossfade toggle and all four tuning controls persist, and that it closes with the main app or when Advanced Features is disabled.
-- On Linux, use the tray menu or `Ctrl + Alt + Shift + M` to enter Mini Player from both Normal and Sidebar views. Confirm its buttons track playback, thumbs-up only enables for eligible Local Radio, clicking the track text switches its display, dragging that text moves it horizontally while it stays on the top edge, and toggling it off returns to the view it started from.
+- Confirm the main Streaming / Local Music tab reopens exactly where it was left; when Local Music is unavailable, it safely opens Streaming instead. On Linux, use the tray menu or `Ctrl + Alt + Shift + M` to enter Mini Player from both Normal and Sidebar views. Confirm its buttons track playback, thumbs-up only enables for eligible Local Radio, clicking the track text switches its display, only the far-left grip moves it horizontally while it stays on the top edge, and toggling it off returns to the view it started from.
 
 ## User communication
 

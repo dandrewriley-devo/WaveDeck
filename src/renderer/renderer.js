@@ -371,7 +371,7 @@ function setRecordingsSectionVisible(visible) {
   if (changed) queueRender();
 }
 
-function setMusicVisible(visible) {
+function setMusicVisible(visible, { persist = true } = {}) {
   musicVisible = proModeEnabled && Boolean(visible);
   if (musicVisible && recordingsSectionVisible) setRecordingsSectionVisible(false);
   musicPanel.hidden = !musicVisible;
@@ -383,6 +383,11 @@ function setMusicVisible(visible) {
   musicToggleBtn.setAttribute('aria-label', 'Open Local Music');
   updateSectionToolbarHighlights();
   queueRender();
+  if (persist) {
+    void window.wavedeck.setSectionVisibility({ activeTab: musicVisible ? 'local-music' : 'streaming' })
+      .then(setSectionVisibilityUi)
+      .catch(error => { nowPlaying.textContent = `Could not save the open tab: ${error.message}`; });
+  }
   if (musicVisible) {
     musicSearch.focus();
     if (!musicSearch.value.trim() && !localMusicViewCache) showLocalMusicLoading();
@@ -1671,6 +1676,7 @@ window.wavedeck.onWarning((warning) => {
     setProModeUi(preferences);
     setSidebarUi(sidebarState);
     setSectionVisibilityUi(sectionVisibility);
+    setMusicVisible(sectionVisibility.activeTab === 'local-music', { persist: false });
     setRecordingUi(savedRecordingState);
     setPlayPauseUi(status);
     if (typeof status?.muted === "boolean") setMuteUi(status.muted);

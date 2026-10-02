@@ -126,7 +126,7 @@ let windowsSidebar = null;
 let sidebarApplied = false;
 let sidebarTransitioning = false;
 let floatingBounds = null;
-let sectionVisibility = { presets: false, localPresets: false, localMixes: true, localFavoritesOnly: false, favoritesOnly: false, mostPlayed: false, collapsedGroups: [], collapsedSubgroups: [] };
+let sectionVisibility = { presets: false, localPresets: false, localMixes: true, localFavoritesOnly: false, favoritesOnly: false, mostPlayed: false, activeTab: "streaming", collapsedGroups: [], collapsedSubgroups: [] };
 let quitFinalizingRecording = false;
 let cleanupComplete = false;
 const startupWarnings = [];
@@ -1169,7 +1169,8 @@ function installIpcHandlers() {
       sectionVisibility = storage.setStreamingUiState({
         ...sectionVisibility,
         favoritesOnly: false,
-        mostPlayed: false
+        mostPlayed: false,
+        activeTab: "streaming"
       });
       sendToAll("sections:state-changed", { ...sectionVisibility });
     }

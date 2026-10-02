@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "0.11.15");
-assert.strictEqual(packageJson.wavedeckVersion, "0.11.15");
+assert.strictEqual(packageJson.version, "1.0.0");
+assert.strictEqual(packageJson.wavedeckVersion, "1.0.0");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -354,6 +354,7 @@ try {
       localFavoritesOnly: false,
       favoritesOnly: false,
       mostPlayed: false,
+      activeTab: "streaming",
       collapsedGroups: [],
       collapsedSubgroups: []
     },
@@ -409,6 +410,7 @@ try {
     localFavoritesOnly: true,
     favoritesOnly: true,
     mostPlayed: true,
+    activeTab: "local-music",
     collapsedGroups: ["Rock"],
     collapsedSubgroups: ["Rock\u001fClassic"]
   }), {
@@ -418,9 +420,11 @@ try {
     localFavoritesOnly: true,
     favoritesOnly: true,
     mostPlayed: true,
+    activeTab: "local-music",
     collapsedGroups: ["Rock"],
     collapsedSubgroups: ["Rock\u001fClassic"]
   });
+  assert.strictEqual(storage.getStreamingUiState().activeTab, "local-music");
   assert.deepStrictEqual(storage.setSettingsWindowBounds({ x: 2100.4, y: 40.6, width: 1120.2, height: 840.8 }), {
     x: 2100,
     y: 41,
@@ -474,6 +478,7 @@ try {
     mainWindowBounds: { x: 84, y: 97, width: 300, height: 641 },
     miniPlayerWindowBounds: { x: 189, y: 28, width: 560, height: 32 }
   });
+  assert.strictEqual(uiPreferenceReload.getStreamingUiState().activeTab, "local-music");
 
   const changed = storage.readStations();
   changed[0].favorite = !changed[0].favorite;
@@ -1289,6 +1294,9 @@ assert.ok(settingsHtml.includes('id="removeLauncherBtn"'));
 assert.ok(settingsHtml.includes("Local Music Setup and Music Information"));
 assert.ok(settingsHtml.includes("How Local Radio Chooses Music"));
 assert.ok(settingsHtml.includes("0.11.0 — Various Refinements"));
+assert.ok(settingsHtml.includes('<h3>WaveDeck 1.0 - Full Release - Oct 2, 2026</h3>'));
+assert.ok(settingsHtml.includes('<p class="about-scripture">"Whatever you do, do it all for the glory of God."</p>'));
+assert.ok(settingsHtml.indexOf('WaveDeck 1.0 - Full Release - Oct 2, 2026</h3>') < settingsHtml.indexOf('0.11.0 — Various Refinements'));
 assert.ok(!settingsHtml.includes("<h3>WaveDeck 0.11.2"));
 const settingsRendererSource = fs.readFileSync(path.join(root, "src", "renderer", "settings.js"), "utf8");
 assert.ok(settingsRendererSource.includes('Drag to reorder this subgroup'));
@@ -1454,7 +1462,7 @@ assert.ok(mainSource.includes('ipcMain.handle("launcher:remove"'));
 assert.ok(mainSource.includes('ipcMain.handle("listening:get"'));
 assert.ok(mainSource.includes('ipcMain.handle("listening:reset"'));
 assert.ok(mainSource.includes('ipcMain.handle("listening:toggle-local-preset"'));
-assert.ok(mainSource.includes('let sectionVisibility = { presets: false, localPresets: false, localMixes: true, localFavoritesOnly: false, favoritesOnly: false, mostPlayed: false, collapsedGroups: [], collapsedSubgroups: [] }'));
+assert.ok(mainSource.includes('activeTab: "streaming"'));
 assert.ok(mainSource.includes('ipcMain.handle("sections:get-state"'));
 assert.ok(mainSource.includes('ipcMain.handle("sections:set-state"'));
 assert.ok(mainSource.includes('storage.getStreamingUiState()'));

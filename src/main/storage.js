@@ -402,6 +402,7 @@ function validatePreferences(value) {
       localFavoritesOnly: rawStreamingUi.localFavoritesOnly === true,
       favoritesOnly: rawStreamingUi.favoritesOnly === true,
       mostPlayed: rawStreamingUi.mostPlayed === true,
+      activeTab: rawStreamingUi.activeTab === "local-music" ? "local-music" : "streaming",
       collapsedGroups: cleanUiNameList(rawStreamingUi.collapsedGroups),
       collapsedSubgroups: cleanUiNameList(rawStreamingUi.collapsedSubgroups)
     },
@@ -612,6 +613,7 @@ class PortableStorage {
       localFavoritesOnly: streamingUi.localFavoritesOnly,
       favoritesOnly: streamingUi.favoritesOnly,
       mostPlayed: streamingUi.mostPlayed,
+      activeTab: streamingUi.activeTab,
       collapsedGroups: [...streamingUi.collapsedGroups],
       collapsedSubgroups: [...streamingUi.collapsedSubgroups]
     };
@@ -627,6 +629,7 @@ class PortableStorage {
       localFavoritesOnly: typeof state.localFavoritesOnly === "boolean" ? state.localFavoritesOnly : current.localFavoritesOnly,
       favoritesOnly: typeof state.favoritesOnly === "boolean" ? state.favoritesOnly : current.favoritesOnly,
       mostPlayed: typeof state.mostPlayed === "boolean" ? state.mostPlayed : current.mostPlayed,
+      activeTab: state.activeTab === "local-music" ? "local-music" : (state.activeTab === "streaming" ? "streaming" : current.activeTab),
       collapsedGroups: Array.isArray(state.collapsedGroups) ? cleanUiNameList(state.collapsedGroups) : current.collapsedGroups,
       collapsedSubgroups: Array.isArray(state.collapsedSubgroups) ? cleanUiNameList(state.collapsedSubgroups) : current.collapsedSubgroups
     };
