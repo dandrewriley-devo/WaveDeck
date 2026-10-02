@@ -6,7 +6,7 @@ on:
     branches: [main]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   windows:
@@ -55,7 +55,9 @@ jobs:
       # WaveDeck intentionally does not use a standard npm lockfile. Keep it
       # untouched and install the pinned manifest dependencies for the build.
       - run: npm install --package-lock=false --no-audit --no-fund
-      - run: npm test
+      # The full validator checks a POSIX executable permission bit; the Linux
+      # build covers that assertion. This is the portable music regression suite.
+      - run: node scripts/test-music.js
       - run: npm run dist:windows -- --publish never
 
       - name: Inspect portable EXE
@@ -76,3 +78,14 @@ jobs:
           if-no-files-found: error
           compression-level: 0
           retention-days: 14
+
+      - name: Publish WaveDeck 1.0.1 for Windows
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.1
+          target_commitish: ${{ github.sha }}
+          name: WaveDeck for Windows 1.0.1
+          body: Portable Windows x64 build. Keep WaveDeck.exe beside your existing Data and Music folders.
+          files: dist/windows/WaveDeck.exe
+          overwrite_files: true
+          fail_on_unmatched_files: true
