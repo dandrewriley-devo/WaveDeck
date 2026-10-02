@@ -309,7 +309,7 @@ function validatePreferences(value) {
   const localRadioArtistSetSize = [1, 2, 3, 4].includes(Number(value?.localRadioArtistSetSize)) ? Number(value.localRadioArtistSetSize) : 1;
   const localMusicCrossfadeEnabled = value?.localMusicCrossfadeEnabled !== false;
   const miniPlayerDisplayMode = value?.miniPlayerDisplayMode === 'source' ? 'source' : 'now-playing';
-  const miniPlayerColorScheme = ['default', 'inverted', 'chiefs', 'army', 'cherry'].includes(value?.miniPlayerColorScheme)
+  const miniPlayerColorScheme = ['default', 'inverted', 'chiefs', 'army', 'cherry', 'gray', 'denim', 'rosewood', 'sapphire', 'bamboo', 'aloe'].includes(value?.miniPlayerColorScheme)
     ? value.miniPlayerColorScheme
     : 'default';
   const localMixEnabled = {};
@@ -719,7 +719,7 @@ class PortableStorage {
 
   setMiniPlayerColorScheme(scheme) {
     const preferences = this.readPreferences();
-    preferences.miniPlayerColorScheme = ['default', 'inverted', 'chiefs', 'army', 'cherry'].includes(scheme)
+    preferences.miniPlayerColorScheme = ['default', 'inverted', 'chiefs', 'army', 'cherry', 'gray', 'denim', 'rosewood', 'sapphire', 'bamboo', 'aloe'].includes(scheme)
       ? scheme
       : 'default';
     this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));

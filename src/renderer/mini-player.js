@@ -16,6 +16,7 @@ let feedbackTrackId = '';
 let feedbackSelected = false;
 let displayMode = 'now-playing';
 let trackPointer = null;
+const MINI_PLAYER_COLOR_SCHEMES = new Set(['inverted', 'chiefs', 'army', 'cherry', 'gray', 'denim', 'rosewood', 'sapphire', 'bamboo', 'aloe']);
 
 function isActiveMusic(status = currentStatus) {
   return Boolean(status?.currentMusic && status?.mediaState !== 'stopped');
@@ -33,6 +34,12 @@ function setMuteUi(muted) {
   muteIcon.innerHTML = muted
     ? '<path d="M4 10v4h4l5 4V6l-5 4H4zm12.5-1.5L19 11l2.5-2.5 1.4 1.4-2.5 2.5 2.5 2.5-1.4 1.4-2.5-2.5-2.5 2.5-1.4-1.4 2.5-2.5-2.5-2.5z" fill="currentColor"/>'
     : '<path d="M4 10v4h4l5 4V6l-5 4zm12.2.4a1 1 0 0 1 1.4 0 2.3 2.3 0 0 1 0 3.2 1 1 0 1 1-1.4-1.4.3.3 0 0 0 0-.4 1 1 0 0 1 0-1.4z" fill="currentColor"/>';
+}
+
+function getColorScheme(preferences) {
+  return MINI_PLAYER_COLOR_SCHEMES.has(preferences?.miniPlayerColorScheme)
+    ? preferences.miniPlayerColorScheme
+    : 'default';
 }
 
 async function toggleDisplay() {
@@ -177,10 +184,7 @@ window.wavedeck.onPlayerStatus((status) => {
 
 window.wavedeck.onUiPreferencesChanged((preferences) => {
   const nextMode = preferences?.miniPlayerDisplayMode === 'source' ? 'source' : 'now-playing';
-  const colorScheme = ['inverted', 'chiefs', 'army', 'cherry'].includes(preferences?.miniPlayerColorScheme)
-    ? preferences.miniPlayerColorScheme
-    : 'default';
-  document.documentElement.dataset.colorScheme = colorScheme;
+  document.documentElement.dataset.colorScheme = getColorScheme(preferences);
   if (displayMode !== nextMode) {
     displayMode = nextMode;
     render();
@@ -195,9 +199,7 @@ window.wavedeck.onUiPreferencesChanged((preferences) => {
     ]);
     currentStatus = status;
     displayMode = preferences?.miniPlayerDisplayMode === 'source' ? 'source' : 'now-playing';
-    document.documentElement.dataset.colorScheme = ['inverted', 'chiefs', 'army', 'cherry'].includes(preferences?.miniPlayerColorScheme)
-      ? preferences.miniPlayerColorScheme
-      : 'default';
+    document.documentElement.dataset.colorScheme = getColorScheme(preferences);
   } catch (error) {
     currentStatus = { state: 'error', message: error.message, mediaState: 'stopped' };
   }

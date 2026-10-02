@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "1.0.0");
-assert.strictEqual(packageJson.wavedeckVersion, "1.0.0");
+assert.strictEqual(packageJson.version, "1.0.1");
+assert.strictEqual(packageJson.wavedeckVersion, "1.0.1");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -398,7 +398,7 @@ try {
   assert.deepStrictEqual(storage.setLocalRadioTuning({ songRepeatHours: 6, artistRepeatMinutes: 180, artistSetSize: 2 }).localRadioArtistSetSize, 2);
   assert.strictEqual(storage.setLocalMusicCrossfadeEnabled(false).localMusicCrossfadeEnabled, false);
   assert.strictEqual(storage.setMiniPlayerDisplayMode('source').miniPlayerDisplayMode, 'source');
-  assert.strictEqual(storage.setMiniPlayerColorScheme('chiefs').miniPlayerColorScheme, 'chiefs');
+  assert.strictEqual(storage.setMiniPlayerColorScheme('bamboo').miniPlayerColorScheme, 'bamboo');
   assert.strictEqual(storage.setLocalMixEnabled('classic-rock', false).localMixEnabled['classic-rock'], false);
   assert.strictEqual(storage.setLocalMixFavorite('classic-rock', true).localMixFavorites['classic-rock'], true);
   assert.deepStrictEqual(storage.setLocalMixFavorite('classic-rock', false).localMixFavorites, {});
@@ -468,7 +468,7 @@ try {
     localRadioArtistSetSize: 2,
     localMusicCrossfadeEnabled: false,
     miniPlayerDisplayMode: "source",
-    miniPlayerColorScheme: "chiefs",
+    miniPlayerColorScheme: "bamboo",
     localMixEnabled: { "classic-rock": false },
     localMixFavorites: { "classic-rock": true },
     launchInSidebarMode: true,
@@ -1376,6 +1376,12 @@ assert.ok(!miniPlayerHtml.includes('title="Click to switch display'));
 assert.ok(miniPlayerStyles.includes('data-color-scheme="chiefs"'));
 assert.ok(miniPlayerStyles.includes('data-color-scheme="army"'));
 assert.ok(miniPlayerStyles.includes('data-color-scheme="cherry"'));
+assert.ok(miniPlayerStyles.includes('data-color-scheme="gray"'));
+assert.ok(miniPlayerStyles.includes('data-color-scheme="denim"'));
+assert.ok(miniPlayerStyles.includes('data-color-scheme="rosewood"'));
+assert.ok(miniPlayerStyles.includes('data-color-scheme="sapphire"'));
+assert.ok(miniPlayerStyles.includes('data-color-scheme="bamboo"'));
+assert.ok(miniPlayerStyles.includes('data-color-scheme="aloe"'));
 assert.ok(miniPlayerStyles.includes('.drag-handle'));
 assert.ok(settingsHtml.includes("Download your station listings as a json file."));
 assert.ok(settingsHtml.indexOf('id="stationEditorHome"') < settingsHtml.indexOf('class="listening-history-bar"'));
@@ -1519,6 +1525,7 @@ assert.ok(mainSource.includes("storage.setMiniPlayerDisplayMode"));
 assert.ok(mainSource.includes("storage.setMiniPlayerColorScheme"));
 assert.ok(mainSource.includes("toggleMiniPlayerDisplayMode"));
 assert.ok(mainSource.includes("mini-player:show-context-menu"));
+assert.ok(mainSource.includes("Exit Mini Player"));
 assert.ok(mainSource.includes("mini-player:drag-start"));
 assert.ok(mainSource.includes("setSidebarMode(false, { showWindow: false })"));
 assert.ok(mainSource.includes("async function setSidebarMode(enabled, { showWindow = true } = {})"));

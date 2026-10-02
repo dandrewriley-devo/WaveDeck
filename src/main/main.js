@@ -1295,14 +1295,24 @@ function installIpcHandlers() {
       ["White", "inverted"],
       ["Chiefs", "chiefs"],
       ["Army", "army"],
-      ["Cherry", "cherry"]
+      ["Cherry", "cherry"],
+      ["Gray", "gray"],
+      ["Denim", "denim"],
+      ["Rosewood", "rosewood"],
+      ["Sapphire", "sapphire"],
+      ["Bamboo", "bamboo"],
+      ["Aloe", "aloe"]
     ];
-    const menu = Menu.buildFromTemplate(choices.map(([label, scheme]) => ({
-      label,
-      type: "radio",
-      checked: selected === scheme,
-      click: () => setMiniPlayerColorScheme(scheme)
-    })));
+    const menu = Menu.buildFromTemplate([
+      { label: "Exit Mini Player", click: () => { void closeMiniPlayer(); } },
+      { type: "separator" },
+      ...choices.map(([label, scheme]) => ({
+        label,
+        type: "radio",
+        checked: selected === scheme,
+        click: () => setMiniPlayerColorScheme(scheme)
+      }))
+    ]);
     menu.popup({
       window,
       x: Math.max(0, Math.round(Number(position.x) || 0)),

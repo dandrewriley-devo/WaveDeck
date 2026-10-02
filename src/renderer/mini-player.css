@@ -73,6 +73,96 @@
   --mini-feedback: #ffd6d1;
   color-scheme: dark;
 }
+:root[data-color-scheme="gray"] {
+  --mini-page-background: #5a5a59;
+  --mini-background: #747473;
+  --mini-border: #d8d4c9;
+  --mini-control-border: #beb9ad;
+  --mini-text: #e7e3d9;
+  --mini-button: #e7e3d9;
+  --mini-hover-background: #8c8b87;
+  --mini-hover-text: #ffffff;
+  --mini-active-background: #595958;
+  --mini-disabled: #bbb6ab;
+  --mini-focus: #fff7e8;
+  --mini-feedback: #fff7e8;
+  color-scheme: dark;
+}
+:root[data-color-scheme="denim"] {
+  --mini-page-background: #284253;
+  --mini-background: #3a5b72;
+  --mini-border: #e3c89c;
+  --mini-control-border: #c5a97d;
+  --mini-text: #eed6ad;
+  --mini-button: #eed6ad;
+  --mini-hover-background: #54778d;
+  --mini-hover-text: #fff0d3;
+  --mini-active-background: #2b4355;
+  --mini-disabled: #b9a17b;
+  --mini-focus: #fff0d3;
+  --mini-feedback: #fff0d3;
+  color-scheme: dark;
+}
+:root[data-color-scheme="rosewood"] {
+  --mini-page-background: #786962;
+  --mini-background: #9d8982;
+  --mini-border: #d8cab6;
+  --mini-control-border: #bfae9a;
+  --mini-text: #e0d4c0;
+  --mini-button: #e0d4c0;
+  --mini-hover-background: #b6a199;
+  --mini-hover-text: #fff2de;
+  --mini-active-background: #76645e;
+  --mini-disabled: #c0b4a4;
+  --mini-focus: #fff2de;
+  --mini-feedback: #fff2de;
+  color-scheme: dark;
+}
+:root[data-color-scheme="sapphire"] {
+  --mini-page-background: #182f4a;
+  --mini-background: #223f62;
+  --mini-border: #e3b921;
+  --mini-control-border: #c69c0d;
+  --mini-text: #e4b91f;
+  --mini-button: #e4b91f;
+  --mini-hover-background: #315980;
+  --mini-hover-text: #fff1a5;
+  --mini-active-background: #182f4b;
+  --mini-disabled: #b08b27;
+  --mini-focus: #fff1a5;
+  --mini-feedback: #fff1a5;
+  color-scheme: dark;
+}
+:root[data-color-scheme="bamboo"] {
+  --mini-page-background: #d8bd89;
+  --mini-background: #ead2a2;
+  --mini-border: #405f71;
+  --mini-control-border: #6e8997;
+  --mini-text: #3d5f72;
+  --mini-button: #3d5f72;
+  --mini-hover-background: #dec08c;
+  --mini-hover-text: #213d4c;
+  --mini-active-background: #d3b57f;
+  --mini-disabled: #788a91;
+  --mini-focus: #213d4c;
+  --mini-feedback: #213d4c;
+  color-scheme: light;
+}
+:root[data-color-scheme="aloe"] {
+  --mini-page-background: #819c2d;
+  --mini-background: #9cbd3c;
+  --mini-border: #29494a;
+  --mini-control-border: #4f6940;
+  --mini-text: #1d3c3d;
+  --mini-button: #1d3c3d;
+  --mini-hover-background: #b0cc58;
+  --mini-hover-text: #102d2e;
+  --mini-active-background: #86a332;
+  --mini-disabled: #53645d;
+  --mini-focus: #102d2e;
+  --mini-feedback: #102d2e;
+  color-scheme: light;
+}
 * { box-sizing: border-box; }
 html, body { background: var(--mini-page-background); color: var(--mini-text); font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, sans-serif; height: 100%; margin: 0; overflow: hidden; }
 .mini-player { align-items: stretch; background: var(--mini-background); border: 1px solid var(--mini-border); display: flex; height: 32px; width: 100%; }
