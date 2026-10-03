@@ -61,10 +61,9 @@ const lastFmStatus = document.getElementById('lastFmStatus');
 const lastFmProgressWrap = document.getElementById('lastFmProgressWrap');
 const lastFmProgress = document.getElementById('lastFmProgress');
 const lastFmProgressLabel = document.getElementById('lastFmProgressLabel');
-const lastFmUpdating = document.getElementById('lastFmUpdating');
+const lastFmUpdatingState = document.getElementById('lastFmUpdatingState');
 const localMixManager = document.getElementById('localMixManager');
 const queueLastFmRefreshBtn = document.getElementById('queueLastFmRefreshBtn');
-const openRadioLogBtn = document.getElementById('openRadioLogBtn');
 const resetListeningBtn = document.getElementById("resetListeningBtn");
 const platform = window.wavedeck.platform;
 
@@ -139,9 +138,8 @@ function renderLastFmStatus(status) {
   }
   const queued = Number(status.queuedAlbums || 0);
   const updating = status.processing === true || queued > 0;
-  lastFmUpdating.hidden = !updating;
+  lastFmUpdatingState.textContent = updating ? 'UPDATING' : 'UPDATED';
   queueLastFmRefreshBtn.disabled = updating;
-  queueLastFmRefreshBtn.textContent = updating ? 'Updating Music Data…' : 'Refresh Last.fm Music Data';
   if (!status.enabled) { lastFmStatus.textContent = 'Last.fm music data is off.'; return; }
   lastFmStatus.textContent = `Last.fm: ${current.toLocaleString()} of ${total.toLocaleString()} tracks current${queued ? ` · ${queued.toLocaleString()} albums queued` : ''}${status.message ? ` · ${status.message}` : ''}`;
 }
@@ -1108,15 +1106,9 @@ queueLastFmRefreshBtn.addEventListener('click', async () => {
     setStatus(statusLocalMusic, 'Last.fm catch-up refresh queued.');
   } catch (error) {
     queueLastFmRefreshBtn.disabled = false;
-    queueLastFmRefreshBtn.textContent = 'Refresh Last.fm Music Data';
     setStatus(statusLocalMusic, `Could not queue Last.fm refresh: ${error.message}`, false);
   }
-  finally {
-    if (!queueLastFmRefreshBtn.disabled) queueLastFmRefreshBtn.textContent = 'Refresh Last.fm Music Data';
-  }
 });
-
-openRadioLogBtn.addEventListener('click', () => { void window.wavedeck.openMusicDebugLog(); });
 
 async function reloadEverything() {
   await loadData();

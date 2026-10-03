@@ -175,6 +175,9 @@ main{
 }
 .local-music-section:first-child{ margin-top:0; }
 .lastfm-settings{ display:grid; gap:9px; }
+.lastfm-toggle-row{ align-items:center; display:flex; gap:4px; }
+.lastfm-toggle-row .preference-toggle{ margin:8px 0 0; }
+.lastfm-refresh-link{ align-self:center; margin:8px 0 0; }
 .lastfm-details{ display:grid; gap:8px; }
 .lastfm-status{ color:var(--muted); font-size:12px; overflow-wrap:anywhere; }
 .lastfm-progress-wrap{ align-items:center; display:grid; gap:6px 10px; grid-template-columns:1fr auto; margin-top:4px; }

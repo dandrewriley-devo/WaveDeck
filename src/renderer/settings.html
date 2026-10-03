@@ -232,7 +232,7 @@
         </section>
         <section class="local-music-section" aria-labelledby="portableMusicTitle">
           <div class="pro-music-settings-title" id="portableMusicTitle">Portable Music</div>
-          <div class="hint">The portable <b>Music</b> folder beside <b>Data</b> is converted in the background to lean 96 kbps Opus files.</div>
+          <div class="hint">The music you add to WaveDeck’s “Music” folder is converted to 96 kbps Opus files.</div>
           <div id="portableMusicProgressWrap" class="portable-music-progress-wrap" hidden>
             <progress id="portableMusicProgress" class="portable-music-progress" max="1" value="0" aria-label="Portable Music conversion progress"></progress>
             <span id="portableMusicProgressLabel" class="portable-music-progress-label">0 of 0</span>
@@ -244,23 +244,22 @@
         </section>
         <section class="lastfm-settings local-music-section" aria-labelledby="lastFmTitle">
           <div class="pro-music-settings-title" id="lastFmTitle">Last.fm Music Data</div>
-          <label class="preference-toggle">
-            <input id="lastFmEnabled" type="checkbox" />
-            <span class="toggle-switch" aria-hidden="true"></span>
-            <span>Improve Music Data with Last.fm</span>
-          </label>
-          <div class="hint">Refreshes song popularity, genre tags, and related artists in WaveDeck Opus’s own portable database. No Last.fm account or setup is needed. It never changes your Additional Music Folder.</div>
+          <div class="lastfm-toggle-row">
+            <label class="preference-toggle">
+              <input id="lastFmEnabled" type="checkbox" />
+              <span class="toggle-switch" aria-hidden="true"></span>
+              <span>Improve Music Data with Last.fm.</span>
+            </label>
+            <button id="queueLastFmRefreshBtn" class="subtle-link lastfm-refresh-link" type="button">Refresh</button>
+          </div>
           <div id="lastFmDetails" class="lastfm-details" hidden>
-            <button id="queueLastFmRefreshBtn" class="btn" type="button">Refresh Last.fm Music Data</button>
-            <div class="hint">Checks missing or older music data and skips songs checked within the past week.</div>
             <div id="lastFmProgressWrap" class="lastfm-progress-wrap" hidden>
-              <div id="lastFmUpdating" class="lastfm-updating" hidden>Updating Music Data</div>
+              <div id="lastFmUpdating" class="lastfm-updating">MUSIC DATA <span id="lastFmUpdatingState">UPDATED</span></div>
               <progress id="lastFmProgress" class="lastfm-progress" max="100" value="0" aria-label="Last.fm music data progress"></progress>
               <span id="lastFmProgressLabel" class="lastfm-progress-label">0%</span>
             </div>
             <div id="lastFmStatus" class="lastfm-status">Last.fm is ready when you are.</div>
           </div>
-          <button id="openRadioLogBtn" class="subtle-link" type="button">Open Live Radio Log</button>
         </section>
         <section class="local-music-section" aria-labelledby="localMixManagerTitle">
           <div class="pro-music-settings-title" id="localMixManagerTitle">Manage Local Mixes</div>
