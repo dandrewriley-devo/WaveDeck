@@ -160,6 +160,8 @@ main{
 }
 
 .pro-music-settings-row .input{ flex:1; min-width:0; }
+.additional-music-folder-choice{ align-items:center; color:var(--muted); display:flex; flex-wrap:wrap; font-size:12px; gap:4px; }
+.additional-music-folder-choice .subtle-link{ align-self:center; margin:0; }
 .music-library-status-row{ align-items:center; display:flex; gap:10px; justify-content:space-between; }
 .music-library-status-row span{ color:var(--muted); font-size:12px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .portable-music-progress-wrap{ align-items:center; display:grid; gap:6px 10px; grid-template-columns:1fr auto; }

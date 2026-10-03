@@ -7,6 +7,7 @@ const { MusicLibrary } = require('../src/main/music-library');
 const { MusicRadio, weight, COOLDOWN } = require('../src/main/music-radio');
 const { extractTrack, radioArtist } = require('../src/main/music-tags');
 const { OpusOptimizer, OPUS_BITRATE, outputFor, stableAmpId } = require('../src/main/opus-optimizer');
+const { ComputerMusicFolders, resolveComputerIdentity } = require('../src/main/computer-music-folders');
 const { MediaController, serializeTransport } = require('../src/main/media-controller');
 const { LastFmEnricher, popularityScore } = require('../src/main/lastfm-enricher');
 const { resolveLocalMix, listLocalMixes, loadLocalMixes, getLocalMixAvailability, isTrackEligibleForMix, qualityForTrackCount } = require('../src/main/local-mixes');
@@ -29,6 +30,15 @@ async function run() {
   assert.equal(qualityForTrackCount(400), 'Excellent');
   const temp = await fs.mkdtemp(path.join(os.tmpdir(), 'wavedeck-music-test-')); let library;
   try {
+    const computerIdentity = resolveComputerIdentity({ platform: 'linux', hostname: 'test-computer', readFile: () => 'stable-machine-id\n' });
+    assert.equal(computerIdentity.label, 'test-computer', 'saved computer folders use a friendly local computer name');
+    const computerFolders = new ComputerMusicFolders({ dataDir: path.join(temp, 'computer-folders') });
+    computerFolders.initialize();
+    computerFolders.remember({ ...computerIdentity, folder: '/mnt/test-music' });
+    assert.equal(computerFolders.get(computerIdentity.id).folder, '/mnt/test-music', 'an Additional Music Folder can be remembered per computer');
+    const reloadedComputerFolders = new ComputerMusicFolders({ dataDir: path.join(temp, 'computer-folders') });
+    reloadedComputerFolders.initialize();
+    assert.equal(reloadedComputerFolders.get(computerIdentity.id).folder, '/mnt/test-music', 'remembered computer folders persist in portable Data');
     const dataDir = path.join(temp, 'Data'); const musicDir = path.join(temp, 'Music'); await fs.mkdir(musicDir, { recursive: true });
     const file = path.join(musicDir, 'song.MP3'); await fs.writeFile(file, fixture());
     const digest = async () => crypto.createHash('sha256').update(await fs.readFile(file)).digest('hex'); const before = await digest();

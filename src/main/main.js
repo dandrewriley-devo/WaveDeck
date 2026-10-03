@@ -35,6 +35,7 @@ const {
   resolveRuntimeDir
 } = require("./portable-paths");
 const { PortableStorage } = require("./storage");
+const { ComputerMusicFolders, resolveComputerIdentity } = require('./computer-music-folders');
 const { probeStream } = require("./stream-probe");
 const {
   clearCinnamonReservedSpace,
@@ -106,6 +107,10 @@ const radioDiagnosticSession = [];
 const RADIO_DIAGNOSTIC_LIMIT = 3000;
 let radioDiagnosticStationKey = '';
 let storage = null;
+let computerMusicFolders = null;
+let currentComputer = null;
+let activeAdditionalMusicFolder = '';
+let additionalMusicFolderMode = 'none';
 let player = null;
 let recordingLibrary = null;
 let musicLibrary = null;
@@ -163,6 +168,25 @@ function beginOpusOptimization() {
   void opusOptimizer.start().then(() => {
     void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
   }).catch(error => sendToMain('app:warning', `Portable Music optimization paused: ${error.message}`));
+}
+
+function currentUiPreferences() {
+  const preferences = storage.getUiPreferences();
+  return {
+    ...preferences,
+    additionalMusicFolder: activeAdditionalMusicFolder,
+    additionalMusicFolderRemembered: additionalMusicFolderMode === 'remembered',
+    additionalMusicFolderNeedsDecision: additionalMusicFolderMode === 'decision',
+    currentComputerName: currentComputer?.label || 'this computer'
+  };
+}
+
+async function applyAdditionalMusicFolder(folder, mode = 'none') {
+  activeAdditionalMusicFolder = String(folder || '').trim();
+  additionalMusicFolderMode = activeAdditionalMusicFolder ? mode : 'none';
+  await musicLibrary?.setAdditionalMusicFolder(activeAdditionalMusicFolder);
+  void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
+  return currentUiPreferences();
 }
 
 function enableLocalMusic() {
@@ -1182,7 +1206,7 @@ function installIpcHandlers() {
     return getDesktopLauncherState();
   });
 
-  ipcMain.handle("ui:get-preferences", () => storage.getUiPreferences());
+  ipcMain.handle("ui:get-preferences", () => currentUiPreferences());
   ipcMain.handle("ui:set-launch-in-sidebar", (_event, enabled) => {
     if (process.platform !== "linux" && process.platform !== "win32") {
       throw new Error("Sidebar launch is not available on this operating system.");
@@ -1208,8 +1232,8 @@ function installIpcHandlers() {
       sendToAll("sections:state-changed", { ...sectionVisibility });
     }
     if (preferences.proModeEnabled) void enableLocalMusic().catch(error => sendToMain('app:warning', error.message));
-    sendToAll("ui:preferences-changed", preferences);
-    return preferences;
+    sendToAll("ui:preferences-changed", currentUiPreferences());
+    return currentUiPreferences();
   });
   ipcMain.handle('ui:choose-additional-music-folder', async () => {
     const result = await dialog.showOpenDialog(settingsWindow || mainWindow, {
@@ -1223,9 +1247,25 @@ function installIpcHandlers() {
       const stat = await fs.promises.stat(selected);
       if (!stat.isDirectory()) throw new Error('Choose a folder containing MP3 files.');
     }
-    const preferences = storage.setAdditionalMusicFolder(selected);
-    await musicLibrary?.setAdditionalMusicFolder(preferences.additionalMusicFolder);
-    void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
+    const preferences = await applyAdditionalMusicFolder(selected, selected ? 'decision' : 'none');
+    sendToAll('ui:preferences-changed', preferences);
+    return preferences;
+  });
+  ipcMain.handle('ui:remember-additional-music-folder', async () => {
+    if (!activeAdditionalMusicFolder || !currentComputer || !computerMusicFolders) throw new Error('Choose a music folder first.');
+    computerMusicFolders.remember({ ...currentComputer, folder: activeAdditionalMusicFolder });
+    const preferences = await applyAdditionalMusicFolder(activeAdditionalMusicFolder, 'remembered');
+    sendToAll('ui:preferences-changed', preferences);
+    return preferences;
+  });
+  ipcMain.handle('ui:use-additional-music-folder-this-time', async () => {
+    const preferences = await applyAdditionalMusicFolder(activeAdditionalMusicFolder, 'temporary');
+    sendToAll('ui:preferences-changed', preferences);
+    return preferences;
+  });
+  ipcMain.handle('ui:remove-additional-music-folder', async () => {
+    if (currentComputer && computerMusicFolders) computerMusicFolders.forget(currentComputer.id);
+    const preferences = await applyAdditionalMusicFolder('', 'none');
     sendToAll('ui:preferences-changed', preferences);
     return preferences;
   });
@@ -1305,7 +1345,7 @@ function installIpcHandlers() {
 
   // Retain the original channels for older renderer bundles and portable data
   // created before the preference became available on Windows.
-  ipcMain.handle("linux-ui:get-preferences", () => storage.getUiPreferences());
+  ipcMain.handle("linux-ui:get-preferences", () => currentUiPreferences());
   ipcMain.handle("linux-ui:set-launch-in-sidebar", (_event, enabled) => {
     if (process.platform !== "linux" && process.platform !== "win32") {
       throw new Error("Sidebar launch is not available on this operating system.");
@@ -1543,6 +1583,22 @@ if (!hasSingleInstanceLock) {
       storage.initialize();
       storage.assertWritable();
       sectionVisibility = storage.getStreamingUiState();
+      currentComputer = resolveComputerIdentity();
+      computerMusicFolders = new ComputerMusicFolders({ dataDir: getDataDir() });
+      computerMusicFolders.initialize();
+      const rememberedFolder = computerMusicFolders.get(currentComputer.id);
+      if (rememberedFolder?.folder) {
+        activeAdditionalMusicFolder = rememberedFolder.folder;
+        additionalMusicFolderMode = 'remembered';
+      } else {
+        const legacyFolder = storage.getUiPreferences().additionalMusicFolder;
+        if (legacyFolder) {
+          computerMusicFolders.remember({ ...currentComputer, folder: legacyFolder });
+          storage.setAdditionalMusicFolder('');
+          activeAdditionalMusicFolder = legacyFolder;
+          additionalMusicFolderMode = 'remembered';
+        }
+      }
     } catch (error) {
       startupWarnings.push(`WaveDeck's Data folder is not writable. Changes may not be saved. ${error.message}`);
     }
@@ -1624,7 +1680,7 @@ if (!hasSingleInstanceLock) {
     }));
 
     musicLibrary = new MusicLibrary({
-      dataDir: getDataDir(), additionalMusicFolder: storage.getUiPreferences().additionalMusicFolder,
+      dataDir: getDataDir(), additionalMusicFolder: activeAdditionalMusicFolder,
       onStatus: status => {
         latestMusicLibraryStatus = status;
         sendToAll('music:changed', { ...status, ...(opusOptimizer?.getStatus() || {}) });

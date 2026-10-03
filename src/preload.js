@@ -75,6 +75,9 @@ contextBridge.exposeInMainWorld("wavedeck", {
   setProModeEnabled: (enabled) => ipcRenderer.invoke("ui:set-pro-mode", enabled),
   chooseAdditionalMusicFolder: () => ipcRenderer.invoke('ui:choose-additional-music-folder'),
   setAdditionalMusicFolder: (folder) => ipcRenderer.invoke('ui:set-additional-music-folder', folder),
+  rememberAdditionalMusicFolder: () => ipcRenderer.invoke('ui:remember-additional-music-folder'),
+  useAdditionalMusicFolderThisTime: () => ipcRenderer.invoke('ui:use-additional-music-folder-this-time'),
+  removeAdditionalMusicFolder: () => ipcRenderer.invoke('ui:remove-additional-music-folder'),
   onUiPreferencesChanged: (callback) => subscribe("ui:preferences-changed", callback),
 
   exportLibrary: () => ipcRenderer.invoke("library:export"),

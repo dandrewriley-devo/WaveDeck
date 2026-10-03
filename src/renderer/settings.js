@@ -50,6 +50,9 @@ const advancedFeaturesOff = document.getElementById('advancedFeaturesOff');
 const additionalMusicFolder = document.getElementById('additionalMusicFolder');
 const chooseAdditionalMusicFolderBtn = document.getElementById('chooseAdditionalMusicFolderBtn');
 const clearAdditionalMusicFolderBtn = document.getElementById('clearAdditionalMusicFolderBtn');
+const additionalMusicFolderChoice = document.getElementById('additionalMusicFolderChoice');
+const rememberAdditionalMusicFolderBtn = document.getElementById('rememberAdditionalMusicFolderBtn');
+const useAdditionalMusicFolderThisTimeBtn = document.getElementById('useAdditionalMusicFolderThisTimeBtn');
 const musicLibraryStatus = document.getElementById('musicLibraryStatus');
 const rescanMusicBtn = document.getElementById('rescanMusicBtn');
 const portableMusicProgressWrap = document.getElementById('portableMusicProgressWrap');
@@ -119,6 +122,7 @@ function renderProMusicSettings(preferences) {
   if (!proEnabled && document.querySelector('.tab.active')?.dataset.tab === 'localmusic') showTab('interface');
   additionalMusicFolder.value = folder;
   clearAdditionalMusicFolderBtn.disabled = !folder;
+  additionalMusicFolderChoice.hidden = preferences?.additionalMusicFolderNeedsDecision !== true;
   lastFmEnabled.checked = preferences?.lastFmEnabled !== false;
   lastFmDetails.hidden = !lastFmEnabled.checked;
   if (proEnabled) { void loadLastFmStatus(); void loadLocalMixManager(); void loadMusicLibraryStatus(); }
@@ -1057,7 +1061,7 @@ chooseAdditionalMusicFolderBtn.addEventListener('click', async () => {
     const folder = await window.wavedeck.chooseAdditionalMusicFolder();
     if (!folder) return;
     renderProMusicSettings(await window.wavedeck.setAdditionalMusicFolder(folder));
-    setStatus(statusLocalMusic, 'Additional music folder saved. Use Music’s Rescan button when you want to index it.');
+    setStatus(statusLocalMusic, 'Choose whether this music folder is remembered on this computer.');
   } catch (error) {
     setStatus(statusLocalMusic, `Could not save the music folder: ${error.message}`, false);
   } finally {
@@ -1068,11 +1072,31 @@ chooseAdditionalMusicFolderBtn.addEventListener('click', async () => {
 clearAdditionalMusicFolderBtn.addEventListener('click', async () => {
   clearAdditionalMusicFolderBtn.disabled = true;
   try {
-    renderProMusicSettings(await window.wavedeck.setAdditionalMusicFolder(''));
+    renderProMusicSettings(await window.wavedeck.removeAdditionalMusicFolder());
     setStatus(statusLocalMusic, 'Additional music folder removed.');
   } catch (error) {
     setStatus(statusLocalMusic, `Could not remove the music folder: ${error.message}`, false);
   }
+});
+
+rememberAdditionalMusicFolderBtn.addEventListener('click', async () => {
+  rememberAdditionalMusicFolderBtn.disabled = true;
+  try {
+    renderProMusicSettings(await window.wavedeck.rememberAdditionalMusicFolder());
+    setStatus(statusLocalMusic, 'This computer and music folder will be remembered.');
+  } catch (error) {
+    setStatus(statusLocalMusic, `Could not remember this computer: ${error.message}`, false);
+  } finally { rememberAdditionalMusicFolderBtn.disabled = false; }
+});
+
+useAdditionalMusicFolderThisTimeBtn.addEventListener('click', async () => {
+  useAdditionalMusicFolderThisTimeBtn.disabled = true;
+  try {
+    renderProMusicSettings(await window.wavedeck.useAdditionalMusicFolderThisTime());
+    setStatus(statusLocalMusic, 'This music folder will be used for this visit only.');
+  } catch (error) {
+    setStatus(statusLocalMusic, `Could not use the music folder: ${error.message}`, false);
+  } finally { useAdditionalMusicFolderThisTimeBtn.disabled = false; }
 });
 
 rescanMusicBtn.addEventListener('click', async () => {
