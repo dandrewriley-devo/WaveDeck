@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "1.0.3");
-assert.strictEqual(packageJson.wavedeckVersion, "1.0.3");
+assert.strictEqual(packageJson.version, "1.0.4");
+assert.strictEqual(packageJson.wavedeckVersion, "1.0.4");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -1691,13 +1691,16 @@ assert.ok(windowsSidebarNativeSource.includes("target_rect.bottom = monitor_info
 const windowsWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "windows-portable.yml"), "utf8");
 assert.ok(windowsWorkflow.includes("  push:"));
 assert.ok(windowsWorkflow.includes("Build and inspect Windows Sidebar helper"));
-assert.ok(windowsWorkflow.includes("WaveDeck-0.6.5-Windows"));
-const linuxWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "linux-portable.yml"), "utf8");
-assert.ok(linuxWorkflow.includes("  push:"));
-assert.ok(linuxWorkflow.includes("WaveDeck-0.6.7-Linux.zip"));
-assert.ok(linuxWorkflow.includes('install -m 755 dist/WaveDeck.AppImage'));
-assert.ok(linuxWorkflow.includes('install -m 644 USER-GUIDE.html'));
-assert.ok(!linuxWorkflow.includes('install -m 644 START-HERE.txt'));
+assert.ok(windowsWorkflow.includes("jobs:"));
+assert.ok(windowsWorkflow.includes("linux:"));
+assert.ok(windowsWorkflow.includes("needs: [linux, windows]"));
+assert.ok(windowsWorkflow.includes("npm run dist:linux -- --publish never"));
+assert.ok(windowsWorkflow.includes("WaveDeck-1.0.4-Linux"));
+assert.ok(windowsWorkflow.includes("WaveDeck-1.0.4-Windows"));
+assert.ok(windowsWorkflow.includes("Publish WaveDeck 1.0.4 for Linux and Windows"));
+assert.ok(windowsWorkflow.includes("release-assets/linux/WaveDeck.AppImage"));
+assert.ok(windowsWorkflow.includes("release-assets/windows/WaveDeck.exe"));
+assert.ok(windowsWorkflow.includes('chmod 755 "$appimage"'));
 const macosInstructions = fs.readFileSync(path.join(root, "START-HERE-MACOS.txt"), "utf8");
 assert.ok(macosInstructions.includes("Version 0.6.1 universal build"));
 assert.ok(macosInstructions.includes("WaveDeck is unsigned"));

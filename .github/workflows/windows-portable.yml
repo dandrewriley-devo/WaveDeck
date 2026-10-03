@@ -1,4 +1,4 @@
-name: Build Windows portable release
+name: Build portable releases
 
 on:
   workflow_dispatch:
@@ -73,19 +73,80 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: WaveDeck-0.6.5-Windows
+          name: WaveDeck-1.0.4-Windows
           path: dist/windows/WaveDeck.exe
           if-no-files-found: error
           compression-level: 0
           retention-days: 14
 
-      - name: Publish WaveDeck 1.0.3 for Windows
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      # WaveDeck intentionally does not use a standard npm lockfile. Keep it
+      # untouched and install the pinned manifest dependencies for the build.
+      - run: npm install --package-lock=false --no-audit --no-fund
+      - run: npm test
+      - run: npm run dist:linux -- --publish never
+
+      - name: Inspect AppImage
+        shell: bash
+        run: |
+          set -euo pipefail
+          appimage="dist/WaveDeck.AppImage"
+          chmod 755 "$appimage"
+          test -f "$appimage"
+          test -x "$appimage"
+          size=$(stat --format=%s "$appimage")
+          if [ "$size" -lt 100000000 ]; then
+            echo "WaveDeck.AppImage is unexpectedly small: $size bytes."
+            exit 1
+          fi
+          sha256sum "$appimage"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WaveDeck-1.0.4-Linux
+          path: dist/WaveDeck.AppImage
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+
+  publish:
+    needs: [linux, windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: WaveDeck-1.0.4-Linux
+          path: release-assets/linux
+      - uses: actions/download-artifact@v4
+        with:
+          name: WaveDeck-1.0.4-Windows
+          path: release-assets/windows
+
+      - name: Inspect release assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f release-assets/linux/WaveDeck.AppImage
+          test -f release-assets/windows/WaveDeck.exe
+          sha256sum release-assets/linux/WaveDeck.AppImage release-assets/windows/WaveDeck.exe
+
+      - name: Publish WaveDeck 1.0.4 for Linux and Windows
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.3
+          tag_name: v1.0.4
           target_commitish: ${{ github.sha }}
-          name: WaveDeck for Windows 1.0.3
-          body: Portable Windows x64 build. Keep WaveDeck.exe beside your existing Data and Music folders.
-          files: dist/windows/WaveDeck.exe
+          name: WaveDeck 1.0.4
+          body: Portable Linux x64 and Windows x64 builds. Keep WaveDeck.AppImage or WaveDeck.exe beside your existing Data and Music folders.
+          files: |
+            release-assets/linux/WaveDeck.AppImage
+            release-assets/windows/WaveDeck.exe
           overwrite_files: true
           fail_on_unmatched_files: true

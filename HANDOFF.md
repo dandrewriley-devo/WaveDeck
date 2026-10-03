@@ -1,14 +1,14 @@
 # WaveDeck Project Handoff
 
-This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.3**.
+This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.4**.
 
 ## Current published state
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `main`
-- Current version: **1.0.3**
-- Current release: 1.0.3 — repaired the Windows release after a truncated main-process source upload.
-- Current commit: the verified 1.0.3 release commit at the head of `main`.
+- Current version: **1.0.4**
+- Current release: 1.0.4 — GitHub Releases now publishes both the portable Linux AppImage and the portable Windows EXE from the same verified source commit.
+- Current commit: the verified 1.0.4 release commit at the head of `main`.
 - 0.11.8 commit: `8118e235eed4b4a18c378f12ced8a86be83ed4b9` — monitor-safe main-window bounds persistence and portable Windows build.
 - 0.11.7 commit: `c8b69b7b8842dd6c310dda05b22b8d52870d3e84` — superseded source correction after the first portable Windows build.
 - 0.11.6 commit: `621e44d8c484cd0a4d70eb124106170f6183d0ae` — compact Local Radio Controls and remembered auxiliary-window bounds.
@@ -28,7 +28,7 @@ Always fetch and read remote `main` before changing anything. The original scrat
 - Increment the patch version for every shipped update.
 - Run both `npm test` and `git diff --check` before publishing.
 - Verify the actual remote `main` version and changed files after publishing.
-- Andrew's normal desktop icon/updater pulls and runs the source from GitHub `main`. Do not build or publish an AppImage unless he specifically asks.
+- Andrew's normal desktop icon/updater pulls and runs the source from GitHub `main`. GitHub Releases publishes the portable Linux AppImage and Windows EXE when a version is shipped; neither release artifact replaces the shared `Data` or `Music` folders.
 - MP3 files and their tags are read-only. WaveDeck may index them, but must never write metadata back to them.
 - Do not change `package-lock.json`. It is unusual/binary in this project and is not part of normal source updates.
 - Small internal or cosmetic releases do not need a new visible changelog entry unless Andrew asks. The About tab’s newest visible entry is the intentionally blank heading `WaveDeck 1.0 - Full Release - Oct 2, 2026`.

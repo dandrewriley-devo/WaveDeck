@@ -1,9 +1,7 @@
-name: Build Linux portable release
+name: Legacy Linux portable artifact
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
 
 permissions:
   contents: read
@@ -17,7 +15,10 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      - run: npm ci
+      # The published Linux AppImage is produced by the coordinated portable
+      # release workflow. This legacy manual artifact remains only for
+      # troubleshooting and must not use WaveDeck's nonstandard lockfile.
+      - run: npm install --package-lock=false --no-audit --no-fund
       - run: npm test
       - run: npm run dist:linux -- --publish never
 
