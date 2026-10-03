@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "classical-essentials",
+  "name": "Classical Essentials",
+  "description": "A welcoming classical library spanning Baroque, Classical, Romantic, and modern orchestral staples.",
+  "researchStatus": "curated-format-book-v1",
+  "formatPolicy": {
+    "trackYear": {
+      "from": 1600,
+      "to": 2026
+    },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    {
+      "source": "AllMusic - Classical",
+      "url": "https://www.allmusic.com/genre/classical-ma0000002521"
+    },
+    {
+      "source": "Billboard charts",
+      "url": "https://www.billboard.com/charts/"
+    }
+  ],
+  "coreArtists": [
+    "Johann Sebastian Bach",
+    "Ludwig van Beethoven",
+    "Wolfgang Amadeus Mozart",
+    "Antonio Vivaldi",
+    "Johannes Brahms",
+    "Pyotr Ilyich Tchaikovsky",
+    "Franz Schubert",
+    "Frederic Chopin",
+    "Claude Debussy",
+    "George Frideric Handel",
+    "Maurice Ravel",
+    "Igor Stravinsky",
+    "Gustav Mahler",
+    "Sergei Rachmaninoff",
+    "Erik Satie"
+  ],
+  "approvedArtists": [
+    "Joseph Haydn",
+    "Felix Mendelssohn",
+    "Antonin Dvorak",
+    "Camille Saint-Saens",
+    "Richard Wagner",
+    "Edward Elgar",
+    "Jean Sibelius",
+    "Arvo Part",
+    "Philip Glass",
+    "Steve Reich",
+    "John Adams",
+    "Hildegard von Bingen",
+    "Olivier Messiaen",
+    "Benjamin Britten",
+    "Aaron Copland"
+  ],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [
+    [
+      "Ludwig van Beethoven",
+      "Symphony No. 5"
+    ],
+    [
+      "Johann Sebastian Bach",
+      "Brandenburg Concerto No. 3"
+    ],
+    [
+      "Claude Debussy",
+      "Clair de Lune"
+    ]
+  ],
+  "maintenanceNotes": [
+    "This book expects composer metadata or artist fields that identify the composer."
+  ]
+}

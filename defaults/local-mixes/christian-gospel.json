@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "christian-gospel",
+  "name": "Christian & Gospel",
+  "description": "Gospel, contemporary Christian, worship, and faith-rooted pop and rock.",
+  "researchStatus": "curated-format-book-v1",
+  "formatPolicy": {
+    "trackYear": {
+      "from": 1960,
+      "to": 2026
+    },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    {
+      "source": "AllMusic - Religious",
+      "url": "https://www.allmusic.com/genre/religious-ma0000002755"
+    },
+    {
+      "source": "Billboard charts",
+      "url": "https://www.billboard.com/charts/"
+    }
+  ],
+  "coreArtists": [
+    "Aretha Franklin",
+    "Mahalia Jackson",
+    "The Blind Boys of Alabama",
+    "Kirk Franklin",
+    "CeCe Winans",
+    "Yolanda Adams",
+    "Chris Tomlin",
+    "Amy Grant",
+    "Michael W. Smith",
+    "Third Day",
+    "Casting Crowns",
+    "MercyMe",
+    "Lauren Daigle",
+    "TobyMac",
+    "Switchfoot"
+  ],
+  "approvedArtists": [
+    "Maverick City Music",
+    "Hillsong Worship",
+    "Elevation Worship",
+    "Bethel Music",
+    "Zach Williams",
+    "Crowder",
+    "for KING & COUNTRY",
+    "DC Talk",
+    "Newsboys",
+    "Steven Curtis Chapman",
+    "Gaither Vocal Band",
+    "The Clark Sisters",
+    "Tasha Cobbs Leonard",
+    "Fred Hammond",
+    "Mandisa"
+  ],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [
+    [
+      "Kirk Franklin",
+      "Stomp"
+    ],
+    [
+      "Lauren Daigle",
+      "You Say"
+    ],
+    [
+      "Chris Tomlin",
+      "How Great Is Our God"
+    ]
+  ],
+  "maintenanceNotes": [
+    "This spans gospel and Christian contemporary music but requires named artists, not a religious tag."
+  ]
+}

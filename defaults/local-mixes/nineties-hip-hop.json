@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "nineties-hip-hop",
+  "name": "'90s Hip-Hop",
+  "description": "Golden-era, G-funk, East Coast, Southern, and alternative hip-hop from the 1990s.",
+  "researchStatus": "curated-format-book-v1",
+  "formatPolicy": {
+    "trackYear": {
+      "from": 1990,
+      "to": 1999
+    },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    {
+      "source": "AllMusic - Rap",
+      "url": "https://www.allmusic.com/genre/rap-ma0000002816"
+    },
+    {
+      "source": "Billboard charts",
+      "url": "https://www.billboard.com/charts/"
+    }
+  ],
+  "coreArtists": [
+    "A Tribe Called Quest",
+    "De La Soul",
+    "Nas",
+    "The Notorious B.I.G.",
+    "2Pac",
+    "Dr. Dre",
+    "Snoop Dogg",
+    "OutKast",
+    "Wu-Tang Clan",
+    "Public Enemy",
+    "The Fugees",
+    "Missy Elliott",
+    "Busta Rhymes",
+    "Jay-Z",
+    "Beastie Boys"
+  ],
+  "approvedArtists": [
+    "Gang Starr",
+    "Mobb Deep",
+    "The Pharcyde",
+    "Common",
+    "Mos Def",
+    "Lauryn Hill",
+    "N.W.A",
+    "Ice Cube",
+    "Redman",
+    "Method Man",
+    "Cypress Hill",
+    "Jeru the Damaja",
+    "Digable Planets",
+    "LL Cool J",
+    "Salt-N-Pepa"
+  ],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [
+    [
+      "A Tribe Called Quest",
+      "Scenario"
+    ],
+    [
+      "Dr. Dre",
+      "Nuthin' but a G Thang"
+    ],
+    [
+      "OutKast",
+      "Rosa Parks"
+    ]
+  ],
+  "maintenanceNotes": [
+    "Use album and explicit-content metadata only as playback policy allows; format membership is artist/era based."
+  ]
+}

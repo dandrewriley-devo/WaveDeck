@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "singer-songwriter",
+  "name": "Singer-Songwriter",
+  "description": "A focused writers-first format with literate lyrics and distinct solo voices.",
+  "researchStatus": "curated-format-book-v1",
+  "formatPolicy": {
+    "trackYear": {
+      "from": 1965,
+      "to": 2026
+    },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    {
+      "source": "AllMusic - Singer/Songwriter",
+      "url": "https://www.allmusic.com/style/singer-songwriter-ma0000002891"
+    },
+    {
+      "source": "Billboard charts",
+      "url": "https://www.billboard.com/charts/"
+    }
+  ],
+  "coreArtists": [
+    "Bob Dylan",
+    "Joni Mitchell",
+    "Leonard Cohen",
+    "Nick Drake",
+    "Nick Cave",
+    "John Prine",
+    "Townes Van Zandt",
+    "Elvis Costello",
+    "Aimee Mann",
+    "Tori Amos",
+    "Fiona Apple",
+    "Regina Spektor",
+    "Andrew Bird",
+    "Conor Oberst",
+    "Rufus Wainwright"
+  ],
+  "approvedArtists": [
+    "Sufjan Stevens",
+    "Elliott Smith",
+    "Phoebe Bridgers",
+    "Lucy Dacus",
+    "Julien Baker",
+    "Mitski",
+    "Sharon Van Etten",
+    "Perfume Genius",
+    "Iron & Wine",
+    "Josh Ritter",
+    "Dawes",
+    "Damien Rice",
+    "Ben Folds",
+    "David Gray",
+    "Paul Simon"
+  ],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [
+    [
+      "Joni Mitchell",
+      "A Case of You"
+    ],
+    [
+      "Leonard Cohen",
+      "Hallelujah"
+    ],
+    [
+      "Fiona Apple",
+      "Criminal"
+    ]
+  ],
+  "maintenanceNotes": [
+    "More intimate than Singer-Songwriter & Folk Rock; bands are the exception rather than the rule."
+  ]
+}

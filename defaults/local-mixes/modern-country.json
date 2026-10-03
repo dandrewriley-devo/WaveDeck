@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "modern-country",
+  "name": "Modern Country",
+  "description": "Mainstream country hits and strong country-radio artists from the 1990s forward.",
+  "researchStatus": "curated-format-book-v1",
+  "formatPolicy": {
+    "trackYear": {
+      "from": 1990,
+      "to": 2026
+    },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    {
+      "source": "AllMusic - Country",
+      "url": "https://www.allmusic.com/genre/country-ma0000002532"
+    },
+    {
+      "source": "Billboard charts",
+      "url": "https://www.billboard.com/charts/"
+    }
+  ],
+  "coreArtists": [
+    "Garth Brooks",
+    "George Strait",
+    "Alan Jackson",
+    "Shania Twain",
+    "Tim McGraw",
+    "Faith Hill",
+    "Kenny Chesney",
+    "Toby Keith",
+    "Brad Paisley",
+    "Carrie Underwood",
+    "Keith Urban",
+    "Luke Combs",
+    "Chris Stapleton",
+    "Miranda Lambert",
+    "Eric Church"
+  ],
+  "approvedArtists": [
+    "Rascal Flatts",
+    "Dierks Bentley",
+    "Jason Aldean",
+    "Zac Brown Band",
+    "Blake Shelton",
+    "Little Big Town",
+    "Kelsea Ballerini",
+    "Maren Morris",
+    "Thomas Rhett",
+    "Morgan Wallen",
+    "Lainey Wilson",
+    "Jelly Roll",
+    "Cole Swindell",
+    "Brooks & Dunn",
+    "Florida Georgia Line"
+  ],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [
+    [
+      "George Strait",
+      "Check Yes or No"
+    ],
+    [
+      "Carrie Underwood",
+      "Before He Cheats"
+    ],
+    [
+      "Luke Combs",
+      "When It Rains It Pours"
+    ]
+  ],
+  "maintenanceNotes": [
+    "Classic Country retains the older traditional canon."
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "eighties-pop",
+  "name": "'80s Pop",
+  "description": "Big, melodic pop hits and crossover favorites from the 1980s.",
+  "researchStatus": "curated-format-book-v1",
+  "formatPolicy": {
+    "trackYear": {
+      "from": 1980,
+      "to": 1989
+    },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    {
+      "source": "AllMusic - Pop/Rock",
+      "url": "https://www.allmusic.com/genre/pop-rock-ma0000002613"
+    },
+    {
+      "source": "Billboard charts",
+      "url": "https://www.billboard.com/charts/"
+    }
+  ],
+  "coreArtists": [
+    "Michael Jackson",
+    "Madonna",
+    "Prince",
+    "Cyndi Lauper",
+    "Whitney Houston",
+    "George Michael",
+    "Duran Duran",
+    "Tears for Fears",
+    "A-ha",
+    "The Bangles",
+    "Culture Club",
+    "Eurythmics",
+    "Phil Collins",
+    "Genesis",
+    "Huey Lewis and the News"
+  ],
+  "approvedArtists": [
+    "The Go-Go's",
+    "Belinda Carlisle",
+    "Rick Springfield",
+    "Pat Benatar",
+    "Billy Joel",
+    "Elton John",
+    "Lionel Richie",
+    "Paula Abdul",
+    "Janet Jackson",
+    "INXS",
+    "Simple Minds",
+    "Tiffany",
+    "The Pointer Sisters",
+    "Sade",
+    "Peter Gabriel"
+  ],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [
+    [
+      "Michael Jackson",
+      "Billie Jean"
+    ],
+    [
+      "Madonna",
+      "Like a Prayer"
+    ],
+    [
+      "Tears for Fears",
+      "Everybody Wants to Rule the World"
+    ]
+  ],
+  "maintenanceNotes": [
+    "Keep this on the pop side of the decade; Alternative 80s handles the more underground lane."
+  ]
+}

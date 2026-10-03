@@ -1,6 +1,9 @@
 const SIX_MONTHS_MS = 183 * 24 * 60 * 60 * 1000;
 const RETRY_MS = 7 * 24 * 60 * 60 * 1000;
 const REQUEST_INTERVAL_MS = 1500;
+// This is WaveDeck's public, read-only API key. Desktop clients must send an
+// API key with Last.fm requests; the API secret is intentionally not bundled.
+const WAVEDECK_LASTFM_API_KEY = 'bcfd159a52580e96ad9cafa6df400a2a';
 
 const pause = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
 const normalize = value => String(value || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
@@ -24,7 +27,7 @@ class LastFmEnricher {
   }
   preferences() {
     const preferences = this.getPreferences() || {};
-    return { enabled: preferences.lastFmEnabled === true, apiKey: String(preferences.lastFmApiKey || '').trim() };
+    return { enabled: preferences.lastFmEnabled !== false, apiKey: WAVEDECK_LASTFM_API_KEY };
   }
   async refreshStatus(message = this.status.message) {
     let database = {};
@@ -36,9 +39,9 @@ class LastFmEnricher {
   }
   configure() {
     const preferences = this.preferences();
-    if (!preferences.enabled || !preferences.apiKey) {
+    if (!preferences.enabled) {
       clearTimeout(this.timer); this.timer = null;
-      void this.refreshStatus(preferences.enabled ? 'Add a Last.fm API key to begin refreshing music data.' : 'Last.fm music data is off.');
+      void this.refreshStatus('Last.fm music data is off.');
       return;
     }
     this.schedule(500);
@@ -48,7 +51,7 @@ class LastFmEnricher {
     this.timer = setTimeout(() => void this.tick(), delay);
   }
   async queueAlbum(trackId) {
-    if (!this.preferences().enabled || !this.preferences().apiKey || !trackId) return;
+    if (!this.preferences().enabled || !trackId) return;
     await this.library.queueLastFmAlbum(trackId);
     await this.refreshStatus('Refreshing the current album when the background queue reaches it.');
     this.schedule(100);
@@ -56,7 +59,6 @@ class LastFmEnricher {
   async queueFullRefresh() {
     const preferences = this.preferences();
     if (!preferences.enabled) throw new Error('Turn on Improve Music Data with Last.fm first.');
-    if (!preferences.apiKey) throw new Error('Add a Last.fm API key first.');
     await this.library.queueFullLastFmRefresh();
     await this.refreshStatus('Full Last.fm refresh queued.');
     this.schedule(100);
@@ -65,7 +67,6 @@ class LastFmEnricher {
   async testConnection() {
     const preferences = this.preferences();
     if (!preferences.enabled) throw new Error('Turn on Improve Music Data with Last.fm first.');
-    if (!preferences.apiKey) throw new Error('Add a Last.fm API key first.');
     await this.request('artist.getInfo', { artist: 'Cher' });
     await this.refreshStatus('Last.fm connection successful.');
     this.configure();
@@ -116,7 +117,7 @@ class LastFmEnricher {
   async tick() {
     if (this.running) return;
     const preferences = this.preferences();
-    if (!preferences.enabled || !preferences.apiKey) return this.configure();
+    if (!preferences.enabled) return this.configure();
     if (!this.library?.enabled) { await this.refreshStatus('Open Music to begin the Last.fm background refresh.'); return; }
     this.running = true;
     try {
@@ -128,7 +129,7 @@ class LastFmEnricher {
         ...batch.artists.map(artist => () => this.updateArtist(artist))
       ];
       for (const item of items) {
-        if (!this.preferences().enabled || !this.preferences().apiKey) break;
+        if (!this.preferences().enabled) break;
         await item();
         await pause(this.requestIntervalMs);
       }
@@ -147,4 +148,4 @@ class LastFmEnricher {
   stop() { clearTimeout(this.timer); this.timer = null; }
 }
 
-module.exports = { LastFmEnricher, popularityScore, SIX_MONTHS_MS, RETRY_MS };
+module.exports = { LastFmEnricher, WAVEDECK_LASTFM_API_KEY, popularityScore, SIX_MONTHS_MS, RETRY_MS };

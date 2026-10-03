@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "blues-essentials",
+  "name": "Blues Essentials",
+  "description": "A cross-era blues survey from Delta and Chicago blues to electric and contemporary masters.",
+  "researchStatus": "curated-format-book-v1",
+  "formatPolicy": {
+    "trackYear": {
+      "from": 1920,
+      "to": 2026
+    },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    {
+      "source": "AllMusic - Blues",
+      "url": "https://www.allmusic.com/genre/blues-ma0000002467"
+    },
+    {
+      "source": "Billboard charts",
+      "url": "https://www.billboard.com/charts/"
+    }
+  ],
+  "coreArtists": [
+    "Muddy Waters",
+    "B.B. King",
+    "Howlin' Wolf",
+    "Robert Johnson",
+    "John Lee Hooker",
+    "Etta James",
+    "Willie Dixon",
+    "Elmore James",
+    "Freddie King",
+    "Albert King",
+    "Buddy Guy",
+    "Son House",
+    "Koko Taylor",
+    "T-Bone Walker",
+    "Otis Rush"
+  ],
+  "approvedArtists": [
+    "Lightnin' Hopkins",
+    "Big Mama Thornton",
+    "Junior Wells",
+    "Jimmy Reed",
+    "Magic Sam",
+    "Robert Cray",
+    "Joe Bonamassa",
+    "Keb' Mo'",
+    "Shemekia Copeland",
+    "Gary Clark Jr.",
+    "Samantha Fish",
+    "Eric Bibb",
+    "Rory Block",
+    "Johnny Winter",
+    "Jimmie Vaughan"
+  ],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [
+    [
+      "B.B. King",
+      "The Thrill Is Gone"
+    ],
+    [
+      "Muddy Waters",
+      "Hoochie Coochie Man"
+    ],
+    [
+      "Etta James",
+      "At Last"
+    ]
+  ],
+  "maintenanceNotes": [
+    "Keep rock crossovers for Blues & Roots Rock; this book is blues first."
+  ]
+}

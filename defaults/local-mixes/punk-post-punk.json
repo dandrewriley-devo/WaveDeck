@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "punk-post-punk",
+  "name": "Punk & Post-Punk",
+  "description": "Punk energy and the artier, darker, and more melodic post-punk paths that followed.",
+  "researchStatus": "curated-format-book-v1",
+  "formatPolicy": {
+    "trackYear": {
+      "from": 1975,
+      "to": 2026
+    },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    {
+      "source": "AllMusic - Punk/New Wave",
+      "url": "https://www.allmusic.com/style/punk-new-wave-ma0000002802"
+    },
+    {
+      "source": "Billboard charts",
+      "url": "https://www.billboard.com/charts/"
+    }
+  ],
+  "coreArtists": [
+    "Ramones",
+    "The Clash",
+    "Sex Pistols",
+    "Buzzcocks",
+    "The Damned",
+    "The Cure",
+    "Joy Division",
+    "New Order",
+    "Siouxsie and the Banshees",
+    "The Smiths",
+    "The Jam",
+    "Wire",
+    "Television",
+    "Gang of Four",
+    "The Stooges"
+  ],
+  "approvedArtists": [
+    "Dead Kennedys",
+    "Bad Brains",
+    "Black Flag",
+    "Husker Du",
+    "The Replacements",
+    "The Pogues",
+    "Public Image Ltd.",
+    "Magazine",
+    "Echo & the Bunnymen",
+    "The Jesus and Mary Chain",
+    "Interpol",
+    "IDLES",
+    "Fontaines D.C.",
+    "The Libertines",
+    "The Yeah Yeah Yeahs"
+  ],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [
+    [
+      "The Clash",
+      "London Calling"
+    ],
+    [
+      "Joy Division",
+      "Love Will Tear Us Apart"
+    ],
+    [
+      "Ramones",
+      "Blitzkrieg Bop"
+    ]
+  ],
+  "maintenanceNotes": [
+    "New Wave & Synthpop is intentionally a separate, brighter format."
+  ]
+}

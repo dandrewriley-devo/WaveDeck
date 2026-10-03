@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "disco-club-classics",
+  "name": "Disco & Club Classics",
+  "description": "A dance-floor-focused mix of disco, Hi-NRG, freestyle, and classic club records.",
+  "researchStatus": "curated-format-book-v1",
+  "formatPolicy": {
+    "trackYear": {
+      "from": 1974,
+      "to": 1995
+    },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    {
+      "source": "AllMusic - Disco",
+      "url": "https://www.allmusic.com/style/disco-ma0000002552"
+    },
+    {
+      "source": "Billboard charts",
+      "url": "https://www.billboard.com/charts/"
+    }
+  ],
+  "coreArtists": [
+    "Donna Summer",
+    "Chic",
+    "Bee Gees",
+    "Sister Sledge",
+    "Gloria Gaynor",
+    "KC and the Sunshine Band",
+    "Village People",
+    "Sylvester",
+    "Thelma Houston",
+    "Evelyn Champagne King",
+    "Lime",
+    "Laura Branigan",
+    "Dead or Alive",
+    "New Order",
+    "Madonna"
+  ],
+  "approvedArtists": [
+    "Pet Shop Boys",
+    "Erasure",
+    "Technotronic",
+    "C+C Music Factory",
+    "Black Box",
+    "Robin S.",
+    "Crystal Waters",
+    "CeCe Peniston",
+    "Ultra Nate",
+    "Deee-Lite",
+    "La Bouche",
+    "Real McCoy",
+    "Corona",
+    "The Weather Girls",
+    "Yazoo"
+  ],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [
+    [
+      "Donna Summer",
+      "I Feel Love"
+    ],
+    [
+      "Robin S.",
+      "Show Me Love"
+    ],
+    [
+      "Crystal Waters",
+      "Gypsy Woman"
+    ]
+  ],
+  "maintenanceNotes": [
+    "This is tighter and more club-facing than Funk, Disco & Dance Classics."
+  ]
+}

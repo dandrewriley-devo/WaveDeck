@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "progressive-rock",
+  "name": "Progressive Rock",
+  "description": "Ambitious, album-minded rock built around long-form composition, virtuosity, and adventurous arrangements.",
+  "researchStatus": "curated-format-book-v1",
+  "formatPolicy": {
+    "trackYear": {
+      "from": 1967,
+      "to": 2026
+    },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    {
+      "source": "AllMusic - Prog-Rock",
+      "url": "https://www.allmusic.com/style/prog-rock-ma0000002798"
+    },
+    {
+      "source": "Billboard charts",
+      "url": "https://www.billboard.com/charts/"
+    }
+  ],
+  "coreArtists": [
+    "Yes",
+    "Genesis",
+    "King Crimson",
+    "Pink Floyd",
+    "Rush",
+    "Jethro Tull",
+    "Emerson Lake & Palmer",
+    "Camel",
+    "Kansas",
+    "Supertramp",
+    "The Moody Blues",
+    "Porcupine Tree",
+    "Dream Theater",
+    "Tool",
+    "Marillion"
+  ],
+  "approvedArtists": [
+    "Gentle Giant",
+    "Focus",
+    "Renaissance",
+    "Van der Graaf Generator",
+    "Asia",
+    "Spock's Beard",
+    "The Mars Volta",
+    "Coheed and Cambria",
+    "Opeth",
+    "Steven Wilson",
+    "Transatlantic",
+    "Saga",
+    "Eloy",
+    "Caravan",
+    "Procol Harum"
+  ],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [
+    [
+      "Yes",
+      "Roundabout"
+    ],
+    [
+      "Pink Floyd",
+      "Shine On You Crazy Diamond"
+    ],
+    [
+      "Rush",
+      "Tom Sawyer"
+    ]
+  ],
+  "maintenanceNotes": [
+    "Allow the expected long tracks; this format should not be forced into a pop-radio shape."
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "nineties-pop-rock",
+  "name": "'90s Pop & Rock",
+  "description": "The broad, melodic 1990s radio lane: alternative-friendly rock, adult pop, and crossover favorites.",
+  "researchStatus": "curated-format-book-v1",
+  "formatPolicy": {
+    "trackYear": {
+      "from": 1990,
+      "to": 1999
+    },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    {
+      "source": "AllMusic - Alternative Pop/Rock",
+      "url": "https://www.allmusic.com/style/alternative-pop-rock-ma0000002422"
+    },
+    {
+      "source": "Billboard charts",
+      "url": "https://www.billboard.com/charts/"
+    }
+  ],
+  "coreArtists": [
+    "R.E.M.",
+    "Tom Petty",
+    "The Wallflowers",
+    "Gin Blossoms",
+    "Counting Crows",
+    "Matchbox Twenty",
+    "Sheryl Crow",
+    "Alanis Morissette",
+    "Sarah McLachlan",
+    "Hootie & the Blowfish",
+    "The Goo Goo Dolls",
+    "Third Eye Blind",
+    "Train",
+    "No Doubt",
+    "The Cranberries"
+  ],
+  "approvedArtists": [
+    "Crowded House",
+    "Toad the Wet Sprocket",
+    "The Verve Pipe",
+    "Fastball",
+    "Semisonic",
+    "The Cardigans",
+    "Natalie Imbruglia",
+    "Jewel",
+    "Melissa Etheridge",
+    "Collective Soul",
+    "Dishwalla",
+    "Better Than Ezra",
+    "Sixpence None the Richer",
+    "Soul Asylum",
+    "Sister Hazel"
+  ],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [
+    [
+      "R.E.M.",
+      "Losing My Religion"
+    ],
+    [
+      "Gin Blossoms",
+      "Hey Jealousy"
+    ],
+    [
+      "Alanis Morissette",
+      "You Oughta Know"
+    ]
+  ],
+  "maintenanceNotes": [
+    "Keep grunge, industrial, and heavier alternative primarily in Grunge Era Rock."
+  ]
+}

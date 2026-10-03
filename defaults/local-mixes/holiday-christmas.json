@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "holiday-christmas",
+  "name": "Holiday & Christmas",
+  "description": "Seasonal favorites across traditional pop, rock, soul, country, and contemporary holiday recordings.",
+  "researchStatus": "curated-format-book-v1",
+  "formatPolicy": {
+    "trackYear": {
+      "from": 1940,
+      "to": 2026
+    },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    {
+      "source": "AllMusic - Holiday",
+      "url": "https://www.allmusic.com/genre/holiday-ma0000002679"
+    },
+    {
+      "source": "Billboard charts",
+      "url": "https://www.billboard.com/charts/"
+    }
+  ],
+  "coreArtists": [
+    "Bing Crosby",
+    "Nat King Cole",
+    "Frank Sinatra",
+    "Andy Williams",
+    "The Carpenters",
+    "Elvis Presley",
+    "Brenda Lee",
+    "Chuck Berry",
+    "The Beach Boys",
+    "Mariah Carey",
+    "Wham!",
+    "Trans-Siberian Orchestra",
+    "Michael Buble",
+    "Vince Guaraldi Trio",
+    "The Ronettes"
+  ],
+  "approvedArtists": [
+    "Stevie Wonder",
+    "The Jackson 5",
+    "John Legend",
+    "Kelly Clarkson",
+    "Pentatonix",
+    "Darlene Love",
+    "Burl Ives",
+    "Dean Martin",
+    "Amy Grant",
+    "Faith Hill",
+    "Dolly Parton",
+    "Bruce Springsteen",
+    "Paul McCartney",
+    "Sufjan Stevens",
+    "She & Him"
+  ],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [
+    [
+      "Bing Crosby",
+      "White Christmas"
+    ],
+    [
+      "Mariah Carey",
+      "All I Want for Christmas Is You"
+    ],
+    [
+      "Vince Guaraldi Trio",
+      "Christmas Time Is Here"
+    ]
+  ],
+  "maintenanceNotes": [
+    "This is intentionally seasonal. Enable it when wanted and disable it when the season ends."
+  ]
+}

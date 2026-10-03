@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "jazz-essentials",
+  "name": "Jazz Essentials",
+  "description": "An approachable cross-era jazz foundation: swing, bebop, cool jazz, vocal jazz, hard bop, and modern standards.",
+  "researchStatus": "curated-format-book-v1",
+  "formatPolicy": {
+    "trackYear": {
+      "from": 1930,
+      "to": 2026
+    },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    {
+      "source": "AllMusic - Jazz",
+      "url": "https://www.allmusic.com/genre/jazz-ma0000002674"
+    },
+    {
+      "source": "Billboard charts",
+      "url": "https://www.billboard.com/charts/"
+    }
+  ],
+  "coreArtists": [
+    "Miles Davis",
+    "John Coltrane",
+    "Duke Ellington",
+    "Louis Armstrong",
+    "Ella Fitzgerald",
+    "Billie Holiday",
+    "Thelonious Monk",
+    "Dave Brubeck",
+    "Herbie Hancock",
+    "Charles Mingus",
+    "Sonny Rollins",
+    "Stan Getz",
+    "Sarah Vaughan",
+    "Count Basie",
+    "Wayne Shorter"
+  ],
+  "approvedArtists": [
+    "Art Blakey",
+    "Cannonball Adderley",
+    "Wes Montgomery",
+    "Chet Baker",
+    "Oscar Peterson",
+    "Dizzy Gillespie",
+    "Brad Mehldau",
+    "Pat Metheny",
+    "Kamasi Washington",
+    "Esperanza Spalding",
+    "Norah Jones",
+    "Nina Simone",
+    "Mel Torme",
+    "Joe Pass",
+    "Joe Henderson"
+  ],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [
+    [
+      "Miles Davis",
+      "So What"
+    ],
+    [
+      "Dave Brubeck",
+      "Take Five"
+    ],
+    [
+      "Ella Fitzgerald",
+      "Mack the Knife"
+    ]
+  ],
+  "maintenanceNotes": [
+    "Keep this welcoming and broad; fusion and smooth jazz each have their own book."
+  ]
+}

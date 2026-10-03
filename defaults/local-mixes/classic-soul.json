@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "classic-soul",
+  "name": "Classic Soul",
+  "description": "Deep soul, Southern soul, Chicago soul, and enduring vocal groups from the 1960s and 1970s.",
+  "researchStatus": "curated-format-book-v1",
+  "formatPolicy": {
+    "trackYear": {
+      "from": 1960,
+      "to": 1979
+    },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    {
+      "source": "AllMusic - Soul",
+      "url": "https://www.allmusic.com/style/soul-ma0000002807"
+    },
+    {
+      "source": "Billboard charts",
+      "url": "https://www.billboard.com/charts/"
+    }
+  ],
+  "coreArtists": [
+    "Otis Redding",
+    "Aretha Franklin",
+    "Al Green",
+    "Marvin Gaye",
+    "Sam Cooke",
+    "Wilson Pickett",
+    "The Staple Singers",
+    "The O'Jays",
+    "The Spinners",
+    "The Chi-Lites",
+    "The Delfonics",
+    "Donny Hathaway",
+    "Bobby Womack",
+    "Curtis Mayfield",
+    "Bill Withers"
+  ],
+  "approvedArtists": [
+    "Gladys Knight & the Pips",
+    "The Impressions",
+    "The Dramatics",
+    "Betty Wright",
+    "Ann Peebles",
+    "Candi Staton",
+    "Bobby Blue Bland",
+    "Tyrone Davis",
+    "The Isley Brothers",
+    "The Temptations",
+    "Eddie Floyd",
+    "James Carr",
+    "The Persuaders",
+    "The Main Ingredient",
+    "The Manhattans"
+  ],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [
+    [
+      "Otis Redding",
+      "Sittin' On The Dock of the Bay"
+    ],
+    [
+      "Al Green",
+      "Let's Stay Together"
+    ],
+    [
+      "Bill Withers",
+      "Ain't No Sunshine"
+    ]
+  ],
+  "maintenanceNotes": [
+    "This is more intimate and gritty than the broader Motown and Classic R&B book."
+  ]
+}

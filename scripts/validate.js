@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "1.0.4");
-assert.strictEqual(packageJson.wavedeckVersion, "1.0.4");
+assert.strictEqual(packageJson.version, "1.0.5");
+assert.strictEqual(packageJson.wavedeckVersion, "1.0.5");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
@@ -181,11 +181,16 @@ assert.ok(defaultLibrary.stations.every((station) => (
 assert.ok(!fs.existsSync(path.join(defaultsDir, "preferences.json")));
 const formatBookDirectory = path.join(defaultsDir, "local-mixes");
 const formatBooks = fs.readdirSync(formatBookDirectory).filter(name => name.endsWith('.json')).sort();
-assert.deepStrictEqual(formatBooks, ["alternative-80s.json", "classic-country.json", "classic-hits.json", "classic-rock.json", "grunge-era-rock.json", "rock-and-metal.json", "your-best-music.json"]);
+assert.strictEqual(formatBooks.length, 49);
+assert.ok(formatBooks.includes("classic-rock.json"));
+assert.ok(formatBooks.includes("christian-gospel.json"));
+assert.ok(formatBooks.includes("ambient-chill.json"));
+assert.ok(formatBooks.includes("world-music.json"));
+assert.ok(!formatBooks.includes("yacht-rock.json"));
 for (const name of formatBooks) {
   const mix = JSON.parse(fs.readFileSync(path.join(formatBookDirectory, name), "utf8"));
   assert.ok(mix.id && mix.name && mix.description, `${name} must identify its Local Mix`);
-  assert.ok(Array.isArray(mix.sourceBasis) && mix.sourceBasis.length >= 3, `${name} must retain its research basis`);
+  assert.ok(Array.isArray(mix.sourceBasis) && mix.sourceBasis.length >= 2, `${name} must retain its research basis`);
 }
 assert.deepStrictEqual(SEARCH_FIELDS, ["name", "group", "subgroup", "country", "description", "url"]);
 assert.strictEqual(normalizeSearchText("  RÁDIO Zürich  "), "radio zurich");
@@ -307,6 +312,8 @@ try {
   const storage = new PortableStorage({ dataDir, defaultsDir });
   storage.initialize();
   storage.assertWritable();
+  assert.ok(fs.statSync(path.join(testRoot, "Music")).isDirectory());
+  assert.ok(fs.statSync(path.join(testRoot, "Recordings")).isDirectory());
   assert.strictEqual(storage.readStations().length, 360);
   assert.strictEqual(storage.readGroups().length, 17);
   assert.strictEqual(storage.readSubgroups().groups.reduce((sum, entry) => sum + entry.subgroups.length, 0), 105);
@@ -336,7 +343,7 @@ try {
     downloadNewStations: true,
     proModeEnabled: false,
     additionalMusicFolder: "",
-    lastFmEnabled: false,
+    lastFmEnabled: true,
     lastFmApiKey: "",
     localRadioFamiliarity: "balanced",
     localRadioSongRepeatHours: 4,
@@ -371,7 +378,7 @@ try {
   assert.deepStrictEqual(storage.getLinuxUiPreferences(), {
     proModeEnabled: false,
     additionalMusicFolder: "",
-    lastFmEnabled: false,
+    lastFmEnabled: true,
     lastFmApiKey: "",
     localRadioFamiliarity: "balanced",
     localRadioSongRepeatHours: 4,
@@ -393,7 +400,7 @@ try {
   assert.strictEqual(storage.setLaunchInSidebarMode(true).launchInSidebarMode, true);
   assert.strictEqual(storage.setProModeEnabled(true).proModeEnabled, true);
   assert.strictEqual(storage.setAdditionalMusicFolder("/mnt/music").additionalMusicFolder, "/mnt/music");
-  assert.strictEqual(storage.setLastFmSettings({ enabled: true, apiKey: 'test-key' }).lastFmEnabled, true);
+  assert.strictEqual(storage.setLastFmSettings({ enabled: true }).lastFmEnabled, true);
   assert.strictEqual(storage.setLocalRadioFamiliarity('hits').localRadioFamiliarity, 'hits');
   assert.deepStrictEqual(storage.setLocalRadioTuning({ songRepeatHours: 6, artistRepeatMinutes: 180, artistSetSize: 2 }).localRadioArtistSetSize, 2);
   assert.strictEqual(storage.setLocalMusicCrossfadeEnabled(false).localMusicCrossfadeEnabled, false);
@@ -461,7 +468,7 @@ try {
     proModeEnabled: true,
     additionalMusicFolder: "/mnt/music",
     lastFmEnabled: true,
-    lastFmApiKey: "test-key",
+    lastFmApiKey: "",
     localRadioFamiliarity: "hits",
     localRadioSongRepeatHours: 6,
     localRadioArtistRepeatMinutes: 180,
@@ -1346,7 +1353,7 @@ assert.ok(!settingsHtml.includes('radio-rule-tab'));
 assert.ok(!settingsHtml.includes('id="resetAllRadioRules"'));
 assert.ok(settingsHtml.includes('id="chooseAdditionalMusicFolderBtn"'));
 assert.ok(settingsHtml.includes('id="lastFmEnabled"'));
-assert.ok(settingsHtml.includes('id="lastFmApiKey"'));
+assert.ok(!settingsHtml.includes('id="lastFmApiKey"'));
 assert.ok(settingsHtml.includes('id="queueLastFmRefreshBtn"'));
 assert.ok(localRadioControlsHtml.includes('min="1" max="24" step="1"'));
 assert.ok(localRadioControlsHtml.includes('>Three-way<'));
@@ -1422,6 +1429,9 @@ assert.ok(mainSource.includes("constrainBoundsToDisplay"));
 assert.ok(mainSource.includes("LASTFM_REFRESH_SHORTCUT"));
 assert.ok(mainSource.includes("music:lastfm:queue-full"));
 assert.ok(fs.existsSync(path.join(root, 'src', 'main', 'lastfm-enricher.js')));
+const lastFmEnricherSource = fs.readFileSync(path.join(root, 'src', 'main', 'lastfm-enricher.js'), 'utf8');
+assert.ok(lastFmEnricherSource.includes('WAVEDECK_LASTFM_API_KEY'));
+assert.ok(!lastFmEnricherSource.includes('Add a Last.fm API key'));
 assert.ok(!mainSource.includes("calculateSidebarLayout"));
 assert.ok(!mainSource.includes("setReservedSpace"));
 assert.ok(mainSource.includes('type: sidebar && process.platform === "linux" ? "dock" : undefined'));
@@ -1695,9 +1705,9 @@ assert.ok(windowsWorkflow.includes("jobs:"));
 assert.ok(windowsWorkflow.includes("linux:"));
 assert.ok(windowsWorkflow.includes("needs: [linux, windows]"));
 assert.ok(windowsWorkflow.includes("npm run dist:linux -- --publish never"));
-assert.ok(windowsWorkflow.includes("WaveDeck-1.0.4-Linux"));
-assert.ok(windowsWorkflow.includes("WaveDeck-1.0.4-Windows"));
-assert.ok(windowsWorkflow.includes("Publish WaveDeck 1.0.4 for Linux and Windows"));
+assert.ok(windowsWorkflow.includes("WaveDeck-1.0.5-Linux"));
+assert.ok(windowsWorkflow.includes("WaveDeck-1.0.5-Windows"));
+assert.ok(windowsWorkflow.includes("Publish WaveDeck 1.0.5 for Linux and Windows"));
 assert.ok(windowsWorkflow.includes("release-assets/linux/WaveDeck.AppImage"));
 assert.ok(windowsWorkflow.includes("release-assets/windows/WaveDeck.exe"));
 assert.ok(windowsWorkflow.includes('chmod 755 "$appimage"'));

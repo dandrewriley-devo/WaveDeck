@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "twenty-tens-twenties-pop",
+  "name": "2010s & 2020s Pop",
+  "description": "Current-era pop from the 2010s and 2020s: hooks, vocal stars, and modern radio staples.",
+  "researchStatus": "curated-format-book-v1",
+  "formatPolicy": {
+    "trackYear": {
+      "from": 2010,
+      "to": 2026
+    },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    {
+      "source": "AllMusic - Pop",
+      "url": "https://www.allmusic.com/genre/pop-ma0000002611"
+    },
+    {
+      "source": "Billboard charts",
+      "url": "https://www.billboard.com/charts/"
+    }
+  ],
+  "coreArtists": [
+    "Taylor Swift",
+    "Dua Lipa",
+    "Adele",
+    "Bruno Mars",
+    "Ed Sheeran",
+    "Billie Eilish",
+    "Olivia Rodrigo",
+    "Harry Styles",
+    "The Weeknd",
+    "Miley Cyrus",
+    "Lizzo",
+    "Sabrina Carpenter",
+    "Chappell Roan",
+    "Ariana Grande",
+    "Katy Perry"
+  ],
+  "approvedArtists": [
+    "Lady Gaga",
+    "Sia",
+    "Halsey",
+    "Shawn Mendes",
+    "Camila Cabello",
+    "Tate McRae",
+    "Doja Cat",
+    "Selena Gomez",
+    "Charlie Puth",
+    "Bebe Rexha",
+    "Tove Lo",
+    "Lauv",
+    "Benson Boone",
+    "Zedd",
+    "Khalid"
+  ],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [
+    [
+      "Dua Lipa",
+      "Levitating"
+    ],
+    [
+      "Taylor Swift",
+      "Anti-Hero"
+    ],
+    [
+      "The Weeknd",
+      "Blinding Lights"
+    ]
+  ],
+  "maintenanceNotes": [
+    "This is a deliberately broad modern pop book; genre tags alone do not admit artists."
+  ]
+}

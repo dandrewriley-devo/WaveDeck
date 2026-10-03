@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "latin-pop-rock",
+  "name": "Latin Pop & Rock",
+  "description": "Spanish-language and Latin crossover pop and rock with durable melodies and band energy.",
+  "researchStatus": "curated-format-book-v1",
+  "formatPolicy": {
+    "trackYear": {
+      "from": 1970,
+      "to": 2026
+    },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    {
+      "source": "AllMusic - Latin",
+      "url": "https://www.allmusic.com/genre/latin-ma0000002692"
+    },
+    {
+      "source": "Billboard charts",
+      "url": "https://www.billboard.com/charts/"
+    }
+  ],
+  "coreArtists": [
+    "Santana",
+    "Mana",
+    "Soda Stereo",
+    "Caifanes",
+    "Juanes",
+    "Shakira",
+    "Carlos Vives",
+    "Julieta Venegas",
+    "Cafe Tacvba",
+    "Los Fabulosos Cadillacs",
+    "Enrique Iglesias",
+    "Ricky Martin",
+    "Gloria Estefan",
+    "Selena",
+    "Natalia Lafourcade"
+  ],
+  "approvedArtists": [
+    "Bomba Estereo",
+    "Aterciopelados",
+    "Zoé",
+    "La Ley",
+    "Los Enanitos Verdes",
+    "Los Amigos Invisibles",
+    "Gustavo Cerati",
+    "Jorge Drexler",
+    "Mon Laferte",
+    "Camilo",
+    "Sebastian Yatra",
+    "Rosalia",
+    "Bad Bunny",
+    "Becky G",
+    "Kali Uchis"
+  ],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [
+    [
+      "Santana",
+      "Oye Como Va"
+    ],
+    [
+      "Mana",
+      "Rayando el Sol"
+    ],
+    [
+      "Shakira",
+      "Hips Don't Lie"
+    ]
+  ],
+  "maintenanceNotes": [
+    "This is melodic Latin pop and rock, not a catch-all for every Latin style."
+  ]
+}

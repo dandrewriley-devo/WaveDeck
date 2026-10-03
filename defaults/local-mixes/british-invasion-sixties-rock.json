@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "british-invasion-sixties-rock",
+  "name": "British Invasion & '60s Rock",
+  "description": "British and American guitar rock from the 1960s: invasion bands, garage, psychedelia, and mod.",
+  "researchStatus": "curated-format-book-v1",
+  "formatPolicy": {
+    "trackYear": {
+      "from": 1963,
+      "to": 1969
+    },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    {
+      "source": "AllMusic - British Invasion",
+      "url": "https://www.allmusic.com/style/british-invasion-ma0000002452"
+    },
+    {
+      "source": "Billboard charts",
+      "url": "https://www.billboard.com/charts/"
+    }
+  ],
+  "coreArtists": [
+    "The Beatles",
+    "The Rolling Stones",
+    "The Who",
+    "The Kinks",
+    "The Animals",
+    "The Yardbirds",
+    "The Hollies",
+    "The Zombies",
+    "The Small Faces",
+    "The Searchers",
+    "The Troggs",
+    "The Byrds",
+    "The Doors",
+    "Jefferson Airplane",
+    "The Jimi Hendrix Experience"
+  ],
+  "approvedArtists": [
+    "Cream",
+    "The Spencer Davis Group",
+    "The Dave Clark Five",
+    "Herman's Hermits",
+    "The Monkees",
+    "The Mamas & the Papas",
+    "The Lovin' Spoonful",
+    "The Guess Who",
+    "The Seeds",
+    "The 13th Floor Elevators",
+    "Donovan",
+    "Procol Harum",
+    "Traffic",
+    "The Pretty Things",
+    "The Turtles"
+  ],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [
+    [
+      "The Beatles",
+      "Ticket to Ride"
+    ],
+    [
+      "The Who",
+      "My Generation"
+    ],
+    [
+      "The Kinks",
+      "You Really Got Me"
+    ]
+  ],
+  "maintenanceNotes": [
+    "Keep it within the 1960s; late Beatles belong here, as well as in Classic Rock where appropriate."
+  ]
+}

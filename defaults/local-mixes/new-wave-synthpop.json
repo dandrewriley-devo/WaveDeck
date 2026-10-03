@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "new-wave-synthpop",
+  "name": "New Wave & Synthpop",
+  "description": "Synth-led, hook-heavy late-1970s and 1980s new wave and synthpop.",
+  "researchStatus": "curated-format-book-v1",
+  "formatPolicy": {
+    "trackYear": {
+      "from": 1978,
+      "to": 1991
+    },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    {
+      "source": "AllMusic - New Wave",
+      "url": "https://www.allmusic.com/style/new-wave-ma0000002750"
+    },
+    {
+      "source": "Billboard charts",
+      "url": "https://www.billboard.com/charts/"
+    }
+  ],
+  "coreArtists": [
+    "Depeche Mode",
+    "New Order",
+    "Pet Shop Boys",
+    "The Human League",
+    "Gary Numan",
+    "OMD",
+    "Erasure",
+    "Yazoo",
+    "A Flock of Seagulls",
+    "The Cars",
+    "Duran Duran",
+    "Simple Minds",
+    "Tears for Fears",
+    "Eurythmics",
+    "Soft Cell"
+  ],
+  "approvedArtists": [
+    "Ultravox",
+    "Heaven 17",
+    "Talk Talk",
+    "Thompson Twins",
+    "The Psychedelic Furs",
+    "INXS",
+    "Men at Work",
+    "The Fixx",
+    "The B-52's",
+    "Berlin",
+    "Book of Love",
+    "Information Society",
+    "Kraftwerk",
+    "Midge Ure",
+    "Sparks"
+  ],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [
+    [
+      "New Order",
+      "Blue Monday"
+    ],
+    [
+      "Depeche Mode",
+      "Just Can't Get Enough"
+    ],
+    [
+      "A Flock of Seagulls",
+      "I Ran"
+    ]
+  ],
+  "maintenanceNotes": [
+    "Alternative 80s can be broader; this book is specifically synth and new-wave driven."
+  ]
+}

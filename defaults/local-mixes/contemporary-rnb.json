@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "contemporary-rnb",
+  "name": "Contemporary R&B",
+  "description": "Polished R&B, neo-soul, and vocal-forward crossover from the 1990s onward.",
+  "researchStatus": "curated-format-book-v1",
+  "formatPolicy": {
+    "trackYear": {
+      "from": 1990,
+      "to": 2026
+    },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    {
+      "source": "AllMusic - Contemporary R&B",
+      "url": "https://www.allmusic.com/style/contemporary-r-b-ma0000002969"
+    },
+    {
+      "source": "Billboard charts",
+      "url": "https://www.billboard.com/charts/"
+    }
+  ],
+  "coreArtists": [
+    "Mary J. Blige",
+    "Aaliyah",
+    "Usher",
+    "Beyonce",
+    "Alicia Keys",
+    "Brandy",
+    "Monica",
+    "TLC",
+    "SZA",
+    "H.E.R.",
+    "Jazmine Sullivan",
+    "Summer Walker",
+    "Frank Ocean",
+    "The Weeknd",
+    "Miguel"
+  ],
+  "approvedArtists": [
+    "Maxwell",
+    "D'Angelo",
+    "Erykah Badu",
+    "India.Arie",
+    "Jill Scott",
+    "Musiq Soulchild",
+    "Chris Brown",
+    "Ne-Yo",
+    "John Legend",
+    "Khalid",
+    "Giveon",
+    "Lucky Daye",
+    "Victoria Monet",
+    "Kehlani",
+    "Ella Mai"
+  ],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [
+    [
+      "Alicia Keys",
+      "If I Ain't Got You"
+    ],
+    [
+      "SZA",
+      "Good Days"
+    ],
+    [
+      "Usher",
+      "Yeah!"
+    ]
+  ],
+  "maintenanceNotes": [
+    "Keep classic soul and Motown in their own period-focused books."
+  ]
+}

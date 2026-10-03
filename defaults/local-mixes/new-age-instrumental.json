@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "new-age-instrumental",
+  "name": "New Age & Instrumental",
+  "description": "Melodic instrumental, new age, contemporary piano, and serene crossover music.",
+  "researchStatus": "curated-format-book-v1",
+  "formatPolicy": {
+    "trackYear": {
+      "from": 1975,
+      "to": 2026
+    },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    {
+      "source": "AllMusic - New Age",
+      "url": "https://www.allmusic.com/genre/new-age-ma0000002749"
+    },
+    {
+      "source": "Billboard charts",
+      "url": "https://www.billboard.com/charts/"
+    }
+  ],
+  "coreArtists": [
+    "Enya",
+    "Yanni",
+    "George Winston",
+    "Kitaro",
+    "Vangelis",
+    "Loreena McKennitt",
+    "Andreas Vollenweider",
+    "Will Ackerman",
+    "David Arkenstone",
+    "Enigma",
+    "Secret Garden",
+    "Mannheim Steamroller",
+    "Ludovico Einaudi",
+    "Yiruma",
+    "Jim Brickman"
+  ],
+  "approvedArtists": [
+    "Philip Aaberg",
+    "Michael Hedges",
+    "Ottmar Liebert",
+    "Paul Winter",
+    "Patrick O'Hearn",
+    "Tingstad & Rumbel",
+    "Brian Crain",
+    "2002",
+    "Cusco",
+    "Adiemus",
+    "Klaus Schulze",
+    "Jean-Michel Jarre",
+    "Mike Oldfield",
+    "Keiko Matsui",
+    "David Lanz"
+  ],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [
+    [
+      "Enya",
+      "Orinoco Flow"
+    ],
+    [
+      "George Winston",
+      "Thanksgiving"
+    ],
+    [
+      "Vangelis",
+      "Chariots of Fire"
+    ]
+  ],
+  "maintenanceNotes": [
+    "Ambient & Chill is more electronic and experimental; this mix stays melodic and restorative."
+  ]
+}

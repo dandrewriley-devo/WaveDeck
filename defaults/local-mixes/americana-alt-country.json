@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "americana-alt-country",
+  "name": "Americana & Alt-Country",
+  "description": "Roots-oriented country, folk, and rock that favors writers and bands outside the slick Nashville lane.",
+  "researchStatus": "curated-format-book-v1",
+  "formatPolicy": {
+    "trackYear": {
+      "from": 1970,
+      "to": 2026
+    },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    {
+      "source": "AllMusic - Americana",
+      "url": "https://www.allmusic.com/genre/americana-ma0000004415"
+    },
+    {
+      "source": "Billboard charts",
+      "url": "https://www.billboard.com/charts/"
+    }
+  ],
+  "coreArtists": [
+    "Uncle Tupelo",
+    "Wilco",
+    "Son Volt",
+    "Drive-By Truckers",
+    "Jason Isbell",
+    "Lucinda Williams",
+    "Steve Earle",
+    "The Jayhawks",
+    "Gillian Welch",
+    "Ryan Adams",
+    "The Avett Brothers",
+    "The Civil Wars",
+    "Sturgill Simpson",
+    "Margo Price",
+    "Tyler Childers"
+  ],
+  "approvedArtists": [
+    "Whiskeytown",
+    "Old 97's",
+    "The Bottle Rockets",
+    "Lyle Lovett",
+    "Neko Case",
+    "The Lone Bellow",
+    "The SteelDrivers",
+    "The War and Treaty",
+    "Chris Stapleton",
+    "Brandi Carlile",
+    "John Hiatt",
+    "Hayes Carll",
+    "Turnpike Troubadours",
+    "The Wood Brothers",
+    "The Milk Carton Kids"
+  ],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [
+    [
+      "Wilco",
+      "California Stars"
+    ],
+    [
+      "Jason Isbell",
+      "If We Were Vampires"
+    ],
+    [
+      "Lucinda Williams",
+      "Car Wheels on a Gravel Road"
+    ]
+  ],
+  "maintenanceNotes": [
+    "This is a roots alternative to Modern Country, not a generic country catch-all."
+  ]
+}

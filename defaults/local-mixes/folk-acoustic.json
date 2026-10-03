@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "folk-acoustic",
+  "name": "Folk & Acoustic",
+  "description": "Acoustic-rooted folk, contemporary folk, and harmony-rich Americana.",
+  "researchStatus": "curated-format-book-v1",
+  "formatPolicy": {
+    "trackYear": {
+      "from": 1958,
+      "to": 2026
+    },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    {
+      "source": "AllMusic - Folk",
+      "url": "https://www.allmusic.com/genre/folk-ma0000002592"
+    },
+    {
+      "source": "Billboard charts",
+      "url": "https://www.billboard.com/charts/"
+    }
+  ],
+  "coreArtists": [
+    "Pete Seeger",
+    "Joan Baez",
+    "The Kingston Trio",
+    "Simon & Garfunkel",
+    "The Byrds",
+    "Fairport Convention",
+    "Nick Drake",
+    "John Denver",
+    "Indigo Girls",
+    "The Civil Wars",
+    "The Lumineers",
+    "Mumford & Sons",
+    "The Head and the Heart",
+    "The Milk Carton Kids",
+    "The Tallest Man on Earth"
+  ],
+  "approvedArtists": [
+    "First Aid Kit",
+    "The Oh Hellos",
+    "The Paper Kites",
+    "The Wailin' Jennys",
+    "Punch Brothers",
+    "Nickel Creek",
+    "The Decemberists",
+    "Fleet Foxes",
+    "The Avett Brothers",
+    "The Lone Bellow",
+    "The Weepies",
+    "Gregory Alan Isakov",
+    "José González",
+    "Iron & Wine",
+    "The Mountain Goats"
+  ],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [
+    [
+      "Simon & Garfunkel",
+      "The Sound of Silence"
+    ],
+    [
+      "The Lumineers",
+      "Ho Hey"
+    ],
+    [
+      "First Aid Kit",
+      "Emmylou"
+    ]
+  ],
+  "maintenanceNotes": [
+    "Keep the acoustic center; use Americana & Alt-Country for country-rock material."
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "hard-rock",
+  "name": "Hard Rock",
+  "description": "Riff-forward hard rock from the 1970s through current arena and bluesy revival acts.",
+  "researchStatus": "curated-format-book-v1",
+  "formatPolicy": {
+    "trackYear": {
+      "from": 1970,
+      "to": 2026
+    },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    {
+      "source": "AllMusic - Hard Rock",
+      "url": "https://www.allmusic.com/style/hard-rock-ma0000002628"
+    },
+    {
+      "source": "Billboard charts",
+      "url": "https://www.billboard.com/charts/"
+    }
+  ],
+  "coreArtists": [
+    "AC/DC",
+    "Aerosmith",
+    "Bad Company",
+    "Deep Purple",
+    "Led Zeppelin",
+    "Van Halen",
+    "Scorpions",
+    "KISS",
+    "Guns N' Roses",
+    "The Cult",
+    "Def Leppard",
+    "Whitesnake",
+    "Bon Jovi",
+    "Stone Temple Pilots",
+    "Alice in Chains"
+  ],
+  "approvedArtists": [
+    "Soundgarden",
+    "The Black Crowes",
+    "Velvet Revolver",
+    "Alter Bridge",
+    "Shinedown",
+    "Halestorm",
+    "Rival Sons",
+    "The Darkness",
+    "Airbourne",
+    "Black Stone Cherry",
+    "Wolfmother",
+    "Greta Van Fleet",
+    "Dirty Honey",
+    "Mammoth WVH",
+    "The Pretty Reckless"
+  ],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [
+    [
+      "AC/DC",
+      "Back in Black"
+    ],
+    [
+      "Led Zeppelin",
+      "Whole Lotta Love"
+    ],
+    [
+      "Van Halen",
+      "Panama"
+    ]
+  ],
+  "maintenanceNotes": [
+    "Rock and Metal remains the broad umbrella; this is the riff-and-chorus lane."
+  ]
+}

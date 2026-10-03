@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "singer-songwriter-folk-rock",
+  "name": "Singer-Songwriter & Folk Rock",
+  "description": "Story-led songs where the writing, voice, and acoustic or roots-rock feel lead the mix.",
+  "researchStatus": "curated-format-book-v1",
+  "formatPolicy": {
+    "trackYear": {
+      "from": 1965,
+      "to": 2026
+    },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    {
+      "source": "AllMusic - Singer/Songwriter",
+      "url": "https://www.allmusic.com/style/singer-songwriter-ma0000002891"
+    },
+    {
+      "source": "Billboard charts",
+      "url": "https://www.billboard.com/charts/"
+    }
+  ],
+  "coreArtists": [
+    "Bob Dylan",
+    "Joni Mitchell",
+    "James Taylor",
+    "Carole King",
+    "Jackson Browne",
+    "Gordon Lightfoot",
+    "Cat Stevens",
+    "John Prine",
+    "Neil Young",
+    "Crosby Stills Nash & Young",
+    "Simon & Garfunkel",
+    "Tracy Chapman",
+    "Shawn Colvin",
+    "Sarah McLachlan",
+    "Suzanne Vega"
+  ],
+  "approvedArtists": [
+    "Neko Case",
+    "Brandi Carlile",
+    "Jason Isbell",
+    "Ray LaMontagne",
+    "Aimee Mann",
+    "Ryan Adams",
+    "Tori Amos",
+    "David Gray",
+    "The Indigo Girls",
+    "Ani DiFranco",
+    "Joan Baez",
+    "Richard Thompson",
+    "Sufjan Stevens",
+    "Iron & Wine",
+    "The Avett Brothers"
+  ],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [
+    [
+      "Carole King",
+      "It's Too Late"
+    ],
+    [
+      "James Taylor",
+      "Fire and Rain"
+    ],
+    [
+      "Brandi Carlile",
+      "The Story"
+    ]
+  ],
+  "maintenanceNotes": [
+    "Keep amplified folk-rock welcome; avoid using broad folk tags as automatic eligibility."
+  ]
+}

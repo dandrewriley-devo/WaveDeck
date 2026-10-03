@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "twenty-tens-twenties-hip-hop",
+  "name": "2010s & 2020s Hip-Hop",
+  "description": "Modern hip-hop spanning mainstream, melodic, Southern, and alternative rap.",
+  "researchStatus": "curated-format-book-v1",
+  "formatPolicy": {
+    "trackYear": {
+      "from": 2010,
+      "to": 2026
+    },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    {
+      "source": "AllMusic - Rap",
+      "url": "https://www.allmusic.com/genre/rap-ma0000002816"
+    },
+    {
+      "source": "Billboard charts",
+      "url": "https://www.billboard.com/charts/"
+    }
+  ],
+  "coreArtists": [
+    "Kendrick Lamar",
+    "Drake",
+    "J. Cole",
+    "Future",
+    "Travis Scott",
+    "Cardi B",
+    "Megan Thee Stallion",
+    "Nicki Minaj",
+    "Tyler the Creator",
+    "Childish Gambino",
+    "Post Malone",
+    "Lil Nas X",
+    "Doja Cat",
+    "Metro Boomin",
+    "21 Savage"
+  ],
+  "approvedArtists": [
+    "A$AP Rocky",
+    "Run the Jewels",
+    "Mac Miller",
+    "Vince Staples",
+    "Denzel Curry",
+    "Roddy Ricch",
+    "Lil Baby",
+    "Gunna",
+    "Jack Harlow",
+    "Latto",
+    "Ice Spice",
+    "GloRilla",
+    "Noname",
+    "Rapsody",
+    "Chance the Rapper"
+  ],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [
+    [
+      "Kendrick Lamar",
+      "HUMBLE."
+    ],
+    [
+      "Drake",
+      "Started From the Bottom"
+    ],
+    [
+      "Cardi B",
+      "Bodak Yellow"
+    ]
+  ],
+  "maintenanceNotes": [
+    "Use a current format with explicit decade limits; 1990s and 2000s books retain their own identities."
+  ]
+}

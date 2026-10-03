@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "reggae-ska",
+  "name": "Reggae & Ska",
+  "description": "A broad Jamaican and reggae-family mix spanning ska, rocksteady, roots, dub, lovers rock, and dancehall.",
+  "researchStatus": "curated-format-book-v1",
+  "formatPolicy": {
+    "trackYear": {
+      "from": 1960,
+      "to": 2026
+    },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    {
+      "source": "AllMusic - Reggae",
+      "url": "https://www.allmusic.com/genre/reggae-ma0000002820"
+    },
+    {
+      "source": "Billboard charts",
+      "url": "https://www.billboard.com/charts/"
+    }
+  ],
+  "coreArtists": [
+    "Bob Marley & the Wailers",
+    "Peter Tosh",
+    "Jimmy Cliff",
+    "Toots and the Maytals",
+    "Burning Spear",
+    "Desmond Dekker",
+    "The Skatalites",
+    "The Specials",
+    "Madness",
+    "UB40",
+    "Steel Pulse",
+    "Black Uhuru",
+    "Dennis Brown",
+    "Gregory Isaacs",
+    "Buju Banton"
+  ],
+  "approvedArtists": [
+    "Barrington Levy",
+    "Culture",
+    "Third World",
+    "Max Romeo",
+    "Lee Scratch Perry",
+    "Augustus Pablo",
+    "King Tubby",
+    "Scientist",
+    "Eek-A-Mouse",
+    "Shaggy",
+    "Sean Paul",
+    "Sublime",
+    "No Doubt",
+    "The Selecter",
+    "The English Beat"
+  ],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [
+    [
+      "Bob Marley & the Wailers",
+      "Three Little Birds"
+    ],
+    [
+      "Toots and the Maytals",
+      "Pressure Drop"
+    ],
+    [
+      "The Specials",
+      "A Message to You Rudy"
+    ]
+  ],
+  "maintenanceNotes": [
+    "The family is intentionally broad, but arbitrary songs with a reggae tag never qualify."
+  ]
+}

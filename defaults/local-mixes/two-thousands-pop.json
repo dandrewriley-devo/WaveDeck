@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "two-thousands-pop",
+  "name": "2000s Pop",
+  "description": "Big, melodic, radio-defining pop from 2000 through 2009.",
+  "researchStatus": "curated-format-book-v1",
+  "formatPolicy": {
+    "trackYear": {
+      "from": 2000,
+      "to": 2009
+    },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    {
+      "source": "AllMusic - Pop",
+      "url": "https://www.allmusic.com/genre/pop-ma0000002611"
+    },
+    {
+      "source": "Billboard charts",
+      "url": "https://www.billboard.com/charts/"
+    }
+  ],
+  "coreArtists": [
+    "Britney Spears",
+    "Christina Aguilera",
+    "Justin Timberlake",
+    "Nelly Furtado",
+    "Kelly Clarkson",
+    "P!nk",
+    "Rihanna",
+    "Beyonce",
+    "Alicia Keys",
+    "Gwen Stefani",
+    "Katy Perry",
+    "Lady Gaga",
+    "Maroon 5",
+    "The Black Eyed Peas",
+    "Natasha Bedingfield"
+  ],
+  "approvedArtists": [
+    "Avril Lavigne",
+    "Ashlee Simpson",
+    "Hilary Duff",
+    "Fergie",
+    "Colbie Caillat",
+    "Sara Bareilles",
+    "Jason Mraz",
+    "James Blunt",
+    "Daniel Powter",
+    "Lifehouse",
+    "The Script",
+    "Jordin Sparks",
+    "Leona Lewis",
+    "Jonas Brothers",
+    "Jesse McCartney"
+  ],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [
+    [
+      "Kelly Clarkson",
+      "Since U Been Gone"
+    ],
+    [
+      "Rihanna",
+      "Umbrella"
+    ],
+    [
+      "Lady Gaga",
+      "Poker Face"
+    ]
+  ],
+  "maintenanceNotes": [
+    "Use clear decade boundaries so this does not become a general pop pool."
+  ]
+}

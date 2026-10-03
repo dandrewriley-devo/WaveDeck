@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "blues-roots-rock",
+  "name": "Blues & Roots Rock",
+  "description": "Electric blues, rootsy guitar rock, and classic American rock-and-roll grit.",
+  "researchStatus": "curated-format-book-v1",
+  "formatPolicy": {
+    "trackYear": {
+      "from": 1965,
+      "to": 2026
+    },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    {
+      "source": "AllMusic - Blues-Rock",
+      "url": "https://www.allmusic.com/style/blues-rock-ma0000002462"
+    },
+    {
+      "source": "Billboard charts",
+      "url": "https://www.billboard.com/charts/"
+    }
+  ],
+  "coreArtists": [
+    "The Allman Brothers Band",
+    "Stevie Ray Vaughan",
+    "ZZ Top",
+    "The Black Crowes",
+    "Joe Bonamassa",
+    "Derek and the Dominos",
+    "The Derek Trucks Band",
+    "Gary Clark Jr.",
+    "The Fabulous Thunderbirds",
+    "George Thorogood",
+    "The Band",
+    "Little Feat",
+    "The Black Keys",
+    "Tedeschi Trucks Band",
+    "Robert Cray"
+  ],
+  "approvedArtists": [
+    "Johnny Winter",
+    "Rory Gallagher",
+    "Warren Haynes",
+    "Keb' Mo'",
+    "The Robert Cray Band",
+    "North Mississippi Allstars",
+    "The White Stripes",
+    "John Hiatt",
+    "Delbert McClinton",
+    "Los Lobos",
+    "The Marcus King Band",
+    "Samantha Fish",
+    "Jonny Lang",
+    "Mavis Staples",
+    "The Kentucky Headhunters"
+  ],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [
+    [
+      "Stevie Ray Vaughan",
+      "Pride and Joy"
+    ],
+    [
+      "The Allman Brothers Band",
+      "Ramblin' Man"
+    ],
+    [
+      "The Black Crowes",
+      "Hard to Handle"
+    ]
+  ],
+  "maintenanceNotes": [
+    "Roots flavor is intentional; do not let generic classic-rock tags add artists."
+  ]
+}

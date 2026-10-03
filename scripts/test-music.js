@@ -37,7 +37,7 @@ async function run() {
     assert.equal(library.tracks[0].doNotPlay, true, 'Do Not Play tags are copied into the local index');
     const initialMixAnalysis = await library.analyzeLocalMixes();
     assert.equal(initialMixAnalysis.analyzing, false, 'Local Mix availability analysis completes in the music worker');
-    assert.equal(initialMixAnalysis.mixes.length, 7, 'the worker discovers shipped Local Mix books');
+    assert.equal(initialMixAnalysis.mixes.length, 49, 'the worker discovers all shipped Local Mix books');
     await fs.access(path.join(dataDir, 'local-mix-availability.json'));
     assert.equal(await digest(), before, 'scanning never changes MP3 bytes');
     assert.equal((await library.call('search', "' OR 1=1 --")).total, 0);
@@ -156,7 +156,9 @@ async function run() {
       ...Array.from({ length: 16 }, (_value, index) => track(`classic-boston-${index}`, { artist: 'Boston', albumArtist: 'Boston', title: `Boston Song ${index}`, year: 1976 }))
     ];
     const portableMixData = path.join(temp, 'mix-format-books');
-    assert.deepEqual(listLocalMixes(portableMixData).map(mix => mix.id), ['alternative-80s', 'classic-country', 'classic-hits', 'classic-rock', 'grunge-era-rock', 'rock-and-metal', 'your-best-music'], 'all shipped Local Mix books copy to portable Data');
+    const copiedMixIds = listLocalMixes(portableMixData).map(mix => mix.id);
+    assert.equal(copiedMixIds.length, 49, 'all shipped Local Mix books copy to portable Data');
+    assert(copiedMixIds.includes('classic-rock') && copiedMixIds.includes('christian-gospel') && copiedMixIds.includes('ambient-chill'), 'the expanded built-in Local Mix books copy to portable Data');
     let mixAvailability = getLocalMixAvailability(portableMixData, classicSeedTracks);
     const classicAvailability = mixAvailability.find(mix => mix.id === 'classic-rock');
     assert.equal(classicAvailability.ready, true, 'Local Mixes need at least twenty eligible songs before they can appear');

@@ -1,14 +1,14 @@
 # WaveDeck Project Handoff
 
-This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.4**.
+This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.5**.
 
 ## Current published state
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `main`
-- Current version: **1.0.4**
-- Current release: 1.0.4 — GitHub Releases now publishes both the portable Linux AppImage and the portable Windows EXE from the same verified source commit.
-- Current commit: the verified 1.0.4 release commit at the head of `main`.
+- Current version: **1.0.5**
+- Current release: 1.0.5 — creates the visible portable `Music` folder on startup, bundles WaveDeck's read-only Last.fm access, and adds 42 built-in Local Mix format books.
+- Current commit: the verified 1.0.5 release commit at the head of `main`.
 - 0.11.8 commit: `8118e235eed4b4a18c378f12ced8a86be83ed4b9` — monitor-safe main-window bounds persistence and portable Windows build.
 - 0.11.7 commit: `c8b69b7b8842dd6c310dda05b22b8d52870d3e84` — superseded source correction after the first portable Windows build.
 - 0.11.6 commit: `621e44d8c484cd0a4d70eb124106170f6183d0ae` — compact Local Radio Controls and remembered auxiliary-window bounds.
@@ -54,7 +54,7 @@ Important: do **not** let a large base64 file be truncated while creating a GitH
 
 ## Local Music and index
 
-- WaveDeck scans the portable `Music` folder next to `Data` and one optional Additional Music Folder. Scanning is recursive for MP3s.
+- WaveDeck creates and scans the portable `Music` folder next to `Data` and one optional Additional Music Folder. Scanning is recursive for MP3s.
 - `Data/music.sqlite` is the portable read-only music index. `src/main/music-worker.js` owns its SQLite access; `src/main/music-library.js` is the main-process wrapper.
 - Indexed useful tags include title, artist, album, Album Artist, year, genre, ratings, Favorite, and Do Not Play.
 - Custom MP3 `RATING` is on a **0–10** scale: 10 = five stars, 5 = 2.5 stars, 0/unset = unrated. Existing MP3 rating values remain read-only.
@@ -93,7 +93,7 @@ Important: do **not** let a large base64 file be truncated while creating a GitH
 
 ## Local Mixes
 
-- Built-in/portable books live in `Data/local-mixes`. Additional JSON books are detected automatically but remain hidden until enabled in Settings → Local Music.
+- Built-in/portable books live in `Data/local-mixes`. The 42 expanded format books are bundled with the original mixes and appear when eligible; additional listener-supplied JSON books are detected automatically but remain hidden until enabled in Settings → Local Music.
 - A Local Mix must have at least **20 eligible tracks** to appear. The manager labels readiness: Not Enough (0–19), Weak (20–49), Solid (50–149), Strong (150–399), Excellent (400+), using a red-to-green visual gradient.
 - Current shipped mixes: Classic Rock, Grunge Era Rock, Classic Hits, Alternative ’80s, Rock and Metal, Classic Country, and Wild Card Radio. Yacht Rock was intentionally retired.
 - Classic Rock includes Southern Rock and Heartland Rock material. AC/DC is accepted through all albums, including `Black Ice` (2008); legacy `AC` parsing is normalized to `AC/DC`.
@@ -107,7 +107,7 @@ Important: do **not** let a large base64 file be truncated while creating a GitH
 
 ## Last.fm
 
-- Last.fm is optional and uses an API key plus user-controlled toggle in Settings → Local Music.
+- Last.fm uses WaveDeck's bundled read-only API key and a user-controlled toggle in Settings → Local Music. Never add the Last.fm API secret to the app or repository.
 - It reads `track.getInfo` and `artist.getSimilar`, storing popularity, tags, and similar artists in `Data/music.sqlite` (`lastfm_tracks`, `lastfm_artists`, and `lastfm_jobs`). It never writes to MP3s.
 - Successful data remains current about six months; network failures retry after about seven days; not-found results retry after six months.
 - A full catch-up refresh is started with the visible Settings button. The progress bar and “Updating Music Data” indicator prevent accidental duplicate refresh attempts.

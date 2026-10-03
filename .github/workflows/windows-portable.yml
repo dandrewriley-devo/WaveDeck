@@ -73,7 +73,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: WaveDeck-1.0.4-Windows
+          name: WaveDeck-1.0.5-Windows
           path: dist/windows/WaveDeck.exe
           if-no-files-found: error
           compression-level: 0
@@ -111,7 +111,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: WaveDeck-1.0.4-Linux
+          name: WaveDeck-1.0.5-Linux
           path: dist/WaveDeck.AppImage
           if-no-files-found: error
           compression-level: 0
@@ -123,11 +123,11 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: WaveDeck-1.0.4-Linux
+          name: WaveDeck-1.0.5-Linux
           path: release-assets/linux
       - uses: actions/download-artifact@v4
         with:
-          name: WaveDeck-1.0.4-Windows
+          name: WaveDeck-1.0.5-Windows
           path: release-assets/windows
 
       - name: Inspect release assets
@@ -138,12 +138,12 @@ jobs:
           test -f release-assets/windows/WaveDeck.exe
           sha256sum release-assets/linux/WaveDeck.AppImage release-assets/windows/WaveDeck.exe
 
-      - name: Publish WaveDeck 1.0.4 for Linux and Windows
+      - name: Publish WaveDeck 1.0.5 for Linux and Windows
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.4
+          tag_name: v1.0.5
           target_commitish: ${{ github.sha }}
-          name: WaveDeck 1.0.4
+          name: WaveDeck 1.0.5
           body: Portable Linux x64 and Windows x64 builds. Keep WaveDeck.AppImage or WaveDeck.exe beside your existing Data and Music folders.
           files: |
             release-assets/linux/WaveDeck.AppImage

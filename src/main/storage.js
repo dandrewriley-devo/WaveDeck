@@ -384,7 +384,9 @@ function validatePreferences(value) {
       : true,
     proModeEnabled: value?.proModeEnabled === true,
     additionalMusicFolder,
-    lastFmEnabled: value?.lastFmEnabled === true,
+    // Last.fm's read-only music data is included with WaveDeck. Existing
+    // listeners can still turn it off, while a new portable library starts on.
+    lastFmEnabled: value?.lastFmEnabled !== false,
     lastFmApiKey,
     localRadioFamiliarity,
     localRadioSongRepeatHours,
@@ -459,6 +461,10 @@ class PortableStorage {
   initialize() {
     fs.mkdirSync(this.dataDir, { recursive: true });
     fs.mkdirSync(this.backupDir, { recursive: true });
+    // Keep the portable layout obvious on the first launch, before Local Music
+    // has been opened and its background scan has a chance to create Music.
+    fs.mkdirSync(path.join(path.dirname(this.dataDir), "Music"), { recursive: true });
+    fs.mkdirSync(path.join(path.dirname(this.dataDir), "Recordings"), { recursive: true });
     this.#initializeLibraryAndPreferences();
     if (!fs.existsSync(this.getListeningHistoryPath())) {
       this.#atomicWrite(LISTENING_HISTORY_FILE, validateListeningHistory(null), { createBackup: false });
@@ -679,10 +685,9 @@ class PortableStorage {
     return this.getUiPreferences();
   }
 
-  setLastFmSettings({ enabled, apiKey }) {
+  setLastFmSettings({ enabled }) {
     const preferences = this.readPreferences();
     preferences.lastFmEnabled = Boolean(enabled);
-    preferences.lastFmApiKey = typeof apiKey === 'string' ? apiKey.trim().slice(0, 160) : preferences.lastFmApiKey;
     this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
     return this.getUiPreferences();
   }

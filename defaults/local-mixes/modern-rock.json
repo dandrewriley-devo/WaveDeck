@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "modern-rock",
+  "name": "Modern Rock",
+  "description": "Rock radio after 2010: big guitars, modern alternative, and melodic arena-ready acts.",
+  "researchStatus": "curated-format-book-v1",
+  "formatPolicy": {
+    "trackYear": {
+      "from": 2010,
+      "to": 2026
+    },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    {
+      "source": "AllMusic - Pop/Rock",
+      "url": "https://www.allmusic.com/genre/pop-rock-ma0000002613"
+    },
+    {
+      "source": "Billboard charts",
+      "url": "https://www.billboard.com/charts/"
+    }
+  ],
+  "coreArtists": [
+    "Foo Fighters",
+    "Imagine Dragons",
+    "Twenty One Pilots",
+    "Muse",
+    "The Black Keys",
+    "Cage the Elephant",
+    "Royal Blood",
+    "Nothing But Thieves",
+    "Greta Van Fleet",
+    "The Struts",
+    "Shinedown",
+    "Halestorm",
+    "Mammoth WVH",
+    "Rival Sons",
+    "The Pretty Reckless"
+  ],
+  "approvedArtists": [
+    "Badflower",
+    "Highly Suspect",
+    "AWOLNATION",
+    "X Ambassadors",
+    "Bishop Briggs",
+    "The War on Drugs",
+    "The Record Company",
+    "Nathaniel Rateliff & the Night Sweats",
+    "The Glorious Sons",
+    "In This Moment",
+    "Dirty Honey",
+    "Bad Wolves",
+    "Starset",
+    "PVRIS",
+    "Yungblud"
+  ],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [
+    [
+      "Royal Blood",
+      "Figure It Out"
+    ],
+    [
+      "Cage the Elephant",
+      "Ain't No Rest for the Wicked"
+    ],
+    [
+      "The Black Keys",
+      "Gold on the Ceiling"
+    ]
+  ],
+  "maintenanceNotes": [
+    "Keep this post-2010 and guitar-led; 2000s Rock & Alternative handles the preceding wave."
+  ]
+}

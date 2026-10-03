@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "funk-disco-dance-classics",
+  "name": "Funk, Disco & Dance Classics",
+  "description": "Groove-first classics from funk, disco, and crossover dance music.",
+  "researchStatus": "curated-format-book-v1",
+  "formatPolicy": {
+    "trackYear": {
+      "from": 1970,
+      "to": 1990
+    },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    {
+      "source": "AllMusic - Funk",
+      "url": "https://www.allmusic.com/genre/funk-ma0000002397"
+    },
+    {
+      "source": "Billboard charts",
+      "url": "https://www.billboard.com/charts/"
+    }
+  ],
+  "coreArtists": [
+    "Parliament",
+    "Funkadelic",
+    "Kool & the Gang",
+    "Chic",
+    "Donna Summer",
+    "Bee Gees",
+    "Earth Wind & Fire",
+    "The Gap Band",
+    "The Brothers Johnson",
+    "Sly and the Family Stone",
+    "Commodores",
+    "The Pointer Sisters",
+    "Sister Sledge",
+    "KC and the Sunshine Band",
+    "Rick James"
+  ],
+  "approvedArtists": [
+    "The Jacksons",
+    "Cameo",
+    "Zapp",
+    "Ohio Players",
+    "Heatwave",
+    "Thelma Houston",
+    "Gloria Gaynor",
+    "Village People",
+    "Boney M.",
+    "Evelyn Champagne King",
+    "Shalamar",
+    "Diana Ross",
+    "Chaka Khan",
+    "GAP Band",
+    "The Whispers"
+  ],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [
+    [
+      "Chic",
+      "Le Freak"
+    ],
+    [
+      "Donna Summer",
+      "I Feel Love"
+    ],
+    [
+      "Kool & the Gang",
+      "Celebration"
+    ]
+  ],
+  "maintenanceNotes": [
+    "Favor rhythmic, upbeat recordings; avoid turning this into a general soul station."
+  ]
+}

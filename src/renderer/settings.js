@@ -54,8 +54,6 @@ const musicLibraryStatus = document.getElementById('musicLibraryStatus');
 const rescanMusicBtn = document.getElementById('rescanMusicBtn');
 const lastFmEnabled = document.getElementById('lastFmEnabled');
 const lastFmDetails = document.getElementById('lastFmDetails');
-const lastFmApiKey = document.getElementById('lastFmApiKey');
-const testLastFmBtn = document.getElementById('testLastFmBtn');
 const lastFmStatus = document.getElementById('lastFmStatus');
 const lastFmProgressWrap = document.getElementById('lastFmProgressWrap');
 const lastFmProgress = document.getElementById('lastFmProgress');
@@ -104,8 +102,7 @@ function renderProMusicSettings(preferences) {
   if (!proEnabled && document.querySelector('.tab.active')?.dataset.tab === 'localmusic') showTab('interface');
   additionalMusicFolder.value = folder;
   clearAdditionalMusicFolderBtn.disabled = !folder;
-  lastFmEnabled.checked = preferences?.lastFmEnabled === true;
-  lastFmApiKey.value = String(preferences?.lastFmApiKey || '');
+  lastFmEnabled.checked = preferences?.lastFmEnabled !== false;
   lastFmDetails.hidden = !lastFmEnabled.checked;
   if (proEnabled) { void loadLastFmStatus(); void loadLocalMixManager(); void loadMusicLibraryStatus(); }
 }
@@ -128,7 +125,6 @@ function renderLastFmStatus(status) {
   queueLastFmRefreshBtn.disabled = updating;
   queueLastFmRefreshBtn.textContent = updating ? 'Updating Music Data…' : 'Refresh Last.fm Music Data';
   if (!status.enabled) { lastFmStatus.textContent = 'Last.fm music data is off.'; return; }
-  if (!status.configured) { lastFmStatus.textContent = 'Add a Last.fm API key to begin refreshing music data.'; return; }
   lastFmStatus.textContent = `Last.fm: ${current.toLocaleString()} of ${total.toLocaleString()} tracks current${queued ? ` · ${queued.toLocaleString()} albums queued` : ''}${status.message ? ` · ${status.message}` : ''}`;
 }
 
@@ -1078,30 +1074,13 @@ rescanMusicBtn.addEventListener('click', async () => {
 lastFmEnabled.addEventListener('change', async () => {
   lastFmEnabled.disabled = true;
   try {
-    const preferences = await window.wavedeck.setLastFmSettings({ enabled: lastFmEnabled.checked, apiKey: lastFmApiKey.value });
+    const preferences = await window.wavedeck.setLastFmSettings({ enabled: lastFmEnabled.checked });
     renderProMusicSettings(preferences);
     setStatus(statusLocalMusic, lastFmEnabled.checked ? 'Last.fm music-data refresh is on.' : 'Last.fm music-data refresh is off.');
   } catch (error) {
     lastFmEnabled.checked = !lastFmEnabled.checked;
     setStatus(statusLocalMusic, `Could not save Last.fm settings: ${error.message}`, false);
   } finally { lastFmEnabled.disabled = false; }
-});
-
-lastFmApiKey.addEventListener('change', async () => {
-  try {
-    const preferences = await window.wavedeck.setLastFmSettings({ enabled: lastFmEnabled.checked, apiKey: lastFmApiKey.value });
-    renderProMusicSettings(preferences);
-    setStatus(statusLocalMusic, 'Last.fm API key saved.');
-  } catch (error) { setStatus(statusLocalMusic, `Could not save the Last.fm API key: ${error.message}`, false); }
-});
-
-testLastFmBtn.addEventListener('click', async () => {
-  testLastFmBtn.disabled = true;
-  try {
-    renderLastFmStatus(await window.wavedeck.testLastFm());
-    setStatus(statusLocalMusic, 'Last.fm background refresh is ready.');
-  } catch (error) { setStatus(statusLocalMusic, `Last.fm connection could not start: ${error.message}`, false); }
-  finally { testLastFmBtn.disabled = false; }
 });
 
 queueLastFmRefreshBtn.addEventListener('click', async () => {

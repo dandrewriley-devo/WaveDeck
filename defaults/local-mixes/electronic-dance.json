@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "electronic-dance",
+  "name": "Electronic & Dance",
+  "description": "A broad, beat-forward electronic mix across house, techno, synthpop, EDM, and dance-pop.",
+  "researchStatus": "curated-format-book-v1",
+  "formatPolicy": {
+    "trackYear": {
+      "from": 1978,
+      "to": 2026
+    },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    {
+      "source": "AllMusic - Electronic",
+      "url": "https://www.allmusic.com/genre/electronic-ma0000002572"
+    },
+    {
+      "source": "Billboard charts",
+      "url": "https://www.billboard.com/charts/"
+    }
+  ],
+  "coreArtists": [
+    "Daft Punk",
+    "Depeche Mode",
+    "New Order",
+    "The Chemical Brothers",
+    "The Prodigy",
+    "Underworld",
+    "Moby",
+    "Calvin Harris",
+    "Deadmau5",
+    "Swedish House Mafia",
+    "Disclosure",
+    "Kraftwerk",
+    "Justice",
+    "Fatboy Slim",
+    "The Crystal Method"
+  ],
+  "approvedArtists": [
+    "Orbital",
+    "The Orb",
+    "Aphex Twin",
+    "Rufus Du Sol",
+    "ODESZA",
+    "Flume",
+    "Avicii",
+    "Skrillex",
+    "Diplo",
+    "The Chainsmokers",
+    "Robyn",
+    "Kylie Minogue",
+    "Pet Shop Boys",
+    "Basement Jaxx",
+    "LCD Soundsystem"
+  ],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [
+    [
+      "Daft Punk",
+      "One More Time"
+    ],
+    [
+      "The Chemical Brothers",
+      "Block Rockin' Beats"
+    ],
+    [
+      "Avicii",
+      "Wake Me Up"
+    ]
+  ],
+  "maintenanceNotes": [
+    "Ambient & Chill is separate; this book should retain a danceable pulse."
+  ]
+}

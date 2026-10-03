@@ -25,7 +25,7 @@
       <!-- INTERFACE -->
       <section id="tab-interface" class="panel hidden">
         <div class="general-meta">
-          <b>WaveDeck version <span id="aboutVersion">1.0.4</span></b>
+          <b>WaveDeck version <span id="aboutVersion">1.0.5</span></b>
         </div>
         <div class="general-sections">
         <section class="general-card">
@@ -241,12 +241,8 @@
             <span class="toggle-switch" aria-hidden="true"></span>
             <span>Improve Music Data with Last.fm</span>
           </label>
-          <div class="hint">Refreshes song popularity, genre tags, and related artists in WaveDeck’s own portable database. Your MP3 files and tags are never changed.</div>
+          <div class="hint">Refreshes song popularity, genre tags, and related artists in WaveDeck’s own portable database. No Last.fm account or setup is needed. Your MP3 files and tags are never changed.</div>
           <div id="lastFmDetails" class="lastfm-details" hidden>
-            <div class="pro-music-settings-row">
-              <input id="lastFmApiKey" class="input" type="password" autocomplete="off" spellcheck="false" placeholder="Last.fm API key" />
-              <button id="testLastFmBtn" class="btn" type="button">Test Connection</button>
-            </div>
             <button id="queueLastFmRefreshBtn" class="btn" type="button">Refresh Last.fm Music Data</button>
             <div class="hint">Checks missing or older music data and skips songs checked within the past week.</div>
             <div id="lastFmProgressWrap" class="lastfm-progress-wrap" hidden>
@@ -260,7 +256,7 @@
         </section>
         <section class="local-music-section" aria-labelledby="localMixManagerTitle">
           <div class="pro-music-settings-title" id="localMixManagerTitle">Manage Local Mixes</div>
-          <div class="hint">Choose which installed Local Mix books appear in Local Music. A mix needs at least 20 eligible songs before it can be played. Add optional books to <b>Data/local-mixes</b>; they stay off until you choose them.</div>
+          <div class="hint">Choose which Local Mixes appear in Local Music. A mix needs at least 20 eligible songs before it can be played. You can also add your own books to <b>Data/local-mixes</b>; they stay off until you choose them.</div>
           <div id="localMixManager" class="local-mix-manager" aria-live="polite">Checking installed Local Mixes…</div>
         </section>
         <div id="statusLocalMusic" class="status"></div>
@@ -293,7 +289,7 @@
             <p>You can expand a station briefly to read its information or adjust gain. Station details collapse again after a short time to keep the list tidy. Streaming group headings stay open while their subgroups can be expanded or collapsed.</p>
           </details>
           <details><summary>Local Music Setup and Music Information</summary>
-            <p>Turn on <b>Enable Advanced Features</b> in Settings → General to make Local Music available. WaveDeck scans the portable <code>Music</code> folder beside the app, and you can add one optional Additional Music Folder in Settings → Local Music. Use <b>Rescan</b> after adding music or changing tags.</p>
+            <p>Turn on <b>Enable Advanced Features</b> in Settings → General to make Local Music available. WaveDeck creates and scans the portable <code>Music</code> folder beside the app, and you can add one optional Additional Music Folder in Settings → Local Music. Use <b>Rescan</b> after adding music or changing tags.</p>
             <p>WaveDeck reads your MP3 information into its own portable index; it does not change your MP3 files. It uses song, artist, album, Album Artist, year, genre, rating, Favorite, and Do Not Play information when available. Your MP3 <code>RATING</code> tag uses a 0–10 scale: 10 is five stars and 5 is two and a half stars. A rating of 0 means unrated.</p>
             <p>A track marked <code>DO_NOT_PLAY=1</code> is never selected by Local Radio or a Local Mix. A Favorite tag gives that song a stronger chance when it fits the station.</p>
           </details>
@@ -321,8 +317,8 @@
             <p><b>Enable 8-second crossfade</b> blends Local Music tracks, Local Radio, Local Mixes, and albums. It is on by default and does not affect Streaming Radio.</p>
           </details>
           <details><summary>Last.fm Music Data and Live Radio Log</summary>
-            <p>Last.fm is optional. When enabled in Settings → Local Music, WaveDeck can refresh song popularity, useful genre tags, and related artists in its own portable music database. It never writes those details into your MP3 files.</p>
-            <p>Enter a Last.fm API key, test the connection, then use <b>Refresh Last.fm Music Data</b> when you want a catch-up refresh. The progress bar shows when music data is already updating. The subtle <b>Open Live Radio Log</b> link opens selection diagnostics, including prior choices recorded while the log was closed.</p>
+            <p>When enabled in Settings → Local Music, WaveDeck can refresh song popularity, useful genre tags, and related artists in its own portable music database. It never writes those details into your MP3 files.</p>
+            <p>WaveDeck includes the needed Last.fm access. Use <b>Refresh Last.fm Music Data</b> when you want a catch-up refresh. The progress bar shows when music data is already updating. The subtle <b>Open Live Radio Log</b> link opens selection diagnostics, including prior choices recorded while the log was closed.</p>
           </details>
           <details><summary>Settings, Library Management, and Updates</summary>
             <p>Settings → Streaming Stations lets you add, edit, search, and organize streams. The Groups tab creates, renames, reorders, and removes groups and optional subgroups. Removing a group moves its stations to Other; removing a subgroup leaves its stations in the main group.</p>

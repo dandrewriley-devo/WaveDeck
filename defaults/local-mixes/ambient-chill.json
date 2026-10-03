@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "ambient-chill",
+  "name": "Ambient & Chill",
+  "description": "Atmospheric electronic, downtempo, trip-hop, and instrumental music for unhurried listening.",
+  "researchStatus": "curated-format-book-v1",
+  "formatPolicy": {
+    "trackYear": {
+      "from": 1975,
+      "to": 2026
+    },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    {
+      "source": "AllMusic - Ambient",
+      "url": "https://www.allmusic.com/genre/ambient-ma0000002424"
+    },
+    {
+      "source": "Billboard charts",
+      "url": "https://www.billboard.com/charts/"
+    }
+  ],
+  "coreArtists": [
+    "Brian Eno",
+    "Tangerine Dream",
+    "Kraftwerk",
+    "The Orb",
+    "Aphex Twin",
+    "Boards of Canada",
+    "Tycho",
+    "Bonobo",
+    "Moby",
+    "Air",
+    "Massive Attack",
+    "Portishead",
+    "Thievery Corporation",
+    "Zero 7",
+    "Kruder & Dorfmeister"
+  ],
+  "approvedArtists": [
+    "Biosphere",
+    "Global Communication",
+    "William Orbit",
+    "Ulrich Schnauss",
+    "Helios",
+    "Kiasmos",
+    "Jon Hopkins",
+    "Four Tet",
+    "Nils Frahm",
+    "Max Richter",
+    "Hammock",
+    "Explosions in the Sky",
+    "Khruangbin",
+    "Emancipator",
+    "Nightmares on Wax"
+  ],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [
+    [
+      "Brian Eno",
+      "An Ending (Ascent)"
+    ],
+    [
+      "Massive Attack",
+      "Teardrop"
+    ],
+    [
+      "Tycho",
+      "Awake"
+    ]
+  ],
+  "maintenanceNotes": [
+    "Beatless and downtempo music are both welcome; do not turn this into a generic EDM list."
+  ]
+}

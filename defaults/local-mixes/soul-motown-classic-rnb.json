@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "soul-motown-classic-rnb",
+  "name": "Soul, Motown & Classic R&B",
+  "description": "The classic R&B, Motown, and soul canon from the 1960s through the early 1980s.",
+  "researchStatus": "curated-format-book-v1",
+  "formatPolicy": {
+    "trackYear": {
+      "from": 1960,
+      "to": 1985
+    },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    {
+      "source": "AllMusic - R&B",
+      "url": "https://www.allmusic.com/genre/r-b-ma0000002809"
+    },
+    {
+      "source": "Billboard charts",
+      "url": "https://www.billboard.com/charts/"
+    }
+  ],
+  "coreArtists": [
+    "Aretha Franklin",
+    "Marvin Gaye",
+    "Stevie Wonder",
+    "The Temptations",
+    "The Four Tops",
+    "The Supremes",
+    "Smokey Robinson",
+    "Otis Redding",
+    "Al Green",
+    "Sam Cooke",
+    "Gladys Knight & the Pips",
+    "The Jackson 5",
+    "The Isley Brothers",
+    "Earth Wind & Fire",
+    "The O'Jays"
+  ],
+  "approvedArtists": [
+    "Wilson Pickett",
+    "The Spinners",
+    "The Staple Singers",
+    "The Chi-Lites",
+    "The Commodores",
+    "Tina Turner",
+    "The Pointer Sisters",
+    "The Miracles",
+    "Martha Reeves & the Vandellas",
+    "The Dramatics",
+    "Bill Withers",
+    "Donny Hathaway",
+    "Rufus & Chaka Khan",
+    "The Whispers",
+    "Bobby Womack"
+  ],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [
+    [
+      "Marvin Gaye",
+      "What's Going On"
+    ],
+    [
+      "Aretha Franklin",
+      "Respect"
+    ],
+    [
+      "Stevie Wonder",
+      "Superstition"
+    ]
+  ],
+  "maintenanceNotes": [
+    "Keep it centered on soul and classic R&B; Disco & Club Classics owns the dance-floor lane."
+  ]
+}

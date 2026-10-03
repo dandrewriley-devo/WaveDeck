@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "two-thousands-hip-hop",
+  "name": "2000s Hip-Hop",
+  "description": "Mainstream, Southern, conscious, and crossover hip-hop from 2000 through 2009.",
+  "researchStatus": "curated-format-book-v1",
+  "formatPolicy": {
+    "trackYear": {
+      "from": 2000,
+      "to": 2009
+    },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    {
+      "source": "AllMusic - Rap",
+      "url": "https://www.allmusic.com/genre/rap-ma0000002816"
+    },
+    {
+      "source": "Billboard charts",
+      "url": "https://www.billboard.com/charts/"
+    }
+  ],
+  "coreArtists": [
+    "Kanye West",
+    "Eminem",
+    "Jay-Z",
+    "OutKast",
+    "Missy Elliott",
+    "Lil Wayne",
+    "50 Cent",
+    "T.I.",
+    "Ludacris",
+    "Nelly",
+    "The Roots",
+    "Common",
+    "The Black Eyed Peas",
+    "Lupe Fiasco",
+    "The Game"
+  ],
+  "approvedArtists": [
+    "Busta Rhymes",
+    "Ja Rule",
+    "Cam'ron",
+    "Three 6 Mafia",
+    "Young Jeezy",
+    "Rick Ross",
+    "Akon",
+    "Pharrell Williams",
+    "Clipse",
+    "M.I.A.",
+    "Talib Kweli",
+    "Mos Def",
+    "The Diplomats",
+    "Twista",
+    "Fabolous"
+  ],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [
+    [
+      "Kanye West",
+      "Gold Digger"
+    ],
+    [
+      "OutKast",
+      "Hey Ya!"
+    ],
+    [
+      "Eminem",
+      "Lose Yourself"
+    ]
+  ],
+  "maintenanceNotes": [
+    "Keep the decade boundary firm; later material belongs in 2010s & 2020s Hip-Hop."
+  ]
+}

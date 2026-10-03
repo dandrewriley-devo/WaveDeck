@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "world-music",
+  "name": "World Music",
+  "description": "Globally rooted popular and traditional music with strong crossover listening value.",
+  "researchStatus": "curated-format-book-v1",
+  "formatPolicy": {
+    "trackYear": {
+      "from": 1960,
+      "to": 2026
+    },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    {
+      "source": "AllMusic - International",
+      "url": "https://www.allmusic.com/genre/international-ma0000002688"
+    },
+    {
+      "source": "Billboard charts",
+      "url": "https://www.billboard.com/charts/"
+    }
+  ],
+  "coreArtists": [
+    "Fela Kuti",
+    "Youssou N'Dour",
+    "Miriam Makeba",
+    "Ali Farka Toure",
+    "Buena Vista Social Club",
+    "Cesaria Evora",
+    "Ravi Shankar",
+    "Nusrat Fateh Ali Khan",
+    "Tinariwen",
+    "Angelique Kidjo",
+    "Salif Keita",
+    "King Sunny Ade",
+    "Ladysmith Black Mambazo",
+    "Bebel Gilberto",
+    "Anoushka Shankar"
+  ],
+  "approvedArtists": [
+    "Khaled",
+    "Amadou & Mariam",
+    "Seu Jorge",
+    "Rodrigo y Gabriela",
+    "Gipsy Kings",
+    "Omara Portuondo",
+    "Bombino",
+    "Oumou Sangare",
+    "Arooj Aftab",
+    "Burna Boy",
+    "Wizkid",
+    "Tems",
+    "KOKOROKO",
+    "The Gloaming",
+    "Balkan Beat Box"
+  ],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [
+    [
+      "Buena Vista Social Club",
+      "Chan Chan"
+    ],
+    [
+      "Fela Kuti",
+      "Water No Get Enemy"
+    ],
+    [
+      "Youssou N'Dour",
+      "7 Seconds"
+    ]
+  ],
+  "maintenanceNotes": [
+    "Keep each artist intentional; broad World tags are too inconsistent to define eligibility."
+  ]
+}

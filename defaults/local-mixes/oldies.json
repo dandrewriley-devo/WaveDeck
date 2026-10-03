@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "oldies",
+  "name": "Oldies",
+  "description": "Foundational rock and roll, doo-wop, girl groups, soul, surf, and pop from the 1950s through the 1960s.",
+  "researchStatus": "curated-format-book-v1",
+  "formatPolicy": {
+    "trackYear": {
+      "from": 1954,
+      "to": 1969
+    },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    {
+      "source": "AllMusic - Early Pop/Rock",
+      "url": "https://www.allmusic.com/genre/early-pop-rock-ma0000002763"
+    },
+    {
+      "source": "Billboard charts",
+      "url": "https://www.billboard.com/charts/"
+    }
+  ],
+  "coreArtists": [
+    "Elvis Presley",
+    "Chuck Berry",
+    "Little Richard",
+    "Buddy Holly",
+    "The Beach Boys",
+    "The Everly Brothers",
+    "The Four Seasons",
+    "The Platters",
+    "Dion",
+    "The Drifters",
+    "The Shirelles",
+    "The Ronettes",
+    "The Righteous Brothers",
+    "Sam Cooke",
+    "Roy Orbison"
+  ],
+  "approvedArtists": [
+    "Jerry Lee Lewis",
+    "Fats Domino",
+    "The Coasters",
+    "The Chiffons",
+    "The Crystals",
+    "The Marvelettes",
+    "The Tokens",
+    "The Ventures",
+    "Jan and Dean",
+    "Ritchie Valens",
+    "The Kingsmen",
+    "Tommy James and the Shondells",
+    "The Turtles",
+    "The Monkees",
+    "The Association"
+  ],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [
+    [
+      "Chuck Berry",
+      "Johnny B. Goode"
+    ],
+    [
+      "The Beach Boys",
+      "Good Vibrations"
+    ],
+    [
+      "The Ronettes",
+      "Be My Baby"
+    ]
+  ],
+  "maintenanceNotes": [
+    "Keep the oldies center before 1970; Classic Hits takes over after that."
+  ]
+}

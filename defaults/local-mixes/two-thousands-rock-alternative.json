@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "two-thousands-rock-alternative",
+  "name": "2000s Rock & Alternative",
+  "description": "Guitar-driven rock and alternative from the first decade of the 2000s.",
+  "researchStatus": "curated-format-book-v1",
+  "formatPolicy": {
+    "trackYear": {
+      "from": 2000,
+      "to": 2009
+    },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    {
+      "source": "AllMusic - Alternative/Indie Rock",
+      "url": "https://www.allmusic.com/style/alternative-indie-rock-ma0000002427"
+    },
+    {
+      "source": "Billboard charts",
+      "url": "https://www.billboard.com/charts/"
+    }
+  ],
+  "coreArtists": [
+    "Foo Fighters",
+    "The Killers",
+    "Coldplay",
+    "The White Stripes",
+    "Kings of Leon",
+    "Muse",
+    "The Strokes",
+    "Franz Ferdinand",
+    "The Black Keys",
+    "Incubus",
+    "Jimmy Eat World",
+    "Weezer",
+    "Linkin Park",
+    "Green Day",
+    "My Chemical Romance"
+  ],
+  "approvedArtists": [
+    "Snow Patrol",
+    "Keane",
+    "The Fray",
+    "Death Cab for Cutie",
+    "The Bravery",
+    "Jet",
+    "The Hives",
+    "The Shins",
+    "Modest Mouse",
+    "Rise Against",
+    "AFI",
+    "Paramore",
+    "Yeah Yeah Yeahs",
+    "The Raconteurs",
+    "Arctic Monkeys"
+  ],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [
+    [
+      "The Killers",
+      "Mr. Brightside"
+    ],
+    [
+      "Foo Fighters",
+      "The Pretender"
+    ],
+    [
+      "The White Stripes",
+      "Seven Nation Army"
+    ]
+  ],
+  "maintenanceNotes": [
+    "Favor songs that lived naturally in rock or alternative radio rotation."
+  ]
+}

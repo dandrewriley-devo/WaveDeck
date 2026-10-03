@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "smooth-jazz",
+  "name": "Smooth Jazz",
+  "description": "Polished, melodic contemporary jazz and instrumental crossover designed for relaxed continuous listening.",
+  "researchStatus": "curated-format-book-v1",
+  "formatPolicy": {
+    "trackYear": {
+      "from": 1975,
+      "to": 2026
+    },
+    "unknownYear": "allowOnlyForCoreArtistWhenNoExplicitExclusionApplies",
+    "lastFm": "rankApprovedCandidatesOnly",
+    "sharedGenreTags": "neverCreateEligibility",
+    "feedbackScope": "stationOnly"
+  },
+  "sourceBasis": [
+    {
+      "source": "AllMusic - Smooth Jazz",
+      "url": "https://www.allmusic.com/style/smooth-jazz-ma0000002860"
+    },
+    {
+      "source": "Billboard charts",
+      "url": "https://www.billboard.com/charts/"
+    }
+  ],
+  "coreArtists": [
+    "Kenny G",
+    "George Benson",
+    "Grover Washington Jr.",
+    "David Sanborn",
+    "Bob James",
+    "The Rippingtons",
+    "Fourplay",
+    "Spyro Gyra",
+    "Boney James",
+    "Norman Brown",
+    "Dave Koz",
+    "Chris Botti",
+    "Najee",
+    "Gerald Albright",
+    "Brian Culbertson"
+  ],
+  "approvedArtists": [
+    "Richard Elliot",
+    "Peter White",
+    "Earl Klugh",
+    "Acoustic Alchemy",
+    "Keiko Matsui",
+    "Jeff Lorber",
+    "Larry Carlton",
+    "Lee Ritenour",
+    "Chuck Mangione",
+    "Sade",
+    "Kirk Whalum",
+    "Marion Meadows",
+    "Paul Hardcastle",
+    "Gato Barbieri",
+    "Fattburger"
+  ],
+  "artistRules": [],
+  "excludedArtists": [],
+  "seedSuggestions": [
+    [
+      "Grover Washington Jr.",
+      "Just the Two of Us"
+    ],
+    [
+      "George Benson",
+      "Breezin'"
+    ],
+    [
+      "Dave Koz",
+      "Castle of Dreams"
+    ]
+  ],
+  "maintenanceNotes": [
+    "Keep the polished radio format separate from Jazz Essentials and Fusion."
+  ]
+}
