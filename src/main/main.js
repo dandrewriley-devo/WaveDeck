@@ -113,6 +113,7 @@ let currentComputer = null;
 let activeAdditionalMusicFolder = '';
 let additionalMusicFolderMode = 'none';
 let portableImporter = null;
+let quietMusicCheckTimer = null;
 let player = null;
 let recordingLibrary = null;
 let musicLibrary = null;
@@ -196,9 +197,16 @@ async function applyAdditionalMusicFolder(folder, mode = 'none', { rescan = fals
 }
 
 function enableLocalMusic() {
-  return musicLibrary.enable({ scanOnEnable: true }).then(() => {
+  return musicLibrary.enable({ scanOnEnable: false }).then(() => {
     lastFmEnricher?.configure();
     beginOpusOptimization();
+    // The indexed library is ready immediately. A later low-priority check keeps
+    // dropped-in files current without making opening Local Music feel like a scan.
+    clearTimeout(quietMusicCheckTimer);
+    quietMusicCheckTimer = setTimeout(() => {
+      if (!storage?.getUiPreferences().proModeEnabled || !musicLibrary?.enabled) return;
+      void musicLibrary.rescan().then(() => analyzeLocalMixes()).catch(error => sendToMain('app:warning', error.message));
+    }, 4000);
   });
 }
 
@@ -1468,7 +1476,8 @@ function installIpcHandlers() {
     await requireMusic();
     void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
     const availability = localMixAvailability();
-    return availability.analyzing ? [] : availability.mixes.filter(mix => mix.valid && mix.enabled && mix.ready);
+    // Keep the last complete mix list visible while a background refresh works.
+    return availability.mixes.filter(mix => mix.valid && mix.enabled && mix.ready);
   });
   ipcMain.handle('music:mixes:manage', async () => {
     await requireMusic();
@@ -1735,7 +1744,7 @@ if (!hasSingleInstanceLock) {
         latestMusicLibraryStatus = status;
         sendToAll('music:changed', { ...status, ...(opusOptimizer?.getStatus() || {}) });
       },
-      onLocalMixAvailability: () => sendToAll('music:mixes-changed')
+      onLocalMixAvailability: availability => sendToAll('music:mixes-changed', availability)
     });
     if (process.platform === 'linux' && portableFfmpegExecutable && portableFfprobeExecutable) {
       opusOptimizer = new OpusOptimizer({
@@ -1753,6 +1762,7 @@ if (!hasSingleInstanceLock) {
       opusOptimizer.watch(async () => {
         if (!storage.getUiPreferences().proModeEnabled) return;
         if (opusOptimizer.isRunning()) return;
+        if (portableImporter?.isRunning()) return;
         await musicLibrary.rescan();
         beginOpusOptimization();
       });
@@ -1760,6 +1770,7 @@ if (!hasSingleInstanceLock) {
         musicRoot: path.join(path.dirname(getDataDir()), 'Music'), ffmpegExecutable: portableFfmpegExecutable, ffprobeExecutable: portableFfprobeExecutable,
         getAdditionalFolder: () => activeAdditionalMusicFolder, getPortableTracks: () => musicLibrary.tracks.filter(track => track.library === 'portable'),
         onStatus: status => sendToAll('music:import-changed', status),
+        onBatch: async () => { await musicLibrary.rescan(); },
         onComplete: async () => { await musicLibrary.rescan(); await analyzeLocalMixes(); beginOpusOptimization(); }
       });
     }

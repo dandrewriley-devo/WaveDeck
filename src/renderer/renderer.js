@@ -435,19 +435,20 @@ async function warmLocalMusicView() {
   return localMusicWarmupPromise;
 }
 
-async function renderMusic() {
+async function renderMusic({ preserveExisting = false } = {}) {
   const sequence = ++musicRenderSequence;
   const query = musicSearch.value;
+  const preservedScrollY = preserveExisting ? window.scrollY : null;
+  const renderTarget = document.createDocumentFragment();
   const openMusicIds = new Set([...listEl.querySelectorAll('details.music-row[open]')]
     .map(row => row.dataset.musicId));
   try {
     const isBlankQuery = !query.trim();
-    if (isBlankQuery && !localMusicViewCache) showLocalMusicLoading();
+    if (isBlankQuery && !localMusicViewCache && !preserveExisting) showLocalMusicLoading();
     const initialView = isBlankQuery ? await warmLocalMusicView() : null;
     const result = initialView?.result || await window.wavedeck.searchMusic(query);
     if (!musicVisible || sequence !== musicRenderSequence || query !== musicSearch.value) return;
-    listEl.replaceChildren();
-    if (query.trim()) listEl.append(createSectionTitle('Local Music', `${result.total} matches`));
+    if (query.trim()) renderTarget.append(createSectionTitle('Local Music', `${result.total} matches`));
     if (!query.trim()) {
       const history = initialView?.history || await window.wavedeck.getListeningHistory();
       if (!musicVisible || sequence !== musicRenderSequence || query !== musicSearch.value) return;
@@ -464,31 +465,31 @@ async function renderMusic() {
         .filter(station => !showSaved || !savedKeys.has(station.key)).slice(0, 10);
       if (showSaved) {
         const localMusicPresets = [...saved, ...favoriteMixes];
-        listEl.append(createSectionTitle('Local Music Presets', localMusicPresets.length ? '' : 'None yet — star a Local Station or Local Mix to save it.'));
+        renderTarget.append(createSectionTitle('Local Music Presets', localMusicPresets.length ? '' : 'None yet — star a Local Station or Local Mix to save it.'));
         if (localMusicPresets.length) {
           const block = element('div', 'local-station-list');
           block.append(
             ...saved.map(station => createLocalStationRow(station, true)),
             ...favoriteMixes.map(createLocalMixRow)
           );
-          listEl.append(block);
+          renderTarget.append(block);
         }
       }
       if (recent.length) {
-        listEl.append(createSectionTitle('Recently Played Local Stations', 'Most recent first'));
+        renderTarget.append(createSectionTitle('Recently Played Local Stations', 'Most recent first'));
         const block = element('div', 'local-station-list');
         block.append(...recent.map(station => createLocalStationRow(station, savedKeys.has(station.key))));
-        listEl.append(block);
+        renderTarget.append(block);
       } else if ((!saved.length && !favoriteMixes.length || !showSaved) && (!showMixList || !mixes.length)) {
-        listEl.append(element('div', 'music-empty-state', 'Search for local music, or start a Local Station to see it here.'));
+        renderTarget.append(element('div', 'music-empty-state', 'Search for local music, or start a Local Station to see it here.'));
       }
       if (showMixList && mixes.length) {
-        listEl.append(createSectionTitle('Local Mixes', 'Curated Local Radio that learns what fits each station.'));
+        renderTarget.append(createSectionTitle('Local Mixes', 'Curated Local Radio that learns what fits each station.'));
         const block = element('div', 'local-mix-list');
         block.append(...mixes.map(createLocalMixRow));
-        listEl.append(block);
+        renderTarget.append(block);
       }
-    } else if (!result.tracks.length) listEl.append(element('div', 'placeholder', 'No matching songs.'));
+    } else if (!result.tracks.length) renderTarget.append(element('div', 'placeholder', 'No matching songs.'));
     for (const track of result.tracks) {
       const row = element('details', 'music-row');
       row.dataset.musicId = track.id;
@@ -510,9 +511,11 @@ async function renderMusic() {
         actions.append(button);
       }
       row.append(actions);
-      listEl.append(row);
+      renderTarget.append(row);
     }
-    if (result.total > result.tracks.length && query.trim()) listEl.append(element('div', 'placeholder', 'Showing the first 200 matches. Refine your search for more.'));
+    if (result.total > result.tracks.length && query.trim()) renderTarget.append(element('div', 'placeholder', 'Showing the first 200 matches. Refine your search for more.'));
+    listEl.replaceChildren(renderTarget);
+    if (preservedScrollY !== null) requestAnimationFrame(() => window.scrollTo({ top: preservedScrollY }));
   } catch (error) { if (musicVisible) musicStatus.textContent = error.message; }
 }
 
@@ -659,8 +662,10 @@ localThumbUpBtn.addEventListener('click', async () => {
 localRadioControlsBtn.addEventListener('click', () => { void window.wavedeck.openLocalRadioControls(); });
 window.wavedeck.onMusicChanged(status => {
   setMusicStatus(status);
-  if (!status.scanning) invalidateLocalMusicView();
-  if (musicVisible && !status.scanning) queueRender();
+  if (!status.scanning) {
+    invalidateLocalMusicView();
+    if (musicVisible) void renderMusic({ preserveExisting: true });
+  }
 });
 window.wavedeck.onMusicOptimizationChanged(setMusicStatus);
 // Browsing Streaming Radio controls does not interrupt Local Music; choosing one does.
@@ -1639,9 +1644,10 @@ window.wavedeck.onListeningHistoryChanged((history) => {
   if (mostPlayedSectionVisible) queueRender();
   if (musicVisible && !musicSearch.value.trim()) void renderMusic();
 });
-window.wavedeck.onLocalMixesChanged(() => {
+window.wavedeck.onLocalMixesChanged(availability => {
+  if (availability?.analyzing) return;
   invalidateLocalMusicView();
-  if (musicVisible && !musicSearch.value.trim()) void renderMusic();
+  if (musicVisible && !musicSearch.value.trim()) void renderMusic({ preserveExisting: true });
 });
 
 window.wavedeck.onSectionVisibilityChanged(setSectionVisibilityUi);

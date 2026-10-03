@@ -115,7 +115,7 @@ function renderPortableStorage(storage = {}) {
   const total = Math.max(0, Number(storage.totalBytes) || 0); const available = Math.max(0, Number(storage.availableBytes) || 0);
   if (!total) { portableStoragePercent.textContent = '—'; portableStorageLabel.textContent = 'Drive space unavailable'; return; }
   const usedPercent = Math.max(0, Math.min(100, Math.round(((total - available) / total) * 100)));
-  portableStorageChart.style.background = `conic-gradient(var(--green) 0deg ${usedPercent * 3.6}deg, #b9b9b9 ${usedPercent * 3.6}deg 360deg)`;
+  portableStorageChart.style.background = `conic-gradient(#e7541f 0deg ${usedPercent * 3.6}deg, #b9b9b9 ${usedPercent * 3.6}deg 360deg)`;
   portableStoragePercent.textContent = `${usedPercent}%`;
   portableStorageLabel.textContent = `${formatBytes(available)} free of ${formatBytes(total)}`;
 }
