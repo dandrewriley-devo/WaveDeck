@@ -1,11 +1,11 @@
 # WaveDeck Opus Branch Handoff
 
-## WaveDeck Opus 1.0.4
+## WaveDeck Opus 1.0.5
 
 - This is the separate **`opus-portable`** branch. It is a Linux-only personal edition; `main` remains the normal cross-platform WaveDeck product.
-- Release artifact: **`WaveDeckOpus.AppImage`**. Its release workflow is `.github/workflows/opus-portable.yml` and publishes tag `opus-v1.0.4` without touching the main WaveDeck release.
+- Release artifact: **`WaveDeckOpus.AppImage`**. Its release workflow is `.github/workflows/opus-portable.yml` and publishes tag `opus-v1.0.5` without touching the main WaveDeck release.
 - WaveDeck Opus changes only the sibling portable `Music` folder. The optional Additional Music Folder is always read-only.
-- Portable MP3s are indexed immediately, then converted one at a time in the background to 96 kbps Opus. Each output is validated before its MP3 source is removed. Existing valid Opus outputs and `.opus.part` recovery files are handled safely at the next pass.
+- Portable MP3, FLAC, M4A/AAC, WAV, WMA, and OGG sources are converted one at a time in the background to 96 kbps Opus. Each output is validated before its source is removed. Existing valid Opus outputs and `.opus.part` recovery files are handled safely at the next pass.
 - Only these tags are carried into Opus: title, artist, album, Album Artist, track number, disc number, year, genre, `RATING`, `FAVORITE`, `DO_NOT_PLAY`, and `AMP_TRACK_ID`. Embedded artwork, loose image files, lyric/sidecar files, and other metadata are intentionally discarded from the portable Music tree.
 - Portable MP3 and Opus counterparts share the same logical track ID, so Local Radio station history, feedback, and Last.fm data survive conversion. Do not change `src/main/music-tags.js` identity behavior casually.
 - `src/main/opus-optimizer.js` owns conversion, validation, crash recovery, source protection for the currently playing song, and portable-Music watching. It uses the bundled, pinned FFmpeg/FFprobe pair already used by Linux recording.
@@ -13,6 +13,7 @@
 - 1.0.2 tightens the Local Music Settings page: Last.fm uses an inline Refresh link, stable MUSIC DATA UPDATED/UPDATING line, and no explanatory clutter or Radio Log link. Portable Music wording is shorter and clearer.
 - 1.0.3 remembers Additional Music Folders per Linux computer in `Data/computer-music-folders.json`. New choices stay temporary until the user selects the inline Remember this computer link; no popup is used. Existing single-folder settings migrate to the first computer that opens this release.
 - 1.0.4 starts an Additional Music Folder scan immediately after selection and visibly reports scan activity. The Local Music settings page shows the current computer’s Additional Music track count, lists all remembered computers, and lets the user rename or forget each remembered computer inline.
+- 1.0.5 makes Remember this computer immediate; it never re-applies the folder or waits behind scans. Additional Music indexes MP3 and Opus, has its own Refresh action, and portable copies suppress matching Additional Music duplicates. Import to Portable Music reads the AMF only, previews missing supported files with space estimate, then writes validated 96 kbps Opus directly to portable Music with progress and approximate remaining time. Portable Music shows a compact green-used/light-gray-free drive chart. Manage Local Mixes is collapsed by default.
 
 # WaveDeck Project Handoff
 

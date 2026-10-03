@@ -36,6 +36,7 @@ const {
 } = require("./portable-paths");
 const { PortableStorage } = require("./storage");
 const { ComputerMusicFolders, resolveComputerIdentity } = require('./computer-music-folders');
+const { PortableImporter } = require('./portable-importer');
 const { probeStream } = require("./stream-probe");
 const {
   clearCinnamonReservedSpace,
@@ -111,6 +112,7 @@ let computerMusicFolders = null;
 let currentComputer = null;
 let activeAdditionalMusicFolder = '';
 let additionalMusicFolderMode = 'none';
+let portableImporter = null;
 let player = null;
 let recordingLibrary = null;
 let musicLibrary = null;
@@ -1258,12 +1260,14 @@ function installIpcHandlers() {
   ipcMain.handle('ui:remember-additional-music-folder', async () => {
     if (!activeAdditionalMusicFolder || !currentComputer || !computerMusicFolders) throw new Error('Choose a music folder first.');
     computerMusicFolders.remember({ ...currentComputer, folder: activeAdditionalMusicFolder });
-    const preferences = await applyAdditionalMusicFolder(activeAdditionalMusicFolder, 'remembered');
+    additionalMusicFolderMode = 'remembered';
+    const preferences = currentUiPreferences();
     sendToAll('ui:preferences-changed', preferences);
     return preferences;
   });
   ipcMain.handle('ui:use-additional-music-folder-this-time', async () => {
-    const preferences = await applyAdditionalMusicFolder(activeAdditionalMusicFolder, 'temporary');
+    additionalMusicFolderMode = activeAdditionalMusicFolder ? 'temporary' : 'none';
+    const preferences = currentUiPreferences();
     sendToAll('ui:preferences-changed', preferences);
     return preferences;
   });
@@ -1435,6 +1439,30 @@ function installIpcHandlers() {
     void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
     return { ...status, ...(opusOptimizer?.getStatus() || {}) };
   });
+  ipcMain.handle('music:additional:refresh', async () => {
+    await requireMusic();
+    if (!activeAdditionalMusicFolder) throw new Error('Choose an Additional Music Folder first.');
+    const status = await musicLibrary.rescan();
+    void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
+    return { ...status, ...(opusOptimizer?.getStatus() || {}) };
+  });
+  ipcMain.handle('music:portable-storage', async () => {
+    const folder = path.join(path.dirname(getDataDir()), 'Music'); const info = await fs.promises.statfs(folder);
+    const blockSize = Number(info.bsize || info.frsize || 4096); const available = Math.max(0, Number(info.bavail || 0) * blockSize);
+    const total = Math.max(0, Number(info.blocks || 0) * blockSize); return { availableBytes: available, totalBytes: total, usedBytes: Math.max(0, total - available) };
+  });
+  ipcMain.handle('music:import:preview', async () => {
+    await requireMusic();
+    if (!portableImporter) throw new Error('Portable import is unavailable.');
+    await musicLibrary.rescan(); await analyzeLocalMixes();
+    return portableImporter.preview();
+  });
+  ipcMain.handle('music:import:start', async () => {
+    await requireMusic();
+    if (!portableImporter) throw new Error('Portable import is unavailable.');
+    return portableImporter.start();
+  });
+  ipcMain.handle('music:import:status', () => portableImporter?.getStatus() || { state: 'waiting', message: 'Portable import is unavailable.' });
   ipcMain.handle('music:play', async (_event, id, mode) => { await requireMusic(); return mediaController.playMusic(String(id), mode); });
   ipcMain.handle('music:mixes', async () => {
     await requireMusic();
@@ -1727,6 +1755,12 @@ if (!hasSingleInstanceLock) {
         if (opusOptimizer.isRunning()) return;
         await musicLibrary.rescan();
         beginOpusOptimization();
+      });
+      portableImporter = new PortableImporter({
+        musicRoot: path.join(path.dirname(getDataDir()), 'Music'), ffmpegExecutable: portableFfmpegExecutable, ffprobeExecutable: portableFfprobeExecutable,
+        getAdditionalFolder: () => activeAdditionalMusicFolder, getPortableTracks: () => musicLibrary.tracks.filter(track => track.library === 'portable'),
+        onStatus: status => sendToAll('music:import-changed', status),
+        onComplete: async () => { await musicLibrary.rescan(); await analyzeLocalMixes(); beginOpusOptimization(); }
       });
     }
     musicRadio = new MusicRadio({ dataDir: getDataDir(), onDecision: sendToRadioLog,

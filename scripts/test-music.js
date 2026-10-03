@@ -6,7 +6,8 @@ const crypto = require('crypto');
 const { MusicLibrary } = require('../src/main/music-library');
 const { MusicRadio, weight, COOLDOWN } = require('../src/main/music-radio');
 const { extractTrack, radioArtist } = require('../src/main/music-tags');
-const { OpusOptimizer, OPUS_BITRATE, outputFor, stableAmpId } = require('../src/main/opus-optimizer');
+const { OpusOptimizer, OPUS_BITRATE, SOURCE_EXTENSIONS, outputFor, stableAmpId } = require('../src/main/opus-optimizer');
+const { trackKey } = require('../src/main/portable-importer');
 const { ComputerMusicFolders, resolveComputerIdentity } = require('../src/main/computer-music-folders');
 const { MediaController, serializeTransport } = require('../src/main/media-controller');
 const { LastFmEnricher, popularityScore } = require('../src/main/lastfm-enricher');
@@ -23,6 +24,8 @@ function fixture() {
 function track(id, more = {}) { return { id, songKey: id, title: id, artist: 'Artist', artists: ['Artist'], albumArtist: 'Artist', album: 'Album', track: Number(id) || 1, disc: 1, relativePath: `${id}.mp3`, genres: ['Pop'], similarArtists: [], rating: null, ...more }; }
 
 async function run() {
+  assert.ok(SOURCE_EXTENSIONS.has('.flac'), 'portable Music recognizes FLAC sources for conversion');
+  assert.equal(trackKey(track('1', { title: 'Same Song', track: 1, duration: 245 })), trackKey(track('2', { title: 'Same Song', track: 1, duration: 245 })), 'portable imports identify matching tagged tracks regardless of source path');
   assert.equal(qualityForTrackCount(19), 'Not Enough');
   assert.equal(qualityForTrackCount(20), 'Weak');
   assert.equal(qualityForTrackCount(50), 'Solid');

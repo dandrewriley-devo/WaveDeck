@@ -64,6 +64,14 @@ function withLastFm(track, maps = lastFmMaps()) {
   };
 }
 function storedTracks() { return rows('SELECT json FROM tracks').map(row => JSON.parse(row.json)); }
+function duplicateKey(track) {
+  return [track.artist, track.title, track.albumArtist || track.artist, track.album, track.disc || 0, track.track || 0, Math.round((Number(track.duration) || 0) * 2) / 2]
+    .map(normalize).join('\n');
+}
+function visibleTracks() {
+  const all = storedTracks(); const portable = new Set(all.filter(track => track.library === 'portable').map(duplicateKey));
+  return all.filter(track => track.library !== 'additional' || !portable.has(duplicateKey(track)));
+}
 function trackById(id) { return storedTracks().find(track => track.id === String(id)) || null; }
 function lastFmCurrent(entry, now = Date.now()) {
   return entry?.status === 'matched' && Date.parse(entry.updated_at || '') > now - SIX_MONTHS_MS;
@@ -193,7 +201,7 @@ async function scan() {
           // Do not follow symlinks outside a selected music tree.
           const extension = path.extname(entry.name).toLowerCase();
           const portableAudio = root.id === 'portable' && (extension === '.mp3' || extension === '.opus');
-          const additionalAudio = root.id === 'additional' && extension === '.mp3';
+          const additionalAudio = root.id === 'additional' && (extension === '.mp3' || extension === '.opus');
           if (!entry.isFile() || (!portableAudio && !additionalAudio)) continue;
           if (root.id === 'portable' && extension === '.mp3' && entries.some(candidate =>
             candidate.isFile() && candidate.name === `${path.basename(entry.name, extension)}.opus`
@@ -277,14 +285,16 @@ async function handleRequest({ id, method, args = [] }) {
       value = status;
     }
     else if (method === 'all') {
-      const maps = lastFmMaps(); value = storedTracks().map(track => withLastFm(track, maps));
+      const maps = lastFmMaps(); value = visibleTracks().map(track => withLastFm(track, maps));
     }
     else if (method === 'search') {
       const words = normalize(args[0]).slice(0, 500).split(/\s+/).filter(Boolean);
       const where = words.length ? ' WHERE ' + words.map(() => 'instr(search, ?) > 0').join(' AND ') : '';
-      const total = rows('SELECT COUNT(*) AS n FROM tracks' + where, words)[0].n;
       const maps = lastFmMaps();
-      value = { total, tracks: words.length ? rows('SELECT json FROM tracks' + where + ' ORDER BY search LIMIT 200', words).map(r => withLastFm(JSON.parse(r.json), maps)) : [] };
+      const matches = words.length ? rows('SELECT json FROM tracks' + where + ' ORDER BY search', words).map(r => JSON.parse(r.json)) : [];
+      const portable = new Set(storedTracks().filter(track => track.library === 'portable').map(duplicateKey));
+      const visible = matches.filter(track => track.library !== 'additional' || !portable.has(duplicateKey(track)));
+      value = { total: visible.length, tracks: visible.slice(0, 200).map(track => withLastFm(track, maps)) };
     } else if (method === 'local-mixes:analyze') {
       value = await analyzeLocalMixes();
     } else if (method === 'lastfm:queue-album') {
