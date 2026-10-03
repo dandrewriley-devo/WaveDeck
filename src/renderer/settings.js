@@ -52,6 +52,9 @@ const chooseAdditionalMusicFolderBtn = document.getElementById('chooseAdditional
 const clearAdditionalMusicFolderBtn = document.getElementById('clearAdditionalMusicFolderBtn');
 const musicLibraryStatus = document.getElementById('musicLibraryStatus');
 const rescanMusicBtn = document.getElementById('rescanMusicBtn');
+const portableMusicProgressWrap = document.getElementById('portableMusicProgressWrap');
+const portableMusicProgress = document.getElementById('portableMusicProgress');
+const portableMusicProgressLabel = document.getElementById('portableMusicProgressLabel');
 const lastFmEnabled = document.getElementById('lastFmEnabled');
 const lastFmDetails = document.getElementById('lastFmDetails');
 const lastFmStatus = document.getElementById('lastFmStatus');
@@ -82,13 +85,26 @@ let activeSubgroupRename = null;
 
 function renderMusicLibraryStatus(status = {}) {
   const count = Number(status.count || 0);
+  const total = Math.max(0, Number(status.total || 0));
+  const converted = Math.min(total, Math.max(0, Number(status.converted || 0)));
+  const remaining = Math.max(0, total - converted);
+  const showPortableProgress = total > 0 || status.optimizing === true;
+  portableMusicProgressWrap.hidden = !showPortableProgress;
+  if (showPortableProgress) {
+    portableMusicProgress.max = Math.max(1, total);
+    portableMusicProgress.value = converted;
+    portableMusicProgressLabel.textContent = `${converted.toLocaleString()} of ${total.toLocaleString()}`;
+    portableMusicProgress.setAttribute('aria-valuetext', `${converted.toLocaleString()} of ${total.toLocaleString()} portable tracks converted`);
+  }
   musicLibraryStatus.textContent = status.optimizing
-    ? `Optimizing portable Music… ${Number(status.converted || 0).toLocaleString()} converted · ${Number(status.pending || 0).toLocaleString()} remaining${status.current ? ` · ${status.current}` : ''}`
-    : status.message || (status.scanning
-    ? `Scanning Local Music… ${Number(status.checked || 0).toLocaleString()} checked`
-    : `${count.toLocaleString()} songs in your Local Music library`);
+    ? `${converted.toLocaleString()} of ${total.toLocaleString()} portable tracks converted · ${remaining.toLocaleString()} remaining`
+    : total > 0
+      ? `${converted.toLocaleString()} of ${total.toLocaleString()} portable tracks converted${status.errors ? ` · ${Number(status.errors).toLocaleString()} need attention` : ''}`
+      : status.scanning
+        ? `Scanning Local Music… ${Number(status.checked || 0).toLocaleString()} checked`
+        : status.message || (count ? `${count.toLocaleString()} songs in your Local Music library` : 'No portable music found yet.');
   rescanMusicBtn.disabled = status.scanning === true || status.optimizing === true;
-  rescanMusicBtn.textContent = status.scanning ? 'Scanning…' : status.optimizing ? 'Optimizing…' : 'Rescan';
+  rescanMusicBtn.textContent = status.scanning ? 'Scanning…' : status.optimizing ? 'Optimizing…' : 'Rescan Local Music';
 }
 
 async function loadMusicLibraryStatus() {
@@ -1144,6 +1160,7 @@ window.wavedeck.onUiPreferencesChanged((preferences) => {
 });
 window.wavedeck.onLastFmChanged(renderLastFmStatus);
 window.wavedeck.onMusicChanged(renderMusicLibraryStatus);
+window.wavedeck.onMusicOptimizationChanged(renderMusicLibraryStatus);
 window.wavedeck.onLocalMixesChanged(() => { if (!localMusicTab.hidden) void loadLocalMixManager(); });
 
 (async function initialize() {

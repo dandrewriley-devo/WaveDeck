@@ -37,6 +37,7 @@ contextBridge.exposeInMainWorld("wavedeck", {
   onMusicDebugLog: callback => subscribe('music:debug-decision', callback),
   onMusicDebugReset: callback => subscribe('music:debug:reset', callback),
   onMusicChanged: callback => subscribe('music:changed', callback),
+  onMusicOptimizationChanged: callback => subscribe('music:optimization-changed', callback),
   onLocalMixesChanged: callback => subscribe('music:mixes-changed', callback),
   getStations: () => ipcRenderer.invoke("stations:get"),
   saveStations: (stations) => ipcRenderer.invoke("stations:save", stations),

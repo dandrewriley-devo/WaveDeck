@@ -1627,7 +1627,7 @@ if (!hasSingleInstanceLock) {
       dataDir: getDataDir(), additionalMusicFolder: storage.getUiPreferences().additionalMusicFolder,
       onStatus: status => {
         latestMusicLibraryStatus = status;
-        sendToMain('music:changed', { ...status, ...(opusOptimizer?.getStatus() || {}) });
+        sendToAll('music:changed', { ...status, ...(opusOptimizer?.getStatus() || {}) });
       },
       onLocalMixAvailability: () => sendToAll('music:mixes-changed')
     });
@@ -1637,7 +1637,7 @@ if (!hasSingleInstanceLock) {
         ffmpegExecutable: portableFfmpegExecutable,
         ffprobeExecutable: portableFfprobeExecutable,
         getProtectedPaths: protectedPortableMusicPaths,
-        onStatus: status => sendToMain('music:changed', { ...latestMusicLibraryStatus, ...status }),
+        onStatus: status => sendToAll('music:optimization-changed', { ...latestMusicLibraryStatus, ...status }),
         rescanLibrary: async () => {
           await musicLibrary.rescan();
           void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
@@ -1646,6 +1646,7 @@ if (!hasSingleInstanceLock) {
       opusOptimizer.setEnabled(storage.getUiPreferences().proModeEnabled);
       opusOptimizer.watch(async () => {
         if (!storage.getUiPreferences().proModeEnabled) return;
+        if (opusOptimizer.isRunning()) return;
         await musicLibrary.rescan();
         beginOpusOptimization();
       });

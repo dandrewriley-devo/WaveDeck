@@ -662,6 +662,7 @@ window.wavedeck.onMusicChanged(status => {
   if (!status.scanning) invalidateLocalMusicView();
   if (musicVisible && !status.scanning) queueRender();
 });
+window.wavedeck.onMusicOptimizationChanged(setMusicStatus);
 // Browsing Streaming Radio controls does not interrupt Local Music; choosing one does.
 for (const button of [presetSectionToggleBtn, favoritesOnlyToggleBtn, mostPlayedSectionToggleBtn, recordingsSectionToggleBtn]) {
   button.addEventListener('click', () => { if (musicVisible) setMusicVisible(false); }, { capture: true });

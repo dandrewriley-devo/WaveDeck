@@ -67,6 +67,9 @@ async function run() {
     assert.equal(await fs.access(path.join(path.dirname(optimizeSource), 'cover.jpg')).then(() => true, () => false), false, 'loose cover art is removed from portable Music');
     assert.equal(await fs.access(path.join(path.dirname(optimizeSource), 'lyrics.lrc')).then(() => true, () => false), false, 'loose lyric files are removed from portable Music');
     assert.equal(optimizerRescans, 1, 'the Local Music index refreshes after an optimization batch');
+    assert.equal(optimizer.getStatus().total, 1, 'portable optimization reports its total track count');
+    assert.equal(optimizer.getStatus().converted, 1, 'portable optimization reports converted track progress');
+    assert.equal(optimizer.getStatus().current, '', 'portable optimization clears its current track after finishing');
     assert.ok(stableAmpId(optimizeRoot, optimizeSource).startsWith('wdop_'), 'converted files receive a stable portable music ID');
     assert.equal(radioArtist(track('x', { albumArtist: 'Various Artists', artist: 'Solo' })), 'Solo');
 

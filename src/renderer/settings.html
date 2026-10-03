@@ -224,14 +224,22 @@
         <section class="local-music-settings local-music-section">
           <div class="pro-music-settings-title">Additional Music Folder <span>(optional)</span></div>
           <div class="pro-music-settings-row">
-            <input id="additionalMusicFolder" class="input" type="text" readonly placeholder="Portable Music folder only" />
+            <input id="additionalMusicFolder" class="input" type="text" readonly placeholder="No additional folder selected" />
             <button id="chooseAdditionalMusicFolderBtn" class="btn" type="button">Choose Folder…</button>
             <button id="clearAdditionalMusicFolderBtn" class="btn" type="button">Remove</button>
           </div>
-          <div class="hint">WaveDeck Opus automatically converts only the portable <b>Music</b> folder beside <b>Data</b> to lean 96 kbps Opus files. This adds one other folder to Music search and playback; its files and tags are never changed.</div>
+          <div class="hint">Add one other folder to Local Music search and playback. Its files and tags are never changed.</div>
+        </section>
+        <section class="local-music-section" aria-labelledby="portableMusicTitle">
+          <div class="pro-music-settings-title" id="portableMusicTitle">Portable Music</div>
+          <div class="hint">The portable <b>Music</b> folder beside <b>Data</b> is converted in the background to lean 96 kbps Opus files.</div>
+          <div id="portableMusicProgressWrap" class="portable-music-progress-wrap" hidden>
+            <progress id="portableMusicProgress" class="portable-music-progress" max="1" value="0" aria-label="Portable Music conversion progress"></progress>
+            <span id="portableMusicProgressLabel" class="portable-music-progress-label">0 of 0</span>
+          </div>
           <div class="music-library-status-row">
-            <span id="musicLibraryStatus" role="status">Checking Local Music…</span>
-            <button id="rescanMusicBtn" class="btn" type="button">Rescan</button>
+            <span id="musicLibraryStatus" role="status">Checking portable Music…</span>
+            <button id="rescanMusicBtn" class="btn" type="button">Rescan Local Music</button>
           </div>
         </section>
         <section class="lastfm-settings local-music-section" aria-labelledby="lastFmTitle">

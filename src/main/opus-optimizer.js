@@ -33,17 +33,18 @@ class OpusOptimizer {
   constructor({ musicRoot, ffmpegExecutable, ffprobeExecutable, rescanLibrary = async () => {}, getProtectedPaths = async () => new Set(), onStatus = () => {}, spawnImpl = run }) {
     this.musicRoot = path.resolve(musicRoot); this.ffmpegExecutable = ffmpegExecutable; this.ffprobeExecutable = ffprobeExecutable;
     this.rescanLibrary = rescanLibrary; this.getProtectedPaths = getProtectedPaths; this.onStatus = onStatus; this.spawnImpl = spawnImpl;
-    this.running = null; this.watchers = []; this.watchTimer = null; this.periodicTimer = null; this.parseFile = null; this.enabled = true; this.status = this.#status();
+    this.running = null; this.watchers = []; this.watchTimer = null; this.periodicTimer = null; this.watchIgnoreUntil = 0; this.parseFile = null; this.enabled = true; this.status = this.#status();
   }
-  #status(overrides = {}) { return { optimizing: false, current: '', pending: 0, converted: 0, retained: 0, cleaned: 0, errors: 0, message: '', ...overrides }; }
+  #status(overrides = {}) { return { optimizing: false, current: '', total: 0, pending: 0, converted: 0, retained: 0, cleaned: 0, errors: 0, message: '', ...overrides }; }
   #emit(overrides = {}) { this.status = { ...this.status, ...overrides }; this.onStatus({ ...this.status }); }
   getStatus() { return { ...this.status }; }
+  isRunning() { return Boolean(this.running); }
   setEnabled(enabled) { this.enabled = enabled === true; }
   async #protected() { const paths = await this.getProtectedPaths(); return new Set([...(paths || [])].map(value => path.resolve(String(value))).filter(Boolean)); }
   async #isProtected(source) { return (await this.#protected()).has(path.resolve(source)); }
-  async #collect(directory, result = { mp3: [], sidecars: [] }) {
+  async #collect(directory, result = { mp3: [], opus: [], sidecars: [] }) {
     let entries; try { entries = await fs.readdir(directory, { withFileTypes: true }); } catch { return result; }
-    for (const entry of entries) { const file = path.join(directory, entry.name); if (entry.isDirectory()) { await this.#collect(file, result); continue; } if (!entry.isFile()) continue; const extension = path.extname(entry.name).toLowerCase(); if (extension === '.mp3') result.mp3.push(file); else if (SIDECAR_EXTENSIONS.has(extension)) result.sidecars.push(file); }
+    for (const entry of entries) { const file = path.join(directory, entry.name); if (entry.isDirectory()) { await this.#collect(file, result); continue; } if (!entry.isFile()) continue; const extension = path.extname(entry.name).toLowerCase(); if (extension === '.mp3') result.mp3.push(file); else if (extension === '.opus') result.opus.push(file); else if (SIDECAR_EXTENSIONS.has(extension)) result.sidecars.push(file); }
     return result;
   }
   async #isValidOpus(filePath) {
@@ -57,7 +58,7 @@ class OpusOptimizer {
     append('title', common.title || path.basename(source, path.extname(source))); append('artist', common.artist); append('album', common.album); append('album_artist', common.albumartist); append('track', common.track?.no); append('disc', common.disk?.no); append('date', common.year || common.originalyear); append('genre', Array.isArray(common.genre) ? common.genre.join('; ') : common.genre); append('RATING', custom.RATING); append('FAVORITE', custom.FAVORITE); append('DO_NOT_PLAY', custom.DO_NOT_PLAY); append('AMP_TRACK_ID', custom.AMP_TRACK_ID || stableAmpId(this.musicRoot, source));
     return args;
   }
-  async #removeSourceIfSafe(source, output) { if (!await this.#isValidOpus(output) || !this.enabled || await this.#isProtected(source)) return false; try { await fs.unlink(source); return true; } catch { return false; } }
+  async #removeSourceIfSafe(source, output) { if (!await this.#isValidOpus(output) || !this.enabled || await this.#isProtected(source)) return false; try { await fs.unlink(source); this.watchIgnoreUntil = Date.now() + 6000; return true; } catch { return false; } }
   async #convert(source) {
     const output = outputFor(source); const partial = `${output}.part`;
     if (await this.#isValidOpus(output)) return { converted: false, retained: !await this.#removeSourceIfSafe(source, output) };
@@ -66,16 +67,16 @@ class OpusOptimizer {
     const metadataArgs = await this.#metadataArguments(source);
     await this.spawnImpl(this.ffmpegExecutable, ['-hide_banner', '-loglevel', 'error', '-nostdin', '-i', source, '-map', '0:a:0', '-map_metadata', '-1', '-vn', '-sn', '-dn', '-c:a', 'libopus', '-application', 'audio', '-b:a', OPUS_BITRATE, '-vbr', 'on', '-compression_level', '10', ...metadataArgs, '-f', 'opus', '-y', partial]);
     if (!await this.#isValidOpus(partial)) throw new Error('WaveDeck could not validate the new Opus file.');
-    await fs.rename(partial, output); return { converted: true, retained: !await this.#removeSourceIfSafe(source, output) };
+    await fs.rename(partial, output); const retained = !await this.#removeSourceIfSafe(source, output); this.watchIgnoreUntil = Date.now() + 6000; return { converted: true, retained };
   }
   async #cleanSidecars(files) { let cleaned = 0; for (const file of files) { if (!isPortablePath(this.musicRoot, file)) continue; try { await fs.unlink(file); cleaned += 1; } catch {} } return cleaned; }
   async start() {
     if (this.running) return this.running; if (!this.enabled) return this.getStatus();
-    this.running = (async () => { let changed = false; try { await fs.mkdir(this.musicRoot, { recursive: true }); const { mp3, sidecars } = await this.#collect(this.musicRoot); this.#emit(this.#status({ optimizing: true, pending: mp3.length })); for (let index = 0; index < mp3.length; index += 1) { if (!this.enabled) break; const source = mp3[index]; this.#emit({ current: path.relative(this.musicRoot, source), pending: mp3.length - index }); try { const result = await this.#convert(source); changed ||= result.converted || !result.retained; this.#emit({ converted: this.status.converted + (result.converted ? 1 : 0), retained: this.status.retained + (result.retained ? 1 : 0) }); } catch (error) { this.#emit({ errors: this.status.errors + 1, message: `Could not optimize ${path.basename(source)}: ${cleanValue(error.message, 280)}` }); } } const cleaned = await this.#cleanSidecars(sidecars); changed ||= cleaned > 0; this.#emit({ cleaned: this.status.cleaned + cleaned, pending: 0, current: '' }); if (changed) await this.rescanLibrary(); } finally { this.#emit({ optimizing: false, current: '', pending: 0 }); this.running = null; } return this.getStatus(); })();
+    this.running = (async () => { let changed = false; try { await fs.mkdir(this.musicRoot, { recursive: true }); const { mp3, opus, sidecars } = await this.#collect(this.musicRoot); const logicalTrack = file => file.slice(0, -path.extname(file).length); const total = new Set([...mp3, ...opus].map(logicalTrack)).size; const alreadyConverted = new Set(opus.map(logicalTrack)).size; this.#emit(this.#status({ optimizing: true, total, converted: alreadyConverted, pending: mp3.length })); for (let index = 0; index < mp3.length; index += 1) { if (!this.enabled) break; const source = mp3[index]; this.#emit({ current: path.relative(this.musicRoot, source), pending: mp3.length - index }); try { const result = await this.#convert(source); changed ||= result.converted || !result.retained; this.#emit({ converted: this.status.converted + 1, pending: mp3.length - index - 1, retained: this.status.retained + (result.retained ? 1 : 0) }); } catch (error) { this.#emit({ errors: this.status.errors + 1, pending: mp3.length - index - 1, message: `Could not optimize ${path.basename(source)}: ${cleanValue(error.message, 280)}` }); } } const cleaned = await this.#cleanSidecars(sidecars); changed ||= cleaned > 0; this.#emit({ cleaned: this.status.cleaned + cleaned, pending: 0, current: '' }); if (changed) await this.rescanLibrary(); } finally { this.#emit({ optimizing: false, current: '', pending: 0 }); this.running = null; } return this.getStatus(); })();
     return this.running;
   }
   watch(onChange) {
-    if (this.watchers.length) return; const schedule = () => { clearTimeout(this.watchTimer); this.watchTimer = setTimeout(() => { void onChange(); }, 3000); };
+    if (this.watchers.length) return; const schedule = () => { clearTimeout(this.watchTimer); this.watchTimer = setTimeout(() => { this.watchTimer = null; if (!this.isRunning() && Date.now() >= this.watchIgnoreUntil) void onChange(); }, 3000); };
     try { this.watchers.push(fsSync.watch(this.musicRoot, { recursive: true }, (_event, name) => { if (!name || /\.(mp3|opus|jpg|jpeg|png|gif|webp|bmp|tif|tiff|lrc|lyrics|txt)$/i.test(String(name))) schedule(); })); } catch { try { this.watchers.push(fsSync.watch(this.musicRoot, schedule)); } catch {} }
     this.periodicTimer = setInterval(() => { void onChange(); }, 10 * 60 * 1000); this.periodicTimer.unref?.();
   }
