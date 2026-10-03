@@ -53,6 +53,9 @@ const clearAdditionalMusicFolderBtn = document.getElementById('clearAdditionalMu
 const additionalMusicFolderChoice = document.getElementById('additionalMusicFolderChoice');
 const rememberAdditionalMusicFolderBtn = document.getElementById('rememberAdditionalMusicFolderBtn');
 const useAdditionalMusicFolderThisTimeBtn = document.getElementById('useAdditionalMusicFolderThisTimeBtn');
+const additionalMusicFolderStatus = document.getElementById('additionalMusicFolderStatus');
+const rememberedMusicComputers = document.getElementById('rememberedMusicComputers');
+const rememberedMusicComputersList = document.getElementById('rememberedMusicComputersList');
 const musicLibraryStatus = document.getElementById('musicLibraryStatus');
 const rescanMusicBtn = document.getElementById('rescanMusicBtn');
 const portableMusicProgressWrap = document.getElementById('portableMusicProgressWrap');
@@ -84,6 +87,7 @@ let reloadQueued = false;
 let initialized = false;
 let pendingEditId = "";
 let activeSubgroupRename = null;
+let renamingRememberedComputerId = '';
 
 function renderMusicLibraryStatus(status = {}) {
   const count = Number(status.count || 0);
@@ -107,6 +111,13 @@ function renderMusicLibraryStatus(status = {}) {
         : status.message || (count ? `${count.toLocaleString()} songs in your Local Music library` : 'No portable music found yet.');
   rescanMusicBtn.disabled = status.scanning === true || status.optimizing === true;
   rescanMusicBtn.textContent = status.scanning ? 'Scanning…' : status.optimizing ? 'Optimizing…' : 'Rescan Local Music';
+  if (additionalMusicFolder.value) {
+    additionalMusicFolderStatus.textContent = status.scanning
+      ? `Scanning Local Music… ${Number(status.checked || 0).toLocaleString()} files checked`
+      : `${Number(status.additionalCount || 0).toLocaleString()} tracks in this computer’s Additional Music Folder`;
+  } else {
+    additionalMusicFolderStatus.textContent = 'No Additional Music Folder selected for this computer.';
+  }
 }
 
 async function loadMusicLibraryStatus() {
@@ -125,7 +136,55 @@ function renderProMusicSettings(preferences) {
   additionalMusicFolderChoice.hidden = preferences?.additionalMusicFolderNeedsDecision !== true;
   lastFmEnabled.checked = preferences?.lastFmEnabled !== false;
   lastFmDetails.hidden = !lastFmEnabled.checked;
-  if (proEnabled) { void loadLastFmStatus(); void loadLocalMixManager(); void loadMusicLibraryStatus(); }
+  if (proEnabled) { void loadLastFmStatus(); void loadLocalMixManager(); void loadMusicLibraryStatus(); void loadRememberedMusicComputers(); }
+}
+
+function renderRememberedMusicComputers(computers = []) {
+  rememberedMusicComputers.hidden = !computers.length;
+  rememberedMusicComputersList.replaceChildren();
+  for (const computer of computers) {
+    const row = element('div', 'remembered-music-computer-row');
+    if (renamingRememberedComputerId === computer.id) {
+      const rename = element('div', 'remembered-music-computer-rename');
+      const input = element('input', 'input');
+      input.type = 'text'; input.maxLength = 120; input.value = computer.label || '';
+      input.setAttribute('aria-label', 'Computer name');
+      const actions = element('div', 'remembered-music-computer-actions');
+      const save = element('button', 'subtle-link', 'Save'); save.type = 'button';
+      const cancel = element('button', 'subtle-link', 'Cancel'); cancel.type = 'button';
+      save.addEventListener('click', async () => {
+        save.disabled = true;
+        try { renamingRememberedComputerId = ''; renderRememberedMusicComputers(await window.wavedeck.renameRememberedMusicComputer(computer.id, input.value)); }
+        catch (error) { save.disabled = false; setStatus(statusLocalMusic, `Could not rename this computer: ${error.message}`, false); }
+      });
+      cancel.addEventListener('click', () => { renamingRememberedComputerId = ''; renderRememberedMusicComputers(computers); });
+      input.addEventListener('keydown', event => { if (event.key === 'Enter') save.click(); if (event.key === 'Escape') cancel.click(); });
+      actions.append(save, document.createTextNode('·'), cancel);
+      rename.append(input, actions);
+      row.append(rename);
+      row.append(element('span', 'remembered-music-computer-folder', computer.folder));
+      setTimeout(() => input.focus(), 0);
+    } else {
+      const copy = element('div', 'remembered-music-computer-copy');
+      copy.append(element('span', 'remembered-music-computer-name', computer.label || 'Unnamed computer'), element('span', 'remembered-music-computer-folder', computer.folder));
+      const actions = element('div', 'remembered-music-computer-actions');
+      const rename = element('button', 'subtle-link', 'Rename'); rename.type = 'button';
+      const forget = element('button', 'subtle-link', 'Forget'); forget.type = 'button';
+      rename.addEventListener('click', () => { renamingRememberedComputerId = computer.id; renderRememberedMusicComputers(computers); });
+      forget.addEventListener('click', async () => {
+        forget.disabled = true;
+        try { renamingRememberedComputerId = ''; renderRememberedMusicComputers(await window.wavedeck.forgetRememberedMusicComputer(computer.id)); }
+        catch (error) { forget.disabled = false; setStatus(statusLocalMusic, `Could not forget this computer: ${error.message}`, false); }
+      });
+      actions.append(rename, document.createTextNode('·'), forget);
+      row.append(copy, actions);
+    }
+    rememberedMusicComputersList.append(row);
+  }
+}
+
+async function loadRememberedMusicComputers() {
+  try { renderRememberedMusicComputers(await window.wavedeck.getRememberedMusicComputers()); } catch {}
 }
 
 function renderLastFmStatus(status) {

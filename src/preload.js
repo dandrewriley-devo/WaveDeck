@@ -78,6 +78,9 @@ contextBridge.exposeInMainWorld("wavedeck", {
   rememberAdditionalMusicFolder: () => ipcRenderer.invoke('ui:remember-additional-music-folder'),
   useAdditionalMusicFolderThisTime: () => ipcRenderer.invoke('ui:use-additional-music-folder-this-time'),
   removeAdditionalMusicFolder: () => ipcRenderer.invoke('ui:remove-additional-music-folder'),
+  getRememberedMusicComputers: () => ipcRenderer.invoke('ui:get-remembered-music-computers'),
+  renameRememberedMusicComputer: (id, label) => ipcRenderer.invoke('ui:rename-remembered-music-computer', id, label),
+  forgetRememberedMusicComputer: (id) => ipcRenderer.invoke('ui:forget-remembered-music-computer', id),
   onUiPreferencesChanged: (callback) => subscribe("ui:preferences-changed", callback),
 
   exportLibrary: () => ipcRenderer.invoke("library:export"),

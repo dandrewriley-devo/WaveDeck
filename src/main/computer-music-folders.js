@@ -35,10 +35,25 @@ class ComputerMusicFolders {
     } catch {}
   }
   get(id) { const entry = this.data.computers[String(id || '')]; return entry ? { ...entry } : null; }
+  list() {
+    return Object.entries(this.data.computers)
+      .map(([id, entry]) => ({ id, folder: entry.folder, label: entry.label || 'Unnamed computer' }))
+      .sort((left, right) => left.label.localeCompare(right.label, undefined, { sensitivity: 'base' }));
+  }
   remember({ id, label, folder }) {
     const computerId = String(id || ''); const clean = cleanFolder(folder);
     if (!/^[a-f0-9]{32}$/.test(computerId) || !clean) throw new Error('That computer music folder is not valid.');
-    this.data.computers[computerId] = { folder: clean, label: cleanLabel(label) };
+    const existing = this.data.computers[computerId];
+    this.data.computers[computerId] = { folder: clean, label: cleanLabel(label) || existing?.label || '' };
+    this.#write(); return this.get(computerId);
+  }
+  rename(id, label) {
+    const computerId = String(id || '');
+    const entry = this.data.computers[computerId];
+    const clean = cleanLabel(label);
+    if (!entry) throw new Error('That remembered computer is no longer available.');
+    if (!clean) throw new Error('Give this computer a name first.');
+    entry.label = clean;
     this.#write(); return this.get(computerId);
   }
   forget(id) { delete this.data.computers[String(id || '')]; this.#write(); }

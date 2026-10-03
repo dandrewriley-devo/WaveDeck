@@ -181,11 +181,15 @@ function currentUiPreferences() {
   };
 }
 
-async function applyAdditionalMusicFolder(folder, mode = 'none') {
+async function applyAdditionalMusicFolder(folder, mode = 'none', { rescan = false } = {}) {
   activeAdditionalMusicFolder = String(folder || '').trim();
   additionalMusicFolderMode = activeAdditionalMusicFolder ? mode : 'none';
   await musicLibrary?.setAdditionalMusicFolder(activeAdditionalMusicFolder);
-  void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
+  if (rescan && musicLibrary) {
+    void musicLibrary.rescan().then(() => analyzeLocalMixes()).catch(error => sendToMain('app:warning', error.message));
+  } else {
+    void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
+  }
   return currentUiPreferences();
 }
 
@@ -1247,7 +1251,7 @@ function installIpcHandlers() {
       const stat = await fs.promises.stat(selected);
       if (!stat.isDirectory()) throw new Error('Choose a folder containing MP3 files.');
     }
-    const preferences = await applyAdditionalMusicFolder(selected, selected ? 'decision' : 'none');
+    const preferences = await applyAdditionalMusicFolder(selected, selected ? 'decision' : 'none', { rescan: Boolean(selected) });
     sendToAll('ui:preferences-changed', preferences);
     return preferences;
   });
@@ -1268,6 +1272,23 @@ function installIpcHandlers() {
     const preferences = await applyAdditionalMusicFolder('', 'none');
     sendToAll('ui:preferences-changed', preferences);
     return preferences;
+  });
+  ipcMain.handle('ui:get-remembered-music-computers', () => computerMusicFolders?.list() || []);
+  ipcMain.handle('ui:rename-remembered-music-computer', (_event, id, label) => {
+    if (!computerMusicFolders) throw new Error('Remembered computers are not available yet.');
+    const entry = computerMusicFolders.rename(id, label);
+    if (currentComputer?.id === String(id || '')) currentComputer = { ...currentComputer, label: entry.label };
+    return computerMusicFolders.list();
+  });
+  ipcMain.handle('ui:forget-remembered-music-computer', async (_event, id) => {
+    if (!computerMusicFolders) return [];
+    const computerId = String(id || '');
+    computerMusicFolders.forget(computerId);
+    if (currentComputer?.id === computerId) {
+      const preferences = await applyAdditionalMusicFolder('', 'none');
+      sendToAll('ui:preferences-changed', preferences);
+    }
+    return computerMusicFolders.list();
   });
   ipcMain.handle('music:lastfm:get-status', async () => {
     requireAdvancedFeatures();
@@ -1588,6 +1609,7 @@ if (!hasSingleInstanceLock) {
       computerMusicFolders.initialize();
       const rememberedFolder = computerMusicFolders.get(currentComputer.id);
       if (rememberedFolder?.folder) {
+        if (rememberedFolder.label) currentComputer = { ...currentComputer, label: rememberedFolder.label };
         activeAdditionalMusicFolder = rememberedFolder.folder;
         additionalMusicFolderMode = 'remembered';
       } else {

@@ -1,9 +1,9 @@
 # WaveDeck Opus Branch Handoff
 
-## WaveDeck Opus 1.0.3
+## WaveDeck Opus 1.0.4
 
 - This is the separate **`opus-portable`** branch. It is a Linux-only personal edition; `main` remains the normal cross-platform WaveDeck product.
-- Release artifact: **`WaveDeckOpus.AppImage`**. Its release workflow is `.github/workflows/opus-portable.yml` and publishes tag `opus-v1.0.3` without touching the main WaveDeck release.
+- Release artifact: **`WaveDeckOpus.AppImage`**. Its release workflow is `.github/workflows/opus-portable.yml` and publishes tag `opus-v1.0.4` without touching the main WaveDeck release.
 - WaveDeck Opus changes only the sibling portable `Music` folder. The optional Additional Music Folder is always read-only.
 - Portable MP3s are indexed immediately, then converted one at a time in the background to 96 kbps Opus. Each output is validated before its MP3 source is removed. Existing valid Opus outputs and `.opus.part` recovery files are handled safely at the next pass.
 - Only these tags are carried into Opus: title, artist, album, Album Artist, track number, disc number, year, genre, `RATING`, `FAVORITE`, `DO_NOT_PLAY`, and `AMP_TRACK_ID`. Embedded artwork, loose image files, lyric/sidecar files, and other metadata are intentionally discarded from the portable Music tree.
@@ -12,6 +12,7 @@
 - 1.0.1 separates optimizer-progress IPC from real library-change IPC, preventing the Local Music tab and list from flashing during conversion. The optimizer ignores its own file-watcher events, then rescans once when a batch completes. Settings now separates Additional Music Folder from Portable Music and shows total conversion progress without a stale track name.
 - 1.0.2 tightens the Local Music Settings page: Last.fm uses an inline Refresh link, stable MUSIC DATA UPDATED/UPDATING line, and no explanatory clutter or Radio Log link. Portable Music wording is shorter and clearer.
 - 1.0.3 remembers Additional Music Folders per Linux computer in `Data/computer-music-folders.json`. New choices stay temporary until the user selects the inline Remember this computer link; no popup is used. Existing single-folder settings migrate to the first computer that opens this release.
+- 1.0.4 starts an Additional Music Folder scan immediately after selection and visibly reports scan activity. The Local Music settings page shows the current computer’s Additional Music track count, lists all remembered computers, and lets the user rename or forget each remembered computer inline.
 
 # WaveDeck Project Handoff
 

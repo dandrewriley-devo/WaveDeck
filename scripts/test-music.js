@@ -36,6 +36,8 @@ async function run() {
     computerFolders.initialize();
     computerFolders.remember({ ...computerIdentity, folder: '/mnt/test-music' });
     assert.equal(computerFolders.get(computerIdentity.id).folder, '/mnt/test-music', 'an Additional Music Folder can be remembered per computer');
+    computerFolders.rename(computerIdentity.id, 'Andrew’s Desk');
+    assert.equal(computerFolders.list()[0].label, 'Andrew’s Desk', 'remembered computers can have a custom name');
     const reloadedComputerFolders = new ComputerMusicFolders({ dataDir: path.join(temp, 'computer-folders') });
     reloadedComputerFolders.initialize();
     assert.equal(reloadedComputerFolders.get(computerIdentity.id).folder, '/mnt/test-music', 'remembered computer folders persist in portable Data');

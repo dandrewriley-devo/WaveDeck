@@ -14,7 +14,7 @@ const portableRoot = path.join(path.dirname(workerData.dataDir), 'Music');
 let additionalMusicFolder = String(workerData.additionalMusicFolder || '').trim();
 const dbPath = path.join(workerData.dataDir, 'music.sqlite');
 const localMixCachePath = path.join(workerData.dataDir, 'local-mix-availability.json');
-let status = { scanning: false, count: 0, checked: 0, errors: 0, folder: portableRoot, message: '' };
+let status = { scanning: false, count: 0, portableCount: 0, additionalCount: 0, checked: 0, errors: 0, folder: portableRoot, message: '' };
 let refreshAllTrackMetadata = false;
 const rows = (sql, params = []) => {
   const statement = db.prepare(sql);
@@ -22,6 +22,11 @@ const rows = (sql, params = []) => {
   finally { statement.free(); }
 };
 const emit = () => parentPort.postMessage({ event: 'status', value: status });
+function updateTrackCounts() {
+  status.count = Number(rows('SELECT COUNT(*) AS n FROM tracks')[0]?.n) || 0;
+  status.portableCount = Number(rows("SELECT COUNT(*) AS n FROM tracks WHERE path LIKE 'portable:%'")[0]?.n) || 0;
+  status.additionalCount = Number(rows("SELECT COUNT(*) AS n FROM tracks WHERE path LIKE 'additional:%'")[0]?.n) || 0;
+}
 const emitLocalMixes = value => parentPort.postMessage({ event: 'local-mixes', value });
 const albumKey = track => {
   const artist = normalize(track.albumArtist || track.artist);
@@ -230,7 +235,7 @@ async function scan() {
       }
       if (indexChanged) bumpLocalMixTrackRevision();
       await persist();
-      status.count = rows('SELECT COUNT(*) AS n FROM tracks')[0].n;
+      updateTrackCounts();
       status.message = status.errors ? `${status.errors} files or folders could not be read; rescan to retry.` : '';
     } catch (error) { status.message = error.message; }
     finally { status.scanning = false; scanning = null; emit(); }
@@ -252,7 +257,7 @@ async function initialize() {
   db.run('CREATE TABLE IF NOT EXISTS lastfm_jobs (album_key TEXT PRIMARY KEY, priority INTEGER, force INTEGER, queued_at TEXT)');
   const metadataVersion = Number(rows('SELECT value FROM music_index_meta WHERE key = ?', ['track_metadata_version'])[0]?.value) || 0;
   refreshAllTrackMetadata = metadataVersion < MUSIC_INDEX_VERSION;
-  status.count = rows('SELECT COUNT(*) AS n FROM tracks')[0].n;
+  updateTrackCounts();
   emit();
 }
 const ready = initialize();
@@ -268,7 +273,7 @@ async function handleRequest({ id, method, args = [] }) {
       db.run("DELETE FROM tracks WHERE path LIKE 'additional:%'");
       bumpLocalMixTrackRevision();
       await persist();
-      status.count = rows('SELECT COUNT(*) AS n FROM tracks')[0].n;
+      updateTrackCounts();
       value = status;
     }
     else if (method === 'all') {

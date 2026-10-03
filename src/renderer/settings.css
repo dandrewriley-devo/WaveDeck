@@ -162,6 +162,18 @@ main{
 .pro-music-settings-row .input{ flex:1; min-width:0; }
 .additional-music-folder-choice{ align-items:center; color:var(--muted); display:flex; flex-wrap:wrap; font-size:12px; gap:4px; }
 .additional-music-folder-choice .subtle-link{ align-self:center; margin:0; }
+.additional-music-folder-status{ color:var(--muted); font-size:12px; min-height:16px; }
+.remembered-music-computers{ border-top:1px solid var(--border); display:grid; gap:7px; padding-top:10px; }
+.remembered-music-computers-title{ color:#e3e3e3; font-size:12px; font-weight:650; }
+.remembered-music-computers-list{ display:grid; gap:6px; }
+.remembered-music-computer-row{ align-items:center; background:#1f1f1f; border:1px solid #383838; display:grid; gap:6px 10px; grid-template-columns:minmax(0, 1fr) auto; padding:8px 9px; }
+.remembered-music-computer-copy{ min-width:0; }
+.remembered-music-computer-name{ color:#e3e3e3; display:block; font-size:12px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.remembered-music-computer-folder{ color:var(--muted); display:block; font-size:11px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.remembered-music-computer-actions{ align-items:center; display:flex; gap:4px; }
+.remembered-music-computer-actions .subtle-link{ margin:0; }
+.remembered-music-computer-rename{ display:grid; gap:6px; grid-column:1 / -1; grid-template-columns:minmax(0, 1fr) auto; }
+.remembered-music-computer-rename .input{ min-width:0; }
 .music-library-status-row{ align-items:center; display:flex; gap:10px; justify-content:space-between; }
 .music-library-status-row span{ color:var(--muted); font-size:12px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .portable-music-progress-wrap{ align-items:center; display:grid; gap:6px 10px; grid-template-columns:1fr auto; }
