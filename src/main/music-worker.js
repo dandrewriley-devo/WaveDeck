@@ -186,7 +186,13 @@ async function scan() {
           const file = path.join(directory, entry.name);
           if (entry.isDirectory()) { if (!await walk(file, root)) return false; continue; }
           // Do not follow symlinks outside a selected music tree.
-          if (!entry.isFile() || !/\.mp3$/i.test(entry.name)) continue;
+          const extension = path.extname(entry.name).toLowerCase();
+          const portableAudio = root.id === 'portable' && (extension === '.mp3' || extension === '.opus');
+          const additionalAudio = root.id === 'additional' && extension === '.mp3';
+          if (!entry.isFile() || (!portableAudio && !additionalAudio)) continue;
+          if (root.id === 'portable' && extension === '.mp3' && entries.some(candidate =>
+            candidate.isFile() && candidate.name === `${path.basename(entry.name, extension)}.opus`
+          )) continue;
           const relative = path.relative(root.folder, file).split(path.sep).join('/');
           const key = `${root.id}:${relative}`;
           seen.add(key);

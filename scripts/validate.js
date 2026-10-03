@@ -144,11 +144,12 @@ function assertValidHeaderPng(filePath) {
 
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
-assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "1.0.5");
-assert.strictEqual(packageJson.wavedeckVersion, "1.0.5");
-assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
-assert.strictEqual(packageJson.build.productName, "WaveDeck");
+assert.strictEqual(packageJson.name, "wavedeck-opus");
+assert.strictEqual(packageJson.version, "1.0.0");
+assert.strictEqual(packageJson.wavedeckVersion, "1.0.0");
+assert.strictEqual(packageJson.desktopName, "wavedeck-opus.desktop");
+assert.strictEqual(packageJson.build.productName, "WaveDeck Opus");
+assert.strictEqual(packageJson.build.appId, "com.a17press.wavedeckopus");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
 assert.strictEqual(packageJson.dependencies["dbus-next"], "^0.10.2");
 assert.ok(packageJson.scripts["prepare:linux-recorder"].includes("prepare-linux-ffmpeg.js"));
@@ -167,7 +168,7 @@ assert.deepStrictEqual(packageJson.build.extraResources, [
   }
 ]);
 assert.strictEqual(packageJson.build.linux.syncDesktopName, true);
-assert.strictEqual(packageJson.build.linux.artifactName, "WaveDeck.${ext}");
+assert.strictEqual(packageJson.build.linux.artifactName, "WaveDeckOpus.${ext}");
 assert.ok(packageJson.scripts["dist:windows"].includes("electron-builder.windows.json"));
 assert.strictEqual(stations.length, 360);
 assert.strictEqual(groups.length, 17);
@@ -741,8 +742,8 @@ try {
 
   const desktopEntry = buildDesktopEntry({ appImagePath: fakeAppImage, version: "0.1.14" });
   assert.ok(desktopEntry.includes(`Exec=${quoteExecArgument(fakeAppImage)}`));
-  assert.ok(desktopEntry.includes("Icon=wavedeck"));
-  assert.ok(desktopEntry.includes("StartupWMClass=wavedeck"));
+  assert.ok(desktopEntry.includes("Icon=wavedeck-opus"));
+  assert.ok(desktopEntry.includes("StartupWMClass=wavedeck-opus"));
   assert.ok(desktopEntry.includes(MANAGED_MARKER));
 
   // Desktop-entry installation is a Linux-only feature. Its file-mode behavior
@@ -1543,12 +1544,12 @@ assert.ok(mainSource.includes("setSidebarMode(false, { showWindow: false })"));
 assert.ok(mainSource.includes("async function setSidebarMode(enabled, { showWindow = true } = {})"));
 assert.ok(mainSource.includes("storage.setMiniPlayerWindowBounds"));
 assert.ok(mainSource.includes("function createTray()"));
-assert.ok(mainSource.includes("Show WaveDeck"));
-assert.ok(mainSource.includes("Quit WaveDeck"));
+assert.ok(mainSource.includes("Show WaveDeck Opus"));
+assert.ok(mainSource.includes("Quit WaveDeck Opus"));
 assert.ok(mainSource.includes("tray?.destroy()"));
 const desktopLauncherSource = fs.readFileSync(path.join(root, "src", "main", "desktop-launcher.js"), "utf8");
 assert.ok(desktopLauncherSource.includes('.local", "share", "applications"'));
-assert.ok(desktopLauncherSource.includes("X-WaveDeck-Managed=true"));
+assert.ok(desktopLauncherSource.includes("X-WaveDeckOpus-Managed=true"));
 const rendererSource = fs.readFileSync(path.join(root, "src", "renderer", "renderer.js"), "utf8");
 assert.ok(rendererSource.includes("warmLocalMusicView"));
 assert.ok(indexHtml.includes('id="localRadioControlsBtn"'));
@@ -1711,6 +1712,13 @@ assert.ok(windowsWorkflow.includes("Publish WaveDeck 1.0.5 for Linux and Windows
 assert.ok(windowsWorkflow.includes("release-assets/linux/WaveDeck.AppImage"));
 assert.ok(windowsWorkflow.includes("release-assets/windows/WaveDeck.exe"));
 assert.ok(windowsWorkflow.includes('chmod 755 "$appimage"'));
+const opusWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "opus-portable.yml"), "utf8");
+assert.ok(opusWorkflow.includes("branches: [opus-portable]"));
+assert.ok(opusWorkflow.includes("npm run dist:linux -- --publish never"));
+assert.ok(opusWorkflow.includes("WaveDeckOpus-1.0.0-Linux"));
+assert.ok(opusWorkflow.includes("dist/WaveDeckOpus.AppImage"));
+assert.ok(opusWorkflow.includes("tag_name: opus-v1.0.0"));
+assert.ok(opusWorkflow.includes("Publish WaveDeck Opus 1.0.0"));
 const macosInstructions = fs.readFileSync(path.join(root, "START-HERE-MACOS.txt"), "utf8");
 assert.ok(macosInstructions.includes("Version 0.6.1 universal build"));
 assert.ok(macosInstructions.includes("WaveDeck is unsigned"));

@@ -82,11 +82,13 @@ let activeSubgroupRename = null;
 
 function renderMusicLibraryStatus(status = {}) {
   const count = Number(status.count || 0);
-  musicLibraryStatus.textContent = status.message || (status.scanning
+  musicLibraryStatus.textContent = status.optimizing
+    ? `Optimizing portable Music… ${Number(status.converted || 0).toLocaleString()} converted · ${Number(status.pending || 0).toLocaleString()} remaining${status.current ? ` · ${status.current}` : ''}`
+    : status.message || (status.scanning
     ? `Scanning Local Music… ${Number(status.checked || 0).toLocaleString()} checked`
     : `${count.toLocaleString()} songs in your Local Music library`);
-  rescanMusicBtn.disabled = status.scanning === true;
-  rescanMusicBtn.textContent = status.scanning ? 'Scanning…' : 'Rescan';
+  rescanMusicBtn.disabled = status.scanning === true || status.optimizing === true;
+  rescanMusicBtn.textContent = status.scanning ? 'Scanning…' : status.optimizing ? 'Optimizing…' : 'Rescan';
 }
 
 async function loadMusicLibraryStatus() {

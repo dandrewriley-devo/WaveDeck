@@ -2,16 +2,28 @@ const path = require('path');
 const crypto = require('crypto');
 const normalize = (value) => String(value ?? '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 const list = (value) => (Array.isArray(value) ? value : String(value || '').split(/[;|]/)).map(String).map(s => s.trim()).filter(Boolean);
+const PORTABLE_CUSTOM_TAGS = new Set(['RATING', 'FAVORITE', 'DO_NOT_PLAY', 'PLAY_COUNT', 'PLAYCOUNT', 'SKIP_COUNT', 'SKIPCOUNT', 'LAST_PLAYED', 'LASTFM_TRACK_POPULARITY_0_100', 'LASTFM_ARTIST_SIMILAR', 'MOOD', 'AMP_TRACK_ID']);
 // Some ID3 readers treat the slash in AC/DC as an artist separator and leave
 // only "AC" in the primary artist field. Canonicalize that known legacy form
 // everywhere WaveDeck displays or matches an artist.
 const canonicalArtist = value => normalize(value) === 'ac' ? 'AC/DC' : String(value || '').trim();
+function customTags(metadata) {
+  const custom = {};
+  for (const frames of Object.values(metadata?.native || {})) for (const frame of frames || []) {
+    const id = String(frame?.id || '');
+    if (id.startsWith('TXXX:')) { custom[id.slice(5).toUpperCase()] = frame.value; continue; }
+    const key = id.toUpperCase();
+    if (PORTABLE_CUSTOM_TAGS.has(key)) custom[key] = frame.value;
+  }
+  return custom;
+}
+function portableTrackId(relativePath, library) {
+  const normalizedPath = String(relativePath || '').replace(/\\/g, '/').replace(/\.[^.\/]+$/, '');
+  return crypto.createHash('sha256').update(`${library}\0${normalizedPath}`).digest('hex');
+}
 function extractTrack(metadata, relativePath, library = 'portable') {
   const c = metadata.common || {};
-  const custom = {};
-  for (const frames of Object.values(metadata.native || {})) for (const frame of frames) {
-    if (frame.id.startsWith('TXXX:')) custom[frame.id.slice(5).toUpperCase()] = frame.value;
-  }
+  const custom = customTags(metadata);
   const number = (...keys) => {
     const value = keys.map(k => custom[k]).find(v => v !== undefined && v !== '');
     return Number.isFinite(Number(value)) ? Number(value) : null;
@@ -54,7 +66,7 @@ function extractTrack(metadata, relativePath, library = 'portable') {
   const title = c.title || path.basename(relativePath, path.extname(relativePath));
   const artist = canonicalArtist(c.artist || '');
   return {
-    id: crypto.createHash('sha256').update(`${library}\0${relativePath}`).digest('hex'), relativePath, library,
+    id: portableTrackId(relativePath, library), relativePath, library,
     title, artist, artists: (c.artists || list(artist)).map(canonicalArtist), album: c.album || '', albumArtist: canonicalArtist(c.albumartist || ''),
     year: c.year || c.originalyear || null, genres: c.genre || [], composer: c.composer || [],
     comments: (c.comment || []).map(v => typeof v === 'string' ? v : v.text || ''),
@@ -76,4 +88,4 @@ function compilation(track) {
     /soundtrack|original motion picture/i.test(track.album || '');
 }
 function radioArtist(track) { return canonicalArtist((!compilation(track) && track.albumArtist) || track.artist); }
-module.exports = { extractTrack, normalize, canonicalArtist, compilation, radioArtist };
+module.exports = { extractTrack, customTags, portableTrackId, normalize, canonicalArtist, compilation, radioArtist };

@@ -1,0 +1,68 @@
+name: Build WaveDeck Opus
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [opus-portable]
+
+permissions:
+  contents: write
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm install --package-lock=false --no-audit --no-fund
+      - run: npm test
+      - run: npm run dist:linux -- --publish never
+      - name: Inspect WaveDeck Opus AppImage
+        shell: bash
+        run: |
+          set -euo pipefail
+          appimage="dist/WaveDeckOpus.AppImage"
+          chmod 755 "$appimage"
+          test -f "$appimage"
+          test -x "$appimage"
+          size=$(stat --format=%s "$appimage")
+          if [ "$size" -lt 100000000 ]; then
+            echo "WaveDeckOpus.AppImage is unexpectedly small: $size bytes."
+            exit 1
+          fi
+          sha256sum "$appimage"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WaveDeckOpus-1.0.0-Linux
+          path: dist/WaveDeckOpus.AppImage
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+
+  publish:
+    needs: linux
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: WaveDeckOpus-1.0.0-Linux
+          path: release-assets
+      - name: Inspect release asset
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f release-assets/WaveDeckOpus.AppImage
+          sha256sum release-assets/WaveDeckOpus.AppImage
+      - name: Publish WaveDeck Opus 1.0.0
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: opus-v1.0.0
+          target_commitish: ${{ github.sha }}
+          name: WaveDeck Opus 1.0.0
+          body: Linux x64 WaveDeck Opus build. Keep WaveDeckOpus.AppImage beside its own Data and Music folders. It automatically converts portable Music to lean Opus files; an Additional Music Folder is never changed.
+          files: release-assets/WaveDeckOpus.AppImage
+          overwrite_files: true
+          fail_on_unmatched_files: true

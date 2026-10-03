@@ -126,7 +126,8 @@ class MusicLibrary {
     const root = await fs.realpath(rootPath);
     const file = await fs.realpath(path.join(root, track.relativePath));
     const relative = path.relative(root, file);
-    if (relative.startsWith('..') || path.isAbsolute(relative) || !/\.mp3$/i.test(file)) throw new Error('Song is outside Music.');
+    const allowed = track.library === 'additional' ? /\.mp3$/i : /\.(mp3|opus)$/i;
+    if (relative.startsWith('..') || path.isAbsolute(relative) || !allowed.test(file)) throw new Error('Song is outside Music.');
     return { ...track, path: file };
   }
   close() { this.disable(); this.worker?.terminate(); }

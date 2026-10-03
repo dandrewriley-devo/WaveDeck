@@ -19,6 +19,7 @@ const { createLibraryUpdater, nodeHttpsFetch } = require("./library-updater");
 const { copyLegacyData } = require("./data-migration");
 const { RecordingLibrary } = require("./recording-library");
 const { MusicLibrary } = require('./music-library');
+const { OpusOptimizer } = require('./opus-optimizer');
 const { MusicRadio } = require('./music-radio');
 const { mixBookSignature } = require('./local-mixes');
 const { LastFmEnricher } = require('./lastfm-enricher');
@@ -67,8 +68,8 @@ if (process.platform === "linux") {
 
 const FIXED_WIDTH = SIDEBAR_WIDTH;
 const PROJECT_ROOT = path.resolve(__dirname, "..", "..");
-const FLOATING_NATIVE_TITLE = "WaveDeck";
-const SIDEBAR_NATIVE_TITLE = "WaveDeck Sidebar";
+const FLOATING_NATIVE_TITLE = "WaveDeck Opus";
+const SIDEBAR_NATIVE_TITLE = "WaveDeck Opus Sidebar";
 const SIDEBAR_REALIZE_DELAY_MS = 150;
 const MEDIA_KEY_RECLAIM_INTERVAL_MS = 15_000;
 const PLAYBACK_HEARTBEAT_MS = 10_000;
@@ -109,8 +110,12 @@ let player = null;
 let recordingLibrary = null;
 let musicLibrary = null;
 let musicRadio = null;
+let opusOptimizer = null;
+let latestMusicLibraryStatus = {};
 let lastFmEnricher = null;
 let recordingProbeExecutable = "";
+let portableFfmpegExecutable = "";
+let portableFfprobeExecutable = "";
 let mediaController = null;
 let recorder = null;
 let mprisService = null;
@@ -141,6 +146,29 @@ function getDataDir() {
     execPath: process.execPath,
     projectRoot: PROJECT_ROOT,
     homeDir: os.homedir()
+  });
+}
+
+async function protectedPortableMusicPaths() {
+  const track = mediaController?.getStatus?.().currentMusic?.track;
+  if (!track?.id || !musicLibrary) return new Set();
+  try {
+    const resolved = await musicLibrary.resolve(track.id);
+    return resolved.library === 'portable' ? new Set([resolved.path]) : new Set();
+  } catch { return new Set(); }
+}
+
+function beginOpusOptimization() {
+  if (!opusOptimizer || !storage?.getUiPreferences().proModeEnabled) return;
+  void opusOptimizer.start().then(() => {
+    void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
+  }).catch(error => sendToMain('app:warning', `Portable Music optimization paused: ${error.message}`));
+}
+
+function enableLocalMusic() {
+  return musicLibrary.enable({ scanOnEnable: true }).then(() => {
+    lastFmEnricher?.configure();
+    beginOpusOptimization();
   });
 }
 
@@ -241,7 +269,7 @@ function refreshTrayMenu() {
   if (!tray) return;
   const miniPlayerActive = Boolean(miniPlayerWindow && !miniPlayerWindow.isDestroyed());
   tray.setContextMenu(Menu.buildFromTemplate([
-    { label: "Show WaveDeck", click: showMainWindow },
+    { label: "Show WaveDeck Opus", click: showMainWindow },
     ...(supportsMiniPlayer() ? [{
       label: "Mini Player",
       type: "checkbox",
@@ -251,7 +279,7 @@ function refreshTrayMenu() {
     { label: "Play / Pause", click: () => { void mediaController?.togglePlayPause(); } },
     { label: "Stop", click: () => { void mediaController?.stop(); } },
     { type: "separator" },
-    { label: "Quit WaveDeck", click: () => app.quit() }
+    { label: "Quit WaveDeck Opus", click: () => app.quit() }
   ]));
 }
 
@@ -276,7 +304,7 @@ function toggleMiniPlayerDisplayMode() {
 function createTray() {
   if (tray || !Tray) return;
   tray = new Tray(path.join(PROJECT_ROOT, "build", "icon.png"));
-  tray.setToolTip("WaveDeck");
+  tray.setToolTip("WaveDeck Opus");
   refreshTrayMenu();
   tray.on("click", showMainWindow);
 }
@@ -549,7 +577,7 @@ function openSettingsWindow(stationId = "") {
     minWidth: Math.min(SETTINGS_MIN_WIDTH, geometry.width),
     minHeight: Math.min(SETTINGS_MIN_HEIGHT, geometry.height),
     resizable: true,
-    title: "WaveDeck Settings"
+    title: "WaveDeck Opus Settings"
   });
 
   settingsWindow.on("close", () => {
@@ -598,7 +626,7 @@ function openRadioLogWindow() {
     minWidth: Math.min(RADIO_LOG_MIN_WIDTH, geometry.width),
     minHeight: Math.min(RADIO_LOG_MIN_HEIGHT, geometry.height),
     resizable: true,
-    title: "WaveDeck Live Radio Log"
+    title: "WaveDeck Opus Live Radio Log"
   });
   radioLogWindow.on("close", () => {
     if (!radioLogWindow || radioLogWindow.isDestroyed()) return;
@@ -776,7 +804,7 @@ async function openMiniPlayer() {
     maxHeight: geometry.height,
     resizable: false,
     skipTaskbar: true,
-    title: "WaveDeck Mini Player"
+    title: "WaveDeck Opus Mini Player"
   });
   miniPlayerWindow = window;
   window.setAlwaysOnTop(true, "floating");
@@ -1166,6 +1194,7 @@ function installIpcHandlers() {
       throw new Error("Stop the current recording before turning Advanced Features off.");
     }
     const preferences = storage.setProModeEnabled(enabled);
+    opusOptimizer?.setEnabled(preferences.proModeEnabled);
     if (!preferences.proModeEnabled) {
       if (mediaController?.music) await mediaController.stop();
       if (localRadioControlsWindow && !localRadioControlsWindow.isDestroyed()) localRadioControlsWindow.close();
@@ -1178,7 +1207,7 @@ function installIpcHandlers() {
       });
       sendToAll("sections:state-changed", { ...sectionVisibility });
     }
-    if (preferences.proModeEnabled) void musicLibrary.enable({ scanOnEnable: true }).then(() => lastFmEnricher?.configure()).catch(error => sendToMain('app:warning', error.message));
+    if (preferences.proModeEnabled) void enableLocalMusic().catch(error => sendToMain('app:warning', error.message));
     sendToAll("ui:preferences-changed", preferences);
     return preferences;
   });
@@ -1331,14 +1360,19 @@ function installIpcHandlers() {
     if (!storage.getUiPreferences().proModeEnabled) throw new Error('Enable Advanced Features to use Music.');
     await musicLibrary.enable();
     lastFmEnricher?.configure();
+    beginOpusOptimization();
   };
-  ipcMain.handle('music:status', async () => { await requireMusic(); return musicLibrary.call('status'); });
+  ipcMain.handle('music:status', async () => {
+    await requireMusic();
+    return { ...(await musicLibrary.call('status')), ...(opusOptimizer?.getStatus() || {}) };
+  });
   ipcMain.handle('music:search', async (_event, query) => { await requireMusic(); return musicLibrary.call('search', String(query || '')); });
   ipcMain.handle('music:scan', async () => {
     await requireMusic();
     const status = await musicLibrary.rescan();
+    beginOpusOptimization();
     void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
-    return status;
+    return { ...status, ...(opusOptimizer?.getStatus() || {}) };
   });
   ipcMain.handle('music:play', async (_event, id, mode) => { await requireMusic(); return mediaController.playMusic(String(id), mode); });
   ipcMain.handle('music:mixes', async () => {
@@ -1529,6 +1563,8 @@ if (!hasSingleInstanceLock) {
           executable: recorderExecutable,
           runtimeDir: getRuntimeDir()
         });
+        portableFfmpegExecutable = recorderExecutable;
+        portableFfprobeExecutable = recordingProbeExecutable;
         recorder = new StreamRecorder({
           executable: recorderExecutable,
           recordingsDir: getRecordingsDir(),
@@ -1589,9 +1625,31 @@ if (!hasSingleInstanceLock) {
 
     musicLibrary = new MusicLibrary({
       dataDir: getDataDir(), additionalMusicFolder: storage.getUiPreferences().additionalMusicFolder,
-      onStatus: status => sendToMain('music:changed', status),
+      onStatus: status => {
+        latestMusicLibraryStatus = status;
+        sendToMain('music:changed', { ...status, ...(opusOptimizer?.getStatus() || {}) });
+      },
       onLocalMixAvailability: () => sendToAll('music:mixes-changed')
     });
+    if (process.platform === 'linux' && portableFfmpegExecutable && portableFfprobeExecutable) {
+      opusOptimizer = new OpusOptimizer({
+        musicRoot: path.join(path.dirname(getDataDir()), 'Music'),
+        ffmpegExecutable: portableFfmpegExecutable,
+        ffprobeExecutable: portableFfprobeExecutable,
+        getProtectedPaths: protectedPortableMusicPaths,
+        onStatus: status => sendToMain('music:changed', { ...latestMusicLibraryStatus, ...status }),
+        rescanLibrary: async () => {
+          await musicLibrary.rescan();
+          void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
+        }
+      });
+      opusOptimizer.setEnabled(storage.getUiPreferences().proModeEnabled);
+      opusOptimizer.watch(async () => {
+        if (!storage.getUiPreferences().proModeEnabled) return;
+        await musicLibrary.rescan();
+        beginOpusOptimization();
+      });
+    }
     musicRadio = new MusicRadio({ dataDir: getDataDir(), onDecision: sendToRadioLog,
       getFamiliarity: () => storage.getUiPreferences().localRadioFamiliarity,
       getTuning: () => storage.getUiPreferences() });
@@ -1603,7 +1661,7 @@ if (!hasSingleInstanceLock) {
     });
     mediaController.configureMusic(musicLibrary, musicRadio, track => { void lastFmEnricher.queueAlbum(track.id); });
     lastFmEnricher.configure();
-    if (storage.getUiPreferences().proModeEnabled) void musicLibrary.enable({ scanOnEnable: true }).then(() => lastFmEnricher.configure()).catch(error => sendToMain('app:warning', error.message));
+    if (storage.getUiPreferences().proModeEnabled) void enableLocalMusic().catch(error => sendToMain('app:warning', error.message));
 
     listeningHistory = new ListeningHistory({
       storage,
@@ -1714,6 +1772,7 @@ function finishShutdown() {
   windowsSidebar?.close();
   player?.close();
   mediaController?.clearMusic();
+  opusOptimizer?.close();
   musicLibrary?.close();
 }
 

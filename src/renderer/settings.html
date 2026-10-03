@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <meta http-equiv="Content-Security-Policy"
         content="default-src 'self'; style-src 'self'; script-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
-  <title>WaveDeck Settings</title>
+  <title>WaveDeck Opus Settings</title>
   <link rel="stylesheet" href="./settings.css">
 </head>
 <body>
@@ -25,7 +25,7 @@
       <!-- INTERFACE -->
       <section id="tab-interface" class="panel hidden">
         <div class="general-meta">
-          <b>WaveDeck version <span id="aboutVersion">1.0.5</span></b>
+          <b>WaveDeck Opus version <span id="aboutVersion">1.0.0</span></b>
         </div>
         <div class="general-sections">
         <section class="general-card">
@@ -228,7 +228,7 @@
             <button id="chooseAdditionalMusicFolderBtn" class="btn" type="button">Choose Folder…</button>
             <button id="clearAdditionalMusicFolderBtn" class="btn" type="button">Remove</button>
           </div>
-          <div class="hint">WaveDeck always includes the portable <b>Music</b> folder beside <b>Data</b>. This adds one other folder to Music search and playback. Files and tags are never changed.</div>
+          <div class="hint">WaveDeck Opus automatically converts only the portable <b>Music</b> folder beside <b>Data</b> to lean 96 kbps Opus files. This adds one other folder to Music search and playback; its files and tags are never changed.</div>
           <div class="music-library-status-row">
             <span id="musicLibraryStatus" role="status">Checking Local Music…</span>
             <button id="rescanMusicBtn" class="btn" type="button">Rescan</button>
@@ -241,7 +241,7 @@
             <span class="toggle-switch" aria-hidden="true"></span>
             <span>Improve Music Data with Last.fm</span>
           </label>
-          <div class="hint">Refreshes song popularity, genre tags, and related artists in WaveDeck’s own portable database. No Last.fm account or setup is needed. Your MP3 files and tags are never changed.</div>
+          <div class="hint">Refreshes song popularity, genre tags, and related artists in WaveDeck Opus’s own portable database. No Last.fm account or setup is needed. It never changes your Additional Music Folder.</div>
           <div id="lastFmDetails" class="lastfm-details" hidden>
             <button id="queueLastFmRefreshBtn" class="btn" type="button">Refresh Last.fm Music Data</button>
             <div class="hint">Checks missing or older music data and skips songs checked within the past week.</div>
@@ -265,10 +265,10 @@
       <!-- ABOUT -->
       <section id="tab-about" class="panel hidden">
         <div class="about-intro">
-          <img class="about-logo" src="../../assets/logo.png" alt="WaveDeck logo" />
+          <img class="about-logo" src="../../assets/logo.png" alt="WaveDeck Opus logo" />
           <div class="about-copy">
-            <h2>About WaveDeck</h2>
-            <p class="muted">WaveDeck is a portable home for Streaming Radio and Local Music. It keeps your stations, presets, listening history, Local Radio settings, and music data together in its own portable Data folder.</p>
+            <h2>About WaveDeck Opus</h2>
+            <p class="muted">WaveDeck Opus is a portable home for Streaming Radio and Local Music. It keeps your stations, presets, listening history, Local Radio settings, and music data together in its own portable Data folder.</p>
           </div>
         </div>
 
@@ -276,7 +276,7 @@
         <div class="user-guide">
           <h2>User Guide</h2>
           <details open><summary>Getting Started and Portable Data</summary>
-            <p>Choose <b>Streaming</b> for internet radio or <b>Local Music</b> for your MP3 library. Click a station, Local Station, Local Mix, or song to begin. The row below the player shows what is playing and whether it came from Streaming or Local Music.</p>
+            <p>Choose <b>Streaming</b> for internet radio or <b>Local Music</b> for your portable music library. Click a station, Local Station, Local Mix, or song to begin. The row below the player shows what is playing and whether it came from Streaming or Local Music.</p>
             <p>WaveDeck keeps your stations, preferences, listening history, Local Radio settings, and music information in a <code>Data</code> folder beside the application. To move WaveDeck to another computer or a USB stick, keep that folder with the app. Updating WaveDeck replaces the application files; it does not replace your existing Data folder.</p>
           </details>
           <details><summary>Streaming Radio</summary>
@@ -289,8 +289,8 @@
             <p>You can expand a station briefly to read its information or adjust gain. Station details collapse again after a short time to keep the list tidy. Streaming group headings stay open while their subgroups can be expanded or collapsed.</p>
           </details>
           <details><summary>Local Music Setup and Music Information</summary>
-            <p>Turn on <b>Enable Advanced Features</b> in Settings → General to make Local Music available. WaveDeck creates and scans the portable <code>Music</code> folder beside the app, and you can add one optional Additional Music Folder in Settings → Local Music. Use <b>Rescan</b> after adding music or changing tags.</p>
-            <p>WaveDeck reads your MP3 information into its own portable index; it does not change your MP3 files. It uses song, artist, album, Album Artist, year, genre, rating, Favorite, and Do Not Play information when available. Your MP3 <code>RATING</code> tag uses a 0–10 scale: 10 is five stars and 5 is two and a half stars. A rating of 0 means unrated.</p>
+            <p>Turn on <b>Enable Advanced Features</b> in Settings → General to make Local Music available. WaveDeck Opus creates and scans the portable <code>Music</code> folder beside the app, and you can add one optional Additional Music Folder in Settings → Local Music. Drop MP3s into the portable Music folder and they are available immediately while WaveDeck Opus converts them in the background.</p>
+            <p>Portable Music becomes lean 96 kbps Opus audio. During conversion, WaveDeck Opus preserves title, artist, album, Album Artist, track number, disc number, year, genre, rating, Favorite, Do Not Play, and its stable music ID. It removes embedded artwork, loose cover images, lyric sidecars, and unneeded metadata. The Additional Music Folder stays read-only.</p>
             <p>A track marked <code>DO_NOT_PLAY=1</code> is never selected by Local Radio or a Local Mix. A Favorite tag gives that song a stronger chance when it fits the station.</p>
           </details>
           <details><summary>Playing Local Music</summary>
@@ -317,7 +317,7 @@
             <p><b>Enable 8-second crossfade</b> blends Local Music tracks, Local Radio, Local Mixes, and albums. It is on by default and does not affect Streaming Radio.</p>
           </details>
           <details><summary>Last.fm Music Data and Live Radio Log</summary>
-            <p>When enabled in Settings → Local Music, WaveDeck can refresh song popularity, useful genre tags, and related artists in its own portable music database. It never writes those details into your MP3 files.</p>
+            <p>When enabled in Settings → Local Music, WaveDeck Opus can refresh song popularity, useful genre tags, and related artists in its own portable music database. Last.fm data stays in that database; it is not written into music files.</p>
             <p>WaveDeck includes the needed Last.fm access. Use <b>Refresh Last.fm Music Data</b> when you want a catch-up refresh. The progress bar shows when music data is already updating. The subtle <b>Open Live Radio Log</b> link opens selection diagnostics, including prior choices recorded while the log was closed.</p>
           </details>
           <details><summary>Settings, Library Management, and Updates</summary>
