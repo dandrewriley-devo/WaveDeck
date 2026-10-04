@@ -40,9 +40,9 @@ function run(executable, args) {
 async function exists(file) { try { return (await fs.stat(file)).isFile(); } catch { return false; } }
 
 class PortableImporter {
-  constructor({ musicRoot, ffmpegExecutable, ffprobeExecutable, getAdditionalFolder, getPortableTracks, onStatus = () => {}, onBatch = async () => {}, onComplete = async () => {} }) {
+  constructor({ musicRoot, ffmpegExecutable, ffprobeExecutable, getAdditionalFolder, getPortableTracks, getWorkers = () => 2, onStatus = () => {}, onBatch = async () => {}, onComplete = async () => {} }) {
     this.musicRoot = musicRoot; this.ffmpegExecutable = ffmpegExecutable; this.ffprobeExecutable = ffprobeExecutable;
-    this.getAdditionalFolder = getAdditionalFolder; this.getPortableTracks = getPortableTracks; this.onStatus = onStatus; this.onBatch = onBatch; this.onComplete = onComplete;
+    this.getAdditionalFolder = getAdditionalFolder; this.getPortableTracks = getPortableTracks; this.getWorkers = getWorkers; this.onStatus = onStatus; this.onBatch = onBatch; this.onComplete = onComplete;
     this.previewValue = null; this.running = null; this.parseFile = null; this.status = { state: 'idle', eligible: 0, total: 0, completed: 0, estimatedBytes: 0, availableBytes: 0, totalBytes: 0, etaSeconds: null, message: '' };
   }
   #emit(value = {}) { this.status = { ...this.status, ...value }; this.onStatus({ ...this.status }); return this.status; }
@@ -152,13 +152,19 @@ class PortableImporter {
     const candidates = this.previewValue.candidates; const started = Date.now();
     this.running = (async () => {
       this.#emit({ state: 'importing', total: candidates.length, completed: 0, etaSeconds: null, message: 'Converting and importing…' });
-      let completed = 0; let errors = 0;
-      for (const item of candidates) {
-        try { await this.#convert(item); } catch { errors += 1; }
-        completed += 1; const elapsed = Math.max(1, (Date.now() - started) / 1000);
-        this.#emit({ completed, etaSeconds: completed >= 3 ? Math.round((elapsed / completed) * (candidates.length - completed)) : null, message: errors ? `${errors} track${errors === 1 ? '' : 's'} need attention.` : 'Converting and importing…' });
-        if (completed % 30 === 0 && completed < candidates.length) await this.onBatch({ completed, total: candidates.length });
-      }
+      let completed = 0; let errors = 0; let next = 0; let lastRefresh = 0;
+      const workers = Math.max(1, Math.min(6, Number(this.getWorkers()) || 2));
+      const runWorker = async () => {
+        while (next < candidates.length) {
+          const item = candidates[next++];
+          try { await this.#convert(item); } catch { errors += 1; }
+          completed += 1; const elapsed = Math.max(1, (Date.now() - started) / 1000);
+          this.#emit({ completed, etaSeconds: completed >= 3 ? Math.round((elapsed / completed) * (candidates.length - completed)) : null, message: errors ? `${errors} track${errors === 1 ? '' : 's'} need attention.` : 'Converting and importing…' });
+          // A full index walk is deliberately rare; it must never become the importer's main job.
+          if (completed - lastRefresh >= 300 && completed < candidates.length) { lastRefresh = completed; void this.onBatch({ completed, total: candidates.length }); }
+        }
+      };
+      await Promise.all(Array.from({ length: workers }, runWorker));
       await this.onComplete(); this.previewValue = null;
       return this.#emit({ state: 'complete', eligible: 0, total: candidates.length, completed, etaSeconds: 0, message: errors ? `Import finished with ${errors} track${errors === 1 ? '' : 's'} needing attention.` : 'Import complete.' });
     })().finally(() => { this.running = null; });

@@ -1,9 +1,9 @@
 # WaveDeck Opus Branch Handoff
 
-## WaveDeck Opus 1.0.6
+## WaveDeck Opus 1.0.7
 
 - This is the separate **`opus-portable`** branch. It is a Linux-only personal edition; `main` remains the normal cross-platform WaveDeck product.
-- Release artifact: **`WaveDeckOpus.AppImage`**. Its release workflow is `.github/workflows/opus-portable.yml` and publishes tag `opus-v1.0.6` without touching the main WaveDeck release.
+- Release artifact: **`WaveDeckOpus.AppImage`**. Its release workflow is `.github/workflows/opus-portable.yml` and publishes tag `opus-v1.0.7` without touching the main WaveDeck release.
 - WaveDeck Opus changes only the sibling portable `Music` folder. The optional Additional Music Folder is always read-only.
 - Portable MP3, FLAC, M4A/AAC, WAV, WMA, and OGG sources are converted one at a time in the background to 96 kbps Opus. Each output is validated before its source is removed. Existing valid Opus outputs and `.opus.part` recovery files are handled safely at the next pass.
 - Only these tags are carried into Opus: title, artist, album, Album Artist, track number, disc number, year, genre, `RATING`, `FAVORITE`, `DO_NOT_PLAY`, and `AMP_TRACK_ID`. Embedded artwork, loose image files, lyric/sidecar files, and other metadata are intentionally discarded from the portable Music tree.
@@ -15,18 +15,19 @@
 - 1.0.4 starts an Additional Music Folder scan immediately after selection and visibly reports scan activity. The Local Music settings page shows the current computer’s Additional Music track count, lists all remembered computers, and lets the user rename or forget each remembered computer inline.
 - 1.0.5 makes Remember this computer immediate; it never re-applies the folder or waits behind scans. Additional Music indexes MP3 and Opus, has its own Refresh action, and portable copies suppress matching Additional Music duplicates. Import to Portable Music reads the AMF only, previews missing supported files with space estimate, then writes validated 96 kbps Opus directly to portable Music with progress and approximate remaining time. Portable Music shows a compact green-used/light-gray-free drive chart. Manage Local Mixes is collapsed by default.
 - 1.0.6 imports by clean tag-based folders instead of the source tree: Album Artist/Album, Various Artists for compilations, Soundtracks for clearly labeled soundtracks, and Loose Tracks when album tags are absent. Existing artist/album folder casing is reused case-insensitively. Imports preserve a 3% free-space reserve (97% maximum used), refresh the index every 30 completed files, and do one Local Mix refresh at the end. Import watcher churn is suppressed. Local Music starts from its database immediately, then quietly checks files in the background without clearing the displayed results; Mix updates likewise wait until analysis is complete. The portable-drive donut now has an orange (`#e7541f`) used slice, light-gray free slice, and a 50% thicker ring.
+- 1.0.7 counts only distinct visible Local Music tracks, runs portable imports with a USB-safe two workers or Fast-drive six workers setting, and performs a non-blocking index refresh only every 300 completed imports plus the final refresh. Settings opens the new Opus-only Manage Portable Music window. It is an album-first manager with Artist/Genre/Needs Attention browse views, search, direct 1–10 ratings, Favorite and Do Not Play controls, editable Opus song details, and personal artist relationships in `Data/artist-relationships.json`. Personal relationships are reciprocal and supplement—never overwrite—Last.fm relationships. Additional Music remains read-only.
 
 # WaveDeck Project Handoff
 
-This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.6**.
+This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.7**.
 
 ## Current published state
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `main`
-- Current version: **1.0.6**
-- Current release: 1.0.6 — tag-organized portable imports, a stable database-first Local Music launch, and quiet batch index updates.
-- Current commit: the verified 1.0.6 release commit at the head of `opus-portable`.
+- Current version: **1.0.7**
+- Current release: 1.0.7 — fast controlled imports and the first Opus-only Portable Music manager.
+- Current commit: the verified 1.0.7 release commit at the head of `opus-portable`.
 - 0.11.8 commit: `8118e235eed4b4a18c378f12ced8a86be83ed4b9` — monitor-safe main-window bounds persistence and portable Windows build.
 - 0.11.7 commit: `c8b69b7b8842dd6c310dda05b22b8d52870d3e84` — superseded source correction after the first portable Windows build.
 - 0.11.6 commit: `621e44d8c484cd0a4d70eb124106170f6183d0ae` — compact Local Radio Controls and remembered auxiliary-window bounds.

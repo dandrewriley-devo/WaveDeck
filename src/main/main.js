@@ -87,6 +87,10 @@ const LOCAL_RADIO_CONTROLS_WIDTH = 480;
 const LOCAL_RADIO_CONTROLS_HEIGHT = 480;
 const LOCAL_RADIO_CONTROLS_MIN_WIDTH = 360;
 const LOCAL_RADIO_CONTROLS_MIN_HEIGHT = 360;
+const MUSIC_LIBRARY_DEFAULT_WIDTH = 1100;
+const MUSIC_LIBRARY_DEFAULT_HEIGHT = 760;
+const MUSIC_LIBRARY_MIN_WIDTH = 760;
+const MUSIC_LIBRARY_MIN_HEIGHT = 520;
 const MINI_PLAYER_WIDTH = 560;
 const MINI_PLAYER_HEIGHT = 32;
 const MINI_PLAYER_MIN_WIDTH = 360;
@@ -100,6 +104,7 @@ let tray = null;
 let settingsWindow = null;
 let radioLogWindow = null;
 let localRadioControlsWindow = null;
+let musicLibraryWindow = null;
 let miniPlayerWindow = null;
 let miniPlayerReturnToSidebar = false;
 let miniPlayerSnapTimer = null;
@@ -113,6 +118,7 @@ let currentComputer = null;
 let activeAdditionalMusicFolder = '';
 let additionalMusicFolderMode = 'none';
 let portableImporter = null;
+let manualArtistRelationships = {};
 let quietMusicCheckTimer = null;
 let player = null;
 let recordingLibrary = null;
@@ -504,9 +510,23 @@ function delay(milliseconds) {
 }
 
 function closeAuxiliaryWindows() {
-  for (const auxiliary of [settingsWindow, radioLogWindow, localRadioControlsWindow, miniPlayerWindow]) {
+  for (const auxiliary of [settingsWindow, radioLogWindow, localRadioControlsWindow, musicLibraryWindow, miniPlayerWindow]) {
     if (auxiliary && !auxiliary.isDestroyed()) auxiliary.close();
   }
+}
+
+const relationshipKey = value => String(value || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+function relationshipsFile() { return path.join(getDataDir(), 'artist-relationships.json'); }
+function loadArtistRelationships() { try { manualArtistRelationships = JSON.parse(fs.readFileSync(relationshipsFile(), 'utf8')) || {}; } catch { manualArtistRelationships = {}; } }
+function saveArtistRelationships() { const file = relationshipsFile(); const temporary = `${file}.tmp`; fs.writeFileSync(temporary, `${JSON.stringify(manualArtistRelationships, null, 2)}\n`); fs.renameSync(temporary, file); }
+function relatedForArtist(artist) { return [...new Set(manualArtistRelationships[relationshipKey(artist)] || [])]; }
+function applyManualArtistRelationships() { if (musicLibrary) musicLibrary.tracks = musicLibrary.tracks.map(track => ({ ...track, similarArtists: [...new Set([...(track.similarArtists || []), ...relatedForArtist(track.artist)])] })); }
+function openPortableMusicLibraryWindow() {
+  if (musicLibraryWindow && !musicLibraryWindow.isDestroyed()) { musicLibraryWindow.show(); musicLibraryWindow.focus(); return; }
+  const display = mainWindow && !mainWindow.isDestroyed() ? screen.getDisplayMatching(mainWindow.getBounds()) : screen.getPrimaryDisplay();
+  musicLibraryWindow = createSecureWindow({ ...calculateCenteredBounds(display, MUSIC_LIBRARY_DEFAULT_WIDTH, MUSIC_LIBRARY_DEFAULT_HEIGHT), minWidth: MUSIC_LIBRARY_MIN_WIDTH, minHeight: MUSIC_LIBRARY_MIN_HEIGHT, resizable: true, title: 'Manage Portable Music' });
+  musicLibraryWindow.on('closed', () => { musicLibraryWindow = null; });
+  musicLibraryWindow.loadFile(path.join(__dirname, '..', 'renderer', 'music-library.html'));
 }
 
 function createMainWindow({
@@ -1471,6 +1491,26 @@ function installIpcHandlers() {
     return portableImporter.start();
   });
   ipcMain.handle('music:import:status', () => portableImporter?.getStatus() || { state: 'waiting', message: 'Portable import is unavailable.' });
+  ipcMain.handle('music:import:set-workers', (_event, value) => storage.setPortableImportWorkers(value));
+  ipcMain.handle('music:library:open', async () => { await requireMusic(); openPortableMusicLibraryWindow(); return true; });
+  ipcMain.handle('music:library:get', async () => { await requireMusic(); applyManualArtistRelationships(); return musicLibrary.tracks.filter(track => track.library === 'portable').map(track => ({ ...track, manualRelatedArtists: relatedForArtist(track.artist) })); });
+  ipcMain.handle('music:library:relationships:get', async (_event, artist) => ({ artist: String(artist || ''), related: relatedForArtist(artist) }));
+  ipcMain.handle('music:library:relationships:save', async (_event, artist, related) => {
+    const name = String(artist || '').trim(); const key = relationshipKey(name); if (!key) throw new Error('Choose an artist first.');
+    const values = [...new Set((Array.isArray(related) ? related : []).map(value => String(value || '').trim()).filter(Boolean))].slice(0, 100);
+    manualArtistRelationships[key] = values;
+    for (const value of values) { const other = relationshipKey(value); if (other) manualArtistRelationships[other] = [...new Set([...(manualArtistRelationships[other] || []), name])]; }
+    saveArtistRelationships(); applyManualArtistRelationships(); return { artist: name, related: values };
+  });
+  ipcMain.handle('music:library:save-track', async (_event, update = {}) => {
+    await requireMusic(); const id = String(update.id || ''); const track = musicLibrary.tracks.find(item => item.id === id && item.library === 'portable');
+    if (!track) throw new Error('That portable track is no longer available.'); const target = (await musicLibrary.resolve(id)).path; const temporary = `${target}.editing`;
+    const clean = value => String(value ?? '').replace(/[\u0000\r\n]/g, ' ').trim().slice(0, 500);
+    const next = { ...track, title: clean(update.title ?? track.title), artist: clean(update.artist ?? track.artist), album: clean(update.album ?? track.album), albumArtist: clean(update.albumArtist ?? track.albumArtist), year: Number(update.year ?? track.year) || '', genres: Array.isArray(update.genres) ? update.genres.map(clean).filter(Boolean) : (track.genres || []), track: Number(update.track ?? track.track) || 0, disc: Number(update.disc ?? track.disc) || 0, rating: Math.max(0, Math.min(10, Number(update.rating ?? track.rating) || 0)), favorite: update.favorite === true, doNotPlay: update.doNotPlay === true };
+    const args = ['-hide_banner','-loglevel','error','-nostdin','-i',target,'-map','0:a:0','-map_metadata','-1','-vn','-sn','-dn','-c:a','copy','-metadata',`title=${next.title}`,'-metadata',`artist=${next.artist}`,'-metadata',`album=${next.album}`,'-metadata',`album_artist=${next.albumArtist}`,'-metadata',`track=${next.track || ''}`,'-metadata',`disc=${next.disc || ''}`,'-metadata',`date=${next.year || ''}`,'-metadata',`genre=${next.genres.join('; ')}`,'-metadata',`RATING=${next.rating || ''}`,'-metadata',`FAVORITE=${next.favorite ? '1' : ''}`,'-metadata',`DO_NOT_PLAY=${next.doNotPlay ? '1' : ''}`,'-metadata',`AMP_TRACK_ID=${track.ampId || ''}`,'-f','opus','-y',temporary];
+    await new Promise((resolve, reject) => execFile(portableFfmpegExecutable, args, { windowsHide: true, maxBuffer: 1024 * 1024 }, error => error ? reject(error) : resolve()));
+    fs.renameSync(temporary, target); await musicLibrary.rescan(); applyManualArtistRelationships(); void analyzeLocalMixes(); return next;
+  });
   ipcMain.handle('music:play', async (_event, id, mode) => { await requireMusic(); return mediaController.playMusic(String(id), mode); });
   ipcMain.handle('music:mixes', async () => {
     await requireMusic();
@@ -1639,6 +1679,7 @@ if (!hasSingleInstanceLock) {
 
     try {
       storage.initialize();
+      loadArtistRelationships();
       storage.assertWritable();
       sectionVisibility = storage.getStreamingUiState();
       currentComputer = resolveComputerIdentity();
@@ -1742,6 +1783,7 @@ if (!hasSingleInstanceLock) {
       dataDir: getDataDir(), additionalMusicFolder: activeAdditionalMusicFolder,
       onStatus: status => {
         latestMusicLibraryStatus = status;
+        if (!status.scanning) applyManualArtistRelationships();
         sendToAll('music:changed', { ...status, ...(opusOptimizer?.getStatus() || {}) });
       },
       onLocalMixAvailability: availability => sendToAll('music:mixes-changed', availability)
@@ -1769,6 +1811,7 @@ if (!hasSingleInstanceLock) {
       portableImporter = new PortableImporter({
         musicRoot: path.join(path.dirname(getDataDir()), 'Music'), ffmpegExecutable: portableFfmpegExecutable, ffprobeExecutable: portableFfprobeExecutable,
         getAdditionalFolder: () => activeAdditionalMusicFolder, getPortableTracks: () => musicLibrary.tracks.filter(track => track.library === 'portable'),
+        getWorkers: () => storage.getUiPreferences().portableImportWorkers,
         onStatus: status => sendToAll('music:import-changed', status),
         onBatch: async () => { await musicLibrary.rescan(); },
         onComplete: async () => { await musicLibrary.rescan(); await analyzeLocalMixes(); beginOpusOptimization(); }

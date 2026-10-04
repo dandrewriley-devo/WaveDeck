@@ -308,6 +308,7 @@ function validatePreferences(value) {
   const localRadioArtistRepeatMinutes = [30, 60, 90, 120, 180].includes(Number(value?.localRadioArtistRepeatMinutes)) ? Number(value.localRadioArtistRepeatMinutes) : 90;
   const localRadioArtistSetSize = [1, 2, 3, 4].includes(Number(value?.localRadioArtistSetSize)) ? Number(value.localRadioArtistSetSize) : 1;
   const localMusicCrossfadeEnabled = value?.localMusicCrossfadeEnabled !== false;
+  const portableImportWorkers = value?.portableImportWorkers === 6 ? 6 : 2;
   const miniPlayerDisplayMode = value?.miniPlayerDisplayMode === 'source' ? 'source' : 'now-playing';
   const miniPlayerColorScheme = ['default', 'inverted', 'chiefs', 'army', 'cherry', 'gray', 'denim', 'rosewood', 'sapphire', 'bamboo', 'aloe'].includes(value?.miniPlayerColorScheme)
     ? value.miniPlayerColorScheme
@@ -393,6 +394,7 @@ function validatePreferences(value) {
     localRadioArtistRepeatMinutes,
     localRadioArtistSetSize,
     localMusicCrossfadeEnabled,
+    portableImportWorkers,
     miniPlayerDisplayMode,
     miniPlayerColorScheme,
     localMixEnabled,
@@ -583,6 +585,7 @@ class PortableStorage {
       localRadioArtistRepeatMinutes: preferences.localRadioArtistRepeatMinutes,
       localRadioArtistSetSize: preferences.localRadioArtistSetSize,
       localMusicCrossfadeEnabled: preferences.localMusicCrossfadeEnabled,
+      portableImportWorkers: preferences.portableImportWorkers,
       miniPlayerDisplayMode: preferences.miniPlayerDisplayMode,
       miniPlayerColorScheme: preferences.miniPlayerColorScheme,
       localMixEnabled: { ...preferences.localMixEnabled },
@@ -711,6 +714,12 @@ class PortableStorage {
   setLocalMusicCrossfadeEnabled(enabled) {
     const preferences = this.readPreferences();
     preferences.localMusicCrossfadeEnabled = enabled === true;
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences();
+  }
+  setPortableImportWorkers(value) {
+    const preferences = this.readPreferences();
+    preferences.portableImportWorkers = value === 6 ? 6 : 2;
     this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
     return this.getUiPreferences();
   }

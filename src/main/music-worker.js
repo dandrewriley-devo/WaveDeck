@@ -23,7 +23,7 @@ const rows = (sql, params = []) => {
 };
 const emit = () => parentPort.postMessage({ event: 'status', value: status });
 function updateTrackCounts() {
-  status.count = Number(rows('SELECT COUNT(*) AS n FROM tracks')[0]?.n) || 0;
+  status.count = visibleTracks().length;
   status.portableCount = Number(rows("SELECT COUNT(*) AS n FROM tracks WHERE path LIKE 'portable:%'")[0]?.n) || 0;
   status.additionalCount = Number(rows("SELECT COUNT(*) AS n FROM tracks WHERE path LIKE 'additional:%'")[0]?.n) || 0;
 }

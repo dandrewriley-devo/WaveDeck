@@ -62,6 +62,8 @@ const portableImportProgressWrap = document.getElementById('portableImportProgre
 const portableImportProgress = document.getElementById('portableImportProgress');
 const portableImportProgressLabel = document.getElementById('portableImportProgressLabel');
 const portableImportBtn = document.getElementById('portableImportBtn');
+const portableImportSpeed = document.getElementById('portableImportSpeed');
+const openPortableMusicLibraryBtn = document.getElementById('openPortableMusicLibraryBtn');
 const musicLibraryStatus = document.getElementById('musicLibraryStatus');
 const rescanMusicBtn = document.getElementById('rescanMusicBtn');
 const portableMusicProgressWrap = document.getElementById('portableMusicProgressWrap');
@@ -195,6 +197,7 @@ function renderProMusicSettings(preferences) {
   clearAdditionalMusicFolderBtn.disabled = !folder;
   additionalMusicFolderChoice.hidden = preferences?.additionalMusicFolderNeedsDecision !== true;
   lastFmEnabled.checked = preferences?.lastFmEnabled !== false;
+  portableImportSpeed.value = String(preferences?.portableImportWorkers === 6 ? 6 : 2);
   lastFmDetails.hidden = !lastFmEnabled.checked;
   if (proEnabled) { void loadLastFmStatus(); void loadLocalMixManager(); void loadMusicLibraryStatus(); void loadRememberedMusicComputers(); void loadPortableStorage(); }
 }
@@ -1219,6 +1222,8 @@ portableImportBtn.addEventListener('click', async () => {
   try { renderPortableImport(await window.wavedeck.startPortableImport()); }
   catch (error) { setStatus(statusLocalMusic, `Could not start import: ${error.message}`, false); portableImportFolder = ''; await loadPortableImport(); }
 });
+portableImportSpeed.addEventListener('change', async () => { renderProMusicSettings(await window.wavedeck.setPortableImportWorkers(Number(portableImportSpeed.value))); });
+openPortableMusicLibraryBtn.addEventListener('click', () => { void window.wavedeck.openPortableMusicLibrary(); });
 
 useAdditionalMusicFolderThisTimeBtn.addEventListener('click', async () => {
   useAdditionalMusicFolderThisTimeBtn.disabled = true;

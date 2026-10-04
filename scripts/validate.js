@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck-opus");
-assert.strictEqual(packageJson.version, "1.0.6");
-assert.strictEqual(packageJson.wavedeckVersion, "1.0.6");
+assert.strictEqual(packageJson.version, "1.0.7");
+assert.strictEqual(packageJson.wavedeckVersion, "1.0.7");
 assert.strictEqual(packageJson.desktopName, "wavedeck-opus.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck Opus");
 assert.strictEqual(packageJson.build.appId, "com.a17press.wavedeckopus");
@@ -351,6 +351,7 @@ try {
     localRadioArtistRepeatMinutes: 90,
     localRadioArtistSetSize: 1,
     localMusicCrossfadeEnabled: true,
+    portableImportWorkers: 2,
     miniPlayerDisplayMode: "now-playing",
     miniPlayerColorScheme: "default",
     localMixEnabled: {},
@@ -386,6 +387,7 @@ try {
     localRadioArtistRepeatMinutes: 90,
     localRadioArtistSetSize: 1,
     localMusicCrossfadeEnabled: true,
+    portableImportWorkers: 2,
     miniPlayerDisplayMode: "now-playing",
     miniPlayerColorScheme: "default",
     localMixEnabled: {},
@@ -405,6 +407,7 @@ try {
   assert.strictEqual(storage.setLocalRadioFamiliarity('hits').localRadioFamiliarity, 'hits');
   assert.deepStrictEqual(storage.setLocalRadioTuning({ songRepeatHours: 6, artistRepeatMinutes: 180, artistSetSize: 2 }).localRadioArtistSetSize, 2);
   assert.strictEqual(storage.setLocalMusicCrossfadeEnabled(false).localMusicCrossfadeEnabled, false);
+  assert.strictEqual(storage.setPortableImportWorkers(6).portableImportWorkers, 6);
   assert.strictEqual(storage.setMiniPlayerDisplayMode('source').miniPlayerDisplayMode, 'source');
   assert.strictEqual(storage.setMiniPlayerColorScheme('bamboo').miniPlayerColorScheme, 'bamboo');
   assert.strictEqual(storage.setLocalMixEnabled('classic-rock', false).localMixEnabled['classic-rock'], false);
@@ -475,6 +478,7 @@ try {
     localRadioArtistRepeatMinutes: 180,
     localRadioArtistSetSize: 2,
     localMusicCrossfadeEnabled: false,
+    portableImportWorkers: 6,
     miniPlayerDisplayMode: "source",
     miniPlayerColorScheme: "bamboo",
     localMixEnabled: { "classic-rock": false },
@@ -1728,10 +1732,10 @@ assert.ok(windowsWorkflow.includes('chmod 755 "$appimage"'));
 const opusWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "opus-portable.yml"), "utf8");
 assert.ok(opusWorkflow.includes("branches: [opus-portable]"));
 assert.ok(opusWorkflow.includes("npm run dist:linux -- --publish never"));
-assert.ok(opusWorkflow.includes("WaveDeckOpus-1.0.6-Linux"));
+assert.ok(opusWorkflow.includes("WaveDeckOpus-1.0.7-Linux"));
 assert.ok(opusWorkflow.includes("dist/WaveDeckOpus.AppImage"));
-assert.ok(opusWorkflow.includes("tag_name: opus-v1.0.6"));
-assert.ok(opusWorkflow.includes("Publish WaveDeck Opus 1.0.6"));
+assert.ok(opusWorkflow.includes("tag_name: opus-v1.0.7"));
+assert.ok(opusWorkflow.includes("Publish WaveDeck Opus 1.0.7"));
 const macosInstructions = fs.readFileSync(path.join(root, "START-HERE-MACOS.txt"), "utf8");
 assert.ok(macosInstructions.includes("Version 0.6.1 universal build"));
 assert.ok(macosInstructions.includes("WaveDeck is unsigned"));
