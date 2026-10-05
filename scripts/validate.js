@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck-opus");
-assert.strictEqual(packageJson.version, "1.0.8");
-assert.strictEqual(packageJson.wavedeckVersion, "1.0.8");
+assert.strictEqual(packageJson.version, "1.0.9");
+assert.strictEqual(packageJson.wavedeckVersion, "1.0.9");
 assert.strictEqual(packageJson.desktopName, "wavedeck-opus.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck Opus");
 assert.strictEqual(packageJson.build.appId, "com.a17press.wavedeckopus");
@@ -537,12 +537,12 @@ try {
     version: 2, stations: {}, recentStationIds: [],
     recentLocalStations: [{ mode: 'radio', seedId: 'comfortably-numb', label: 'Comfortably Numb Radio', title: 'Comfortably Numb', artist: 'Pink Floyd' }]
   });
-  assert.deepStrictEqual(reloadedStorage.readListeningHistory().recentLocalStations.map(station => station.key), ['radio:comfortably-numb']);
+  assert.deepStrictEqual(reloadedStorage.readListeningHistory().recentLocalStations.map(station => station.key), ['portable:radio:comfortably-numb']);
   reloadedStorage.writeListeningHistory({
     version: 3, stations: {}, recentStationIds: [], recentLocalStations: [],
     localStationPresets: [{ mode: 'artist', seedId: 'wish-you-were-here', label: 'Pink Floyd Radio', artist: 'Pink Floyd' }]
   });
-  assert.deepStrictEqual(reloadedStorage.readListeningHistory().localStationPresets.map(station => station.key), ['artist:wish-you-were-here']);
+  assert.deepStrictEqual(reloadedStorage.readListeningHistory().localStationPresets.map(station => station.key), ['portable:artist:wish-you-were-here']);
 
   const subgroupStations = reloadedStorage.readStations();
   const subgroupGroup = subgroupStations[0].group;
@@ -866,17 +866,33 @@ listeningHistory.handleStatus({
   state: "playing", playing: true, mediaState: "playing", currentStation: null,
   currentMusic: { mode: "radio", label: "Comfortably Numb Radio", seed: { id: "seed-1", title: "Comfortably Numb", artist: "Pink Floyd", album: "The Wall" } }
 });
-assert.deepStrictEqual(listeningHistory.getStats().recentLocalStations.map(station => station.key), ["radio:seed-1"]);
+assert.deepStrictEqual(listeningHistory.getStats().recentLocalStations.map(station => station.key), ["portable:radio:seed-1"]);
 listeningHistory.handleStatus({
   state: "playing", playing: true, mediaState: "playing", currentStation: null,
   currentMusic: { mode: "artist", label: "Pink Floyd Radio", seed: { id: "seed-2", title: "Wish You Were Here", artist: "Pink Floyd" } }
 });
-assert.deepStrictEqual(listeningHistory.getStats().recentLocalStations.map(station => station.key), ["artist:seed-2", "radio:seed-1"]);
+assert.deepStrictEqual(listeningHistory.getStats().recentLocalStations.map(station => station.key), ["portable:artist:seed-2", "portable:radio:seed-1"]);
 assert.strictEqual(listeningHistory.toggleLocalStationPreset(listeningHistory.getStats().recentLocalStations[0]).saved, true);
-assert.deepStrictEqual(listeningHistory.getStats().localStationPresets.map(station => station.key), ["artist:seed-2"]);
+assert.deepStrictEqual(listeningHistory.getStats().localStationPresets.map(station => station.key), ["portable:artist:seed-2"]);
 assert.strictEqual(listeningHistory.toggleLocalStationPreset(listeningHistory.getStats().recentLocalStations[0]).saved, false);
 assert.deepStrictEqual(listeningHistory.getStats().localStationPresets, []);
 listeningHistory.close();
+
+const profileHistory = new ListeningHistory({
+  storage: { readListeningHistory: () => ({ version: 3, stations: {} }), writeListeningHistory: history => history },
+  getAdditionalProfile: () => 'additional:andrew-desk:/music',
+  now: () => 1,
+  setTimer: () => 1,
+  clearTimer: () => {}
+});
+profileHistory.handleStatus({
+  state: 'playing', playing: true, mediaState: 'playing', currentStation: null,
+  currentMusic: { mode: 'radio', label: 'Desk Radio', seed: { id: 'desk-seed', title: 'Desk Song', artist: 'Desk Artist', library: 'additional' } }
+});
+assert.deepStrictEqual(profileHistory.getStats('portable').recentLocalStations, [], 'Additional Music stations stay with their remembered library profile');
+assert.deepStrictEqual(profileHistory.getStats('additional:andrew-desk:/music').recentLocalStations.map(station => station.key), ['additional:andrew-desk:/music:radio:desk-seed']);
+assert.strictEqual(profileHistory.removeUnavailableLocalStations(station => station.seedId !== 'desk-seed'), true, 'unavailable unstarred Local Stations are pruned');
+assert.deepStrictEqual(profileHistory.getStats('additional:andrew-desk:/music').recentLocalStations, []);
 
 let indieTime = 0;
 const indieWrites = [];
@@ -1257,6 +1273,7 @@ assert.ok(preloadSource.includes('subscribe("ui:preferences-changed"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("listening:get"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("listening:reset"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("listening:toggle-local-preset", station)'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("listening:remove-local-station", station)'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("sections:get-state"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("sections:set-state", state)'));
 assert.ok(preloadSource.includes('subscribe("sections:state-changed"'));
@@ -1565,6 +1582,10 @@ assert.ok(mainSource.includes("function createTray()"));
 assert.ok(mainSource.includes("Show WaveDeck Opus"));
 assert.ok(mainSource.includes("Quit WaveDeck Opus"));
 assert.ok(mainSource.includes("tray?.destroy()"));
+assert.ok(mainSource.includes("QUIET_MUSIC_MAINTENANCE_MS = 180000"));
+assert.ok(mainSource.includes("scheduleQuietMusicMaintenance"));
+assert.ok(mainSource.includes("activeMusicLibraryProfile"));
+assert.ok(mainSource.includes("removeUnavailableLocalStations"));
 const desktopLauncherSource = fs.readFileSync(path.join(root, "src", "main", "desktop-launcher.js"), "utf8");
 assert.ok(desktopLauncherSource.includes('.local", "share", "applications"'));
 assert.ok(desktopLauncherSource.includes("X-WaveDeckOpus-Managed=true"));
@@ -1641,6 +1662,8 @@ assert.ok(rendererSource.includes("Recently Played Local Stations"));
 assert.ok(rendererSource.includes("recentLocalStations"));
 assert.ok(rendererSource.includes("localStationPresets"));
 assert.ok(rendererSource.includes("toggleLocalStationPreset"));
+assert.ok(rendererSource.includes("removeRecentLocalStation"));
+assert.ok(rendererSource.includes("status.changed !== false"));
 assert.ok(rendererSource.includes("details.music-row[open]"));
 assert.ok(rendererSource.includes("['radio', 'Song Radio'], ['artist', 'Artist Radio'], ['album', 'Play Album']"));
 assert.ok(!rendererSource.includes("Play Song"));
@@ -1733,10 +1756,10 @@ assert.ok(windowsWorkflow.includes('chmod 755 "$appimage"'));
 const opusWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "opus-portable.yml"), "utf8");
 assert.ok(opusWorkflow.includes("branches: [opus-portable]"));
 assert.ok(opusWorkflow.includes("npm run dist:linux -- --publish never"));
-assert.ok(opusWorkflow.includes("WaveDeckOpus-1.0.8-Linux"));
+assert.ok(opusWorkflow.includes("WaveDeckOpus-1.0.9-Linux"));
 assert.ok(opusWorkflow.includes("dist/WaveDeckOpus.AppImage"));
-assert.ok(opusWorkflow.includes("tag_name: opus-v1.0.8"));
-assert.ok(opusWorkflow.includes("Publish WaveDeck Opus 1.0.8"));
+assert.ok(opusWorkflow.includes("tag_name: opus-v1.0.9"));
+assert.ok(opusWorkflow.includes("Publish WaveDeck Opus 1.0.9"));
 const macosInstructions = fs.readFileSync(path.join(root, "START-HERE-MACOS.txt"), "utf8");
 assert.ok(macosInstructions.includes("Version 0.6.1 universal build"));
 assert.ok(macosInstructions.includes("WaveDeck is unsigned"));

@@ -73,6 +73,7 @@ contextBridge.exposeInMainWorld("wavedeck", {
   getListeningHistory: () => ipcRenderer.invoke("listening:get"),
   resetListeningHistory: () => ipcRenderer.invoke("listening:reset"),
   toggleLocalStationPreset: (station) => ipcRenderer.invoke("listening:toggle-local-preset", station),
+  removeRecentLocalStation: (station) => ipcRenderer.invoke("listening:remove-local-station", station),
   onListeningHistoryChanged: (callback) => subscribe("listening:changed", callback),
 
   getSectionVisibility: () => ipcRenderer.invoke("sections:get-state"),

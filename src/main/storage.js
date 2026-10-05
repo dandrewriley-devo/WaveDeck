@@ -41,11 +41,13 @@ function validateListeningHistory(value) {
     if (!rawStation || typeof rawStation !== "object" || Array.isArray(rawStation)) continue;
     const mode = rawStation.mode === "artist" ? "artist" : rawStation.mode === "radio" ? "radio" : "";
     const seedId = String(rawStation.seedId ?? "").trim();
-    const key = `${mode}:${seedId}`;
+    const libraryProfile = String(rawStation.libraryProfile || 'portable').trim().slice(0, 180) || 'portable';
+    const key = `${libraryProfile}:${mode}:${seedId}`;
     if (!mode || !seedId || seenLocalStations.has(key)) continue;
     seenLocalStations.add(key);
     recentLocalStations.push({
       key,
+      libraryProfile,
       mode,
       seedId,
       label: String(rawStation.label ?? "").trim().slice(0, 300),
@@ -62,11 +64,13 @@ function validateListeningHistory(value) {
     if (!rawStation || typeof rawStation !== "object" || Array.isArray(rawStation)) continue;
     const mode = rawStation.mode === "artist" ? "artist" : rawStation.mode === "radio" ? "radio" : "";
     const seedId = String(rawStation.seedId ?? "").trim();
-    const key = `${mode}:${seedId}`;
+    const libraryProfile = String(rawStation.libraryProfile || 'portable').trim().slice(0, 180) || 'portable';
+    const key = `${libraryProfile}:${mode}:${seedId}`;
     if (!mode || !seedId || seenLocalPresets.has(key)) continue;
     seenLocalPresets.add(key);
     localStationPresets.push({
       key,
+      libraryProfile,
       mode,
       seedId,
       label: String(rawStation.label ?? "").trim().slice(0, 300),

@@ -27,11 +27,12 @@ function cleanListeningHistory(value) {
     if (!rawStation || typeof rawStation !== 'object' || Array.isArray(rawStation)) continue;
     const mode = rawStation.mode === 'artist' ? 'artist' : rawStation.mode === 'radio' ? 'radio' : '';
     const seedId = String(rawStation.seedId ?? '').trim();
-    const key = `${mode}:${seedId}`;
+    const libraryProfile = String(rawStation.libraryProfile || 'portable').trim().slice(0, 180) || 'portable';
+    const key = `${libraryProfile}:${mode}:${seedId}`;
     if (!mode || !seedId || seenLocalStations.has(key)) continue;
     seenLocalStations.add(key);
     recentLocalStations.push({
-      key, mode, seedId,
+      key, libraryProfile, mode, seedId,
       label: String(rawStation.label ?? '').trim().slice(0, 300),
       title: String(rawStation.title ?? '').trim().slice(0, 300),
       artist: String(rawStation.artist ?? '').trim().slice(0, 300),
@@ -46,11 +47,12 @@ function cleanListeningHistory(value) {
     if (!rawStation || typeof rawStation !== 'object' || Array.isArray(rawStation)) continue;
     const mode = rawStation.mode === 'artist' ? 'artist' : rawStation.mode === 'radio' ? 'radio' : '';
     const seedId = String(rawStation.seedId ?? '').trim();
-    const key = `${mode}:${seedId}`;
+    const libraryProfile = String(rawStation.libraryProfile || 'portable').trim().slice(0, 180) || 'portable';
+    const key = `${libraryProfile}:${mode}:${seedId}`;
     if (!mode || !seedId || seenLocalPresets.has(key)) continue;
     seenLocalPresets.add(key);
     localStationPresets.push({
-      key, mode, seedId,
+      key, libraryProfile, mode, seedId,
       label: String(rawStation.label ?? '').trim().slice(0, 300),
       title: String(rawStation.title ?? '').trim().slice(0, 300),
       artist: String(rawStation.artist ?? '').trim().slice(0, 300),
@@ -69,7 +71,8 @@ class ListeningHistory {
     minimumSessionMs = MINIMUM_SESSION_MS,
     flushIntervalMs = FLUSH_INTERVAL_MS,
     setTimer = setTimeout,
-    clearTimer = clearTimeout
+    clearTimer = clearTimeout,
+    getAdditionalProfile = () => 'additional'
   }) {
     this.storage = storage;
     this.onChanged = onChanged;
@@ -78,15 +81,34 @@ class ListeningHistory {
     this.flushIntervalMs = flushIntervalMs;
     this.setTimer = setTimer;
     this.clearTimer = clearTimer;
+    this.getAdditionalProfile = getAdditionalProfile;
     this.history = cleanListeningHistory(storage.readListeningHistory());
     this.session = null;
     this.localStationKey = '';
     this.timer = null;
   }
 
-  getStats() {
+  getStats(libraryProfile = '') {
     this.#flushEligibleSession();
-    return cleanListeningHistory(this.history);
+    const result = cleanListeningHistory(this.history);
+    const active = String(libraryProfile || 'portable');
+    const visible = station => station.libraryProfile === 'portable' || station.libraryProfile === active;
+    return { ...result, recentLocalStations: result.recentLocalStations.filter(visible), localStationPresets: result.localStationPresets.filter(visible) };
+  }
+
+  removeRecentLocalStation(rawStation) {
+    const key = String(rawStation?.key || '').trim();
+    if (!key) return this.getStats();
+    this.history.recentLocalStations = this.history.recentLocalStations.filter(station => station.key !== key);
+    this.storage.writeListeningHistory(this.history);
+    const history = this.getStats(); this.onChanged(history); return history;
+  }
+
+  removeUnavailableLocalStations(canPlay) {
+    const before = this.history.recentLocalStations.length;
+    this.history.recentLocalStations = this.history.recentLocalStations.filter(station => canPlay(station));
+    if (this.history.recentLocalStations.length === before) return false;
+    this.storage.writeListeningHistory(this.history); this.onChanged(this.getStats()); return true;
   }
 
   toggleLocalStationPreset(rawStation) {
@@ -215,8 +237,10 @@ class ListeningHistory {
     const seed = music?.seed;
     const seedId = String(seed?.id ?? '').trim();
     if (!mode || !seedId || status?.mediaState !== 'playing' || status?.state === 'error') return null;
+    const libraryProfile = seed?.library === 'additional' ? this.getAdditionalProfile() : 'portable';
     return {
-      key: `${mode}:${seedId}`,
+      libraryProfile,
+      key: `${libraryProfile}:${mode}:${seedId}`,
       mode,
       seedId,
       label: String(music.label ?? '').trim(),

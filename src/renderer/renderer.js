@@ -478,7 +478,7 @@ async function renderMusic({ preserveExisting = false } = {}) {
       if (recent.length) {
         renderTarget.append(createSectionTitle('Recently Played Local Stations', 'Most recent first'));
         const block = element('div', 'local-station-list');
-        block.append(...recent.map(station => createLocalStationRow(station, savedKeys.has(station.key))));
+        block.append(...recent.map(station => createLocalStationRow(station, savedKeys.has(station.key), { removable: true })));
         renderTarget.append(block);
       } else if ((!saved.length && !favoriteMixes.length || !showSaved) && (!showMixList || !mixes.length)) {
         renderTarget.append(element('div', 'music-empty-state', 'Search for local music, or start a Local Station to see it here.'));
@@ -552,7 +552,7 @@ function localStationLabel(station) {
     : `${station.title || 'Song'} Radio`);
 }
 
-function createLocalStationRow(station, saved) {
+function createLocalStationRow(station, saved, { removable = false } = {}) {
   const row = element('div', 'local-station-row');
   const play = element('button', 'local-station-play', localStationLabel(station));
   play.type = 'button';
@@ -574,6 +574,17 @@ function createLocalStationRow(station, saved) {
     finally { star.disabled = false; }
   });
   row.append(play, star);
+  if (removable) {
+    const remove = element('button', 'local-station-remove', '×');
+    remove.type = 'button'; remove.title = 'Remove from Recently Played';
+    remove.setAttribute('aria-label', `Remove ${localStationLabel(station)} from Recently Played`);
+    remove.addEventListener('click', async () => {
+      remove.disabled = true;
+      try { await window.wavedeck.removeRecentLocalStation(station); await renderMusic(); }
+      catch (error) { musicStatus.textContent = error.message; remove.disabled = false; }
+    });
+    row.append(remove);
+  }
   return row;
 }
 
@@ -662,7 +673,9 @@ localThumbUpBtn.addEventListener('click', async () => {
 localRadioControlsBtn.addEventListener('click', () => { void window.wavedeck.openLocalRadioControls(); });
 window.wavedeck.onMusicChanged(status => {
   setMusicStatus(status);
-  if (!status.scanning) {
+  // A quiet verification scan that found no changes must not make the Local
+  // Music view blink or restart its Local Mix lookup.
+  if (!status.scanning && status.changed !== false) {
     invalidateLocalMusicView();
     if (musicVisible) void renderMusic({ preserveExisting: true });
   }

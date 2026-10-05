@@ -48,6 +48,10 @@ async function run() {
     const file = path.join(musicDir, 'song.MP3'); await fs.writeFile(file, fixture());
     const digest = async () => crypto.createHash('sha256').update(await fs.readFile(file)).digest('hex'); const before = await digest();
     library = new MusicLibrary({ dataDir }); await library.enable(); await library.rescan();
+    const indexedRevision = library.revision;
+    const unchangedScan = await library.rescan();
+    assert.equal(unchangedScan.changed, false, 'an unchanged library scan reports that it found nothing new');
+    assert.equal(library.revision, indexedRevision, 'an unchanged library scan keeps the ready in-memory index intact');
     assert.equal(library.tracks[0].ratingStars, 4, 'ratings are copied into the local index');
     assert.equal(library.tracks[0].favorite, true, 'Favorite tags are copied into the local index');
     assert.equal(library.tracks[0].doNotPlay, true, 'Do Not Play tags are copied into the local index');

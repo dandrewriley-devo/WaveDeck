@@ -70,7 +70,9 @@ class MusicLibrary {
     }
   }
   async rescan() {
-    const status = await this.call('scan'); this.tracks = (await this.call('all')).map(canonicalTrack); this.revision += 1; this.onStatus(status); return status;
+    const status = await this.call('scan');
+    if (status.changed) { this.tracks = (await this.call('all')).map(canonicalTrack); this.revision += 1; }
+    this.onStatus(status); return status;
   }
   getLocalMixAvailability() { return this.localMixAvailability; }
   async analyzeLocalMixes(sourceSignature = '') {

@@ -181,7 +181,7 @@ async function analyzeLocalMixes() {
 async function scan() {
   if (scanning) return scanning;
   scanning = (async () => {
-    status = { ...status, scanning: true, checked: 0, errors: 0, message: '' }; emit();
+    status = { ...status, scanning: true, checked: 0, errors: 0, changed: false, message: '' }; emit();
     let indexChanged = false;
     try {
       await fs.mkdir(portableRoot, { recursive: true });
@@ -244,6 +244,7 @@ async function scan() {
       if (indexChanged) bumpLocalMixTrackRevision();
       await persist();
       updateTrackCounts();
+      status.changed = indexChanged;
       status.message = status.errors ? `${status.errors} files or folders could not be read; rescan to retry.` : '';
     } catch (error) { status.message = error.message; }
     finally { status.scanning = false; scanning = null; emit(); }

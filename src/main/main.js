@@ -120,6 +120,7 @@ let additionalMusicFolderMode = 'none';
 let portableImporter = null;
 let manualArtistRelationships = {};
 let quietMusicCheckTimer = null;
+const QUIET_MUSIC_MAINTENANCE_MS = 180000;
 let player = null;
 let recordingLibrary = null;
 let musicLibrary = null;
@@ -190,29 +191,59 @@ function currentUiPreferences() {
   };
 }
 
+function activeMusicLibraryProfile() {
+  if (!activeAdditionalMusicFolder) return 'portable';
+  return `additional:${currentComputer?.id || 'temporary'}:${activeAdditionalMusicFolder}`.slice(0, 180);
+}
+
+function localStationIsAvailable(station) {
+  const profile = String(station?.libraryProfile || 'portable');
+  if (profile !== 'portable' && profile !== activeMusicLibraryProfile()) return false;
+  const seed = musicLibrary?.tracks?.find(track => track.id === String(station?.seedId || ''));
+  if (!seed || seed.doNotPlay) return false;
+  const root = seed.library === 'additional'
+    ? activeAdditionalMusicFolder
+    : path.join(path.dirname(getDataDir()), 'Music');
+  const file = path.resolve(root || '.', String(seed.relativePath || ''));
+  return Boolean(root && file.startsWith(`${path.resolve(root)}${path.sep}`) && fs.existsSync(file));
+}
+
+function pruneUnavailableRecentLocalStations() {
+  listeningHistory?.removeUnavailableLocalStations(localStationIsAvailable);
+}
+
 async function applyAdditionalMusicFolder(folder, mode = 'none', { rescan = false } = {}) {
   activeAdditionalMusicFolder = String(folder || '').trim();
   additionalMusicFolderMode = activeAdditionalMusicFolder ? mode : 'none';
   await musicLibrary?.setAdditionalMusicFolder(activeAdditionalMusicFolder);
+  setTimeout(pruneUnavailableRecentLocalStations, 0);
   if (rescan && musicLibrary) {
-    void musicLibrary.rescan().then(() => analyzeLocalMixes()).catch(error => sendToMain('app:warning', error.message));
+    void musicLibrary.rescan().then(status => { if (status.changed) return analyzeLocalMixes(); return null; }).catch(error => sendToMain('app:warning', error.message));
   } else {
     void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
   }
   return currentUiPreferences();
 }
 
+function scheduleQuietMusicMaintenance() {
+  clearTimeout(quietMusicCheckTimer);
+  quietMusicCheckTimer = setTimeout(() => {
+    if (!storage?.getUiPreferences().proModeEnabled || !musicLibrary?.enabled) return;
+    // Verification and conversion never get first claim on the music worker.
+    if (mediaController?.getStatus?.().currentMusic || portableImporter?.isRunning()) { scheduleQuietMusicMaintenance(); return; }
+    void musicLibrary.rescan().then(status => {
+      if (status.changed) void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
+      beginOpusOptimization();
+    }).catch(error => sendToMain('app:warning', error.message));
+  }, QUIET_MUSIC_MAINTENANCE_MS);
+}
+
 function enableLocalMusic() {
   return musicLibrary.enable({ scanOnEnable: false }).then(() => {
     lastFmEnricher?.configure();
-    beginOpusOptimization();
-    // The indexed library is ready immediately. A later low-priority check keeps
-    // dropped-in files current without making opening Local Music feel like a scan.
-    clearTimeout(quietMusicCheckTimer);
-    quietMusicCheckTimer = setTimeout(() => {
-      if (!storage?.getUiPreferences().proModeEnabled || !musicLibrary?.enabled) return;
-      void musicLibrary.rescan().then(() => analyzeLocalMixes()).catch(error => sendToMain('app:warning', error.message));
-    }, 4000);
+    setTimeout(pruneUnavailableRecentLocalStations, 0);
+    // The saved index is the launch experience. Maintenance waits until idle.
+    scheduleQuietMusicMaintenance();
   });
 }
 
@@ -1202,9 +1233,19 @@ function installIpcHandlers() {
 
   ipcMain.handle("stream:test", (_event, url) => probeStream(url));
 
-  ipcMain.handle("listening:get", () => listeningHistory.getStats());
+  ipcMain.handle("listening:get", () => {
+    const history = listeningHistory.getStats(activeMusicLibraryProfile());
+    // Keep saved stations for a returning library profile, but never offer a
+    // station in the current UI until its seed is actually playable.
+    return {
+      ...history,
+      recentLocalStations: history.recentLocalStations.filter(localStationIsAvailable),
+      localStationPresets: history.localStationPresets.filter(localStationIsAvailable)
+    };
+  });
   ipcMain.handle("listening:reset", () => listeningHistory.reset());
   ipcMain.handle("listening:toggle-local-preset", (_event, station) => listeningHistory.toggleLocalStationPreset(station));
+  ipcMain.handle("listening:remove-local-station", (_event, station) => listeningHistory.removeRecentLocalStation(station));
   ipcMain.handle("sections:get-state", () => ({
     ...sectionVisibility,
     collapsedGroups: [...sectionVisibility.collapsedGroups],
@@ -1453,7 +1494,7 @@ function installIpcHandlers() {
     if (!storage.getUiPreferences().proModeEnabled) throw new Error('Enable Advanced Features to use Music.');
     await musicLibrary.enable();
     lastFmEnricher?.configure();
-    beginOpusOptimization();
+    scheduleQuietMusicMaintenance();
   };
   ipcMain.handle('music:status', async () => {
     await requireMusic();
@@ -1464,14 +1505,14 @@ function installIpcHandlers() {
     await requireMusic();
     const status = await musicLibrary.rescan();
     beginOpusOptimization();
-    void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
+    if (status.changed) void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
     return { ...status, ...(opusOptimizer?.getStatus() || {}) };
   });
   ipcMain.handle('music:additional:refresh', async () => {
     await requireMusic();
     if (!activeAdditionalMusicFolder) throw new Error('Choose an Additional Music Folder first.');
     const status = await musicLibrary.rescan();
-    void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
+    if (status.changed) void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
     return { ...status, ...(opusOptimizer?.getStatus() || {}) };
   });
   ipcMain.handle('music:portable-storage', async () => {
@@ -1514,14 +1555,14 @@ function installIpcHandlers() {
   ipcMain.handle('music:play', async (_event, id, mode) => { await requireMusic(); return mediaController.playMusic(String(id), mode); });
   ipcMain.handle('music:mixes', async () => {
     await requireMusic();
-    void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
+    if (!portableImporter?.isRunning()) void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
     const availability = localMixAvailability();
     // Keep the last complete mix list visible while a background refresh works.
     return availability.mixes.filter(mix => mix.valid && mix.enabled && mix.ready);
   });
   ipcMain.handle('music:mixes:manage', async () => {
     await requireMusic();
-    void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
+    if (!portableImporter?.isRunning()) void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
     return localMixAvailability();
   });
   ipcMain.handle('music:mixes:set-enabled', async (_event, mixId, enabled) => {
@@ -1544,7 +1585,9 @@ function installIpcHandlers() {
   });
   ipcMain.handle('music:play-mix', async (_event, mixId) => {
     await requireMusic();
-    await analyzeLocalMixes();
+    // An import can take hours. Its last completed availability is a good,
+    // stable answer until the final post-import analysis runs.
+    if (!portableImporter?.isRunning()) await analyzeLocalMixes();
     const mix = localMixAvailability().mixes.find(item => item.id === String(mixId || ''));
     if (!mix?.valid) throw new Error('That Local Mix cannot be played until its JSON book is fixed.');
     if (!mix.enabled) throw new Error('Enable this Local Mix in Settings before playing it.');
@@ -1796,8 +1839,8 @@ if (!hasSingleInstanceLock) {
         getProtectedPaths: protectedPortableMusicPaths,
         onStatus: status => sendToAll('music:optimization-changed', { ...latestMusicLibraryStatus, ...status }),
         rescanLibrary: async () => {
-          await musicLibrary.rescan();
-          void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
+          const status = await musicLibrary.rescan();
+          if (status.changed) void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
         }
       });
       opusOptimizer.setEnabled(storage.getUiPreferences().proModeEnabled);
@@ -1832,6 +1875,7 @@ if (!hasSingleInstanceLock) {
 
     listeningHistory = new ListeningHistory({
       storage,
+      getAdditionalProfile: activeMusicLibraryProfile,
       onChanged: (history) => sendToAll("listening:changed", history)
     });
 
