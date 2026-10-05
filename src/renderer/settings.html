@@ -221,8 +221,49 @@
 
       <!-- LOCAL MUSIC -->
       <section id="tab-localmusic" class="panel hidden" hidden>
-        <section class="local-music-settings local-music-section">
-          <div class="pro-music-settings-title">Additional Music Folder <span>(optional)</span></div>
+        <div class="local-music-dashboard">
+        <section class="local-music-card dashboard-square library-card" aria-labelledby="portableMusicTitle">
+          <div class="card-title" id="portableMusicTitle">Your Library</div>
+          <div class="library-track-count"><span id="portableTrackCount">—</span><span>Portable Tracks</span></div>
+          <div id="libraryTotalAvailable" class="library-total-available" hidden></div>
+          <div class="hint library-card-copy">The music you add to WaveDeck’s “Music” folder is converted to 96 kbps Opus files.</div>
+          <div id="portableMusicProgressWrap" class="portable-music-progress-wrap" hidden>
+            <progress id="portableMusicProgress" class="portable-music-progress" max="1" value="0" aria-label="Portable Music conversion progress"></progress>
+            <span id="portableMusicProgressLabel" class="portable-music-progress-label">0 of 0</span>
+          </div>
+          <div id="musicLibraryStatus" class="card-status" role="status">Checking portable Music…</div>
+          <div class="card-actions"><button id="openPortableMusicLibraryBtn" class="subtle-link" type="button">Manage Library</button><button id="rescanMusicBtn" class="subtle-link" type="button">Refresh</button></div>
+        </section>
+        <section class="local-music-card dashboard-square storage-card" aria-labelledby="portableStorageTitle">
+          <div class="card-title" id="portableStorageTitle">Portable Storage</div>
+          <div class="card-donut-wrap">
+            <div id="portableStorageChart" class="portable-storage-chart"><span id="portableStoragePercent">—</span></div>
+            <div id="portableStorageLabel" class="portable-storage-label">Checking drive space…</div>
+          </div>
+        </section>
+        <section class="local-music-card dashboard-square lastfm-card" aria-labelledby="lastFmTitle">
+          <div class="card-title" id="lastFmTitle">Last.fm Music Data</div>
+          <div class="card-donut-wrap">
+            <div id="lastFmChart" class="portable-storage-chart lastfm-storage-chart" title="Checking Last.fm music data…"><span id="lastFmPercent">—</span></div>
+          </div>
+          <div class="lastfm-toggle-row">
+            <label class="preference-toggle"><input id="lastFmEnabled" type="checkbox" /><span class="toggle-switch" aria-hidden="true"></span><span>Enable Last.fm</span></label>
+          </div>
+          <div id="lastFmStatus" class="visually-hidden">Last.fm is ready when you are.</div>
+          <div class="card-actions"><button id="queueLastFmRefreshBtn" class="subtle-link" type="button">Refresh</button></div>
+        </section>
+        <section class="local-music-card dashboard-square import-music-section" aria-labelledby="portableImportTitle">
+          <div class="card-title" id="portableImportTitle">Import to Portable Music <span class="info-tip" title="WaveDeck copies selected music into Portable Music as compact Opus files. Your original music is never changed." aria-label="Import copies music without changing the source">i</span></div>
+          <div id="portableImportStatus" class="portable-import-status" role="status">Choose an Additional Music Folder to see import options.</div>
+          <div id="portableImportProgressWrap" class="portable-import-progress-wrap" hidden>
+            <progress id="portableImportProgress" class="portable-music-progress" max="1" value="0" aria-label="Portable Music import progress"></progress>
+            <span id="portableImportProgressLabel" class="portable-music-progress-label">0 of 0</span>
+          </div>
+          <label class="import-speed-label">Import speed <select id="portableImportSpeed" class="input"><option value="2">USB drive — 2 at a time</option><option value="6">Fast drive — 6 at a time</option><option value="12">Turbo — 12 at a time</option></select></label>
+          <button id="portableImportBtn" class="btn import-action" type="button" disabled>Import Missing Music</button>
+        </section>
+        <section class="local-music-card additional-folder-card" aria-labelledby="additionalMusicFolderTitle">
+          <div class="card-title" id="additionalMusicFolderTitle">Additional Music Folder <span>(optional)</span></div>
           <div class="pro-music-settings-row">
             <input id="additionalMusicFolder" class="input" type="text" readonly placeholder="No additional folder selected" />
             <button id="chooseAdditionalMusicFolderBtn" class="btn" type="button">Choose Folder…</button>
@@ -235,63 +276,19 @@
             <button id="useAdditionalMusicFolderThisTimeBtn" class="subtle-link" type="button">Use this time only</button>
           </div>
           <div class="hint">Add one other folder to Local Music search and playback. Its files and tags are never changed.</div>
-          <div class="additional-music-folder-status-row"><span id="additionalMusicFolderStatus" class="additional-music-folder-status" role="status">No Additional Music Folder selected for this computer.</span><button id="refreshAdditionalMusicBtn" class="subtle-link" type="button">Refresh</button></div>
-          <div id="rememberedMusicComputers" class="remembered-music-computers" hidden>
-            <div class="remembered-music-computers-title">Remembered Computers</div>
-            <div id="rememberedMusicComputersList" class="remembered-music-computers-list"></div>
-          </div>
+          <div class="additional-music-folder-status-row"><span id="additionalMusicFolderStatus" class="additional-music-folder-status" role="status">No Additional Music Folder selected for this computer.</span></div>
         </section>
-        <section class="local-music-section import-music-section" aria-labelledby="portableImportTitle">
-          <div class="pro-music-settings-title" id="portableImportTitle">Import to Portable Music</div>
-          <div id="portableImportStatus" class="portable-import-status" role="status">Choose an Additional Music Folder to see import options.</div>
-          <div id="portableImportProgressWrap" class="portable-import-progress-wrap" hidden>
-            <progress id="portableImportProgress" class="portable-music-progress" max="1" value="0" aria-label="Portable Music import progress"></progress>
-            <span id="portableImportProgressLabel" class="portable-music-progress-label">0 of 0</span>
-          </div>
-          <button id="portableImportBtn" class="btn" type="button" disabled>Import Missing Music</button>
-          <label class="additional-music-folder-choice">Import speed <select id="portableImportSpeed" class="input"><option value="2">USB drive — 2 at a time</option><option value="6">Fast drive — 6 at a time</option><option value="12">Turbo — 12 at a time</option></select></label>
+        <section class="local-music-card dashboard-square local-mixes-card" aria-labelledby="localMixSummaryTitle">
+          <div class="card-title" id="localMixSummaryTitle">Local Mixes</div>
+          <div id="localMixSummary" class="library-track-count local-mix-summary">Checking Local Mixes…</div>
+          <div class="card-actions"><button id="manageLocalMixesBtn" class="subtle-link" type="button">Manage</button></div>
         </section>
-        <section class="local-music-section" aria-labelledby="portableMusicTitle">
-          <div class="portable-music-layout">
-            <div class="portable-music-main">
-              <div class="pro-music-settings-title" id="portableMusicTitle">Portable Music</div>
-              <div class="hint">The music you add to WaveDeck’s “Music” folder is converted to 96 kbps Opus files.</div>
-              <div id="portableMusicProgressWrap" class="portable-music-progress-wrap" hidden>
-                <progress id="portableMusicProgress" class="portable-music-progress" max="1" value="0" aria-label="Portable Music conversion progress"></progress>
-                <span id="portableMusicProgressLabel" class="portable-music-progress-label">0 of 0</span>
-              </div>
-              <div class="music-library-status-row">
-                <span id="musicLibraryStatus" role="status">Checking portable Music…</span>
-                <button id="rescanMusicBtn" class="btn" type="button">Rescan Local Music</button>
-                <button id="openPortableMusicLibraryBtn" class="subtle-link" type="button">Manage Portable Music</button>
-              </div>
-            </div>
-            <div class="portable-storage" aria-label="Portable drive space">
-              <div id="portableStorageChart" class="portable-storage-chart"><span id="portableStoragePercent">—</span></div>
-              <div id="portableStorageLabel" class="portable-storage-label">Checking drive space…</div>
-            </div>
-          </div>
+        <section id="rememberedMusicComputers" class="local-music-card remembered-computers-card" hidden>
+          <div class="card-title">Remembered Computers</div>
+          <div id="rememberedMusicComputersList" class="remembered-music-computers-list"></div>
         </section>
-        <section class="lastfm-settings local-music-section" aria-labelledby="lastFmTitle">
-          <div class="pro-music-settings-title" id="lastFmTitle">Last.fm Music Data</div>
-          <div class="lastfm-toggle-row">
-            <label class="preference-toggle">
-              <input id="lastFmEnabled" type="checkbox" />
-              <span class="toggle-switch" aria-hidden="true"></span>
-              <span>Improve Music Data with Last.fm.</span>
-            </label>
-            <button id="queueLastFmRefreshBtn" class="subtle-link lastfm-refresh-link" type="button">Refresh</button>
-          </div>
-          <div id="lastFmDetails" class="lastfm-details" hidden>
-            <div id="lastFmProgressWrap" class="lastfm-progress-wrap" hidden>
-              <div id="lastFmUpdating" class="lastfm-updating">MUSIC DATA <span id="lastFmUpdatingState">UPDATED</span></div>
-              <progress id="lastFmProgress" class="lastfm-progress" max="100" value="0" aria-label="Last.fm music data progress"></progress>
-              <span id="lastFmProgressLabel" class="lastfm-progress-label">0%</span>
-            </div>
-            <div id="lastFmStatus" class="lastfm-status">Last.fm is ready when you are.</div>
-          </div>
-        </section>
-        <details class="local-music-section local-mix-details">
+        </div>
+        <details id="localMixDetails" class="local-music-section local-mix-details">
           <summary class="pro-music-settings-title" id="localMixManagerTitle">Manage Local Mixes</summary>
           <div class="hint">Choose which Local Mixes appear in Local Music. A mix needs at least 20 eligible songs before it can be played. You can also add your own books to <b>Data/local-mixes</b>; they stay off until you choose them.</div>
           <div id="localMixManager" class="local-mix-manager" aria-live="polite">Checking installed Local Mixes…</div>

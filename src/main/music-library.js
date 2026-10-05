@@ -28,7 +28,7 @@ class MusicLibrary {
         this.localMixAvailability = {
           ...message.value,
           sourceSignature: this.localMixAvailability.sourceSignature || '',
-          libraryRevision: this.localMixAvailability.libraryRevision || 0
+          libraryRevision: this.localMixAvailability.libraryRevision || this.revision
         };
         this.onLocalMixAvailability(this.localMixAvailability);
         return;
@@ -75,10 +75,18 @@ class MusicLibrary {
     this.onStatus(status); return status;
   }
   getLocalMixAvailability() { return this.localMixAvailability; }
+  setLocalMixSourceSignature(sourceSignature = '') {
+    this.localMixAvailability = {
+      ...this.localMixAvailability,
+      sourceSignature: String(sourceSignature),
+      libraryRevision: this.revision
+    };
+    this.onLocalMixAvailability(this.localMixAvailability);
+  }
   async analyzeLocalMixes(sourceSignature = '') {
     if (this.mixAnalysisPromise) return this.mixAnalysisPromise;
     const current = this.localMixAvailability;
-    if (!current.analyzing && !current.error && current.total && current.sourceSignature === sourceSignature && current.libraryRevision === this.revision) {
+    if (!current.analyzing && !current.error && current.cacheValid === true && current.total && current.sourceSignature === sourceSignature && current.libraryRevision === this.revision) {
       return current;
     }
     this.localMixAvailability = { ...current, analyzing: true, error: '', sourceSignature, libraryRevision: this.revision };

@@ -147,6 +147,20 @@ function publicMixAvailability(mix, eligibleTrackCount = 0) {
     quality: qualityForTrackCount(eligibleTrackCount)
   };
 }
+async function cachedLocalMixAvailability() {
+  const inventory = loadLocalMixInventory(workerData.dataDir);
+  const cache = await readLocalMixCache();
+  const trackRevision = localMixTrackRevision();
+  if (cache.trackRevision !== trackRevision) return null;
+  const mixes = [];
+  for (const mix of inventory) {
+    if (!mix.valid) { mixes.push(publicMixAvailability(mix)); continue; }
+    const saved = cache.books[mix.id];
+    if (!saved || saved.sourceSignature !== localMixFileSignature(mix) || !Number.isInteger(saved.eligibleTrackCount)) return null;
+    mixes.push(publicMixAvailability(mix, saved.eligibleTrackCount));
+  }
+  return { analyzing: false, completed: inventory.length, total: inventory.length, mixes, cacheValid: true };
+}
 async function analyzeLocalMixes() {
   const inventory = loadLocalMixInventory(workerData.dataDir);
   const cache = await readLocalMixCache();
@@ -174,7 +188,7 @@ async function analyzeLocalMixes() {
     await new Promise(resolve => setImmediate(resolve));
   }
   await writeLocalMixCache(nextCache);
-  const value = { analyzing: false, completed: total, total, mixes };
+  const value = { analyzing: false, completed: total, total, mixes, cacheValid: true };
   emitLocalMixes(value);
   return value;
 }
@@ -267,6 +281,8 @@ async function initialize() {
   const metadataVersion = Number(rows('SELECT value FROM music_index_meta WHERE key = ?', ['track_metadata_version'])[0]?.value) || 0;
   refreshAllTrackMetadata = metadataVersion < MUSIC_INDEX_VERSION;
   updateTrackCounts();
+  const cachedMixes = await cachedLocalMixAvailability();
+  if (cachedMixes) emitLocalMixes(cachedMixes);
   emit();
 }
 const ready = initialize();
@@ -350,7 +366,7 @@ async function handleRequest({ id, method, args = [] }) {
       db.run('DELETE FROM lastfm_jobs WHERE album_key = ?', [String(args[0] || '')]);
       await persist(); value = true;
     } else if (method === 'lastfm:status') {
-      const maps = lastFmMaps(); const tracks = storedTracks(); const now = Date.now();
+      const maps = lastFmMaps(); const tracks = visibleTracks(); const now = Date.now();
       value = {
         tracksTotal: tracks.length,
         tracksCurrent: tracks.filter(track => lastFmCurrent(maps.tracks.get(track.id), now)).length,

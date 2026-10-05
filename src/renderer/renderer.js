@@ -44,6 +44,7 @@ let musicSearchTimer;
 let musicRenderSequence = 0;
 let localMusicViewCache = null;
 let localMusicWarmupPromise = null;
+let localMusicViewGeneration = 0;
 
 if (platform !== "linux" && platform !== "win32") sidebarModeBtn.hidden = true;
 
@@ -406,6 +407,7 @@ function setMusicStatus(status) {
 }
 
 function invalidateLocalMusicView() {
+  localMusicViewGeneration += 1;
   localMusicViewCache = null;
   localMusicWarmupPromise = null;
 }
@@ -419,20 +421,23 @@ async function warmLocalMusicView() {
   if (!proModeEnabled) return null;
   if (localMusicViewCache) return localMusicViewCache;
   if (localMusicWarmupPromise) return localMusicWarmupPromise;
-  localMusicWarmupPromise = Promise.all([
+  const generation = localMusicViewGeneration;
+  const warmup = Promise.all([
     window.wavedeck.searchMusic(''),
     window.wavedeck.getListeningHistory(),
     (localMixesSectionVisible || localPresetSectionVisible || localFavoritesOnlyVisible)
       ? window.wavedeck.getLocalMixes()
       : Promise.resolve([])
   ]).then(([result, history, mixes]) => {
+    if (generation !== localMusicViewGeneration) return warmLocalMusicView();
     localMusicViewCache = { result, history, mixes };
     return localMusicViewCache;
   }).catch(error => {
-    localMusicWarmupPromise = null;
+    if (generation === localMusicViewGeneration) localMusicWarmupPromise = null;
     throw error;
   });
-  return localMusicWarmupPromise;
+  localMusicWarmupPromise = warmup;
+  return warmup;
 }
 
 async function renderMusic({ preserveExisting = false } = {}) {

@@ -176,25 +176,39 @@ main{
 .remembered-music-computer-actions .subtle-link{ margin:0; }
 .remembered-music-computer-rename{ display:grid; gap:6px; grid-column:1 / -1; grid-template-columns:minmax(0, 1fr) auto; }
 .remembered-music-computer-rename .input{ min-width:0; }
-.music-library-status-row{ align-items:center; display:flex; gap:10px; justify-content:space-between; }
-.music-library-status-row span{ color:var(--muted); font-size:12px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.local-music-dashboard{ display:grid; gap:14px; grid-template-columns:repeat(3, minmax(0, 1fr)); }
+.local-music-card{ background:#242424; border:1px solid var(--border); display:flex; flex-direction:column; gap:10px; min-width:0; padding:14px; }
+.dashboard-square{ aspect-ratio:1 / 1; }
+.card-title{ color:#e3e3e3; font-size:13px; font-weight:650; }
+.card-title > span{ color:var(--muted); font-weight:400; }
+.library-track-count{ color:#e3e3e3; display:grid; font-size:12px; gap:1px; line-height:1.15; }
+.library-track-count > span:first-child{ font-size:27px; font-variant-numeric:tabular-nums; font-weight:700; letter-spacing:-.03em; }
+.library-total-available,.card-status{ color:var(--muted); font-size:12px; line-height:1.35; }
+.library-card-copy{ margin-top:auto; }
+.card-actions{ align-items:center; display:flex; gap:12px; margin-top:auto; }
+.card-actions .subtle-link{ margin:0; text-transform:uppercase; }
+.card-donut-wrap{ align-items:center; display:grid; gap:8px; justify-items:center; margin:auto 0; text-align:center; }
+.import-speed-label{ align-items:center; color:var(--muted); display:flex; font-size:12px; gap:7px; margin-top:auto; }
+.import-speed-label .input{ flex:1; min-width:0; }
+.import-action{ width:100%; }
+.info-tip{ align-items:center; border:1px solid #6d6d6d; border-radius:50%; color:#cfcfcf; cursor:help; display:inline-flex; font-family:serif; font-size:11px; font-style:italic; font-weight:700; height:15px; justify-content:center; margin-left:3px; width:15px; }
+.additional-folder-card,.remembered-computers-card{ grid-column:span 2; }
+.local-mixes-card .card-actions{ margin-top:auto; }
+.local-mix-summary{ margin-top:auto; }
 .portable-music-progress-wrap{ align-items:center; display:grid; gap:6px 10px; grid-template-columns:1fr auto; }
 .portable-music-progress{ accent-color:var(--green); height:12px; min-width:100px; width:100%; }
 .portable-music-progress-label{ color:var(--muted); font-size:12px; font-variant-numeric:tabular-nums; min-width:64px; text-align:right; }
 .portable-import-status{ color:var(--muted); font-size:12px; min-height:16px; }
 .portable-import-progress-wrap{ align-items:center; display:grid; gap:6px 10px; grid-template-columns:1fr auto; }
-.portable-music-layout{ align-items:center; display:grid; gap:18px; grid-template-columns:minmax(0, 3fr) minmax(132px, 2fr); }
-.portable-music-main{ display:grid; gap:9px; min-width:0; }
-.portable-storage{ align-items:center; display:grid; gap:6px; justify-items:center; text-align:center; }
-.portable-storage-chart{ align-items:center; background:conic-gradient(#777 0deg 360deg); border-radius:50%; display:flex; height:72px; justify-content:center; position:relative; width:72px; }
-.portable-storage-chart::before{ background:#242424; border-radius:50%; content:""; height:36px; position:absolute; width:36px; }
-.portable-storage-chart span{ color:#e3e3e3; font-size:11px; font-variant-numeric:tabular-nums; position:relative; z-index:1; }
-.portable-storage-label{ color:var(--muted); font-size:11px; line-height:1.25; max-width:150px; }
+.portable-storage-chart{ align-items:center; background:conic-gradient(#3a3a3a 0deg 360deg); border-radius:50%; display:flex; height:104px; justify-content:center; position:relative; width:104px; }
+.portable-storage-chart::before{ background:#242424; border-radius:50%; content:""; height:58px; position:absolute; width:58px; }
+.portable-storage-chart span{ color:#e3e3e3; font-size:13px; font-variant-numeric:tabular-nums; position:relative; z-index:1; }
+.portable-storage-label{ color:var(--muted); font-size:11px; line-height:1.25; max-width:180px; }
+.lastfm-storage-chart{ cursor:help; }
 .local-mix-details > summary{ cursor:pointer; list-style:none; margin-bottom:0; }
 .local-mix-details > summary::-webkit-details-marker{ display:none; }
 .local-mix-details > summary::before{ color:var(--green); content:'›'; display:inline-block; font-size:18px; line-height:10px; margin-right:6px; transform:rotate(0deg); transition:transform .15s ease; }
 .local-mix-details[open] > summary::before{ transform:rotate(90deg); }
-@media (max-width:520px){ .portable-music-layout{ grid-template-columns:1fr; } .portable-storage{ justify-items:start; text-align:left; grid-template-columns:auto 1fr; } .portable-storage-label{ max-width:none; } }
 .local-music-section{
   background:#242424;
   border:1px solid var(--border);
@@ -204,16 +218,9 @@ main{
   padding:14px;
 }
 .local-music-section:first-child{ margin-top:0; }
-.lastfm-settings{ display:grid; gap:9px; }
-.lastfm-toggle-row{ align-items:center; display:flex; gap:4px; }
-.lastfm-toggle-row .preference-toggle{ margin:8px 0 0; }
-.lastfm-refresh-link{ align-self:center; margin:8px 0 0; }
-.lastfm-details{ display:grid; gap:8px; }
-.lastfm-status{ color:var(--muted); font-size:12px; overflow-wrap:anywhere; }
-.lastfm-progress-wrap{ align-items:center; display:grid; gap:6px 10px; grid-template-columns:1fr auto; margin-top:4px; }
-.lastfm-updating{ color:var(--green); font-size:10px; font-weight:700; grid-column:1 / -1; letter-spacing:.08em; text-transform:uppercase; }
-.lastfm-progress{ accent-color:var(--green); height:12px; min-width:100px; width:100%; }
-.lastfm-progress-label{ color:var(--muted); font-size:12px; font-variant-numeric:tabular-nums; min-width:38px; text-align:right; }
+.lastfm-toggle-row{ margin-top:auto; }
+.lastfm-toggle-row .preference-toggle{ margin:0; }
+.visually-hidden{ height:1px; margin:-1px; overflow:hidden; position:absolute; width:1px; clip:rect(0 0 0 0); white-space:nowrap; }
 .local-mix-manager{ display:grid; gap:7px; }
 .local-mix-analysis{ background:#1f1f1f; border:1px solid #383838; display:grid; gap:6px; padding:10px; }
 .local-mix-analysis-title{ color:#e3e3e3; font-size:12px; font-weight:650; }
@@ -231,6 +238,17 @@ main{
 .local-mix-manager-status.quality-strong{ color:#8eae3a; }
 .local-mix-manager-status.quality-excellent{ color:#49a35c; }
 .local-mix-manager-row.unavailable .local-mix-manager-status{ color:#d6a15d; }
+
+@media (max-width:900px){
+  .local-music-dashboard{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
+  .additional-folder-card,.remembered-computers-card{ grid-column:auto; }
+  .local-mixes-card{ aspect-ratio:auto; grid-column:1 / -1; min-height:130px; }
+}
+@media (max-width:580px){
+  .local-music-dashboard{ grid-template-columns:1fr; }
+  .dashboard-square{ aspect-ratio:auto; min-height:230px; }
+  .additional-folder-card,.remembered-computers-card,.local-mixes-card{ grid-column:auto; }
+}
 
 .radio-tuning{
   margin-top:14px;

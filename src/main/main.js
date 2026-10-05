@@ -240,6 +240,7 @@ function scheduleQuietMusicMaintenance() {
 
 function enableLocalMusic() {
   return musicLibrary.enable({ scanOnEnable: false }).then(() => {
+    musicLibrary.setLocalMixSourceSignature(mixBookSignature(getDataDir()));
     lastFmEnricher?.configure();
     setTimeout(pruneUnavailableRecentLocalStations, 0);
     // The saved index is the launch experience. Maintenance waits until idle.
