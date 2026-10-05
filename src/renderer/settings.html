@@ -254,12 +254,14 @@
         </section>
         <section class="local-music-card dashboard-square import-music-section" aria-labelledby="portableImportTitle">
           <div class="card-title" id="portableImportTitle">Import to Portable Music <span class="info-tip" title="WaveDeck copies selected music into Portable Music as compact Opus files. Your original music is never changed." aria-label="Import copies music without changing the source">i</span></div>
+          <div id="portableImportReady" class="library-track-count import-ready-count" hidden><span id="portableImportReadyCount">—</span><span>Ready to Import</span></div>
+          <div id="portableImportSpace" class="portable-import-space" hidden><span id="portableImportRequiredSpace">Required space: —</span><span id="portableImportAvailableSpace">Available space: —</span></div>
           <div id="portableImportStatus" class="portable-import-status" role="status">Choose an Additional Music Folder to see import options.</div>
           <div id="portableImportProgressWrap" class="portable-import-progress-wrap" hidden>
             <progress id="portableImportProgress" class="portable-music-progress" max="1" value="0" aria-label="Portable Music import progress"></progress>
             <span id="portableImportProgressLabel" class="portable-music-progress-label">0 of 0</span>
           </div>
-          <label class="import-speed-label">Import speed <select id="portableImportSpeed" class="input"><option value="2">USB drive — 2 at a time</option><option value="6">Fast drive — 6 at a time</option><option value="12">Turbo — 12 at a time</option></select></label>
+          <label class="import-speed-label">Import speed <select id="portableImportSpeed" class="input"><option value="2">USB: 2x speed</option><option value="6">FAST: 6x speed</option><option value="12">TURBO: 12x speed</option></select></label>
           <button id="portableImportBtn" class="btn import-action" type="button" disabled>Import Missing Music</button>
         </section>
         <section class="local-music-card additional-folder-card" aria-labelledby="additionalMusicFolderTitle">
@@ -280,7 +282,7 @@
         </section>
         <section class="local-music-card dashboard-square local-mixes-card" aria-labelledby="localMixSummaryTitle">
           <div class="card-title" id="localMixSummaryTitle">Local Mixes</div>
-          <div id="localMixSummary" class="library-track-count local-mix-summary">Checking Local Mixes…</div>
+          <div id="localMixSummary" class="library-track-count local-mix-summary"><span id="localMixReadyCount">—</span><span id="localMixReadyLabel">Checking Local Mixes…</span></div>
           <div class="card-actions"><button id="manageLocalMixesBtn" class="subtle-link" type="button">Manage</button></div>
         </section>
         <section id="rememberedMusicComputers" class="local-music-card remembered-computers-card" hidden>

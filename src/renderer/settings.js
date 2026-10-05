@@ -62,6 +62,11 @@ const portableImportProgress = document.getElementById('portableImportProgress')
 const portableImportProgressLabel = document.getElementById('portableImportProgressLabel');
 const portableImportBtn = document.getElementById('portableImportBtn');
 const portableImportSpeed = document.getElementById('portableImportSpeed');
+const portableImportReady = document.getElementById('portableImportReady');
+const portableImportReadyCount = document.getElementById('portableImportReadyCount');
+const portableImportSpace = document.getElementById('portableImportSpace');
+const portableImportRequiredSpace = document.getElementById('portableImportRequiredSpace');
+const portableImportAvailableSpace = document.getElementById('portableImportAvailableSpace');
 const openPortableMusicLibraryBtn = document.getElementById('openPortableMusicLibraryBtn');
 const musicLibraryStatus = document.getElementById('musicLibraryStatus');
 const portableTrackCount = document.getElementById('portableTrackCount');
@@ -80,6 +85,8 @@ const lastFmPercent = document.getElementById('lastFmPercent');
 const localMixManager = document.getElementById('localMixManager');
 const localMixDetails = document.getElementById('localMixDetails');
 const localMixSummary = document.getElementById('localMixSummary');
+const localMixReadyCount = document.getElementById('localMixReadyCount');
+const localMixReadyLabel = document.getElementById('localMixReadyLabel');
 const manageLocalMixesBtn = document.getElementById('manageLocalMixesBtn');
 const queueLastFmRefreshBtn = document.getElementById('queueLastFmRefreshBtn');
 const resetListeningBtn = document.getElementById("resetListeningBtn");
@@ -109,6 +116,12 @@ function formatBytes(bytes) {
   return `${size >= 10 || unit === 0 ? Math.round(size) : size.toFixed(1)} ${units[unit]}`;
 }
 
+function formatBytesRoundedUp(bytes) {
+  const value = Math.max(0, Number(bytes) || 0); const units = ['B', 'KB', 'MB', 'GB', 'TB']; let size = value; let unit = 0;
+  while (size >= 1024 && unit < units.length - 1) { size /= 1024; unit += 1; }
+  return `${Math.ceil(size)} ${units[unit]}`;
+}
+
 function formatEta(seconds) {
   const total = Math.max(0, Number(seconds) || 0); if (!total) return '';
   const minutes = Math.ceil(total / 60); return minutes < 60 ? `About ${minutes} min remaining` : `About ${Math.floor(minutes / 60)}h ${minutes % 60}m remaining`;
@@ -130,11 +143,24 @@ async function loadPortableStorage() {
 function renderPortableImport(status = {}) {
   const state = String(status.state || 'waiting'); const total = Math.max(0, Number(status.total || 0)); const completed = Math.min(total, Math.max(0, Number(status.completed || 0)));
   const importing = state === 'importing'; portableImportProgressWrap.hidden = !importing;
+  const estimated = Math.max(0, Number(status.estimatedBytes) || 0);
+  const available = Math.max(0, Number(status.availableBytes) || 0);
+  const reserve = Math.max(0, Number(status.totalBytes) || 0) * 0.03;
+  const ready = state === 'ready' && Number(status.eligible) > 0;
+  const enoughSpace = estimated <= Math.max(0, available - reserve);
+  portableImportReady.hidden = !ready;
+  portableImportSpace.hidden = !ready;
+  if (ready) {
+    portableImportReadyCount.textContent = Number(status.eligible).toLocaleString();
+    portableImportRequiredSpace.textContent = `Required space: ${formatBytesRoundedUp(estimated)}`;
+    portableImportAvailableSpace.textContent = `Available space: ${formatBytes(available)}`;
+  }
+  portableImportStatus.hidden = ready;
   if (importing) { portableImportProgress.max = Math.max(1, total); portableImportProgress.value = completed; portableImportProgressLabel.textContent = `${completed.toLocaleString()} of ${total.toLocaleString()}`; }
-  if (state === 'ready') portableImportStatus.textContent = status.eligible ? `${Number(status.eligible).toLocaleString()} tracks ready to import · about ${formatBytes(status.estimatedBytes)} needed · ${formatBytes(status.availableBytes)} free` : status.message;
+  if (state === 'ready') portableImportStatus.textContent = status.message;
   else if (importing) portableImportStatus.textContent = `${completed.toLocaleString()} of ${total.toLocaleString()} imported · ${Number(status.workers) || 2} at a time${formatEta(status.etaSeconds) ? ` · ${formatEta(status.etaSeconds)}` : ''}`;
   else portableImportStatus.textContent = status.message || 'Checking music available to import…';
-  portableImportBtn.disabled = !status.eligible || importing || state === 'checking';
+  portableImportBtn.disabled = !status.eligible || !enoughSpace || importing || state === 'checking';
   portableImportBtn.textContent = importing ? 'Importing…' : 'Import Missing Music';
   if (state === 'complete') void loadPortableStorage();
 }
@@ -348,11 +374,13 @@ function renderLocalMixAnalysis(status) {
 }
 
 function renderLocalMixSummary(availability = {}) {
-  if (availability.analyzing) { localMixSummary.textContent = 'Checking Local Mixes…'; return; }
-  if (availability.error) { localMixSummary.textContent = 'Local Mixes need attention'; return; }
-  const ready = (Array.isArray(availability.mixes) ? availability.mixes : [])
-    .filter(mix => mix.valid && mix.enabled && mix.ready).length;
-  localMixSummary.textContent = `${ready.toLocaleString()} Local Mix${ready === 1 ? '' : 'es'} Ready`;
+  if (availability.analyzing) { localMixReadyCount.textContent = '—'; localMixReadyLabel.textContent = 'Checking Local Mixes…'; return; }
+  if (availability.error) { localMixReadyCount.textContent = '—'; localMixReadyLabel.textContent = 'Local Mixes need attention'; return; }
+  const mixes = Array.isArray(availability.mixes) ? availability.mixes : [];
+  const viable = mixes.filter(mix => mix.valid && mix.ready).length;
+  const ready = mixes.filter(mix => mix.valid && mix.enabled && mix.ready).length;
+  localMixReadyCount.textContent = `${ready.toLocaleString()} of ${viable.toLocaleString()}`;
+  localMixReadyLabel.textContent = 'Local Mixes Ready';
 }
 
 async function loadLocalMixManager() {
