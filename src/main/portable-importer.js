@@ -43,9 +43,31 @@ class PortableImporter {
   constructor({ musicRoot, ffmpegExecutable, ffprobeExecutable, getAdditionalFolder, getPortableTracks, getWorkers = () => 2, onStatus = () => {}, onBatch = async () => {}, onComplete = async () => {} }) {
     this.musicRoot = musicRoot; this.ffmpegExecutable = ffmpegExecutable; this.ffprobeExecutable = ffprobeExecutable;
     this.getAdditionalFolder = getAdditionalFolder; this.getPortableTracks = getPortableTracks; this.getWorkers = getWorkers; this.onStatus = onStatus; this.onBatch = onBatch; this.onComplete = onComplete;
-    this.previewValue = null; this.running = null; this.parseFile = null; this.status = { state: 'idle', eligible: 0, total: 0, completed: 0, estimatedBytes: 0, availableBytes: 0, totalBytes: 0, etaSeconds: null, message: '' };
+    this.previewValue = null; this.running = null; this.parseFile = null; this.importJob = null;
+    this.status = { state: 'idle', eligible: 0, total: 0, completed: 0, estimatedBytes: 0, availableBytes: 0, totalBytes: 0, etaSeconds: null, workers: 2, message: '' };
   }
   #emit(value = {}) { this.status = { ...this.status, ...value }; this.onStatus({ ...this.status }); return this.status; }
+  #workerCount() { return Math.max(1, Math.min(12, Number(this.getWorkers()) || 2)); }
+  #finishJob(job) { if (job.finished || job.next < job.candidates.length || job.active > 0) return; job.finished = true; job.resolve(); }
+  #ensureWorkers(job = this.importJob) {
+    if (!job || job.finished || this.importJob !== job) return;
+    const target = this.#workerCount();
+    while (job.active < target && job.next < job.candidates.length) void this.#runWorker(job);
+  }
+  async #runWorker(job) {
+    job.active += 1;
+    try {
+      while (job.next < job.candidates.length) {
+        if (job.active > this.#workerCount()) return;
+        const item = job.candidates[job.next++];
+        try { await this.#convert(item); } catch { job.errors += 1; }
+        job.completed += 1; const elapsed = Math.max(1, (Date.now() - job.started) / 1000);
+        this.#emit({ completed: job.completed, workers: this.#workerCount(), etaSeconds: job.completed >= 3 ? Math.round((elapsed / job.completed) * (job.candidates.length - job.completed)) : null, message: job.errors ? `${job.errors} track${job.errors === 1 ? '' : 's'} need attention.` : 'Converting and importing…' });
+        if (job.completed - job.lastRefresh >= 300 && job.completed < job.candidates.length) { job.lastRefresh = job.completed; void this.onBatch({ completed: job.completed, total: job.candidates.length }); }
+      }
+    } finally { job.active -= 1; this.#ensureWorkers(job); this.#finishJob(job); }
+  }
+  setWorkers() { this.#emit({ workers: this.#workerCount() }); this.#ensureWorkers(); return this.getStatus(); }
   getStatus() { return { ...this.status }; }
   isRunning() { return Boolean(this.running); }
   async #sources(folder, out = []) {
@@ -152,22 +174,13 @@ class PortableImporter {
     const candidates = this.previewValue.candidates; const started = Date.now();
     this.running = (async () => {
       this.#emit({ state: 'importing', total: candidates.length, completed: 0, etaSeconds: null, message: 'Converting and importing…' });
-      let completed = 0; let errors = 0; let next = 0; let lastRefresh = 0;
-      const workers = Math.max(1, Math.min(6, Number(this.getWorkers()) || 2));
-      const runWorker = async () => {
-        while (next < candidates.length) {
-          const item = candidates[next++];
-          try { await this.#convert(item); } catch { errors += 1; }
-          completed += 1; const elapsed = Math.max(1, (Date.now() - started) / 1000);
-          this.#emit({ completed, etaSeconds: completed >= 3 ? Math.round((elapsed / completed) * (candidates.length - completed)) : null, message: errors ? `${errors} track${errors === 1 ? '' : 's'} need attention.` : 'Converting and importing…' });
-          // A full index walk is deliberately rare; it must never become the importer's main job.
-          if (completed - lastRefresh >= 300 && completed < candidates.length) { lastRefresh = completed; void this.onBatch({ completed, total: candidates.length }); }
-        }
-      };
-      await Promise.all(Array.from({ length: workers }, runWorker));
+      const job = { candidates, started, next: 0, completed: 0, errors: 0, lastRefresh: 0, active: 0, finished: false, resolve: null };
+      job.done = new Promise(resolve => { job.resolve = resolve; }); this.importJob = job;
+      this.#emit({ workers: this.#workerCount() }); this.#ensureWorkers(job);
+      await job.done;
       await this.onComplete(); this.previewValue = null;
-      return this.#emit({ state: 'complete', eligible: 0, total: candidates.length, completed, etaSeconds: 0, message: errors ? `Import finished with ${errors} track${errors === 1 ? '' : 's'} needing attention.` : 'Import complete.' });
-    })().finally(() => { this.running = null; });
+      return this.#emit({ state: 'complete', eligible: 0, total: candidates.length, completed: job.completed, etaSeconds: 0, workers: this.#workerCount(), message: job.errors ? `Import finished with ${job.errors} track${job.errors === 1 ? '' : 's'} needing attention.` : 'Import complete.' });
+    })().finally(() => { this.importJob = null; this.running = null; });
     return this.getStatus();
   }
 }

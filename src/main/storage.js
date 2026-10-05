@@ -308,7 +308,7 @@ function validatePreferences(value) {
   const localRadioArtistRepeatMinutes = [30, 60, 90, 120, 180].includes(Number(value?.localRadioArtistRepeatMinutes)) ? Number(value.localRadioArtistRepeatMinutes) : 90;
   const localRadioArtistSetSize = [1, 2, 3, 4].includes(Number(value?.localRadioArtistSetSize)) ? Number(value.localRadioArtistSetSize) : 1;
   const localMusicCrossfadeEnabled = value?.localMusicCrossfadeEnabled !== false;
-  const portableImportWorkers = value?.portableImportWorkers === 6 ? 6 : 2;
+  const portableImportWorkers = [2, 6, 12].includes(Number(value?.portableImportWorkers)) ? Number(value.portableImportWorkers) : 2;
   const miniPlayerDisplayMode = value?.miniPlayerDisplayMode === 'source' ? 'source' : 'now-playing';
   const miniPlayerColorScheme = ['default', 'inverted', 'chiefs', 'army', 'cherry', 'gray', 'denim', 'rosewood', 'sapphire', 'bamboo', 'aloe'].includes(value?.miniPlayerColorScheme)
     ? value.miniPlayerColorScheme
@@ -719,7 +719,7 @@ class PortableStorage {
   }
   setPortableImportWorkers(value) {
     const preferences = this.readPreferences();
-    preferences.portableImportWorkers = value === 6 ? 6 : 2;
+    preferences.portableImportWorkers = [2, 6, 12].includes(Number(value)) ? Number(value) : 2;
     this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
     return this.getUiPreferences();
   }

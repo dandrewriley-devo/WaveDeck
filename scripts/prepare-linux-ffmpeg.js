@@ -9,10 +9,10 @@ const { spawnSync } = require("child_process");
 // This exact static x86_64 build is the recorder that works on Linux Mint.
 // Keep the release URL and both hashes pinned so every AppImage contains the
 // same verified binary instead of ffmpeg-static, which previously crashed.
-const ARCHIVE_URL = "https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-09-19-13-11/ffmpeg-n8.1.2-54-gc573a95381-linux64-gpl-8.1.tar.xz";
-const ARCHIVE_SHA256 = "5c7ffcf37fd5e0ab99ee2a4a6a5e70219379ec5a4dee2ed39f891c3790a2cbb5";
-const BINARY_SHA256 = "08e0ec21fe0d6c9118878bb9746362c2f47f377b5c8a182cb1878e7bf5706e27";
-const ARCHIVE_ROOT = "ffmpeg-n8.1.2-54-gc573a95381-linux64-gpl-8.1/bin";
+const ARCHIVE_URL = "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n8.1-latest-linux64-gpl-8.1.tar.xz";
+const ARCHIVE_SHA256 = "8a538d41e2cdf6265c8cac06c85d844b78e94acde586857b8376e9e183ff604b";
+const BINARY_SHA256 = "53f6bfd6ec034efd17c530304c1856dda03c7f1ffe5ae35f1d55b995b21a97fe";
+const ARCHIVE_ROOT = "ffmpeg-n8.1-latest-linux64-gpl-8.1/bin";
 const ARCHIVE_MEMBERS = ["ffmpeg", "ffprobe"];
 const projectRoot = path.resolve(__dirname, "..");
 const destinationDir = path.join(projectRoot, ".cache", "wavedeck-tools", "linux");

@@ -1491,7 +1491,7 @@ function installIpcHandlers() {
     return portableImporter.start();
   });
   ipcMain.handle('music:import:status', () => portableImporter?.getStatus() || { state: 'waiting', message: 'Portable import is unavailable.' });
-  ipcMain.handle('music:import:set-workers', (_event, value) => storage.setPortableImportWorkers(value));
+  ipcMain.handle('music:import:set-workers', (_event, value) => { const preferences = storage.setPortableImportWorkers(value); portableImporter?.setWorkers(); return preferences; });
   ipcMain.handle('music:library:open', async () => { await requireMusic(); openPortableMusicLibraryWindow(); return true; });
   ipcMain.handle('music:library:get', async () => { await requireMusic(); applyManualArtistRelationships(); return musicLibrary.tracks.filter(track => track.library === 'portable').map(track => ({ ...track, manualRelatedArtists: relatedForArtist(track.artist) })); });
   ipcMain.handle('music:library:relationships:get', async (_event, artist) => ({ artist: String(artist || ''), related: relatedForArtist(artist) }));

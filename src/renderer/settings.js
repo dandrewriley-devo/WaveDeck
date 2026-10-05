@@ -131,7 +131,7 @@ function renderPortableImport(status = {}) {
   const importing = state === 'importing'; portableImportProgressWrap.hidden = !importing;
   if (importing) { portableImportProgress.max = Math.max(1, total); portableImportProgress.value = completed; portableImportProgressLabel.textContent = `${completed.toLocaleString()} of ${total.toLocaleString()}`; }
   if (state === 'ready') portableImportStatus.textContent = status.eligible ? `${Number(status.eligible).toLocaleString()} tracks ready to import · about ${formatBytes(status.estimatedBytes)} needed · ${formatBytes(status.availableBytes)} free` : status.message;
-  else if (importing) portableImportStatus.textContent = `${completed.toLocaleString()} of ${total.toLocaleString()} imported${formatEta(status.etaSeconds) ? ` · ${formatEta(status.etaSeconds)}` : ''}`;
+  else if (importing) portableImportStatus.textContent = `${completed.toLocaleString()} of ${total.toLocaleString()} imported · ${Number(status.workers) || 2} at a time${formatEta(status.etaSeconds) ? ` · ${formatEta(status.etaSeconds)}` : ''}`;
   else portableImportStatus.textContent = status.message || 'Checking music available to import…';
   portableImportBtn.disabled = !status.eligible || importing || state === 'checking';
   portableImportBtn.textContent = importing ? 'Importing…' : 'Import Missing Music';
@@ -197,7 +197,7 @@ function renderProMusicSettings(preferences) {
   clearAdditionalMusicFolderBtn.disabled = !folder;
   additionalMusicFolderChoice.hidden = preferences?.additionalMusicFolderNeedsDecision !== true;
   lastFmEnabled.checked = preferences?.lastFmEnabled !== false;
-  portableImportSpeed.value = String(preferences?.portableImportWorkers === 6 ? 6 : 2);
+  portableImportSpeed.value = String([2, 6, 12].includes(Number(preferences?.portableImportWorkers)) ? preferences.portableImportWorkers : 2);
   lastFmDetails.hidden = !lastFmEnabled.checked;
   if (proEnabled) { void loadLastFmStatus(); void loadLocalMixManager(); void loadMusicLibraryStatus(); void loadRememberedMusicComputers(); void loadPortableStorage(); }
 }
