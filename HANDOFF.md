@@ -1,9 +1,9 @@
 # WaveDeck Opus Branch Handoff
 
-## WaveDeck Opus 1.0.17
+## WaveDeck Opus 1.0.18
 
 - This is the separate **`opus-portable`** branch. It is a Linux-only personal edition; `main` remains the normal cross-platform WaveDeck product.
-- Release artifact: **`WaveDeckOpus.AppImage`**. Its release workflow is `.github/workflows/opus-portable.yml` and publishes tag `opus-v1.0.17` without touching the main WaveDeck release.
+- Release artifact: **`WaveDeckOpus.AppImage`**. Its release workflow is `.github/workflows/opus-portable.yml` and publishes tag `opus-v1.0.18` without touching the main WaveDeck release.
 - WaveDeck Opus changes only the sibling portable `Music` folder. The optional Additional Music Folder is always read-only.
 - Portable MP3, FLAC, M4A/AAC, WAV, WMA, and OGG sources are converted one at a time in the background to 96 kbps Opus. Each output is validated before its source is removed. Existing valid Opus outputs and `.opus.part` recovery files are handled safely at the next pass.
 - Only these tags are carried into Opus: title, artist, album, Album Artist, track number, disc number, year, genre, `RATING`, `FAVORITE`, `DO_NOT_PLAY`, and `AMP_TRACK_ID`. Embedded artwork, loose image files, lyric/sidecar files, and other metadata are intentionally discarded from the portable Music tree.
@@ -26,6 +26,7 @@
 - 1.0.15 makes Music Manager ratings, Favorite, and Do Not Play controls update immediately without a full library rescan. Their Opus-tag writes are queued in the background. Artist expansion now preserves list position and measures its natural content height, so releases/tracks use the window scroll instead of an internal detail scrollbar.
 - 1.0.16 lists Music Manager releases chronologically and shows their tagged year, such as `Dirt (1992)`. During WaveDeck Opus's quiet background optimization, exact same-release copies are audio-fingerprinted, the original unsuffixed/oldest copy is kept, personal rating/Favorite/Do Not Play settings are merged into it, and matching extra Opus files are removed. Future imports already skip matching portable tracks.
 - 1.0.17 replaces the narrow same-release duplicate gate with a resumable, whole-portable-library decoded-audio fingerprint cache. It safely removes audio-identical Opus copies even when their tags disagree, retaining the unsuffixed/oldest copy and merging the highest rating, Favorite, and Do Not Play values. `Data/opus-dedup-diagnostics.json` records every cleanup run, cache progress, verified duplicate group, retained/deleted path, merged personal tags, deferred currently-playing file, different-audio same-copy-name group, and read/removal failure. It checkpoints the fingerprint cache every 1,000 new files, then only fingerprints new or changed files on later passes. This file is intentionally diagnostic data for Andrew/development use, not end-user UI.
+- 1.0.18 adds a safe practical second cleanup rule after the exact-audio check: within the same copied filename group, files are also considered the same released track when normalized artist, album, title, and track number match and duration is within one second. Missing Album Artist and disc values are ignored. The unsuffixed/oldest copy is kept and WaveDeck metadata is merged. Differing-audio, weak-tag matches remain recorded but untouched. Invalid Opus fingerprint failures are remembered by file size/modified time and are retried only after the file changes, preventing ten-minute background churn. Manage Portable Music now remembers its normal size and screen position.
 
 # WaveDeck Project Handoff
 
@@ -35,9 +36,9 @@ This is the internal continuity reference for future WaveDeck work. It reflects 
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `main`
-- Current version: **1.0.17**
-- Current release: 1.0.17 — resumable audio-based duplicate cleanup and detailed portable cleanup diagnostics.
-- Current commit: the verified 1.0.17 release commit at the head of `opus-portable`.
+- Current version: **1.0.18**
+- Current release: 1.0.18 — same-release cleanup, invalid-file backoff, and remembered Music Manager bounds.
+- Current commit: the verified 1.0.18 release commit at the head of `opus-portable`.
 - 0.11.8 commit: `8118e235eed4b4a18c378f12ced8a86be83ed4b9` — monitor-safe main-window bounds persistence and portable Windows build.
 - 0.11.7 commit: `c8b69b7b8842dd6c310dda05b22b8d52870d3e84` — superseded source correction after the first portable Windows build.
 - 0.11.6 commit: `621e44d8c484cd0a4d70eb124106170f6183d0ae` — compact Local Radio Controls and remembered auxiliary-window bounds.

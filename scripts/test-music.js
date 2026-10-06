@@ -99,14 +99,14 @@ async function run() {
     assert.equal(await fs.access(copiedDuplicate).then(() => true, () => false), false, 'duplicate cleanup removes matching copied Opus files');
     const diagnosticRoot = path.join(temp, 'opus-dedup-diagnostics', 'Music'); const firstVariant = path.join(diagnosticRoot, 'Artist', 'Album', '01 - Song.opus'); const secondVariant = path.join(diagnosticRoot, 'Artist', 'Album', '01 - Song (2).opus'); const diagnosticFile = path.join(temp, 'opus-dedup-diagnostics', 'Data', 'opus-dedup-diagnostics.json');
     await fs.mkdir(path.dirname(firstVariant), { recursive: true }); await fs.writeFile(firstVariant, Buffer.alloc(2048, 1)); await fs.writeFile(secondVariant, Buffer.alloc(2048, 1));
-    const diagnosticOptimizer = new OpusOptimizer({ musicRoot: diagnosticRoot, diagnosticsPath: diagnosticFile, ffmpegExecutable: 'fake-ffmpeg', ffprobeExecutable: 'fake-ffprobe', spawnImpl: async (executable, args) => { if (executable === 'fake-ffprobe') return 'opus\n'; await fs.writeFile(args.at(-1), Buffer.alloc(2048, 1)); return ''; }, audioFingerprintImpl: async () => 'same-audio-regardless-of-tags' });
-    diagnosticOptimizer.parseFile = async file => ({ common: { title: file === firstVariant ? 'Song' : 'Song copied from somewhere else', artist: 'Artist', album: file === firstVariant ? 'Album' : 'Different Album Tag', albumartist: 'Artist', track: { no: 1 }, disk: { no: 1 }, year: 1992, genre: ['Rock'] }, native: { 'ID3v2.4': [{ id: 'TXXX:RATING', value: file === firstVariant ? '3' : '9' }, { id: 'TXXX:FAVORITE', value: file === secondVariant ? '1' : '0' }] } });
+    const diagnosticOptimizer = new OpusOptimizer({ musicRoot: diagnosticRoot, diagnosticsPath: diagnosticFile, ffmpegExecutable: 'fake-ffmpeg', ffprobeExecutable: 'fake-ffprobe', spawnImpl: async (executable, args) => { if (executable === 'fake-ffprobe') return 'opus\n'; await fs.writeFile(args.at(-1), Buffer.alloc(2048, 1)); return ''; }, audioFingerprintImpl: async (_executable, file) => path.basename(file).includes('(2)') ? 'second-source-encoding' : 'first-source-encoding' });
+    diagnosticOptimizer.parseFile = async file => ({ common: { title: 'Song', artist: 'Artist', album: 'Album', albumartist: file === firstVariant ? '' : 'Artist', track: { no: 1 }, disk: { no: file === firstVariant ? 0 : 1 }, year: 1992, genre: ['Rock'] }, native: { 'ID3v2.4': [{ id: 'TXXX:RATING', value: file === firstVariant ? '3' : '9' }, { id: 'TXXX:FAVORITE', value: file === secondVariant ? '1' : '0' }] } });
     await diagnosticOptimizer.start();
-    assert.equal(await fs.access(firstVariant).then(() => true, () => false), true, 'audio-identical copies are cleaned even when their tags disagree');
-    assert.equal(await fs.access(secondVariant).then(() => true, () => false), false, 'duplicate cleanup does not require matching album or title tags');
+    assert.equal(await fs.access(firstVariant).then(() => true, () => false), true, 'same-release copies keep the original unsuffixed Opus file');
+    assert.equal(await fs.access(secondVariant).then(() => true, () => false), false, 'same-release copies are cleaned even when old source encodes differ');
     const diagnosticReport = JSON.parse(await fs.readFile(diagnosticFile, 'utf8'));
     assert.equal(diagnosticReport.lastRun.removed, 1, 'duplicate cleanup records the number of physical copies removed');
-    assert.ok(diagnosticReport.lastRun.groups.some(group => group.action === 'removed' && group.merged?.rating === 9), 'diagnostics explain the kept copy and merged personal tags');
+    assert.ok(diagnosticReport.lastRun.groups.some(group => group.type === 'same-release-tags-different-audio' && group.action === 'removed' && group.merged?.rating === 9), 'diagnostics explain the kept same-release copy and merged personal tags');
     assert.equal(radioArtist(track('x', { albumArtist: 'Various Artists', artist: 'Solo' })), 'Solo');
 
     const savedTracks = []; const savedArtists = [];

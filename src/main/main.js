@@ -628,7 +628,15 @@ function queuePortableTrackTagWrite(track) {
 function openPortableMusicLibraryWindow() {
   if (musicLibraryWindow && !musicLibraryWindow.isDestroyed()) { musicLibraryWindow.show(); musicLibraryWindow.focus(); return; }
   const display = mainWindow && !mainWindow.isDestroyed() ? screen.getDisplayMatching(mainWindow.getBounds()) : screen.getPrimaryDisplay();
-  musicLibraryWindow = createSecureWindow({ ...calculateCenteredBounds(display, MUSIC_LIBRARY_DEFAULT_WIDTH, MUSIC_LIBRARY_DEFAULT_HEIGHT), minWidth: MUSIC_LIBRARY_MIN_WIDTH, minHeight: MUSIC_LIBRARY_MIN_HEIGHT, resizable: true, title: 'Manage Portable Music' });
+  const savedBounds = storage.getUiPreferences().musicLibraryWindowBounds;
+  const targetDisplay = savedBounds ? screen.getDisplayMatching(savedBounds) : display;
+  const geometry = constrainBoundsToDisplay(targetDisplay, savedBounds || calculateCenteredBounds(display, MUSIC_LIBRARY_DEFAULT_WIDTH, MUSIC_LIBRARY_DEFAULT_HEIGHT), { minWidth: MUSIC_LIBRARY_MIN_WIDTH, minHeight: MUSIC_LIBRARY_MIN_HEIGHT });
+  musicLibraryWindow = createSecureWindow({ ...geometry, minWidth: Math.min(MUSIC_LIBRARY_MIN_WIDTH, geometry.width), minHeight: Math.min(MUSIC_LIBRARY_MIN_HEIGHT, geometry.height), resizable: true, title: 'Manage Portable Music' });
+  musicLibraryWindow.on('close', () => {
+    if (!musicLibraryWindow || musicLibraryWindow.isDestroyed()) return;
+    try { storage.setMusicLibraryWindowBounds(musicLibraryWindow.isMaximized() ? musicLibraryWindow.getNormalBounds() : musicLibraryWindow.getBounds()); }
+    catch (error) { console.warn(`Could not remember the Manage Portable Music window position: ${error.message}`); }
+  });
   musicLibraryWindow.on('closed', () => { musicLibraryWindow = null; });
   musicLibraryWindow.loadFile(path.join(__dirname, '..', 'renderer', 'music-library.html'));
 }

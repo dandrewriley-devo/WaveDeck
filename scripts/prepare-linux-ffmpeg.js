@@ -10,8 +10,9 @@ const { spawnSync } = require("child_process");
 // Keep the release URL and both hashes pinned so every AppImage contains the
 // same verified binary instead of ffmpeg-static, which previously crashed.
 const ARCHIVE_URL = "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n8.1-latest-linux64-gpl-8.1.tar.xz";
-const ARCHIVE_SHA256 = "789fbf813d92f228ae15b2431e0a65a489b4a306b3e6961fa34b00177d8a6b3a";
-const BINARY_SHA256 = "27039c532f7258d23bdfd14ea5e92f26f587893df906c41077c6cd3d3dcac092";
+const ARCHIVE_SHA256 = "38dc5311bdb8a45abe960860339c404a431584dd600285426e1caa75a7b91024";
+const BINARY_SHA256 = "7ba91506ba099ead887cd98db9261abdb6fd71e375855a68ced4b25e88c50e3d";
+const PROBE_SHA256 = "9542b17bba0382f16304ec94b75912d90003e1dea7a2a837d4d9e75e84f6f690";
 const ARCHIVE_ROOT = "ffmpeg-n8.1-latest-linux64-gpl-8.1/bin";
 const ARCHIVE_MEMBERS = ["ffmpeg", "ffprobe"];
 const projectRoot = path.resolve(__dirname, "..");
@@ -34,7 +35,7 @@ async function main() {
   }
 
   try {
-    if (fs.existsSync(destination) && fs.existsSync(probeDestination) && sha256(destination) === BINARY_SHA256) {
+    if (fs.existsSync(destination) && fs.existsSync(probeDestination) && sha256(destination) === BINARY_SHA256 && sha256(probeDestination) === PROBE_SHA256) {
       fs.chmodSync(destination, 0o755);
       fs.chmodSync(probeDestination, 0o755);
       console.log("WaveDeck's portable FFmpeg is ready.");
@@ -76,6 +77,9 @@ async function main() {
     const extractedProbe = path.join(extractionDir, ARCHIVE_ROOT, "ffprobe");
     if (sha256(extractedBinary) !== BINARY_SHA256) {
       throw new Error("Extracted FFmpeg executable failed its SHA-256 check.");
+    }
+    if (sha256(extractedProbe) !== PROBE_SHA256) {
+      throw new Error("Extracted FFprobe executable failed its SHA-256 check.");
     }
     fs.mkdirSync(destinationDir, { recursive: true });
     const temporaryDestination = `${destination}.copying-${process.pid}`;

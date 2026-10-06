@@ -299,6 +299,7 @@ function validatePreferences(value) {
   const rawSettingsBounds = value?.settingsWindowBounds;
   const rawRadioLogBounds = value?.radioLogWindowBounds;
   const rawLocalRadioControlsBounds = value?.localRadioControlsWindowBounds;
+  const rawMusicLibraryBounds = value?.musicLibraryWindowBounds;
   const rawMainWindowBounds = value?.mainWindowBounds;
   const rawMiniPlayerBounds = value?.miniPlayerWindowBounds;
   const additionalMusicFolder = typeof value?.additionalMusicFolder === "string"
@@ -363,6 +364,15 @@ function validatePreferences(value) {
         height: Math.max(1, Math.round(Number(rawLocalRadioControlsBounds.height)))
       }
     : null;
+  const musicLibraryWindowBounds = rawMusicLibraryBounds && typeof rawMusicLibraryBounds === "object" && !Array.isArray(rawMusicLibraryBounds) &&
+    ["x", "y", "width", "height"].every((key) => Number.isFinite(Number(rawMusicLibraryBounds[key])))
+    ? {
+        x: Math.round(Number(rawMusicLibraryBounds.x)),
+        y: Math.round(Number(rawMusicLibraryBounds.y)),
+        width: Math.max(1, Math.round(Number(rawMusicLibraryBounds.width))),
+        height: Math.max(1, Math.round(Number(rawMusicLibraryBounds.height)))
+      }
+    : null;
   const mainWindowBounds = rawMainWindowBounds && typeof rawMainWindowBounds === "object" && !Array.isArray(rawMainWindowBounds) &&
     ["x", "y", "width", "height"].every((key) => Number.isFinite(Number(rawMainWindowBounds[key])))
     ? {
@@ -418,6 +428,7 @@ function validatePreferences(value) {
     settingsWindowBounds,
     radioLogWindowBounds,
     localRadioControlsWindowBounds,
+    musicLibraryWindowBounds,
     mainWindowBounds,
     miniPlayerWindowBounds,
     lastLibraryUpdate: Number.isFinite(parsedUpdatedAt) ? new Date(parsedUpdatedAt).toISOString() : "",
@@ -604,6 +615,9 @@ class PortableStorage {
       localRadioControlsWindowBounds: preferences.localRadioControlsWindowBounds
         ? { ...preferences.localRadioControlsWindowBounds }
         : null,
+      musicLibraryWindowBounds: preferences.musicLibraryWindowBounds
+        ? { ...preferences.musicLibraryWindowBounds }
+        : null,
       mainWindowBounds: preferences.mainWindowBounds
         ? { ...preferences.mainWindowBounds }
         : null,
@@ -763,6 +777,12 @@ class PortableStorage {
     preferences.localRadioControlsWindowBounds = bounds;
     this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
     return this.getUiPreferences().localRadioControlsWindowBounds;
+  }
+  setMusicLibraryWindowBounds(bounds) {
+    const preferences = this.readPreferences();
+    preferences.musicLibraryWindowBounds = bounds;
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences().musicLibraryWindowBounds;
   }
 
   setMainWindowBounds(bounds) {

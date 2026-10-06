@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck-opus");
-assert.strictEqual(packageJson.version, "1.0.17");
-assert.strictEqual(packageJson.wavedeckVersion, "1.0.17");
+assert.strictEqual(packageJson.version, "1.0.18");
+assert.strictEqual(packageJson.wavedeckVersion, "1.0.18");
 assert.strictEqual(packageJson.desktopName, "wavedeck-opus.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck Opus");
 assert.strictEqual(packageJson.build.appId, "com.a17press.wavedeckopus");
@@ -371,6 +371,7 @@ try {
     settingsWindowBounds: null,
     radioLogWindowBounds: null,
     localRadioControlsWindowBounds: null,
+    musicLibraryWindowBounds: null,
     mainWindowBounds: null,
     miniPlayerWindowBounds: null,
     lastLibraryUpdate: "",
@@ -396,6 +397,7 @@ try {
     settingsWindowBounds: null,
     radioLogWindowBounds: null,
     localRadioControlsWindowBounds: null,
+    musicLibraryWindowBounds: null,
     mainWindowBounds: null,
     miniPlayerWindowBounds: null
   });
@@ -455,6 +457,12 @@ try {
     width: 482,
     height: 479
   });
+  assert.deepStrictEqual(storage.setMusicLibraryWindowBounds({ x: 63.6, y: 74.5, width: 1141.8, height: 761.2 }), {
+    x: 64,
+    y: 75,
+    width: 1142,
+    height: 761
+  });
   assert.deepStrictEqual(storage.setMainWindowBounds({ x: 84.4, y: 96.6, width: 300.2, height: 640.8 }), {
     x: 84,
     y: 97,
@@ -488,6 +496,7 @@ try {
     settingsWindowBounds: { x: 2100, y: 41, width: 1120, height: 841 },
     radioLogWindowBounds: { x: 14, y: 23, width: 864, height: 700 },
     localRadioControlsWindowBounds: { x: 30, y: 49, width: 482, height: 479 },
+    musicLibraryWindowBounds: { x: 64, y: 75, width: 1142, height: 761 },
     mainWindowBounds: { x: 84, y: 97, width: 300, height: 641 },
     miniPlayerWindowBounds: { x: 189, y: 28, width: 560, height: 32 }
   });
@@ -1563,6 +1572,8 @@ assert.ok(mainSource.includes("function openLocalRadioControlsWindow()"));
 assert.ok(mainSource.includes("localRadioControlsWindow"));
 assert.ok(mainSource.includes("localRadioControlsWindowBounds"));
 assert.ok(mainSource.includes("storage.setLocalRadioControlsWindowBounds(bounds)"));
+assert.ok(mainSource.includes("musicLibraryWindowBounds"));
+assert.ok(mainSource.includes("storage.setMusicLibraryWindowBounds"));
 assert.ok(mainSource.includes("mainWindowBounds"));
 assert.ok(mainSource.includes("storage.setMainWindowBounds(bounds)"));
 assert.ok(mainSource.includes("function toggleMiniPlayer()"));
@@ -1758,10 +1769,10 @@ assert.ok(windowsWorkflow.includes('chmod 755 "$appimage"'));
 const opusWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "opus-portable.yml"), "utf8");
 assert.ok(opusWorkflow.includes("branches: [opus-portable]"));
 assert.ok(opusWorkflow.includes("npm run dist:linux -- --publish never"));
-assert.ok(opusWorkflow.includes("WaveDeckOpus-1.0.17-Linux"));
+assert.ok(opusWorkflow.includes("WaveDeckOpus-1.0.18-Linux"));
 assert.ok(opusWorkflow.includes("dist/WaveDeckOpus.AppImage"));
-assert.ok(opusWorkflow.includes("tag_name: opus-v1.0.17"));
-assert.ok(opusWorkflow.includes("Publish WaveDeck Opus 1.0.17"));
+assert.ok(opusWorkflow.includes("tag_name: opus-v1.0.18"));
+assert.ok(opusWorkflow.includes("Publish WaveDeck Opus 1.0.18"));
 const musicLibraryHtml = fs.readFileSync(path.join(root, "src", "renderer", "music-library.html"), "utf8");
 const musicLibraryRenderer = fs.readFileSync(path.join(root, "src", "renderer", "music-library.js"), "utf8");
 assert.ok(musicLibraryHtml.includes('Search artists, albums, songs, or genres'));
@@ -1776,6 +1787,10 @@ assert.ok(opusOptimizerSource.includes('deduplicationPending'));
 assert.ok(mainSource.includes('opus-dedup-diagnostics.json'));
 assert.ok(opusOptimizerSource.includes('fingerprintCache'));
 assert.ok(opusOptimizerSource.includes('same-copy-name-different-audio'));
+assert.ok(opusOptimizerSource.includes('same-release-tags-different-audio'));
+assert.ok(mainSource.includes('musicLibraryWindowBounds'));
+const linuxFfmpegScript = fs.readFileSync(path.join(root, "scripts", "prepare-linux-ffmpeg.js"), "utf8");
+assert.ok(linuxFfmpegScript.includes('PROBE_SHA256'));
 const macosInstructions = fs.readFileSync(path.join(root, "START-HERE-MACOS.txt"), "utf8");
 assert.ok(macosInstructions.includes("Version 0.6.1 universal build"));
 assert.ok(macosInstructions.includes("WaveDeck is unsigned"));

@@ -33,6 +33,10 @@ const hasCopySuffix = file => / \(\d+\)\.opus$/i.test(path.basename(file));
 const relativePortablePath = (root, file) => path.relative(root, file).split(path.sep).join('/');
 const diagnosticTrack = track => ({ artist: cleanValue(track?.artist, 160), albumArtist: cleanValue(track?.albumArtist, 160), album: cleanValue(track?.album, 160), title: cleanValue(track?.title, 160), disc: Number(track?.disc) || 0, track: Number(track?.track) || 0, duration: Math.round((Number(track?.duration) || 0) * 10) / 10, rating: Number(track?.rating) || 0, favorite: track?.favorite === true, doNotPlay: track?.doNotPlay === true });
 const copyNameKey = (root, file) => normalize(relativePortablePath(root, file).replace(/\.opus$/i, '').replace(/ \(\d+\)$/i, ''));
+function sameReleaseTrack(left, right) {
+  if (!left || !right || !left.track || !right.track) return false;
+  return normalize(left.artist) === normalize(right.artist) && normalize(left.album) === normalize(right.album) && normalize(left.title) === normalize(right.title) && Number(left.track) === Number(right.track) && Math.abs((Number(left.duration) || 0) - (Number(right.duration) || 0)) <= 1;
+}
 function audioFingerprint(executable, file) {
   return new Promise((resolve, reject) => {
     const hash = crypto.createHash('sha256'); let stderr = ''; let child;
@@ -48,7 +52,7 @@ class OpusOptimizer {
   constructor({ musicRoot, ffmpegExecutable, ffprobeExecutable, diagnosticsPath = '', rescanLibrary = async () => {}, getProtectedPaths = async () => new Set(), onStatus = () => {}, spawnImpl = run, audioFingerprintImpl = audioFingerprint }) {
     this.musicRoot = path.resolve(musicRoot); this.ffmpegExecutable = ffmpegExecutable; this.ffprobeExecutable = ffprobeExecutable;
     this.rescanLibrary = rescanLibrary; this.getProtectedPaths = getProtectedPaths; this.onStatus = onStatus; this.spawnImpl = spawnImpl;
-    this.diagnosticsPath = diagnosticsPath ? path.resolve(diagnosticsPath) : ''; this.fingerprintCache = new Map(); this.diagnosticsLoaded = false; this.recentDedupRuns = [];
+    this.diagnosticsPath = diagnosticsPath ? path.resolve(diagnosticsPath) : ''; this.fingerprintCache = new Map(); this.fingerprintFailures = new Map(); this.diagnosticsLoaded = false; this.recentDedupRuns = [];
     this.running = null; this.watchers = []; this.watchTimer = null; this.periodicTimer = null; this.watchIgnoreUntil = 0; this.parseFile = null; this.enabled = true; this.deduplicationPending = true; this.audioFingerprintImpl = audioFingerprintImpl; this.status = this.#status();
   }
   #status(overrides = {}) { return { optimizing: false, current: '', total: 0, pending: 0, converted: 0, retained: 0, cleaned: 0, errors: 0, message: '', ...overrides }; }
@@ -94,6 +98,9 @@ class OpusOptimizer {
       for (const [relative, entry] of Object.entries(saved?.fingerprintCache || {})) {
         if (typeof entry?.fingerprint === 'string' && Number.isFinite(entry.size) && Number.isFinite(entry.mtimeMs)) this.fingerprintCache.set(relative, entry);
       }
+      for (const [relative, entry] of Object.entries(saved?.failedFingerprints || {})) {
+        if (Number.isFinite(entry?.size) && Number.isFinite(entry?.mtimeMs) && typeof entry?.error === 'string') this.fingerprintFailures.set(relative, entry);
+      }
       this.recentDedupRuns = Array.isArray(saved?.recentRuns) ? saved.recentRuns.slice(0, 8) : [];
     } catch {}
   }
@@ -102,7 +109,7 @@ class OpusOptimizer {
     const summary = {
       startedAt: run.startedAt, completedAt: run.completedAt || null, state: run.state,
       totalFiles: run.totalFiles, cacheHits: run.cacheHits, fingerprinted: run.fingerprinted,
-      exactGroups: run.exactGroups, removed: run.removed, deferred: run.deferred,
+      exactGroups: run.exactGroups, metadataGroups: run.metadataGroups, removed: run.removed, deferred: run.deferred, invalidSkipped: run.invalidSkipped,
       audioDifferent: run.audioDifferent, errors: run.errors.length, elapsedMs: Date.now() - run.startedMs
     };
     if (!checkpoint && run.completedAt) this.recentDedupRuns = [summary, ...this.recentDedupRuns].slice(0, 8);
@@ -110,7 +117,7 @@ class OpusOptimizer {
     const report = {
       version: 1, generatedAt: new Date().toISOString(), diagnostics: 'WaveDeck Opus automatic duplicate cleanup report. Matching decoded-audio fingerprints are safe duplicate evidence; all file paths are relative to portable Music.',
       lastRun: { ...summary, groups: run.groups.slice(0, 600), errors: run.errors.slice(0, 120), truncatedGroups: Math.max(0, run.groups.length - 600) },
-      recentRuns: this.recentDedupRuns, fingerprintCache: cache
+      recentRuns: this.recentDedupRuns, fingerprintCache: cache, failedFingerprints: Object.fromEntries(this.fingerprintFailures)
     };
     const temporary = `${this.diagnosticsPath}.tmp`;
     try { await fs.mkdir(path.dirname(this.diagnosticsPath), { recursive: true }); await fs.writeFile(temporary, `${JSON.stringify(report, null, 2)}\n`); await fs.rename(temporary, this.diagnosticsPath); } catch {}
@@ -125,13 +132,15 @@ class OpusOptimizer {
   async #fingerprint(file, stat, run) {
     const relative = relativePortablePath(this.musicRoot, file); const saved = this.fingerprintCache.get(relative);
     if (saved && saved.size === stat.size && saved.mtimeMs === stat.mtimeMs && typeof saved.fingerprint === 'string') { run.cacheHits += 1; return saved.fingerprint; }
+    const failed = this.fingerprintFailures.get(relative);
+    if (failed && failed.size === stat.size && failed.mtimeMs === stat.mtimeMs) { run.invalidSkipped += 1; return ''; }
     try {
       const fingerprint = await this.audioFingerprintImpl(this.ffmpegExecutable, file);
-      this.fingerprintCache.set(relative, { size: stat.size, mtimeMs: stat.mtimeMs, fingerprint }); run.fingerprinted += 1;
+      this.fingerprintFailures.delete(relative); this.fingerprintCache.set(relative, { size: stat.size, mtimeMs: stat.mtimeMs, fingerprint }); run.fingerprinted += 1;
       if (run.fingerprinted % 1000 === 0) await this.#saveDedupDiagnostics(run, { checkpoint: true });
       return fingerprint;
     } catch (error) {
-      run.errors.push({ file: relative, stage: 'audio fingerprint', error: cleanValue(error.message, 360) }); return '';
+      const message = cleanValue(error.message, 360); this.fingerprintFailures.set(relative, { size: stat.size, mtimeMs: stat.mtimeMs, error: message, failedAt: new Date().toISOString() }); run.errors.push({ file: relative, stage: 'audio fingerprint', error: message }); return '';
     }
   }
   async #writeMergedTags(file, track) {
@@ -141,9 +150,23 @@ class OpusOptimizer {
     if (!await this.#isValidOpus(temporary)) throw new Error('WaveDeck could not validate the retained duplicate copy.');
     await fs.rename(temporary, file);
   }
+  async #removeDuplicateGroup(candidates, run, group, removedFiles) {
+    candidates.sort((left, right) => Number(hasCopySuffix(left.file)) - Number(hasCopySuffix(right.file)) || left.stat.mtimeMs - right.stat.mtimeMs || left.file.localeCompare(right.file));
+    const keeper = candidates[0];
+    if (candidates.some(candidate => candidate.protected)) { run.deferred += candidates.length - 1; group.action = 'deferred-currently-playing'; run.groups.push(group); return; }
+    const tracks = candidates.map(candidate => candidate.track).filter(Boolean); const merged = { ...(keeper.track || {}), rating: Math.max(0, ...tracks.map(track => Number(track.rating) || 0)), favorite: tracks.some(track => track.favorite), doNotPlay: tracks.some(track => track.doNotPlay) };
+    try {
+      if (keeper.track && (merged.rating !== keeper.track.rating || merged.favorite !== keeper.track.favorite || merged.doNotPlay !== keeper.track.doNotPlay)) {
+        await this.#writeMergedTags(keeper.file, merged); keeper.track = merged; const stat = await fs.stat(keeper.file); this.fingerprintCache.set(keeper.relative, { size: stat.size, mtimeMs: stat.mtimeMs, fingerprint: keeper.fingerprint }); group.merged = { rating: merged.rating, favorite: merged.favorite, doNotPlay: merged.doNotPlay };
+      }
+      const removed = [];
+      for (const duplicate of candidates.slice(1)) { await fs.unlink(duplicate.file); this.fingerprintCache.delete(duplicate.relative); this.fingerprintFailures.delete(duplicate.relative); removedFiles.add(duplicate.relative); removed.push(duplicate.relative); run.removed += 1; }
+      this.watchIgnoreUntil = Date.now() + 6000; group.action = 'removed'; group.keeper = keeper.relative; group.removed = removed; run.groups.push(group);
+    } catch (error) { group.action = 'remove-failed'; group.error = cleanValue(error.message, 360); run.errors.push({ file: keeper.relative, stage: 'duplicate removal', error: group.error }); run.groups.push(group); this.#emit({ errors: this.status.errors + 1, message: `Could not remove duplicate ${path.basename(keeper.file)}: ${group.error}` }); }
+  }
   async #deduplicate(files) {
     await this.#loadDedupDiagnostics();
-    const run = { startedAt: new Date().toISOString(), startedMs: Date.now(), completedAt: null, state: 'running', totalFiles: files.length, cacheHits: 0, fingerprinted: 0, exactGroups: 0, removed: 0, deferred: 0, audioDifferent: 0, errors: [], groups: [] };
+    const run = { startedAt: new Date().toISOString(), startedMs: Date.now(), completedAt: null, state: 'running', totalFiles: files.length, cacheHits: 0, fingerprinted: 0, exactGroups: 0, metadataGroups: 0, removed: 0, deferred: 0, invalidSkipped: 0, audioDifferent: 0, errors: [], groups: [] };
     await this.#saveDedupDiagnostics(run, { checkpoint: true });
     const protectedPaths = await this.#protected(); const byFingerprint = new Map(); const byCopyName = new Map(); const knownPaths = new Set();
     for (let index = 0; index < files.length; index += 1) {
@@ -157,30 +180,29 @@ class OpusOptimizer {
       } catch (error) { run.errors.push({ file: relative, stage: 'file inspection', error: cleanValue(error.message, 360) }); }
     }
     for (const relative of this.fingerprintCache.keys()) if (!knownPaths.has(relative)) this.fingerprintCache.delete(relative);
+    for (const relative of this.fingerprintFailures.keys()) if (!knownPaths.has(relative)) this.fingerprintFailures.delete(relative);
+    const removedFiles = new Set();
     for (const candidates of byFingerprint.values()) {
       if (candidates.length < 2) continue; run.exactGroups += 1;
       for (const candidate of candidates) candidate.track = await this.#trackForDiagnostic(candidate.file);
-      candidates.sort((left, right) => Number(hasCopySuffix(left.file)) - Number(hasCopySuffix(right.file)) || left.stat.mtimeMs - right.stat.mtimeMs || left.file.localeCompare(right.file));
-      const keeper = candidates[0]; const group = { type: 'exact-audio', fingerprint: keeper.fingerprint.slice(0, 16), files: candidates.map(candidate => ({ file: candidate.relative, protected: candidate.protected, tags: diagnosticTrack(candidate.track) })) };
-      if (candidates.some(candidate => candidate.protected)) { run.deferred += candidates.length - 1; group.action = 'deferred-currently-playing'; run.groups.push(group); continue; }
-      const tracks = candidates.map(candidate => candidate.track).filter(Boolean); const merged = { ...(keeper.track || {}), rating: Math.max(0, ...tracks.map(track => Number(track.rating) || 0)), favorite: tracks.some(track => track.favorite), doNotPlay: tracks.some(track => track.doNotPlay) };
-      try {
-        if (keeper.track && (merged.rating !== keeper.track.rating || merged.favorite !== keeper.track.favorite || merged.doNotPlay !== keeper.track.doNotPlay)) {
-          await this.#writeMergedTags(keeper.file, merged); keeper.track = merged; const stat = await fs.stat(keeper.file); this.fingerprintCache.set(keeper.relative, { size: stat.size, mtimeMs: stat.mtimeMs, fingerprint: keeper.fingerprint }); group.merged = { rating: merged.rating, favorite: merged.favorite, doNotPlay: merged.doNotPlay };
-        }
-        const removed = [];
-        for (const duplicate of candidates.slice(1)) { await fs.unlink(duplicate.file); this.fingerprintCache.delete(duplicate.relative); removed.push(duplicate.relative); run.removed += 1; }
-        this.watchIgnoreUntil = Date.now() + 6000; group.action = 'removed'; group.keeper = keeper.relative; group.removed = removed; run.groups.push(group);
-      } catch (error) { group.action = 'remove-failed'; group.error = cleanValue(error.message, 360); run.errors.push({ file: keeper.relative, stage: 'duplicate removal', error: group.error }); run.groups.push(group); this.#emit({ errors: this.status.errors + 1, message: `Could not remove duplicate ${path.basename(keeper.file)}: ${group.error}` }); }
+      const group = { type: 'exact-audio', fingerprint: candidates[0].fingerprint.slice(0, 16), files: candidates.map(candidate => ({ file: candidate.relative, protected: candidate.protected, tags: diagnosticTrack(candidate.track) })) };
+      await this.#removeDuplicateGroup(candidates, run, group, removedFiles);
     }
     for (const copies of byCopyName.values()) {
-      if (copies.length < 2 || new Set(copies.map(candidate => candidate.fingerprint)).size < 2) continue;
-      run.audioDifferent += 1;
-      for (const candidate of copies) candidate.track ||= await this.#trackForDiagnostic(candidate.file);
-      run.groups.push({ type: 'same-copy-name-different-audio', action: 'kept-audio-different', files: copies.map(candidate => ({ file: candidate.relative, fingerprint: candidate.fingerprint.slice(0, 16), tags: diagnosticTrack(candidate.track) })) });
+      const remaining = copies.filter(candidate => !removedFiles.has(candidate.relative)); if (remaining.length < 2 || new Set(remaining.map(candidate => candidate.fingerprint)).size < 2) continue;
+      for (const candidate of remaining) candidate.track ||= await this.#trackForDiagnostic(candidate.file);
+      const semanticGroups = [];
+      for (const candidate of remaining) { const group = semanticGroups.find(items => sameReleaseTrack(items[0].track, candidate.track)); if (group) group.push(candidate); else semanticGroups.push([candidate]); }
+      for (const matches of semanticGroups) {
+        if (matches.length < 2) continue;
+        run.metadataGroups += 1;
+        const group = { type: 'same-release-tags-different-audio', files: matches.map(candidate => ({ file: candidate.relative, protected: candidate.protected, fingerprint: candidate.fingerprint.slice(0, 16), tags: diagnosticTrack(candidate.track) })) };
+        await this.#removeDuplicateGroup(matches, run, group, removedFiles);
+      }
+      if (semanticGroups.every(matches => matches.length < 2)) { run.audioDifferent += 1; run.groups.push({ type: 'same-copy-name-different-audio', action: 'kept-audio-different', files: remaining.map(candidate => ({ file: candidate.relative, fingerprint: candidate.fingerprint.slice(0, 16), tags: diagnosticTrack(candidate.track) })) }); }
     }
     run.completedAt = new Date().toISOString(); run.state = run.errors.length ? 'completed-with-errors' : 'completed'; await this.#saveDedupDiagnostics(run);
-    this.deduplicationPending = run.errors.length > 0 || run.deferred > 0;
+    this.deduplicationPending = run.deferred > 0;
     return run.removed;
   }
   async start() {
