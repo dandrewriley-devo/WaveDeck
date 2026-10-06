@@ -553,6 +553,46 @@ function loadArtistRelationships() { try { manualArtistRelationships = JSON.pars
 function saveArtistRelationships() { const file = relationshipsFile(); const temporary = `${file}.tmp`; fs.writeFileSync(temporary, `${JSON.stringify(manualArtistRelationships, null, 2)}\n`); fs.renameSync(temporary, file); }
 function relatedForArtist(artist) { return [...new Set(manualArtistRelationships[relationshipKey(artist)] || [])]; }
 function applyManualArtistRelationships() { if (musicLibrary) musicLibrary.tracks = musicLibrary.tracks.map(track => ({ ...track, similarArtists: [...new Set([...(track.similarArtists || []), ...relatedForArtist(track.artist)])] })); }
+function portableManagerTracks() { return (musicLibrary?.tracks || []).filter(track => track.library === 'portable'); }
+function portableManagerArtistKey(artist) { return relationshipKey(artist || 'Unknown Artist') || 'unknown artist'; }
+function portableManagerMatches(track, query) {
+  const needle = String(query || '').trim().toLocaleLowerCase();
+  if (!needle) return true;
+  return [track.artist, track.albumArtist, track.album, track.title, ...(track.genres || [])]
+    .some(value => String(value || '').toLocaleLowerCase().includes(needle));
+}
+function portableManagerReleaseKey(track) {
+  const album = String(track.album || '').trim();
+  return album ? `album:${relationshipKey(track.albumArtist || track.artist)}\n${album.toLocaleLowerCase()}` : `single:${track.id}`;
+}
+function portableManagerArtistSummaries(query = '') {
+  const all = portableManagerTracks(); const matched = all.filter(track => portableManagerMatches(track, query)); const groups = new Map();
+  for (const track of all) {
+    const key = portableManagerArtistKey(track.artist); if (!groups.has(key)) groups.set(key, { key, artist: String(track.artist || 'Unknown Artist').trim() || 'Unknown Artist', tracks: [], matched: false, releases: new Set() });
+    const group = groups.get(key); group.tracks.push(track); group.releases.add(portableManagerReleaseKey(track));
+  }
+  for (const track of matched) { const group = groups.get(portableManagerArtistKey(track.artist)); if (group) group.matched = true; }
+  return [...groups.values()].filter(group => group.matched).map(group => ({
+    key: group.key, artist: group.artist, itemCount: group.releases.size,
+    ratedPercent: group.tracks.length ? Math.round((group.tracks.filter(track => Number(track.rating) > 0).length / group.tracks.length) * 100) : 0
+  })).sort((left, right) => left.artist.localeCompare(right.artist, undefined, { sensitivity: 'base' }));
+}
+function portableManagerArtistDetail(key, query = '') {
+  const artistKey = String(key || ''); const manual = relatedForArtist(artistKey);
+  const all = portableManagerTracks().filter(track => portableManagerArtistKey(track.artist) === artistKey);
+  if (!all.length) throw new Error('That artist is no longer available in Portable Music.');
+  const shown = String(query || '').trim() ? all.filter(track => portableManagerMatches(track, query)) : all;
+  const lastFmRelated = [...new Set(all.flatMap(track => track.similarArtists || []))]
+    .filter(value => !manual.some(related => relationshipKey(related) === relationshipKey(value)))
+    .sort((left, right) => left.localeCompare(right, undefined, { sensitivity: 'base' }));
+  const releases = new Map();
+  for (const track of shown) {
+    const releaseKey = portableManagerReleaseKey(track);
+    if (!releases.has(releaseKey)) releases.set(releaseKey, { key: releaseKey, title: String(track.album || track.title || 'Loose Track'), compilation: /^(various( artists)?|va|v\.a\.|soundtrack)/i.test(String(track.albumArtist || '')), tracks: [] });
+    releases.get(releaseKey).tracks.push({ id: track.id, title: track.title, artist: track.artist, track: track.track, disc: track.disc, duration: track.duration, rating: track.rating, favorite: track.favorite === true, doNotPlay: track.doNotPlay === true, popularity: track.popularity });
+  }
+  return { key: artistKey, artist: all[0].artist || 'Unknown Artist', manualRelated: manual, lastFmRelated, releases: [...releases.values()].sort((left, right) => left.title.localeCompare(right.title, undefined, { sensitivity: 'base' })).map(release => ({ ...release, tracks: release.tracks.sort((left, right) => (left.disc - right.disc) || (left.track - right.track) || left.title.localeCompare(right.title)) })) };
+}
 function openPortableMusicLibraryWindow() {
   if (musicLibraryWindow && !musicLibraryWindow.isDestroyed()) { musicLibraryWindow.show(); musicLibraryWindow.focus(); return; }
   const display = mainWindow && !mainWindow.isDestroyed() ? screen.getDisplayMatching(mainWindow.getBounds()) : screen.getPrimaryDisplay();
@@ -1536,6 +1576,8 @@ function installIpcHandlers() {
   ipcMain.handle('music:import:set-workers', (_event, value) => { const preferences = storage.setPortableImportWorkers(value); portableImporter?.setWorkers(); return preferences; });
   ipcMain.handle('music:library:open', async () => { await requireMusic(); openPortableMusicLibraryWindow(); return true; });
   ipcMain.handle('music:library:get', async () => { await requireMusic(); applyManualArtistRelationships(); return musicLibrary.tracks.filter(track => track.library === 'portable').map(track => ({ ...track, manualRelatedArtists: relatedForArtist(track.artist) })); });
+  ipcMain.handle('music:library:artists', async (_event, query = '') => { await requireMusic(); applyManualArtistRelationships(); return portableManagerArtistSummaries(query); });
+  ipcMain.handle('music:library:artist-detail', async (_event, key, query = '') => { await requireMusic(); applyManualArtistRelationships(); return portableManagerArtistDetail(key, query); });
   ipcMain.handle('music:library:relationships:get', async (_event, artist) => ({ artist: String(artist || ''), related: relatedForArtist(artist) }));
   ipcMain.handle('music:library:relationships:save', async (_event, artist, related) => {
     const name = String(artist || '').trim(); const key = relationshipKey(name); if (!key) throw new Error('Choose an artist first.');

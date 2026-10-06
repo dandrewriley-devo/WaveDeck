@@ -20,6 +20,8 @@ contextBridge.exposeInMainWorld("wavedeck", {
   setPortableImportWorkers: value => ipcRenderer.invoke('music:import:set-workers', value),
   openPortableMusicLibrary: () => ipcRenderer.invoke('music:library:open'),
   getPortableMusicLibrary: () => ipcRenderer.invoke('music:library:get'),
+  getPortableMusicArtists: query => ipcRenderer.invoke('music:library:artists', query),
+  getPortableMusicArtistDetail: (key, query) => ipcRenderer.invoke('music:library:artist-detail', key, query),
   savePortableMusicTrack: track => ipcRenderer.invoke('music:library:save-track', track),
   getArtistRelationships: artist => ipcRenderer.invoke('music:library:relationships:get', artist),
   saveArtistRelationships: (artist, related) => ipcRenderer.invoke('music:library:relationships:save', artist, related),

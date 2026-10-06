@@ -187,7 +187,7 @@ main{
 .library-card-copy{ margin-top:auto; }
 .card-actions{ align-items:center; display:flex; gap:12px; margin-top:auto; }
 .card-actions .subtle-link{ margin:0; text-transform:uppercase; }
-.card-donut-wrap{ align-content:center; align-items:center; display:grid; gap:10px; height:190px; justify-items:center; margin:0; text-align:center; }
+.card-donut-wrap{ align-content:start; align-items:center; box-sizing:border-box; display:grid; gap:10px; height:190px; justify-items:center; margin:0; padding-top:16px; text-align:center; }
 .storage-card,.lastfm-card{ display:grid; grid-template-rows:auto 190px 1fr auto; }
 .import-speed-label{ align-items:center; color:var(--muted); display:flex; font-size:12px; gap:7px; margin-top:auto; }
 .import-speed-label .input{ flex:1; min-width:0; }

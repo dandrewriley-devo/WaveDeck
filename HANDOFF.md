@@ -1,9 +1,9 @@
 # WaveDeck Opus Branch Handoff
 
-## WaveDeck Opus 1.0.12
+## WaveDeck Opus 1.0.13
 
 - This is the separate **`opus-portable`** branch. It is a Linux-only personal edition; `main` remains the normal cross-platform WaveDeck product.
-- Release artifact: **`WaveDeckOpus.AppImage`**. Its release workflow is `.github/workflows/opus-portable.yml` and publishes tag `opus-v1.0.12` without touching the main WaveDeck release.
+- Release artifact: **`WaveDeckOpus.AppImage`**. Its release workflow is `.github/workflows/opus-portable.yml` and publishes tag `opus-v1.0.13` without touching the main WaveDeck release.
 - WaveDeck Opus changes only the sibling portable `Music` folder. The optional Additional Music Folder is always read-only.
 - Portable MP3, FLAC, M4A/AAC, WAV, WMA, and OGG sources are converted one at a time in the background to 96 kbps Opus. Each output is validated before its source is removed. Existing valid Opus outputs and `.opus.part` recovery files are handled safely at the next pass.
 - Only these tags are carried into Opus: title, artist, album, Album Artist, track number, disc number, year, genre, `RATING`, `FAVORITE`, `DO_NOT_PLAY`, and `AMP_TRACK_ID`. Embedded artwork, loose image files, lyric/sidecar files, and other metadata are intentionally discarded from the portable Music tree.
@@ -21,18 +21,19 @@
 - 1.0.10 fixes the Local Mix startup race by restoring valid saved mix availability immediately and refusing stale empty renderer results. Settings → Local Music is now a responsive dashboard: portable-library count, storage and Last.fm donuts, import, Additional Music Folder, Local Mixes, and remembered computers are laid out as cards. The 2-column layout keeps Additional Music Folder and Remembered Computers together, then places Local Mixes full-width above its expandable manager.
 - 1.0.11 aligns and enlarges the dashboard donuts, improves the two-column card ordering, and makes Import and Local Mixes read at a glance. Import now shows the ready-track count and rounded required/available space, disables itself when the 97%-capacity rule would be exceeded, and uses short USB/FAST/TURBO speed labels. Local Mixes shows enabled-ready versus viable-ready counts.
 - 1.0.12 refreshes the pinned FFmpeg build hashes used by the AppImage release workflow so GitHub can build and attach the release download again.
+- 1.0.13 replaces the Portable Music Manager's album-card modes with one fast, virtualized artist list. It searches artist, release, track, and genre while retaining artist rows; one artist expands at a time to Last.fm and personal related artists, releases, then compact playable track rows with duration, Last.fm popularity, 1–10 rating, Favorite, Do Not Play, and editable Opus details. Artist capitalization variants are grouped together. The two dashboard donuts now share a fixed visual top alignment.
 
 # WaveDeck Project Handoff
 
-This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.12**.
+This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.13**.
 
 ## Current published state
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `main`
-- Current version: **1.0.12**
-- Current release: 1.0.12 — dashboard card polish and refreshed AppImage packaging verification.
-- Current commit: the verified 1.0.12 release commit at the head of `opus-portable`.
+- Current version: **1.0.13**
+- Current release: 1.0.13 — portable artist manager and dashboard alignment polish.
+- Current commit: the verified 1.0.13 release commit at the head of `opus-portable`.
 - 0.11.8 commit: `8118e235eed4b4a18c378f12ced8a86be83ed4b9` — monitor-safe main-window bounds persistence and portable Windows build.
 - 0.11.7 commit: `c8b69b7b8842dd6c310dda05b22b8d52870d3e84` — superseded source correction after the first portable Windows build.
 - 0.11.6 commit: `621e44d8c484cd0a4d70eb124106170f6183d0ae` — compact Local Radio Controls and remembered auxiliary-window bounds.
