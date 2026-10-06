@@ -574,6 +574,8 @@ function portableManagerArtistSummaries(query = '') {
   for (const track of matched) { const group = groups.get(portableManagerArtistKey(track.artist)); if (group) group.matched = true; }
   return [...groups.values()].filter(group => group.matched).map(group => ({
     key: group.key, artist: group.artist, itemCount: group.releases.size,
+    trackCount: group.tracks.length,
+    ratedCount: group.tracks.filter(track => Number(track.rating) > 0).length,
     ratedPercent: group.tracks.length ? Math.round((group.tracks.filter(track => Number(track.rating) > 0).length / group.tracks.length) * 100) : 0
   })).sort((left, right) => left.artist.localeCompare(right.artist, undefined, { sensitivity: 'base' }));
 }
@@ -592,6 +594,29 @@ function portableManagerArtistDetail(key, query = '') {
     releases.get(releaseKey).tracks.push({ id: track.id, title: track.title, artist: track.artist, album: track.album, albumArtist: track.albumArtist, track: track.track, disc: track.disc, duration: track.duration, rating: track.rating, favorite: track.favorite === true, doNotPlay: track.doNotPlay === true, popularity: track.popularity });
   }
   return { key: artistKey, artist: all[0].artist || 'Unknown Artist', manualRelated: manual, lastFmRelated, releases: [...releases.values()].sort((left, right) => left.title.localeCompare(right.title, undefined, { sensitivity: 'base' })).map(release => ({ ...release, tracks: release.tracks.sort((left, right) => (left.disc - right.disc) || (left.track - right.track) || left.title.localeCompare(right.title)) })) };
+}
+const portableTagWriteQueue = new Map();
+let portableTagWriteRunning = false;
+async function writePortableTrackTags(track) {
+  const target = (await musicLibrary.resolve(track.id)).path;
+  const temporary = `${target}.editing`;
+  const args = ['-hide_banner','-loglevel','error','-nostdin','-i',target,'-map','0:a:0','-map_metadata','-1','-vn','-sn','-dn','-c:a','copy','-metadata',`title=${track.title}`,'-metadata',`artist=${track.artist}`,'-metadata',`album=${track.album}`,'-metadata',`album_artist=${track.albumArtist}`,'-metadata',`track=${track.track || ''}`,'-metadata',`disc=${track.disc || ''}`,'-metadata',`date=${track.year || ''}`,'-metadata',`genre=${(track.genres || []).join('; ')}`,'-metadata',`RATING=${track.rating || ''}`,'-metadata',`FAVORITE=${track.favorite ? '1' : ''}`,'-metadata',`DO_NOT_PLAY=${track.doNotPlay ? '1' : ''}`,'-metadata',`AMP_TRACK_ID=${track.ampId || ''}`,'-f','opus','-y',temporary];
+  await new Promise((resolve, reject) => execFile(portableFfmpegExecutable, args, { windowsHide: true, maxBuffer: 1024 * 1024 }, error => error ? reject(error) : resolve()));
+  fs.renameSync(temporary, target);
+}
+function queuePortableTrackTagWrite(track) {
+  portableTagWriteQueue.set(track.id, track);
+  if (portableTagWriteRunning) return;
+  portableTagWriteRunning = true;
+  void (async () => {
+    while (portableTagWriteQueue.size) {
+      const [id, next] = portableTagWriteQueue.entries().next().value;
+      portableTagWriteQueue.delete(id);
+      try { await writePortableTrackTags(next); }
+      catch (error) { sendToMain('app:warning', `Could not save tags for ${next.title || 'a portable track'}: ${error.message}`); }
+    }
+    portableTagWriteRunning = false;
+  })();
 }
 function openPortableMusicLibraryWindow() {
   if (musicLibraryWindow && !musicLibraryWindow.isDestroyed()) { musicLibraryWindow.show(); musicLibraryWindow.focus(); return; }
@@ -1588,12 +1613,13 @@ function installIpcHandlers() {
   });
   ipcMain.handle('music:library:save-track', async (_event, update = {}) => {
     await requireMusic(); const id = String(update.id || ''); const track = musicLibrary.tracks.find(item => item.id === id && item.library === 'portable');
-    if (!track) throw new Error('That portable track is no longer available.'); const target = (await musicLibrary.resolve(id)).path; const temporary = `${target}.editing`;
+    if (!track) throw new Error('That portable track is no longer available.');
     const clean = value => String(value ?? '').replace(/[\u0000\r\n]/g, ' ').trim().slice(0, 500);
-    const next = { ...track, title: clean(update.title ?? track.title), artist: clean(update.artist ?? track.artist), album: clean(update.album ?? track.album), albumArtist: clean(update.albumArtist ?? track.albumArtist), year: Number(update.year ?? track.year) || '', genres: Array.isArray(update.genres) ? update.genres.map(clean).filter(Boolean) : (track.genres || []), track: Number(update.track ?? track.track) || 0, disc: Number(update.disc ?? track.disc) || 0, rating: Math.max(0, Math.min(10, Number(update.rating ?? track.rating) || 0)), favorite: update.favorite === true, doNotPlay: update.doNotPlay === true };
-    const args = ['-hide_banner','-loglevel','error','-nostdin','-i',target,'-map','0:a:0','-map_metadata','-1','-vn','-sn','-dn','-c:a','copy','-metadata',`title=${next.title}`,'-metadata',`artist=${next.artist}`,'-metadata',`album=${next.album}`,'-metadata',`album_artist=${next.albumArtist}`,'-metadata',`track=${next.track || ''}`,'-metadata',`disc=${next.disc || ''}`,'-metadata',`date=${next.year || ''}`,'-metadata',`genre=${next.genres.join('; ')}`,'-metadata',`RATING=${next.rating || ''}`,'-metadata',`FAVORITE=${next.favorite ? '1' : ''}`,'-metadata',`DO_NOT_PLAY=${next.doNotPlay ? '1' : ''}`,'-metadata',`AMP_TRACK_ID=${track.ampId || ''}`,'-f','opus','-y',temporary];
-    await new Promise((resolve, reject) => execFile(portableFfmpegExecutable, args, { windowsHide: true, maxBuffer: 1024 * 1024 }, error => error ? reject(error) : resolve()));
-    fs.renameSync(temporary, target); await musicLibrary.rescan(); applyManualArtistRelationships(); void analyzeLocalMixes(); return next;
+    const next = { ...track, title: clean(update.title ?? track.title), artist: clean(update.artist ?? track.artist), album: clean(update.album ?? track.album), albumArtist: clean(update.albumArtist ?? track.albumArtist), year: Number(update.year ?? track.year) || '', genres: Array.isArray(update.genres) ? update.genres.map(clean).filter(Boolean) : (track.genres || []), track: Number(update.track ?? track.track) || 0, disc: Number(update.disc ?? track.disc) || 0, rating: Math.max(0, Math.min(10, Number(update.rating ?? track.rating) || 0)), favorite: update.favorite === undefined ? track.favorite === true : update.favorite === true, doNotPlay: update.doNotPlay === undefined ? track.doNotPlay === true : update.doNotPlay === true };
+    await musicLibrary.updatePortableTrack(next);
+    queuePortableTrackTagWrite(next);
+    if (next.doNotPlay !== track.doNotPlay) void analyzeLocalMixes();
+    return next;
   });
   ipcMain.handle('music:play', async (_event, id, mode) => { await requireMusic(); return mediaController.playMusic(String(id), mode); });
   ipcMain.handle('music:mixes', async () => {

@@ -107,6 +107,15 @@ class MusicLibrary {
   async nextLastFmAlbum() { return this.call('lastfm:next'); }
   async updateLastFmTrack(value) { return this.call('lastfm:update-track', value); }
   async updateLastFmArtist(value) { return this.call('lastfm:update-artist', value); }
+  async updatePortableTrack(value) {
+    const index = this.tracks.findIndex(track => track.id === value?.id && track.library === 'portable');
+    if (index < 0) throw new Error('That portable track is no longer available.');
+    const next = canonicalTrack({ ...this.tracks[index], ...value });
+    this.tracks[index] = next;
+    this.revision += 1;
+    await this.call('track:update', next);
+    return next;
+  }
   async completeLastFmAlbum(key) { return this.call('lastfm:complete', key); }
   applyLastFmTrack(value) {
     const index = this.tracks.findIndex(track => track.id === value?.id);

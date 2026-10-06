@@ -304,6 +304,17 @@ async function handleRequest({ id, method, args = [] }) {
     else if (method === 'all') {
       const maps = lastFmMaps(); value = visibleTracks().map(track => withLastFm(track, maps));
     }
+    else if (method === 'track:update') {
+      const track = args[0] || {};
+      const existing = rows('SELECT path, size FROM tracks WHERE id = ?', [String(track.id || '')])[0];
+      if (!existing || track.library !== 'portable') throw new Error('That portable track is no longer indexed.');
+      const search = normalize([track.title, track.artist, track.albumArtist, track.album, track.year,
+        ...(track.genres || []), ...(track.composer || []), ...(track.comments || []), track.track, track.disc, track.relativePath].join(' '));
+      db.run('UPDATE tracks SET json = ?, search = ?, mtime = ? WHERE id = ?', [JSON.stringify(track), search, -1, String(track.id)]);
+      bumpLocalMixTrackRevision();
+      await persist();
+      value = true;
+    }
     else if (method === 'search') {
       const words = normalize(args[0]).slice(0, 500).split(/\s+/).filter(Boolean);
       const where = words.length ? ' WHERE ' + words.map(() => 'instr(search, ?) > 0').join(' AND ') : '';
