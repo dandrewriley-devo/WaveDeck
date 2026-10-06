@@ -90,6 +90,13 @@ async function run() {
     assert.equal(optimizer.getStatus().converted, 1, 'portable optimization reports converted track progress');
     assert.equal(optimizer.getStatus().current, '', 'portable optimization clears its current track after finishing');
     assert.ok(stableAmpId(optimizeRoot, optimizeSource).startsWith('wdop_'), 'converted files receive a stable portable music ID');
+    const duplicateRoot = path.join(temp, 'opus-duplicates', 'Music'); const originalDuplicate = path.join(duplicateRoot, 'Artist', 'Album', '01 - Song.opus'); const copiedDuplicate = path.join(duplicateRoot, 'Artist', 'Album', '01 - Song (2).opus');
+    await fs.mkdir(path.dirname(originalDuplicate), { recursive: true }); await fs.writeFile(originalDuplicate, Buffer.alloc(2048, 1)); await fs.writeFile(copiedDuplicate, Buffer.alloc(2048, 1));
+    const duplicateOptimizer = new OpusOptimizer({ musicRoot: duplicateRoot, ffmpegExecutable: 'fake-ffmpeg', ffprobeExecutable: 'fake-ffprobe', spawnImpl: async executable => executable === 'fake-ffprobe' ? 'opus\n' : '', audioFingerprintImpl: async () => 'same-audio' });
+    duplicateOptimizer.parseFile = async () => ({ common: { title: 'Song', artist: 'Artist', album: 'Album', albumartist: 'Artist', track: { no: 1 }, disk: { no: 1 }, year: 1992, genre: ['Rock'] }, native: { 'ID3v2.4': [{ id: 'TXXX:RATING', value: '8' }] } });
+    await duplicateOptimizer.start();
+    assert.equal(await fs.access(originalDuplicate).then(() => true, () => false), true, 'duplicate cleanup keeps the original unsuffixed Opus file');
+    assert.equal(await fs.access(copiedDuplicate).then(() => true, () => false), false, 'duplicate cleanup removes matching copied Opus files');
     assert.equal(radioArtist(track('x', { albumArtist: 'Various Artists', artist: 'Solo' })), 'Solo');
 
     const savedTracks = []; const savedArtists = [];

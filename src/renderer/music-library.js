@@ -95,7 +95,7 @@ function artistDetail() {
   box.append(relatedEditor()); const releases = document.createElement('div'); releases.className = 'release-list';
   for (const release of detail.releases) {
     const entry = document.createElement('section'); entry.className = 'release'; const button = document.createElement('button'); button.className = `release-row${activeRelease === release.key ? ' expanded' : ''}`;
-    button.innerHTML = `<span class="release-caret">›</span><span>${esc(release.title)}</span><span>${release.tracks.length} track${release.tracks.length === 1 ? '' : 's'}${release.compilation ? ' · Compilation' : ''}</span>`;
+    button.innerHTML = `<span class="release-caret">›</span><span>${esc(release.title)}${release.year ? ` <span class="release-year">(${release.year})</span>` : ''}</span><span>${release.tracks.length} track${release.tracks.length === 1 ? '' : 's'}${release.compilation ? ' · Compilation' : ''}</span>`;
     button.onclick = () => { activeRelease = activeRelease === release.key ? '' : release.key; editingTrack = ''; expandedDetailHeight = 0; render(currentScroll()); };
     entry.append(button); if (activeRelease === release.key) { const tracks = document.createElement('div'); tracks.className = 'track-list'; release.tracks.forEach(track => tracks.append(trackRow(track))); entry.append(tracks); } releases.append(entry);
   }

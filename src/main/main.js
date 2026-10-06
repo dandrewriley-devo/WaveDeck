@@ -565,6 +565,13 @@ function portableManagerReleaseKey(track) {
   const album = String(track.album || '').trim();
   return album ? `album:${relationshipKey(track.albumArtist || track.artist)}\n${album.toLocaleLowerCase()}` : `single:${track.id}`;
 }
+function portableManagerReleaseYear(tracks = []) {
+  const years = tracks.map(track => Number(track.year)).filter(year => Number.isInteger(year) && year >= 1000 && year <= 9999);
+  if (!years.length) return null;
+  const counts = new Map();
+  for (const year of years) counts.set(year, (counts.get(year) || 0) + 1);
+  return [...counts].sort((left, right) => (counts.get(right) - counts.get(left)) || (left - right))[0];
+}
 function portableManagerArtistSummaries(query = '') {
   const all = portableManagerTracks(); const matched = all.filter(track => portableManagerMatches(track, query)); const groups = new Map();
   for (const track of all) {
@@ -593,7 +600,7 @@ function portableManagerArtistDetail(key, query = '') {
     if (!releases.has(releaseKey)) releases.set(releaseKey, { key: releaseKey, title: String(track.album || track.title || 'Loose Track'), compilation: /^(various( artists)?|va|v\.a\.|soundtrack)/i.test(String(track.albumArtist || '')), tracks: [] });
     releases.get(releaseKey).tracks.push({ id: track.id, title: track.title, artist: track.artist, album: track.album, albumArtist: track.albumArtist, track: track.track, disc: track.disc, duration: track.duration, rating: track.rating, favorite: track.favorite === true, doNotPlay: track.doNotPlay === true, popularity: track.popularity });
   }
-  return { key: artistKey, artist: all[0].artist || 'Unknown Artist', manualRelated: manual, lastFmRelated, releases: [...releases.values()].sort((left, right) => left.title.localeCompare(right.title, undefined, { sensitivity: 'base' })).map(release => ({ ...release, tracks: release.tracks.sort((left, right) => (left.disc - right.disc) || (left.track - right.track) || left.title.localeCompare(right.title)) })) };
+  return { key: artistKey, artist: all[0].artist || 'Unknown Artist', manualRelated: manual, lastFmRelated, releases: [...releases.values()].map(release => ({ ...release, year: portableManagerReleaseYear(release.tracks) })).sort((left, right) => (left.year || Infinity) - (right.year || Infinity) || left.title.localeCompare(right.title, undefined, { sensitivity: 'base' })).map(release => ({ ...release, tracks: release.tracks.sort((left, right) => (left.disc - right.disc) || (left.track - right.track) || left.title.localeCompare(right.title)) })) };
 }
 const portableTagWriteQueue = new Map();
 let portableTagWriteRunning = false;
