@@ -589,7 +589,7 @@ function portableManagerArtistDetail(key, query = '') {
   for (const track of shown) {
     const releaseKey = portableManagerReleaseKey(track);
     if (!releases.has(releaseKey)) releases.set(releaseKey, { key: releaseKey, title: String(track.album || track.title || 'Loose Track'), compilation: /^(various( artists)?|va|v\.a\.|soundtrack)/i.test(String(track.albumArtist || '')), tracks: [] });
-    releases.get(releaseKey).tracks.push({ id: track.id, title: track.title, artist: track.artist, track: track.track, disc: track.disc, duration: track.duration, rating: track.rating, favorite: track.favorite === true, doNotPlay: track.doNotPlay === true, popularity: track.popularity });
+    releases.get(releaseKey).tracks.push({ id: track.id, title: track.title, artist: track.artist, album: track.album, albumArtist: track.albumArtist, track: track.track, disc: track.disc, duration: track.duration, rating: track.rating, favorite: track.favorite === true, doNotPlay: track.doNotPlay === true, popularity: track.popularity });
   }
   return { key: artistKey, artist: all[0].artist || 'Unknown Artist', manualRelated: manual, lastFmRelated, releases: [...releases.values()].sort((left, right) => left.title.localeCompare(right.title, undefined, { sensitivity: 'base' })).map(release => ({ ...release, tracks: release.tracks.sort((left, right) => (left.disc - right.disc) || (left.track - right.track) || left.title.localeCompare(right.title)) })) };
 }

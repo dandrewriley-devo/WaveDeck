@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck-opus");
-assert.strictEqual(packageJson.version, "1.0.13");
-assert.strictEqual(packageJson.wavedeckVersion, "1.0.13");
+assert.strictEqual(packageJson.version, "1.0.14");
+assert.strictEqual(packageJson.wavedeckVersion, "1.0.14");
 assert.strictEqual(packageJson.desktopName, "wavedeck-opus.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck Opus");
 assert.strictEqual(packageJson.build.appId, "com.a17press.wavedeckopus");
@@ -1758,10 +1758,10 @@ assert.ok(windowsWorkflow.includes('chmod 755 "$appimage"'));
 const opusWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "opus-portable.yml"), "utf8");
 assert.ok(opusWorkflow.includes("branches: [opus-portable]"));
 assert.ok(opusWorkflow.includes("npm run dist:linux -- --publish never"));
-assert.ok(opusWorkflow.includes("WaveDeckOpus-1.0.13-Linux"));
+assert.ok(opusWorkflow.includes("WaveDeckOpus-1.0.14-Linux"));
 assert.ok(opusWorkflow.includes("dist/WaveDeckOpus.AppImage"));
-assert.ok(opusWorkflow.includes("tag_name: opus-v1.0.13"));
-assert.ok(opusWorkflow.includes("Publish WaveDeck Opus 1.0.13"));
+assert.ok(opusWorkflow.includes("tag_name: opus-v1.0.14"));
+assert.ok(opusWorkflow.includes("Publish WaveDeck Opus 1.0.14"));
 const musicLibraryHtml = fs.readFileSync(path.join(root, "src", "renderer", "music-library.html"), "utf8");
 const musicLibraryRenderer = fs.readFileSync(path.join(root, "src", "renderer", "music-library.js"), "utf8");
 assert.ok(musicLibraryHtml.includes('Search artists, albums, songs, or genres'));
