@@ -1910,6 +1910,7 @@ if (!hasSingleInstanceLock) {
     if (process.platform === 'linux' && portableFfmpegExecutable && portableFfprobeExecutable) {
       opusOptimizer = new OpusOptimizer({
         musicRoot: path.join(path.dirname(getDataDir()), 'Music'),
+        diagnosticsPath: path.join(getDataDir(), 'opus-dedup-diagnostics.json'),
         ffmpegExecutable: portableFfmpegExecutable,
         ffprobeExecutable: portableFfprobeExecutable,
         getProtectedPaths: protectedPortableMusicPaths,
