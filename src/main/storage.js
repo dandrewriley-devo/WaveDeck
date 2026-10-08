@@ -312,6 +312,7 @@ function validatePreferences(value) {
   const localRadioSongRepeatHours = Number.isInteger(Number(value?.localRadioSongRepeatHours)) && Number(value.localRadioSongRepeatHours) >= 1 && Number(value.localRadioSongRepeatHours) <= 24 ? Number(value.localRadioSongRepeatHours) : 4;
   const localRadioArtistRepeatMinutes = [30, 60, 90, 120, 180].includes(Number(value?.localRadioArtistRepeatMinutes)) ? Number(value.localRadioArtistRepeatMinutes) : 90;
   const localRadioArtistSetSize = [1, 2, 3, 4].includes(Number(value?.localRadioArtistSetSize)) ? Number(value.localRadioArtistSetSize) : 1;
+  const localMixFavorLastFm = value?.localMixFavorLastFm === true;
   const localMusicCrossfadeEnabled = value?.localMusicCrossfadeEnabled !== false;
   const portableImportWorkers = [2, 6, 12].includes(Number(value?.portableImportWorkers)) ? Number(value.portableImportWorkers) : 2;
   const miniPlayerDisplayMode = value?.miniPlayerDisplayMode === 'source' ? 'source' : 'now-playing';
@@ -407,6 +408,7 @@ function validatePreferences(value) {
     localRadioSongRepeatHours,
     localRadioArtistRepeatMinutes,
     localRadioArtistSetSize,
+    localMixFavorLastFm,
     localMusicCrossfadeEnabled,
     portableImportWorkers,
     miniPlayerDisplayMode,
@@ -599,6 +601,7 @@ class PortableStorage {
       localRadioSongRepeatHours: preferences.localRadioSongRepeatHours,
       localRadioArtistRepeatMinutes: preferences.localRadioArtistRepeatMinutes,
       localRadioArtistSetSize: preferences.localRadioArtistSetSize,
+      localMixFavorLastFm: preferences.localMixFavorLastFm,
       localMusicCrossfadeEnabled: preferences.localMusicCrossfadeEnabled,
       portableImportWorkers: preferences.portableImportWorkers,
       miniPlayerDisplayMode: preferences.miniPlayerDisplayMode,
@@ -725,6 +728,13 @@ class PortableStorage {
     if (Number.isInteger(Number(value.songRepeatHours)) && Number(value.songRepeatHours) >= 1 && Number(value.songRepeatHours) <= 24) preferences.localRadioSongRepeatHours = Number(value.songRepeatHours);
     if ([30, 60, 90, 120, 180].includes(Number(value.artistRepeatMinutes))) preferences.localRadioArtistRepeatMinutes = Number(value.artistRepeatMinutes);
     if ([1, 2, 3, 4].includes(Number(value.artistSetSize))) preferences.localRadioArtistSetSize = Number(value.artistSetSize);
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences();
+  }
+
+  setLocalMixFavorLastFm(enabled) {
+    const preferences = this.readPreferences();
+    preferences.localMixFavorLastFm = enabled === true;
     this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
     return this.getUiPreferences();
   }

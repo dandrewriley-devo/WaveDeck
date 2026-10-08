@@ -61,6 +61,9 @@ async function run() {
     await fs.access(path.join(dataDir, 'local-mix-availability.json'));
     assert.equal(await digest(), before, 'scanning never changes MP3 bytes');
     assert.equal((await library.call('search', "' OR 1=1 --")).total, 0);
+    const indexedSearch = await library.call('search', 'test son');
+    assert.equal(indexedSearch.total, 1, 'the main Local Music search uses its indexed multi-word lookup');
+    assert.equal(indexedSearch.tracks[0].title, 'Test Song');
     assert.equal(extractTrack({ common: { rating: [{ rating: 0.8 }] }, native: {} }, 'fallback.mp3').ratingStars, 4);
     const tenPointRating = extractTrack({ common: {}, native: { 'ID3v2.4': [{ id: 'TXXX:RATING', value: '5' }] } }, 'five-of-ten.mp3');
     assert.equal(tenPointRating.rating, 5, 'custom RATING remains on the portable 0–10 scale');
@@ -245,6 +248,12 @@ async function run() {
     assert.equal(bestMixRadio.choose([ratedFavorite, bestMixPopular], bestMix, 'mix').id, ratedFavorite.id, 'Wild Card Radio uses personal ratings before Last.fm popularity');
     const fallbackRadio = new MusicRadio({ dataDir: path.join(temp, 'best-music-fallback'), now: () => now, random: () => 0, getFamiliarity: () => 'balanced' });
     assert.equal(fallbackRadio.choose([bestMixPopular, track('unrated-obscure', { artist: 'Frank Zappa', artists: ['Frank Zappa'], popularity: 10 })], bestMix, 'mix').id, bestMixPopular.id, 'Wild Card Radio falls back to Last.fm familiarity when no personal ratings or Favorites exist');
+    const lastFmOnlyMixRadio = new MusicRadio({ dataDir: path.join(temp, 'lastfm-only-mix'), now: () => now, random: () => 0.99, getTuning: () => ({ localMixFavorLastFm: true }) });
+    const favoriteLowPopularity = track('favorite-low-popularity', { artist: 'Metallica', artists: ['Metallica'], favorite: true, rating: 10, popularity: 5 });
+    const highPopularity = track('high-popularity', { artist: 'Miles Davis', artists: ['Miles Davis'], rating: 1, popularity: 95 });
+    const missingPopularity = track('missing-popularity', { artist: 'David Bowie', artists: ['David Bowie'], favorite: true, rating: 10 });
+    assert.equal(lastFmOnlyMixRadio.choose([favoriteLowPopularity, highPopularity, missingPopularity], bestMix, 'mix').id, highPopularity.id, 'Favor Last.fm Data for Local Mixes ignores ratings and Favorites, excludes missing Last.fm data, and selects by popularity');
+    assert.equal(lastFmOnlyMixRadio.getLastDecision().reason.includes('Last.fm popularity'), true, 'Local Mix diagnostics identify strict Last.fm popularity mode');
     const classicRadio = new MusicRadio({ dataDir: path.join(temp, 'classic-format'), now: () => now, random: () => 0 });
     const modernColdplay = track('coldplay', { artist: 'Coldplay', artists: ['Coldplay'], title: 'Charlie Brown', year: 2011, rating: 10, similarArtists: ['U2'] });
     assert.equal(classicRadio.choose([...classicSeedTracks, modernColdplay], classicMix, 'mix').artist, 'Boston', 'Last.fm similarity cannot admit a non-format Classic Rock artist');

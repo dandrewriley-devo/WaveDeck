@@ -1,4 +1,5 @@
 const crossfade = document.getElementById('localMusicCrossfade');
+const localMixFavorLastFm = document.getElementById('localMixFavorLastFm');
 const familiarity = document.getElementById('localRadioFamiliarity');
 const songRepeat = document.getElementById('localRadioSongRepeat');
 const songRepeatValue = document.getElementById('localRadioSongRepeatValue');
@@ -32,6 +33,7 @@ function updateSongRepeatStop(hours) {
 
 function render(preferences = {}) {
   crossfade.checked = preferences.localMusicCrossfadeEnabled !== false;
+  localMixFavorLastFm.checked = preferences.localMixFavorLastFm === true;
   const selectedFamiliarity = FAMILIARITY.includes(preferences.localRadioFamiliarity) ? preferences.localRadioFamiliarity : 'balanced';
   familiarity.value = String(FAMILIARITY.indexOf(selectedFamiliarity));
   const songHours = Number.isInteger(Number(preferences.localRadioSongRepeatHours)) ? Number(preferences.localRadioSongRepeatHours) : 4;
@@ -52,6 +54,17 @@ crossfade.addEventListener('change', async () => {
     crossfade.checked = !crossfade.checked;
     showStatus(`Could not save crossfade: ${error.message}`, true);
   } finally { crossfade.disabled = false; }
+});
+
+localMixFavorLastFm.addEventListener('change', async () => {
+  localMixFavorLastFm.disabled = true;
+  try {
+    render(await window.wavedeck.setLocalMixFavorLastFm(localMixFavorLastFm.checked));
+    showStatus();
+  } catch (error) {
+    localMixFavorLastFm.checked = !localMixFavorLastFm.checked;
+    showStatus(`Could not save Local Mix preference: ${error.message}`, true);
+  } finally { localMixFavorLastFm.disabled = false; }
 });
 
 familiarity.addEventListener('change', async () => {

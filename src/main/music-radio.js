@@ -19,7 +19,8 @@ function localRadioTuning(value = {}) {
   return {
     songRepeatHours: Number.isInteger(songRepeatHours) && songRepeatHours >= 1 && songRepeatHours <= 24 ? songRepeatHours : 4,
     artistRepeatMinutes: [30, 60, 90, 120, 180].includes(artistRepeatMinutes) ? artistRepeatMinutes : 90,
-    artistSetSize: [1, 2, 3, 4].includes(artistSetSize) ? artistSetSize : 1
+    artistSetSize: [1, 2, 3, 4].includes(artistSetSize) ? artistSetSize : 1,
+    localMixFavorLastFm: value.localMixFavorLastFm === true
   };
 }
 
@@ -247,19 +248,35 @@ class MusicRadio {
     // Artist Radio has a fixed, balanced taste profile. Song Radio and Local
     // Mixes continue to use the listener's Song Familiarity setting.
     const familiarity = artistRadio ? 'balanced' : (['hits', 'balanced', 'deep-cuts'].includes(this.getFamiliarity()) ? this.getFamiliarity() : 'balanced');
+    const lastFmOnlyMix = mode === 'mix' && settings.localMixFavorLastFm;
     this.history.forEach(item => { if (!context.last.has(item.key)) context.last.set(item.key, item); if (!context.artistLast.has(artistKey(item))) context.artistLast.set(artistKey(item), item.at); });
     const forcedArtist = this.artistSet?.remaining?.length ? this.artistSet.artist : '';
-    const scored = tracks.filter(track => !excluded.has(track.id) && (!forcedArtist || artistKey(track) === forcedArtist)).map(track => ({ track, ...scoreTrack(track, seed, mode, this.history, now, context, familiarity) }));
+    const scored = tracks.filter(track => !excluded.has(track.id) && (!forcedArtist || artistKey(track) === forcedArtist)).map(track => {
+      const item = { track, ...scoreTrack(track, seed, mode, this.history, now, context, familiarity) };
+      if (!lastFmOnlyMix || item.excluded) return item;
+      const popularity = Number(track?.popularity);
+      if (!Number.isFinite(popularity)) return { ...item, score: 0, excluded: 'missing Last.fm popularity', multipliers: [] };
+      return {
+        ...item,
+        // In this mode a format book remains the eligibility gate, but the
+        // weighted pick itself is Last.fm popularity and nothing else.
+        score: Math.max(1, popularity),
+        multipliers: [{ label: 'Last.fm popularity', value: Math.max(1, popularity), source: `${Math.round(popularity)}/100` }],
+        popularity
+      };
+    });
     const cooldownExcluded = scored.filter(item => item.excluded === 'cooldown').length;
     const artistCooldownExcluded = scored.filter(item => item.excluded === 'artist cooldown').length;
     const doNotPlayExcluded = scored.filter(item => item.excluded === 'do not play').length;
     const credibleCandidates = scored.filter(item => item.score > 0); const credibleCount = credibleCandidates.length;
     // Each familiarity stop starts with the listener's own quality threshold.
     // Unrated songs stay neutral, but cannot displace qualifying rated/Favorite music.
-    const personalCandidates = credibleCandidates.filter(item => hasPersonalSignal(item.track, familiarity));
+    const personalCandidates = lastFmOnlyMix ? [] : credibleCandidates.filter(item => hasPersonalSignal(item.track, familiarity));
     const personalLibraryMix = mode === 'mix' && seed?.policy?.personalLibrary === true;
-    const lastFmCandidates = !artistRadio && !personalCandidates.length && (personalLibraryMix || familiarity === 'hits')
-      ? credibleCandidates.filter(item => hasLastFmFamiliarity(item.track)) : [];
+    const lastFmCandidates = lastFmOnlyMix
+      ? credibleCandidates
+      : (!artistRadio && !personalCandidates.length && (personalLibraryMix || familiarity === 'hits')
+        ? credibleCandidates.filter(item => hasLastFmFamiliarity(item.track)) : []);
     let candidates = personalCandidates.length ? personalCandidates : (lastFmCandidates.length ? lastFmCandidates : credibleCandidates);
     let artistLane = '';
     if (artistRadio) {
@@ -321,7 +338,7 @@ class MusicRadio {
     const diagnostic = item => ({ diagnosticId: stableId(item.track), title: item.track.title, artist: item.track.artist, album: item.track.album, eligibilityReasons: item.relationship.reasons, score: item.score, additions: item.additions, multipliers: item.multipliers, favorite: item.track.favorite === true, rating: ratingOutOfTen(item.track), popularity: item.popularity, tags: item.relationship.tags });
     const ranked = [...candidates].sort((a, b) => b.score - a.score).slice(0, 8);
     const threshold = FAMILIARITY_RATINGS[familiarity].minimum;
-    const poolLabel = artistRadio ? artistLane : (personalCandidates.length ? `personal ${threshold}–10/Favorite` : (lastFmCandidates.length ? 'Last.fm familiar' : 'credible'));
+    const poolLabel = artistRadio ? artistLane : (lastFmOnlyMix ? 'Last.fm popularity' : (personalCandidates.length ? `personal ${threshold}–10/Favorite` : (lastFmCandidates.length ? 'Last.fm familiar' : 'credible')));
     this.lastDecision = { at: new Date(now).toISOString(), mode, stationKey, selectionTrigger, seed: { diagnosticId: stableId(seed), title: seed?.title || seed?.name || '', artist: seed?.artist || '', album: seed?.album || '', genres: seed?.genres || [] }, policy: artistRadio ? 'artist-radio-v1' : 'automatic-local-radio-v2', familiarity, tuning: settings, artistSet: { size: artistSetSize, remaining: this.artistSet?.remaining?.length || 0 }, artistRadio: artistRadio ? { seedTargetPercent: 90, seedSelectionsSinceRelated: this.artistStation?.seedSelections || 0 } : null, counts: { totalTracks: tracks.length, skippedByPlaybackError: excluded.size, skippedForCooldown: cooldownExcluded, skippedForArtistCooldown: artistCooldownExcluded, skippedForDoNotPlay: doNotPlayExcluded, credible: credibleCount, personal: personalCandidates.length, personalMinimum: threshold, lastFmFamiliar: lastFmCandidates.length, finalPool: candidates.length }, selected: selected ? diagnostic(picked) : null, diagnostics: { topFinalCandidates: ranked.map(diagnostic), recentHistory: this.history.slice(0, 12).map(item => ({ diagnosticId: stableId({ songKey: item.key }), artist: item.artist, album: item.album, at: new Date(item.at).toISOString() })) }, reason: selected ? `Picked from ${candidates.length} ${poolLabel} Local Radio candidates.` : (artistRadio ? 'No eligible seed-artist song is currently available; Artist Radio is waiting rather than taking over with related music.' : 'No credible Local Radio song is currently available; waiting rather than making a poor leap.') };
     try { this.onDecision(this.getLastDecision()); } catch {}
     return selected;

@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck-opus");
-assert.strictEqual(packageJson.version, "1.0.18");
-assert.strictEqual(packageJson.wavedeckVersion, "1.0.18");
+assert.strictEqual(packageJson.version, "1.0.19");
+assert.strictEqual(packageJson.wavedeckVersion, "1.0.19");
 assert.strictEqual(packageJson.desktopName, "wavedeck-opus.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck Opus");
 assert.strictEqual(packageJson.build.appId, "com.a17press.wavedeckopus");
@@ -350,6 +350,7 @@ try {
     localRadioSongRepeatHours: 4,
     localRadioArtistRepeatMinutes: 90,
     localRadioArtistSetSize: 1,
+    localMixFavorLastFm: false,
     localMusicCrossfadeEnabled: true,
     portableImportWorkers: 2,
     miniPlayerDisplayMode: "now-playing",
@@ -387,6 +388,7 @@ try {
     localRadioSongRepeatHours: 4,
     localRadioArtistRepeatMinutes: 90,
     localRadioArtistSetSize: 1,
+    localMixFavorLastFm: false,
     localMusicCrossfadeEnabled: true,
     portableImportWorkers: 2,
     miniPlayerDisplayMode: "now-playing",
@@ -408,6 +410,7 @@ try {
   assert.strictEqual(storage.setLastFmSettings({ enabled: true }).lastFmEnabled, true);
   assert.strictEqual(storage.setLocalRadioFamiliarity('hits').localRadioFamiliarity, 'hits');
   assert.deepStrictEqual(storage.setLocalRadioTuning({ songRepeatHours: 6, artistRepeatMinutes: 180, artistSetSize: 2 }).localRadioArtistSetSize, 2);
+  assert.strictEqual(storage.setLocalMixFavorLastFm(true).localMixFavorLastFm, true);
   assert.strictEqual(storage.setLocalMusicCrossfadeEnabled(false).localMusicCrossfadeEnabled, false);
   assert.strictEqual(storage.setPortableImportWorkers(6).portableImportWorkers, 6);
   assert.strictEqual(storage.setPortableImportWorkers(12).portableImportWorkers, 12);
@@ -486,6 +489,7 @@ try {
     localRadioSongRepeatHours: 6,
     localRadioArtistRepeatMinutes: 180,
     localRadioArtistSetSize: 2,
+    localMixFavorLastFm: true,
     localMusicCrossfadeEnabled: false,
     portableImportWorkers: 12,
     miniPlayerDisplayMode: "source",
@@ -1407,7 +1411,10 @@ assert.ok(localRadioControlsHtml.includes('min="1" max="24" step="1"'));
 assert.ok(localRadioControlsHtml.includes('>Three-way<'));
 assert.ok(localRadioControlsHtml.includes('>Four-play<'));
 assert.ok(localRadioControlsHtml.includes('id="localMusicCrossfade"'));
+assert.ok(localRadioControlsHtml.includes('id="localMixFavorLastFm"'));
+assert.ok(localRadioControlsHtml.includes('Favor Last.fm Data for Local Mixes'));
 assert.ok(localRadioControlsSource.includes('setLocalRadioTuning'));
+assert.ok(localRadioControlsSource.includes('setLocalMixFavorLastFm'));
 assert.ok(localRadioControlsSource.includes('setLocalMusicCrossfade'));
 assert.ok(!localRadioControlsSource.includes('FAMILIARITY_COPY'));
 assert.ok(miniPlayerHtml.includes('id="playPauseBtn"'));
@@ -1464,6 +1471,7 @@ assert.ok(settingsStyles.includes("overflow: auto"));
 assert.ok(settingsStyles.includes("flex:1 1 auto"));
 assert.ok(!settingsStyles.includes("min(62vh"));
 const mainSource = fs.readFileSync(path.join(root, "src", "main", "main.js"), "utf8");
+const musicWorkerSource = fs.readFileSync(path.join(root, "src", "main", "music-worker.js"), "utf8");
 assert.ok(!mainSource.includes("loadSidebarState"));
 assert.ok(!mainSource.includes("saveSidebarState"));
 assert.ok(!mainSource.includes("screen.getCursorScreenPoint()"));
@@ -1712,6 +1720,8 @@ assert.ok(settingsSource.includes("if (days < 1000) return"));
 assert.ok(!mainSource.includes("music:rules:get"));
 assert.ok(!mainSource.includes("music:rules:reset-all"));
 assert.ok(mainSource.includes("music:local-radio:set-familiarity"));
+assert.ok(mainSource.includes("music:local-radio:set-lastfm-mode"));
+assert.ok(musicWorkerSource.includes('music_search'));
 
 const windowsBuild = JSON.parse(fs.readFileSync(path.join(root, "electron-builder.windows.json"), "utf8"));
 assert.strictEqual(windowsBuild.win.artifactName, "WaveDeck.exe");
@@ -1769,10 +1779,10 @@ assert.ok(windowsWorkflow.includes('chmod 755 "$appimage"'));
 const opusWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "opus-portable.yml"), "utf8");
 assert.ok(opusWorkflow.includes("branches: [opus-portable]"));
 assert.ok(opusWorkflow.includes("npm run dist:linux -- --publish never"));
-assert.ok(opusWorkflow.includes("WaveDeckOpus-1.0.18-Linux"));
+assert.ok(opusWorkflow.includes("WaveDeckOpus-1.0.19-Linux"));
 assert.ok(opusWorkflow.includes("dist/WaveDeckOpus.AppImage"));
-assert.ok(opusWorkflow.includes("tag_name: opus-v1.0.18"));
-assert.ok(opusWorkflow.includes("Publish WaveDeck Opus 1.0.18"));
+assert.ok(opusWorkflow.includes("tag_name: opus-v1.0.19"));
+assert.ok(opusWorkflow.includes("Publish WaveDeck Opus 1.0.19"));
 const musicLibraryHtml = fs.readFileSync(path.join(root, "src", "renderer", "music-library.html"), "utf8");
 const musicLibraryRenderer = fs.readFileSync(path.join(root, "src", "renderer", "music-library.js"), "utf8");
 assert.ok(musicLibraryHtml.includes('Search artists, albums, songs, or genres'));

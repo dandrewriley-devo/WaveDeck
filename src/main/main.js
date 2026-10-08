@@ -1476,6 +1476,12 @@ function installIpcHandlers() {
     sendToAll('ui:preferences-changed', preferences);
     return preferences;
   });
+  ipcMain.handle('music:local-radio:set-lastfm-mode', (_event, enabled) => {
+    requireAdvancedFeatures();
+    const preferences = storage.setLocalMixFavorLastFm(enabled === true);
+    sendToAll('ui:preferences-changed', preferences);
+    return preferences;
+  });
   ipcMain.handle('music:local-radio:set-crossfade', (_event, enabled) => {
     requireAdvancedFeatures();
     const preferences = storage.setLocalMusicCrossfadeEnabled(enabled === true);
