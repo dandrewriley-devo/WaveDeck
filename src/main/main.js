@@ -428,7 +428,7 @@ function beginRadioDiagnosticSession(stationKey = '') {
 }
 
 function sendToRadioLog(decision) {
-  if (decision?.selected) {
+  if (decision && typeof decision === 'object') {
     radioDiagnosticSession.push(decision);
     if (radioDiagnosticSession.length > RADIO_DIAGNOSTIC_LIMIT) radioDiagnosticSession.shift();
     persistRadioDiagnostics();

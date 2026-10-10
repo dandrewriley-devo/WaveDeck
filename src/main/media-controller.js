@@ -120,7 +120,7 @@ class MediaController {
         mode: this.music.mode,
         mixId: this.music.mixId || '',
         label: musicContextLabel(this.music),
-        awayFromSeed: this.music.mode === 'explore' && this.musicRadio?.isExploringAwayFromSeed?.() === true,
+        awayFromSeed: this.musicRadio?.isAwayFromSeed?.() === true,
         waiting: this.music.waiting
       } : null
     };

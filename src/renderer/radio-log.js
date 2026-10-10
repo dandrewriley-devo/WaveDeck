@@ -44,12 +44,29 @@ function naturalList(values = [], maximum = 12) {
 function howPickedLines(decision, selected, manualStart) {
   const info = decision.howPicked;
   if (manualStart || info?.manualStart) return [`You selected ${quoted(selected.title)} by ${selected.artist || 'Unknown artist'} to begin this station. The next track will be selected automatically.`];
+  if (!decision.selected || info?.waiting) {
+    const counts = decision.counts || {};
+    return [
+      'WaveDeck could not find a playable track after checking the station family and its repeat-protection recovery steps.',
+      `${counts.credible ?? 0} credible tracks were available before repeat protection; ${counts.skippedForCooldown ?? 0} were resting by song and ${counts.skippedForArtistCooldown ?? 0} by artist.`
+    ];
+  }
   if (!info) return ['This older log entry has the score details below, but it was recorded before WaveDeck began saving the plain-language selection story.'];
   const seed = info.seed || decision.seed || {};
   const lines = [`This station began with ${quoted(seed.title)} by ${seed.artist || 'Unknown artist'}.`];
+  const artistSet = info.artistSet;
+  if (artistSet?.size > 1) {
+    lines.push(`We’re playing another ${selected.artist || 'artist'} song. This is track ${artistSet.position} of ${artistSet.size} in the artist set.${artistSet.shortened ? ` WaveDeck shortened the requested ${artistSet.requested}-track set so the station could keep playing.` : ''}`);
+  }
   const related = naturalList(info.relatedArtists);
-  if (related) lines.push(`Related artists available in your library were ${related}.`);
-  else lines.push('No Last.fm related artists from the active route were available in your library for this pick.');
+  if (!artistSet?.size || artistSet.size <= 1) {
+    if (related) lines.push(`Related artists available in your library were ${related}.`);
+    else lines.push('No Last.fm related artists from the active route were available in your library for this pick.');
+  }
+  const recovery = info.recovery;
+  if (recovery?.kind === 'related-route') lines.push(`The closer station family was exhausted, so WaveDeck expanded through a ${recovery.hops}-hop related-artist route from the original seed.`);
+  if (recovery?.relaxedRepeat === 'artist') lines.push('All normal options were exhausted, so WaveDeck eased artist rest within this station family to keep the station playing.');
+  if (recovery?.relaxedRepeat === 'song') lines.push('All normal options were exhausted, so WaveDeck used the least-recently-played credible song within this station family.');
   const explore = info.explore;
   if (explore) {
     const distance = ({ close: 'Close to Home', detour: 'Take a Detour', explore: 'Go Exploring' })[explore.distance] || 'Take a Detour';
@@ -75,13 +92,14 @@ function howPickedLines(decision, selected, manualStart) {
 }
 
 function renderDecision(decision, { prepend = true } = {}) {
-  if (!decision?.selected) return;
-  const selected = decision.selected;
+  if (!decision) return;
+  const waiting = !decision.selected;
+  const selected = decision.selected || { title: 'No song selected', artist: '', album: '', popularity: null, eligibilityReasons: [], additions: [], multipliers: [], score: null };
   const manualStart = decision.selectionTrigger === 'start' && decision.policy === 'manual-local-radio-start-v1';
   const entry = element('article', '', 'entry');
   const head = element('div', '', 'entry-head');
   const mode = decision.mode === 'artist' ? 'Artist Radio' : decision.mode === 'explore' ? 'Explore Radio' : decision.mode === 'mix' ? 'Local Mix' : 'Song Radio';
-  head.append(element('b', manualStart ? `${mode} — Selected seed track` : mode));
+  head.append(element('b', waiting ? `${mode} — No eligible track` : (manualStart ? `${mode} — Selected seed track` : mode)));
   head.append(element('span', new Date(decision.at).toLocaleString(), 'time'));
   entry.append(head);
   const body = element('div', '', 'entry-body');
@@ -100,7 +118,7 @@ function renderDecision(decision, { prepend = true } = {}) {
   ] : [
     `Song familiarity: ${({ hits: 'Favor the Hits', balanced: 'Balanced Mix', 'deep-cuts': 'Play Deep Cuts Too' })[decision.familiarity] || 'Balanced Mix'}`,
     'Strong musical links are required',
-    'Poor-fit candidates wait instead of playing'
+    'Poor-fit candidates never play; recovery stays within related artists'
   ]);
   addBox(grid, 'Last.fm popularity', [
     selected.popularity === null || selected.popularity === undefined ? 'Missing — treated as neutral' : `${selected.popularity}/100`,
@@ -112,7 +130,7 @@ function renderDecision(decision, { prepend = true } = {}) {
     'Broad tags such as Rock or Country do not qualify alone',
     'DO_NOT_PLAY is an absolute exclusion',
     'Favorite tags and MP3 ratings lead personal song choice',
-    'Exact-song repeat wait: 2 hours'
+    'Repeat waits bend only after the related-artist safety net is exhausted'
   ]);
   addBox(grid, 'Candidates', manualStart ? [
     'No candidate search was needed',
@@ -126,12 +144,12 @@ function renderDecision(decision, { prepend = true } = {}) {
   body.append(grid);
   addDetails(body, 'How it was picked', howPickedLines(decision, selected, manualStart), 'WaveDeck did not save a plain-language selection story for this entry.');
   const additions = (selected.additions || []).map(item => `${item.label}: +${number(item.amount)}`);
-  addDetails(body, 'Why this song fit', [
+  addDetails(body, waiting ? 'Why no song was available' : 'Why this song fit', [
     ...(selected.eligibilityReasons || []).map(reason => `Acceptable match: ${reason}`),
     ...additions
   ], 'It qualified for the acceptable pool through artist or similarity data.');
   const multipliers = (selected.multipliers || []).map(item => `${item.label}: ×${number(item.value, 3)}${item.source ? ` (${item.source})` : ''}`);
-  if (!manualStart) multipliers.push(`Final score: ${number(selected.score, 3)}`);
+  if (!manualStart && !waiting) multipliers.push(`Final score: ${number(selected.score, 3)}`);
   addDetails(body, manualStart ? 'Selection details' : 'Score adjustments', multipliers, manualStart ? 'This seed track was selected directly, so no automatic score was calculated.' : 'No score adjustments recorded.');
   body.append(element('div', `${decision.reason || 'A track was selected.'} Trigger: ${decision.selectionTrigger || 'next'}.`, 'reason'));
   entry.append(body);

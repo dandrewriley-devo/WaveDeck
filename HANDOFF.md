@@ -37,17 +37,21 @@
 
 - Live Radio Log now adds a human-readable **How it was picked** section above the technical fit details. New selections explain the station seed, related artists actually available in the library, artist-repeat protection, eligible-track count, the selected track's Last.fm popularity/personal rating/Favorite/feedback factors, and any Explore Radio hop, return, or rescue route. Older saved entries remain readable and simply identify that this newer story was not recorded yet.
 
+## WaveDeck Opus 1.0.23
+
+- Local Radio now treats artist-set length as a preference instead of a reason to stop: a requested four-play can safely shorten to three, two, or one playable track. Song Radio and Explore Radio use a station-family recovery ladder before ever easing repeat protection: they walk at most three Last.fm-related-artist hops from the original seed, never use broad genre matching, then only relax artist rest and finally exact-song rest inside that verified family. `DO_NOT_PLAY` remains absolute. An exact-song emergency choice is the least recently played credible family track. Any rare no-pick decision is now persisted in the Live Radio Log with its blocking counts. While Song Radio is using a related-route recovery, its station label turns orange. The Log identifies artist-set position (for example, track 2 of 4), shortened sets, route hops, and any eased protection.
+
 # WaveDeck Project Handoff
 
-This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.22**.
+This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.23**.
 
 ## Current published state
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `main`
-- Current version: **1.0.22**
-- Current release: 1.0.22 — human-readable Live Radio selection stories.
-- Current commit: the verified 1.0.22 release commit at the head of `opus-portable`.
+- Current version: **1.0.23**
+- Current release: 1.0.23 — resilient station-family recovery without surprise genre leaps.
+- Current commit: the verified 1.0.23 release commit at the head of `opus-portable`.
 - 0.11.8 commit: `8118e235eed4b4a18c378f12ced8a86be83ed4b9` — monitor-safe main-window bounds persistence and portable Windows build.
 - 0.11.7 commit: `c8b69b7b8842dd6c310dda05b22b8d52870d3e84` — superseded source correction after the first portable Windows build.
 - 0.11.6 commit: `621e44d8c484cd0a4d70eb124106170f6183d0ae` — compact Local Radio Controls and remembered auxiliary-window bounds.
@@ -114,7 +118,7 @@ Important: do **not** let a large base64 file be truncated while creating a GitH
   - Balanced Mix (default): Favorites and ratings 5–10 lead when available.
   - Favor the Hits: Favorites and ratings 7–10 lead when available.
 - If that personal pool is empty, Last.fm popularity/familiarity can help; missing popularity is neutral. Personal ratings and Favorite tags take precedence over public popularity.
-- Persistent tuning controls: Song Repeat Wait has 1–24 hour stops (default 4); Artist Repeat Wait has 30, 60, 90, 120, and 180 minute stops (default 90); Artist Sets are Single Tracks, Two-fers, Three-way, and Four-play (default Single Tracks). Artist Sets are planned before the first song and only start when the full requested set is eligible.
+- Persistent tuning controls: Song Repeat Wait has 1–24 hour stops (default 4); Artist Repeat Wait has 30, 60, 90, 120, and 180 minute stops (default 90); Artist Sets are Single Tracks, Two-fers, Three-way, and Four-play (default Single Tracks). Artist Sets are planned before the first song; if the requested length is unavailable, Local Radio safely shortens the set rather than pausing playback.
 - The Song Familiarity slider increases toward the right: Play Deep Cuts Too → Balanced Mix → Favor the Hits.
 
 ### Artist Radio and albums
