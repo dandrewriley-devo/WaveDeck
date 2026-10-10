@@ -33,17 +33,21 @@
 - 1.0.21 makes artist-repeat protection station-specific: starting any new Local Radio station clears the prior station’s artist-rest list while exact-song repeat history remains intact. Explore Radio now performs a small (at most three-hop) Last.fm related-artist rescue search from the original seed when its current route is exhausted, rather than immediately waiting. While an Explore route is away from its original seed, the gold current-station label changes to orange and returns to gold at the seed. Explore Radio thumbs-up is enabled in both the main player and Mini Player.
 - The 1.0.21 AppImage refreshes the pinned FFmpeg/FFprobe hashes after BtbN updated the moving `latest` archive again. The verified archive SHA-256 is `e4fba844d3451bd9b386dd007180a3db0ac343909d7796b0600eb4845b442aab`; extracted `ffmpeg` is `e35727315569a41ca0d13726648c96ae33a040e108f1bc25de1529cd4e257ea2`; `ffprobe` is `2d06053fcdfb69bdbe844fd8ff725a9a960af83ffad21f665d81c0c666234c0b`.
 
+## WaveDeck Opus 1.0.22
+
+- Live Radio Log now adds a human-readable **How it was picked** section above the technical fit details. New selections explain the station seed, related artists actually available in the library, artist-repeat protection, eligible-track count, the selected track's Last.fm popularity/personal rating/Favorite/feedback factors, and any Explore Radio hop, return, or rescue route. Older saved entries remain readable and simply identify that this newer story was not recorded yet.
+
 # WaveDeck Project Handoff
 
-This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.21**.
+This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.22**.
 
 ## Current published state
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `main`
-- Current version: **1.0.21**
-- Current release: 1.0.21 — station-specific artist rest and resilient Explore Radio routes.
-- Current commit: the verified 1.0.20 release commit at the head of `opus-portable`.
+- Current version: **1.0.22**
+- Current release: 1.0.22 — human-readable Live Radio selection stories.
+- Current commit: the verified 1.0.22 release commit at the head of `opus-portable`.
 - 0.11.8 commit: `8118e235eed4b4a18c378f12ced8a86be83ed4b9` — monitor-safe main-window bounds persistence and portable Windows build.
 - 0.11.7 commit: `c8b69b7b8842dd6c310dda05b22b8d52870d3e84` — superseded source correction after the first portable Windows build.
 - 0.11.6 commit: `621e44d8c484cd0a4d70eb124106170f6183d0ae` — compact Local Radio Controls and remembered auxiliary-window bounds.

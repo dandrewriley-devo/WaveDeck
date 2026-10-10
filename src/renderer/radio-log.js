@@ -31,13 +31,56 @@ function addDetails(parent, title, items, fallback) {
   parent.append(section);
 }
 
+function quoted(value, fallback = 'Unknown song') { return `“${String(value || fallback)}”`; }
+
+function naturalList(values = [], maximum = 12) {
+  const unique = [...new Set(values.filter(Boolean))]; const visible = unique.slice(0, maximum); const more = unique.length - visible.length;
+  if (!visible.length) return '';
+  if (visible.length === 1) return `${visible[0]}${more ? ` and ${more} more` : ''}`;
+  const text = visible.length === 2 ? `${visible[0]} and ${visible[1]}` : `${visible.slice(0, -1).join(', ')}, and ${visible.at(-1)}`;
+  return more ? `${text}, and ${more} more` : text;
+}
+
+function howPickedLines(decision, selected, manualStart) {
+  const info = decision.howPicked;
+  if (manualStart || info?.manualStart) return [`You selected ${quoted(selected.title)} by ${selected.artist || 'Unknown artist'} to begin this station. The next track will be selected automatically.`];
+  if (!info) return ['This older log entry has the score details below, but it was recorded before WaveDeck began saving the plain-language selection story.'];
+  const seed = info.seed || decision.seed || {};
+  const lines = [`This station began with ${quoted(seed.title)} by ${seed.artist || 'Unknown artist'}.`];
+  const related = naturalList(info.relatedArtists);
+  if (related) lines.push(`Related artists available in your library were ${related}.`);
+  else lines.push('No Last.fm related artists from the active route were available in your library for this pick.');
+  const explore = info.explore;
+  if (explore) {
+    const distance = ({ close: 'Close to Home', detour: 'Take a Detour', explore: 'Go Exploring' })[explore.distance] || 'Take a Detour';
+    const hopWord = explore.hops === 1 ? 'hop' : 'hops';
+    lines.push(`Explore Radio is set to ${distance}. This pick is ${explore.hops} ${hopWord} from the original seed${explore.activeAnchor ? `, using ${explore.activeAnchor} as the active route` : ''}.`);
+    if (explore.rescueUsed) lines.push('The current route had no eligible next track, so WaveDeck found another nearby related-artist route from the original seed.');
+    else if (explore.returningToSeed) lines.push('WaveDeck is pulling this route back toward the original seed.');
+  }
+  const artist = info.artist || {}; const chosenArtist = artist.name || selected.artist || 'Unknown artist';
+  lines.push(`WaveDeck chose ${chosenArtist} because ${artist.reason || 'it was in the eligible pool for this station'}.`);
+  const resting = naturalList(info.restingRelatedArtists);
+  if (resting) lines.push(`Other related artists were played more recently and were resting: ${resting}.`);
+  if (artist.eligibleTracks > 0) lines.push(`${chosenArtist} had ${artist.eligibleTracks} eligible ${artist.eligibleTracks === 1 ? 'track' : 'tracks'} based on repeat-protection settings.`);
+  const song = info.song || {}; const factors = [];
+  if (song.popularity !== null && song.popularity !== undefined) factors.push(`Last.fm popularity of ${song.popularity}/100`);
+  if (song.rating) factors.push(`your ${song.rating}/10 rating`);
+  if (song.favorite) factors.push('your Favorite tag');
+  if (song.thumbsUp) factors.push(`${song.thumbsUp} thumbs-up${song.thumbsUp === 1 ? '' : 's'} for this station`);
+  if (song.thumbsDown) factors.push(`${song.thumbsDown} negative feedback mark${song.thumbsDown === 1 ? '' : 's'} for this station`);
+  if (song.skips) factors.push(`${song.skips} earlier skip${song.skips === 1 ? '' : 's'} for this station`);
+  lines.push(`WaveDeck picked ${quoted(selected.title)} from that pool based on ${naturalList(factors, 99) || 'its relationship to the station and the current variety protections'}.`);
+  return lines;
+}
+
 function renderDecision(decision, { prepend = true } = {}) {
   if (!decision?.selected) return;
   const selected = decision.selected;
   const manualStart = decision.selectionTrigger === 'start' && decision.policy === 'manual-local-radio-start-v1';
   const entry = element('article', '', 'entry');
   const head = element('div', '', 'entry-head');
-  const mode = decision.mode === 'artist' ? 'Artist Radio' : 'Song Radio';
+  const mode = decision.mode === 'artist' ? 'Artist Radio' : decision.mode === 'explore' ? 'Explore Radio' : decision.mode === 'mix' ? 'Local Mix' : 'Song Radio';
   head.append(element('b', manualStart ? `${mode} — Selected seed track` : mode));
   head.append(element('span', new Date(decision.at).toLocaleString(), 'time'));
   entry.append(head);
@@ -81,6 +124,7 @@ function renderDecision(decision, { prepend = true } = {}) {
     `Skipped: ${decision.counts?.skippedForCooldown ?? 0} repeat wait, ${decision.counts?.skippedForDoNotPlay ?? 0} Do Not Play`
   ]);
   body.append(grid);
+  addDetails(body, 'How it was picked', howPickedLines(decision, selected, manualStart), 'WaveDeck did not save a plain-language selection story for this entry.');
   const additions = (selected.additions || []).map(item => `${item.label}: +${number(item.amount)}`);
   addDetails(body, 'Why this song fit', [
     ...(selected.eligibilityReasons || []).map(reason => `Acceptable match: ${reason}`),

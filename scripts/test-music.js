@@ -156,6 +156,11 @@ async function run() {
     assert.equal(exploreRadio.choose([exploreFirst, exploreSecond], exploreSeed, 'explore').id, 'explore-first', 'Explore Radio starts from a direct neighbor of the seed');
     exploreRadio.record(exploreFirst);
     assert.equal(exploreRadio.choose([exploreFirst, exploreSecond], exploreSeed, 'explore').id, 'explore-second', 'Explore Radio daisy-chains through the current related artist');
+    const explainedExplorePick = exploreRadio.getLastDecision();
+    assert.equal(explainedExplorePick.howPicked.seed.artist, 'Seed Artist', 'Live Radio diagnostics retain the original station seed');
+    assert(explainedExplorePick.howPicked.relatedArtists.includes('Second Neighbor'), 'Live Radio diagnostics identify available related artists');
+    assert.equal(explainedExplorePick.howPicked.artist.eligibleTracks, 1, 'Live Radio diagnostics count eligible tracks for the selected artist');
+    assert.equal(explainedExplorePick.howPicked.explore.hops, 2, 'Live Radio diagnostics record Explore Radio hop distance');
     const rescueRoot = track('rescue-root', { artist: 'Root Artist', artists: ['Root Artist'], albumArtist: 'Root Artist', similarArtists: ['Blocked Branch', 'Rescue Branch'] });
     const blockedBranch = track('blocked-branch', { artist: 'Blocked Branch', artists: ['Blocked Branch'], albumArtist: 'Blocked Branch', similarArtists: ['Stuck Branch'] });
     const stuckBranch = track('stuck-branch', { artist: 'Stuck Branch', artists: ['Stuck Branch'], albumArtist: 'Stuck Branch', similarArtists: ['Blocked Branch'] });
