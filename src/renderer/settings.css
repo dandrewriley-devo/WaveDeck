@@ -188,7 +188,8 @@ main{
 .card-actions{ align-items:center; display:flex; gap:12px; margin-top:auto; }
 .card-actions .subtle-link{ margin:0; text-transform:uppercase; }
 .card-donut-wrap{ align-content:start; align-items:center; box-sizing:border-box; display:grid; gap:10px; height:190px; justify-items:center; margin:0; padding-top:16px; text-align:center; }
-.storage-card,.lastfm-card{ display:grid; grid-template-rows:auto 190px 1fr auto; }
+.storage-card{ display:grid; grid-template-rows:auto 190px 1fr auto; }
+.lastfm-card{ display:grid; grid-template-rows:auto 190px auto auto auto; }
 .import-speed-label{ align-items:center; color:var(--muted); display:flex; font-size:12px; gap:7px; margin-top:auto; }
 .import-speed-label .input{ flex:1; min-width:0; }
 .import-action{ width:100%; }
@@ -223,6 +224,7 @@ main{
 .local-music-section:first-child{ margin-top:0; }
 .lastfm-toggle-row{ margin-top:auto; }
 .lastfm-toggle-row .preference-toggle{ margin:0; }
+.lastfm-connection{ color:var(--muted); font-size:11px; line-height:1.25; min-height:14px; }
 .visually-hidden{ height:1px; margin:-1px; overflow:hidden; position:absolute; width:1px; clip:rect(0 0 0 0); white-space:nowrap; }
 .local-mix-manager{ display:grid; gap:7px; }
 .local-mix-analysis{ background:#1f1f1f; border:1px solid #383838; display:grid; gap:6px; padding:10px; }

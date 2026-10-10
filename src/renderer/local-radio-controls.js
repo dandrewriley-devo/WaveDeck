@@ -1,6 +1,7 @@
 const crossfade = document.getElementById('localMusicCrossfade');
 const localMixFavorLastFm = document.getElementById('localMixFavorLastFm');
 const familiarity = document.getElementById('localRadioFamiliarity');
+const exploreDistance = document.getElementById('localRadioExploreDistance');
 const songRepeat = document.getElementById('localRadioSongRepeat');
 const songRepeatValue = document.getElementById('localRadioSongRepeatValue');
 const artistRepeat = document.getElementById('localRadioArtistRepeat');
@@ -8,6 +9,7 @@ const artistSet = document.getElementById('localRadioArtistSet');
 const status = document.getElementById('status');
 
 const FAMILIARITY = ['deep-cuts', 'balanced', 'hits'];
+const EXPLORE_DISTANCES = ['close', 'detour', 'explore'];
 const ARTIST_WAITS = [30, 60, 90, 120, 180];
 const ARTIST_SETS = [1, 2, 3, 4];
 
@@ -34,6 +36,8 @@ function updateSongRepeatStop(hours) {
 function render(preferences = {}) {
   crossfade.checked = preferences.localMusicCrossfadeEnabled !== false;
   localMixFavorLastFm.checked = preferences.localMixFavorLastFm === true;
+  const selectedExploreDistance = EXPLORE_DISTANCES.includes(preferences.localRadioExploreDistance) ? preferences.localRadioExploreDistance : 'detour';
+  exploreDistance.value = String(EXPLORE_DISTANCES.indexOf(selectedExploreDistance));
   const selectedFamiliarity = FAMILIARITY.includes(preferences.localRadioFamiliarity) ? preferences.localRadioFamiliarity : 'balanced';
   familiarity.value = String(FAMILIARITY.indexOf(selectedFamiliarity));
   const songHours = Number.isInteger(Number(preferences.localRadioSongRepeatHours)) ? Number(preferences.localRadioSongRepeatHours) : 4;
@@ -75,6 +79,15 @@ familiarity.addEventListener('change', async () => {
     showStatus();
   } catch (error) { showStatus(`Could not save Song familiarity: ${error.message}`, true); }
   finally { familiarity.disabled = false; }
+});
+
+exploreDistance.addEventListener('change', async () => {
+  exploreDistance.disabled = true;
+  try {
+    render(await window.wavedeck.setLocalRadioExploreDistance(EXPLORE_DISTANCES[Number(exploreDistance.value)] || 'detour'));
+    showStatus();
+  } catch (error) { showStatus(`Could not save Explore Radio setting: ${error.message}`, true); }
+  finally { exploreDistance.disabled = false; }
 });
 
 songRepeat.addEventListener('input', () => updateSongRepeatStop(songRepeat.value));

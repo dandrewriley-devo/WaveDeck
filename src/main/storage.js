@@ -313,6 +313,9 @@ function validatePreferences(value) {
   const localRadioArtistRepeatMinutes = [30, 60, 90, 120, 180].includes(Number(value?.localRadioArtistRepeatMinutes)) ? Number(value.localRadioArtistRepeatMinutes) : 90;
   const localRadioArtistSetSize = [1, 2, 3, 4].includes(Number(value?.localRadioArtistSetSize)) ? Number(value.localRadioArtistSetSize) : 1;
   const localMixFavorLastFm = value?.localMixFavorLastFm === true;
+  const localRadioExploreDistance = ['close', 'detour', 'explore'].includes(value?.localRadioExploreDistance)
+    ? value.localRadioExploreDistance
+    : 'detour';
   const localMusicCrossfadeEnabled = value?.localMusicCrossfadeEnabled !== false;
   const portableImportWorkers = [2, 6, 12].includes(Number(value?.portableImportWorkers)) ? Number(value.portableImportWorkers) : 2;
   const miniPlayerDisplayMode = value?.miniPlayerDisplayMode === 'source' ? 'source' : 'now-playing';
@@ -409,6 +412,7 @@ function validatePreferences(value) {
     localRadioArtistRepeatMinutes,
     localRadioArtistSetSize,
     localMixFavorLastFm,
+    localRadioExploreDistance,
     localMusicCrossfadeEnabled,
     portableImportWorkers,
     miniPlayerDisplayMode,
@@ -602,6 +606,7 @@ class PortableStorage {
       localRadioArtistRepeatMinutes: preferences.localRadioArtistRepeatMinutes,
       localRadioArtistSetSize: preferences.localRadioArtistSetSize,
       localMixFavorLastFm: preferences.localMixFavorLastFm,
+      localRadioExploreDistance: preferences.localRadioExploreDistance,
       localMusicCrossfadeEnabled: preferences.localMusicCrossfadeEnabled,
       portableImportWorkers: preferences.portableImportWorkers,
       miniPlayerDisplayMode: preferences.miniPlayerDisplayMode,
@@ -735,6 +740,13 @@ class PortableStorage {
   setLocalMixFavorLastFm(enabled) {
     const preferences = this.readPreferences();
     preferences.localMixFavorLastFm = enabled === true;
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences();
+  }
+
+  setLocalRadioExploreDistance(value) {
+    const preferences = this.readPreferences();
+    preferences.localRadioExploreDistance = ['close', 'detour', 'explore'].includes(value) ? value : 'detour';
     this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
     return this.getUiPreferences();
   }

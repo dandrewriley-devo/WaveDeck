@@ -57,6 +57,7 @@ function musicContextLabel(music) {
   const seed = music?.seed || music?.current || {};
   if (music?.mode === 'album') return seed.album ? `${seed.album} Radio` : 'Album Radio';
   if (music?.mode === 'artist') return `${radioArtist(seed) || seed.artist || 'Artist'} Radio`;
+  if (music?.mode === 'explore') return seed.title ? `${seed.title} Explore Radio` : 'Explore Radio';
   if (music?.mode === 'radio') return seed.title ? `${seed.title} Radio` : 'Song Radio';
   return seed.title || 'Song';
 }
@@ -285,7 +286,7 @@ class MediaController {
 
   async nextPreset() {
     if (this.music) {
-      if (['radio', 'artist', 'mix'].includes(this.music.mode) && this.music.current) {
+      if (['radio', 'artist', 'explore', 'mix'].includes(this.music.mode) && this.music.current) {
         this.musicRadio?.recordFeedback(this.music.radioKey, this.music.current, 'skip');
       }
       return this.advanceMusic('skip');
@@ -334,7 +335,7 @@ class MediaController {
   }
 
   async playMusic(id, mode = 'song') {
-    if (!['song', 'album', 'artist', 'radio'].includes(mode)) throw new Error('Unknown music mode.');
+    if (!['song', 'album', 'artist', 'radio', 'explore'].includes(mode)) throw new Error('Unknown music mode.');
     const track = await this.musicLibrary.resolve(id);
     if (track.doNotPlay) throw new Error('This song is marked Do Not Play.');
     await this.beforeStop({ reason: 'music-playback', station: this.getCurrentStation() });
@@ -346,8 +347,9 @@ class MediaController {
       .sort((a, b) => a.disc - b.disc || a.track - b.track || a.relativePath.localeCompare(b.relativePath));
     if (mode === 'album' && !album.length) album.push(track);
     const albumArtistSeed = mode === 'album' ? artistRadioSeedForAlbum(track) : null;
-    this.music = { seed: track, albumArtistSeed, mode, radioKey: `${mode}:${track.songKey || track.id}`, current: null, queue: mode === 'album' ? album.map(t => t.id) : [], back: [], failed: new Set(), waiting: false, initialRadioSelectionPending: ['radio', 'artist'].includes(mode) };
+    this.music = { seed: track, albumArtistSeed, mode, radioKey: `${mode}:${track.songKey || track.id}`, current: null, queue: mode === 'album' ? album.map(t => t.id) : [], back: [], failed: new Set(), waiting: false, initialRadioSelectionPending: ['radio', 'artist', 'explore'].includes(mode) };
     if (mode === 'artist') this.musicRadio?.beginArtistSession?.(track);
+    if (mode === 'explore') this.musicRadio?.beginExploreSession?.(track);
     this.onLocalStationStart(this.music.radioKey);
     this.onStationChanged(null);
     return this.loadMusic(mode === 'album' ? this.music.queue.shift() : id);
@@ -496,7 +498,7 @@ class MediaController {
   async handleEnded(event) {
     if (!this.music || this.mediaState !== 'playing') return;
     try {
-      if (event?.reason === 'eof' && ['radio', 'artist', 'mix'].includes(this.music.mode) && this.music.current) {
+      if (event?.reason === 'eof' && ['radio', 'artist', 'explore', 'mix'].includes(this.music.mode) && this.music.current) {
         this.musicRadio?.recordFeedback(this.music.radioKey, this.music.current, 'complete');
       }
       await this.advanceMusic(event.reason);
@@ -504,7 +506,7 @@ class MediaController {
   }
 
   async rateMusic(kind) {
-    if (!this.music || !['radio', 'artist', 'mix'].includes(this.music.mode) || !this.music.current) {
+    if (!this.music || !['radio', 'artist', 'explore', 'mix'].includes(this.music.mode) || !this.music.current) {
       throw new Error('Start Local Radio before using feedback.');
     }
     const valid = kind === 'up' || kind === 'down';

@@ -33,6 +33,12 @@
       </div>
 
       <div class="control">
+        <label for="localRadioExploreDistance">How Far Should We Stray From the Seed?</label>
+        <input id="localRadioExploreDistance" type="range" min="0" max="2" step="1" value="1" />
+        <div class="stops three" aria-hidden="true"><span>Close to Home</span><span>Take a Detour</span><span>Go Exploring</span></div>
+      </div>
+
+      <div class="control">
         <label for="localRadioSongRepeat">Don't play the same song for how long?</label>
         <input id="localRadioSongRepeat" type="range" min="1" max="24" step="1" value="4" />
         <div class="song-repeat-value" aria-hidden="true"><output id="localRadioSongRepeatValue"></output></div>

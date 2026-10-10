@@ -82,6 +82,9 @@ const lastFmEnabled = document.getElementById('lastFmEnabled');
 const lastFmStatus = document.getElementById('lastFmStatus');
 const lastFmChart = document.getElementById('lastFmChart');
 const lastFmPercent = document.getElementById('lastFmPercent');
+const lastFmConnection = document.getElementById('lastFmConnection');
+const connectLastFmBtn = document.getElementById('connectLastFmBtn');
+const disconnectLastFmBtn = document.getElementById('disconnectLastFmBtn');
 const localMixManager = document.getElementById('localMixManager');
 const localMixDetails = document.getElementById('localMixDetails');
 const localMixSummary = document.getElementById('localMixSummary');
@@ -287,13 +290,23 @@ function renderLastFmStatus(status) {
   const total = Number(status.tracksTotal || 0);
   const current = Math.min(total, Number(status.tracksCurrent || 0));
   const percent = total ? Math.round((current / total) * 100) : 0;
-  lastFmChart.style.background = `conic-gradient(#d51007 0deg ${percent * 3.6}deg, #3a3a3a ${percent * 3.6}deg 360deg)`;
+  const progressColor = `hsl(${Math.round(4 + (116 * percent / 100))} 78% 48%)`;
+  lastFmChart.style.background = `conic-gradient(${progressColor} 0deg ${percent * 3.6}deg, #3a3a3a ${percent * 3.6}deg 360deg)`;
   lastFmPercent.textContent = total ? `${percent}%` : '—';
   lastFmChart.title = `${current.toLocaleString()} of ${total.toLocaleString()} tracks enriched`;
   lastFmChart.setAttribute('aria-label', lastFmChart.title);
   const queued = Number(status.queuedAlbums || 0);
   const updating = status.processing === true || queued > 0;
   queueLastFmRefreshBtn.disabled = updating || !status.enabled;
+  const scrobble = status.scrobble || {};
+  const connected = scrobble.connected === true;
+  connectLastFmBtn.hidden = connected;
+  disconnectLastFmBtn.hidden = !connected;
+  connectLastFmBtn.disabled = scrobble.connecting === true;
+  disconnectLastFmBtn.disabled = scrobble.connecting === true;
+  lastFmConnection.textContent = connected
+    ? `Connected as ${scrobble.username || 'Last.fm listener'}${Number(scrobble.pending || 0) ? ` · ${Number(scrobble.pending).toLocaleString()} scrobbles waiting` : ''}${scrobble.message ? ` · ${scrobble.message}` : ''}`
+    : (scrobble.connecting ? (scrobble.message || 'Finish connecting in your browser.') : 'Connect Last.fm to scrobble Local Music.');
   if (!status.enabled) { lastFmStatus.textContent = 'Last.fm music data is off.'; return; }
   lastFmStatus.textContent = `Last.fm: ${current.toLocaleString()} of ${total.toLocaleString()} tracks current${queued ? ` · ${queued.toLocaleString()} albums queued` : ''}${status.message ? ` · ${status.message}` : ''}`;
 }
@@ -1315,6 +1328,20 @@ queueLastFmRefreshBtn.addEventListener('click', async () => {
     queueLastFmRefreshBtn.disabled = false;
     setStatus(statusLocalMusic, `Could not queue Last.fm refresh: ${error.message}`, false);
   }
+});
+
+connectLastFmBtn.addEventListener('click', async () => {
+  connectLastFmBtn.disabled = true;
+  try { renderLastFmStatus(await window.wavedeck.connectLastFm()); }
+  catch (error) { setStatus(statusLocalMusic, `Could not start Last.fm connection: ${error.message}`, false); }
+  finally { void loadLastFmStatus(); }
+});
+
+disconnectLastFmBtn.addEventListener('click', async () => {
+  disconnectLastFmBtn.disabled = true;
+  try { renderLastFmStatus(await window.wavedeck.disconnectLastFm()); }
+  catch (error) { setStatus(statusLocalMusic, `Could not disconnect Last.fm: ${error.message}`, false); }
+  finally { void loadLastFmStatus(); }
 });
 
 async function reloadEverything() {

@@ -504,7 +504,7 @@ async function renderMusic({ preserveExisting = false } = {}) {
         [track.artist || 'Unknown artist', track.album, track.year].filter(Boolean).join(' • ')));
       row.append(summary);
       const actions = element('div', 'music-actions');
-      for (const [mode, label] of [['radio', 'Song Radio'], ['artist', 'Artist Radio'], ['album', 'Play Album']]) {
+      for (const [mode, label] of [['radio', 'Song Radio'], ['explore', 'Explore Radio'], ['artist', 'Artist Radio'], ['album', 'Play Album']]) {
         const button = element('button', 'recording-action', label);
         button.type = 'button';
         button.addEventListener('click', async () => {

@@ -249,8 +249,9 @@
           <div class="lastfm-toggle-row">
             <label class="preference-toggle"><input id="lastFmEnabled" type="checkbox" /><span class="toggle-switch" aria-hidden="true"></span><span>Enable Last.fm</span></label>
           </div>
+          <div id="lastFmConnection" class="lastfm-connection">Connect Last.fm to scrobble Local Music.</div>
           <div id="lastFmStatus" class="visually-hidden">Last.fm is ready when you are.</div>
-          <div class="card-actions"><button id="queueLastFmRefreshBtn" class="subtle-link" type="button">Refresh</button></div>
+          <div class="card-actions"><button id="connectLastFmBtn" class="subtle-link" type="button">Connect Last.fm</button><button id="disconnectLastFmBtn" class="subtle-link" type="button" hidden>Disconnect</button><button id="queueLastFmRefreshBtn" class="subtle-link" type="button">Refresh</button></div>
         </section>
         <section class="local-music-card dashboard-square import-music-section" aria-labelledby="portableImportTitle">
           <div class="card-title" id="portableImportTitle">Import to Portable Music <span class="info-tip" title="WaveDeck copies selected music into Portable Music as compact Opus files. Your original music is never changed." aria-label="Import copies music without changing the source">i</span></div>
@@ -330,9 +331,10 @@
             <p>A track marked <code>DO_NOT_PLAY=1</code> is never selected by Local Radio or a Local Mix. A Favorite tag gives that song a stronger chance when it fits the station.</p>
           </details>
           <details><summary>Playing Local Music</summary>
-            <p>Search your Local Music library by song, artist, album, or year. Each matching song can start <b>Song Radio</b>, <b>Artist Radio</b>, or <b>Play Album</b>.</p>
+            <p>Search your Local Music library by song, artist, album, or year. Each matching song can start <b>Song Radio</b>, <b>Explore Radio</b>, <b>Artist Radio</b>, or <b>Play Album</b>.</p>
             <ul>
               <li><b>Song Radio</b> starts from a song and looks for music that belongs with it.</li>
+              <li><b>Explore Radio</b> takes a controlled path through related artists, then returns toward the original seed.</li>
               <li><b>Artist Radio</b> stays focused on the selected artist—about 90% of its selections are from that artist, with only an occasional related-artist change.</li>
               <li><b>Play Album</b> plays the album in order, then moves into Artist Radio when the album has a clear Album Artist. Various Artists albums stop when they end.</li>
             </ul>
@@ -348,12 +350,12 @@
             <p>Settings → Local Music → <b>Manage Local Mixes</b> shows every installed book, its eligible-song count, and a readiness label. Enable the mixes you want to see in Local Music; optional books you add later stay hidden until you turn them on. Star a mix to move it to the top of the Local Mixes list.</p>
           </details>
           <details><summary>Local Radio Controls and Crossfade</summary>
-            <p>Open <b>Local Radio Controls</b> from the sliders icon at the left of the Local Music playback controls. It lets you shape Song Radio and Local Mixes. <b>Song Familiarity</b> moves from Play Deep Cuts Too to Balanced Mix to Favor the Hits. It changes the odds among songs that already fit the station; it does not make unrelated music eligible.</p>
+            <p>Open <b>Local Radio Controls</b> from the sliders icon at the left of the Local Music playback controls. It lets you shape Song Radio and Local Mixes. <b>Song Familiarity</b> moves from Play Deep Cuts Too to Balanced Mix to Favor the Hits. <b>How Far Should We Stray From the Seed?</b> controls Explore Radio. These controls change the odds among songs that already fit; they do not make unrelated music eligible.</p>
             <p><b>Song Repeat Wait</b> sets how long a song rests before it can return. <b>Artist Repeat Wait</b> sets the break before an artist returns. <b>Artist Sets</b> can play Single Tracks, Two-fers, Three-way, or Four-play sets. Artist Radio itself uses its fixed artist-focused behavior rather than these taste controls.</p>
             <p><b>Enable 8-second crossfade</b> blends Local Music tracks, Local Radio, Local Mixes, and albums. It is on by default and does not affect Streaming Radio.</p>
           </details>
           <details><summary>Last.fm Music Data and Live Radio Log</summary>
-            <p>When enabled in Settings → Local Music, WaveDeck Opus can refresh song popularity, useful genre tags, and related artists in its own portable music database. Last.fm data stays in that database; it is not written into music files.</p>
+            <p>When enabled in Settings → Local Music, WaveDeck Opus can refresh song popularity, useful genre tags, and related artists in its own portable music database. Last.fm data stays in that database; it is not written into music files. Connect your Last.fm account there to scrobble Local Music playback.</p>
             <p>WaveDeck includes the needed Last.fm access. Use <b>Refresh Last.fm Music Data</b> when you want a catch-up refresh. The progress bar shows when music data is already updating. The subtle <b>Open Live Radio Log</b> link opens selection diagnostics, including prior choices recorded while the log was closed.</p>
           </details>
           <details><summary>Settings, Library Management, and Updates</summary>

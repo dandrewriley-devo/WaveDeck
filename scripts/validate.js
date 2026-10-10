@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck-opus");
-assert.strictEqual(packageJson.version, "1.0.19");
-assert.strictEqual(packageJson.wavedeckVersion, "1.0.19");
+assert.strictEqual(packageJson.version, "1.0.20");
+assert.strictEqual(packageJson.wavedeckVersion, "1.0.20");
 assert.strictEqual(packageJson.desktopName, "wavedeck-opus.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck Opus");
 assert.strictEqual(packageJson.build.appId, "com.a17press.wavedeckopus");
@@ -351,6 +351,7 @@ try {
     localRadioArtistRepeatMinutes: 90,
     localRadioArtistSetSize: 1,
     localMixFavorLastFm: false,
+    localRadioExploreDistance: "detour",
     localMusicCrossfadeEnabled: true,
     portableImportWorkers: 2,
     miniPlayerDisplayMode: "now-playing",
@@ -389,6 +390,7 @@ try {
     localRadioArtistRepeatMinutes: 90,
     localRadioArtistSetSize: 1,
     localMixFavorLastFm: false,
+    localRadioExploreDistance: "detour",
     localMusicCrossfadeEnabled: true,
     portableImportWorkers: 2,
     miniPlayerDisplayMode: "now-playing",
@@ -411,6 +413,7 @@ try {
   assert.strictEqual(storage.setLocalRadioFamiliarity('hits').localRadioFamiliarity, 'hits');
   assert.deepStrictEqual(storage.setLocalRadioTuning({ songRepeatHours: 6, artistRepeatMinutes: 180, artistSetSize: 2 }).localRadioArtistSetSize, 2);
   assert.strictEqual(storage.setLocalMixFavorLastFm(true).localMixFavorLastFm, true);
+  assert.strictEqual(storage.setLocalRadioExploreDistance('explore').localRadioExploreDistance, 'explore');
   assert.strictEqual(storage.setLocalMusicCrossfadeEnabled(false).localMusicCrossfadeEnabled, false);
   assert.strictEqual(storage.setPortableImportWorkers(6).portableImportWorkers, 6);
   assert.strictEqual(storage.setPortableImportWorkers(12).portableImportWorkers, 12);
@@ -490,6 +493,7 @@ try {
     localRadioArtistRepeatMinutes: 180,
     localRadioArtistSetSize: 2,
     localMixFavorLastFm: true,
+    localRadioExploreDistance: "explore",
     localMusicCrossfadeEnabled: false,
     portableImportWorkers: 12,
     miniPlayerDisplayMode: "source",
@@ -1402,6 +1406,8 @@ assert.ok(settingsHtml.includes('id="chooseAdditionalMusicFolderBtn"'));
 assert.ok(settingsHtml.includes('id="lastFmEnabled"'));
 assert.ok(!settingsHtml.includes('id="lastFmApiKey"'));
 assert.ok(settingsHtml.includes('id="queueLastFmRefreshBtn"'));
+assert.ok(settingsHtml.includes('id="connectLastFmBtn"'));
+assert.ok(settingsHtml.includes('id="disconnectLastFmBtn"'));
 assert.ok(settingsHtml.includes('>Enable Last.fm</span>'));
 assert.ok(settingsHtml.includes('id="localMixSummary"'));
 assert.ok(settingsHtml.includes('id="manageLocalMixesBtn"'));
@@ -1412,9 +1418,12 @@ assert.ok(localRadioControlsHtml.includes('>Three-way<'));
 assert.ok(localRadioControlsHtml.includes('>Four-play<'));
 assert.ok(localRadioControlsHtml.includes('id="localMusicCrossfade"'));
 assert.ok(localRadioControlsHtml.includes('id="localMixFavorLastFm"'));
+assert.ok(localRadioControlsHtml.includes('id="localRadioExploreDistance"'));
+assert.ok(localRadioControlsHtml.includes('How Far Should We Stray From the Seed?'));
 assert.ok(localRadioControlsHtml.includes('Favor Last.fm Data for Local Mixes'));
 assert.ok(localRadioControlsSource.includes('setLocalRadioTuning'));
 assert.ok(localRadioControlsSource.includes('setLocalMixFavorLastFm'));
+assert.ok(localRadioControlsSource.includes('setLocalRadioExploreDistance'));
 assert.ok(localRadioControlsSource.includes('setLocalMusicCrossfade'));
 assert.ok(!localRadioControlsSource.includes('FAMILIARITY_COPY'));
 assert.ok(miniPlayerHtml.includes('id="playPauseBtn"'));
@@ -1686,7 +1695,7 @@ assert.ok(rendererSource.includes("toggleLocalStationPreset"));
 assert.ok(rendererSource.includes("removeRecentLocalStation"));
 assert.ok(rendererSource.includes("status.changed !== false"));
 assert.ok(rendererSource.includes("details.music-row[open]"));
-assert.ok(rendererSource.includes("['radio', 'Song Radio'], ['artist', 'Artist Radio'], ['album', 'Play Album']"));
+assert.ok(rendererSource.includes("['radio', 'Song Radio'], ['explore', 'Explore Radio'], ['artist', 'Artist Radio'], ['album', 'Play Album']"));
 assert.ok(!rendererSource.includes("Play Song"));
 assert.ok(indexHtml.includes('id="clearMusicSearchBtn"'));
 assert.ok(!indexHtml.includes('id="musicContextLabel"'));
@@ -1779,10 +1788,10 @@ assert.ok(windowsWorkflow.includes('chmod 755 "$appimage"'));
 const opusWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "opus-portable.yml"), "utf8");
 assert.ok(opusWorkflow.includes("branches: [opus-portable]"));
 assert.ok(opusWorkflow.includes("npm run dist:linux -- --publish never"));
-assert.ok(opusWorkflow.includes("WaveDeckOpus-1.0.19-Linux"));
+assert.ok(opusWorkflow.includes("WaveDeckOpus-1.0.20-Linux"));
 assert.ok(opusWorkflow.includes("dist/WaveDeckOpus.AppImage"));
-assert.ok(opusWorkflow.includes("tag_name: opus-v1.0.19"));
-assert.ok(opusWorkflow.includes("Publish WaveDeck Opus 1.0.19"));
+assert.ok(opusWorkflow.includes("tag_name: opus-v1.0.20"));
+assert.ok(opusWorkflow.includes("Publish WaveDeck Opus 1.0.20"));
 const musicLibraryHtml = fs.readFileSync(path.join(root, "src", "renderer", "music-library.html"), "utf8");
 const musicLibraryRenderer = fs.readFileSync(path.join(root, "src", "renderer", "music-library.js"), "utf8");
 assert.ok(musicLibraryHtml.includes('Search artists, albums, songs, or genres'));
@@ -1801,6 +1810,10 @@ assert.ok(opusOptimizerSource.includes('same-release-tags-different-audio'));
 assert.ok(mainSource.includes('musicLibraryWindowBounds'));
 const linuxFfmpegScript = fs.readFileSync(path.join(root, "scripts", "prepare-linux-ffmpeg.js"), "utf8");
 assert.ok(linuxFfmpegScript.includes('PROBE_SHA256'));
+assert.ok(linuxFfmpegScript.includes('2f9294be3e97095b8a213362fbc334b5f376f86427e59827cb5bb138a55efdf5'));
+const lastFmScrobblerSource = fs.readFileSync(path.join(root, "src", "main", "lastfm-scrobbler.js"), "utf8");
+assert.ok(lastFmScrobblerSource.includes("track.scrobble"));
+assert.ok(lastFmScrobblerSource.includes("track.updateNowPlaying"));
 const macosInstructions = fs.readFileSync(path.join(root, "START-HERE-MACOS.txt"), "utf8");
 assert.ok(macosInstructions.includes("Version 0.6.1 universal build"));
 assert.ok(macosInstructions.includes("WaveDeck is unsigned"));
@@ -1820,6 +1833,7 @@ for (const file of [
   "src/main/windows-media-keys.js",
   "src/main/windows-sidebar.js",
   "src/main/media-controller.js",
+  "src/main/lastfm-scrobbler.js",
   "src/main/listening-history.js",
   "src/main/mpris.js",
   "src/main/window-layout.js",

@@ -11,6 +11,7 @@ const { trackKey } = require('../src/main/portable-importer');
 const { ComputerMusicFolders, resolveComputerIdentity } = require('../src/main/computer-music-folders');
 const { MediaController, serializeTransport } = require('../src/main/media-controller');
 const { LastFmEnricher, popularityScore } = require('../src/main/lastfm-enricher');
+const { LastFmScrobbler, signatureFor } = require('../src/main/lastfm-scrobbler');
 const { resolveLocalMix, listLocalMixes, loadLocalMixes, getLocalMixAvailability, isTrackEligibleForMix, qualityForTrackCount } = require('../src/main/local-mixes');
 
 function fixture() {
@@ -116,6 +117,18 @@ async function run() {
     const lastFmLibrary = { enabled: true, worker: {}, getLastFmStatus: async () => ({ tracksTotal: 1, tracksCurrent: 0, queuedAlbums: 1 }), nextLastFmAlbum: async () => ({ albumKey: 'artist\\nalbum', queued: true, tracks: [track('lastfm')], artists: ['Artist'] }), updateLastFmTrack: async value => savedTracks.push(value), updateLastFmArtist: async value => savedArtists.push(value), applyLastFmTrack: () => {}, applyLastFmArtist: () => {}, completeLastFmAlbum: async () => {} };
     const enricher = new LastFmEnricher({ library: lastFmLibrary, getPreferences: () => ({ lastFmEnabled: true, lastFmApiKey: 'key' }), requestIntervalMs: 0, fetchImpl: async url => ({ ok: true, json: async () => url.includes('track.getInfo') ? { track: { listeners: '100000', toptags: { tag: [{ name: 'Progressive Rock' }] } } } : { similarartists: { artist: [{ name: 'David Gilmour' }] } } }) });
     await enricher.tick(); enricher.stop(); assert(savedTracks[0].popularity > 0 && savedArtists[0].similarArtists.includes('David Gilmour')); assert(popularityScore(100000) > popularityScore(1000));
+    assert.match(signatureFor({ b: '2', a: '1' }, 'test-secret'), /^[a-f0-9]{32}$/, 'Last.fm write calls use a stable signed request');
+    const scrobbleRequests = [];
+    const scrobbler = new LastFmScrobbler({ dataDir: path.join(temp, 'lastfm-scrobble'), now: () => 1_000_000, fetchImpl: async (url, options = {}) => {
+      scrobbleRequests.push({ url, options }); return { ok: true, json: async () => ({ scrobbles: { accepted: '1' } }) };
+    } });
+    scrobbler.data.sessionKey = 'a'.repeat(32); scrobbler.data.username = 'Andrew';
+    scrobbler.trackStarted(track('scrobble', { title: 'Scrobble Song', artist: 'Scrobble Artist', duration: 240 }));
+    scrobbler.observe({ mediaState: 'playing', position: 120, duration: 240, currentMusic: { track: { id: 'scrobble' } } });
+    await new Promise(resolve => setTimeout(resolve, 0));
+    assert.ok(scrobbleRequests.some(request => String(request.options.body || '').includes('method=track.scrobble')), 'Local Music queues and submits a scrobble after genuine listening');
+    assert.equal(scrobbler.getStatus().pending, 0, 'accepted scrobbles leave the offline queue');
+    scrobbler.stop();
 
     let now = 10_000_000;
     const seed = track('comfortably-numb', { title: 'Comfortably Numb', artist: 'Pink Floyd', artists: ['Pink Floyd'], albumArtist: 'Pink Floyd', album: 'The Wall', genres: ['Progressive Rock', 'Rock'], similarArtists: ['David Gilmour'] });
@@ -135,6 +148,14 @@ async function run() {
     assert.equal(diagnosticSelections.at(-1).selected.title, 'Comfortably Numb');
     assert.equal(radio.choose([country], seed, 'radio'), null, 'a broad Rock tag alone is never enough');
     assert.equal(radio.choose([sameAlbum, country], seed, 'radio').id, sameAlbum.id, 'same-album songs lead Song Radio');
+    const exploreSeed = track('explore-seed', { artist: 'Seed Artist', artists: ['Seed Artist'], albumArtist: 'Seed Artist', similarArtists: ['First Neighbor'] });
+    const exploreFirst = track('explore-first', { artist: 'First Neighbor', artists: ['First Neighbor'], albumArtist: 'First Neighbor', similarArtists: ['Second Neighbor'] });
+    const exploreSecond = track('explore-second', { artist: 'Second Neighbor', artists: ['Second Neighbor'], albumArtist: 'Second Neighbor', similarArtists: ['Seed Artist'] });
+    const exploreRadio = new MusicRadio({ dataDir: path.join(temp, 'explore-radio'), now: () => now, random: () => 0, getTuning: () => ({ localRadioExploreDistance: 'detour' }) });
+    exploreRadio.beginExploreSession(exploreSeed); exploreRadio.record(exploreSeed);
+    assert.equal(exploreRadio.choose([exploreFirst, exploreSecond], exploreSeed, 'explore').id, 'explore-first', 'Explore Radio starts from a direct neighbor of the seed');
+    exploreRadio.record(exploreFirst);
+    assert.equal(exploreRadio.choose([exploreFirst, exploreSecond], exploreSeed, 'explore').id, 'explore-second', 'Explore Radio daisy-chains through the current related artist');
     assert(weight(seedArtist, seed, 'artist', [], now) > weight(similar, seed, 'artist', [], now), 'Artist Radio returns to seed artist');
     assert(weight(similar, seed, 'artist', [], now) > 0 && weight(specificTag, seed, 'radio', [], now) > 0, 'Last.fm and specific tags are meaningful links');
     assert.equal(weight(country, seed, 'radio', [], now), 0);
