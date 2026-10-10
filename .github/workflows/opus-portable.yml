@@ -36,7 +36,7 @@ jobs:
           sha256sum "$appimage"
       - uses: actions/upload-artifact@v4
         with:
-          name: WaveDeckOpus-1.0.20-Linux
+          name: WaveDeckOpus-1.0.21-Linux
           path: dist/WaveDeckOpus.AppImage
           if-no-files-found: error
           compression-level: 0
@@ -48,7 +48,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: WaveDeckOpus-1.0.20-Linux
+          name: WaveDeckOpus-1.0.21-Linux
           path: release-assets
       - name: Inspect release asset
         shell: bash
@@ -56,12 +56,12 @@ jobs:
           set -euo pipefail
           test -f release-assets/WaveDeckOpus.AppImage
           sha256sum release-assets/WaveDeckOpus.AppImage
-      - name: Publish WaveDeck Opus 1.0.20
+      - name: Publish WaveDeck Opus 1.0.21
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: opus-v1.0.20
+          tag_name: opus-v1.0.21
           target_commitish: ${{ github.sha }}
-          name: WaveDeck Opus 1.0.20
+          name: WaveDeck Opus 1.0.21
           body: Linux x64 WaveDeck Opus build. Keep WaveDeckOpus.AppImage beside its own Data and Music folders. It automatically converts portable Music to lean Opus files; an Additional Music Folder is never changed.
           files: release-assets/WaveDeckOpus.AppImage
           overwrite_files: true

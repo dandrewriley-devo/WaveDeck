@@ -120,6 +120,7 @@ function updateCurrentSource(status = currentPlayerStatus) {
   const music = status?.currentMusic;
   if (music && status?.mediaState !== 'stopped') {
     currentSourceRow.hidden = false;
+    currentSourceRow.classList.toggle('exploring-away', music.awayFromSeed === true);
     currentSourceName.textContent = music.label || 'Local Music';
     currentSourceIcon.innerHTML = ICON_LOCAL_MUSIC;
     return;
@@ -127,11 +128,13 @@ function updateCurrentSource(status = currentPlayerStatus) {
   const station = status?.currentStation || currentStreamingStation;
   if (station && status?.mediaState !== 'stopped') {
     currentSourceRow.hidden = false;
+    currentSourceRow.classList.remove('exploring-away');
     currentSourceName.textContent = station.name || 'Streaming Radio';
     currentSourceIcon.innerHTML = ICON_STREAMING_RADIO;
     return;
   }
   currentSourceRow.hidden = true;
+  currentSourceRow.classList.remove('exploring-away');
   currentSourceName.textContent = '';
   currentSourceIcon.replaceChildren();
 }
@@ -613,7 +616,7 @@ function showMusicPlayback(status) {
   }
   if (status.state === 'error') nowPlaying.textContent = status.message;
   updateCurrentSource(status);
-  const feedbackEnabled = active && ['artist', 'radio', 'mix'].includes(music.mode) && Boolean(track);
+  const feedbackEnabled = active && ['artist', 'radio', 'explore', 'mix'].includes(music.mode) && Boolean(track);
   if (selectedFeedbackTrackId !== String(track?.id || '')) {
     selectedFeedbackTrackId = '';
     selectedFeedbackKind = '';

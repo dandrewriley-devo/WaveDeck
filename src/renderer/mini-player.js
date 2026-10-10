@@ -120,7 +120,7 @@ function render(status = currentStatus) {
     setTrack(status?.mediaState === 'paused' ? 'Paused' : 'Stopped', `WaveDeck — ${status?.mediaState === 'paused' ? 'Paused' : 'Stopped'}`);
   }
 
-  const eligibleFeedback = musicActive && ['artist', 'radio', 'mix'].includes(music.mode) && Boolean(music.track);
+  const eligibleFeedback = musicActive && ['artist', 'radio', 'explore', 'mix'].includes(music.mode) && Boolean(music.track);
   const trackId = String(music?.track?.id || '');
   if (trackId !== feedbackTrackId) {
     feedbackTrackId = trackId;

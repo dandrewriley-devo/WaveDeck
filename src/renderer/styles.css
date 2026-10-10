@@ -297,6 +297,7 @@ html, body{
   padding:0 12px;
   text-transform:uppercase;
 }
+.current-source-row.exploring-away { color:#e77d35; }
 .current-source-row[hidden]{ display:none; }
 .current-source-icon{ flex:0 0 16px; height:16px; width:16px; }
 #currentSourceName{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }

@@ -164,6 +164,53 @@ function scoreTrack(track, seed, mode, history = [], now = Date.now(), context =
 }
 function weight(track, seed, mode, history, now, context, familiarity) { return scoreTrack(track, seed, mode, history, now, context, familiarity).score; }
 
+// Explore Radio should never have to make a broad genre leap just because one
+// related-artist path is resting. When that happens, walk a *small* Last.fm
+// relationship graph from the original seed and offer tracks by another local
+// related artist as a bridge. This is deliberately only used after the normal
+// current-route choice has failed.
+function exploreRescueCandidates(tracks, root, excluded, history, now, context, familiarity, maxHops) {
+  const artistTracks = new Map(); const artistNames = new Map(); const neighbors = new Map();
+  const addNeighbor = (from, to) => {
+    if (!from || !to || from === to) return;
+    const set = neighbors.get(from) || new Set(); set.add(to); neighbors.set(from, set);
+  };
+  const addTrack = track => {
+    const artist = artistKey(track);
+    if (!artist) return;
+    const entries = artistTracks.get(artist) || []; entries.push(track); artistTracks.set(artist, entries);
+    if (!artistNames.has(artist)) artistNames.set(artist, radioArtist(track) || track.artist || artist);
+    for (const related of track.similarArtists || []) {
+      const relatedKey = normalize(related);
+      if (!relatedKey) continue;
+      addNeighbor(artist, relatedKey); addNeighbor(relatedKey, artist);
+    }
+  };
+  for (const track of tracks) addTrack(track);
+  addTrack(root);
+
+  const rootArtist = artistKey(root); if (!rootArtist) return [];
+  const queue = [{ artist: rootArtist, hops: 0 }]; const visited = new Set([rootArtist]); const found = [];
+  for (let offset = 0; offset < queue.length; offset += 1) {
+    const entry = queue[offset];
+    if (entry.hops > 0) {
+      const name = artistNames.get(entry.artist) || entry.artist;
+      const anchor = { artist: name, artists: [name], similarArtists: [...(neighbors.get(entry.artist) || [])] };
+      for (const candidate of artistTracks.get(entry.artist) || []) {
+        if (excluded.has(candidate.id)) continue;
+        const scored = scoreTrack(candidate, anchor, 'radio', history, now, context, familiarity);
+        if (scored.score > 0) found.push({ track: candidate, ...scored, rescue: { artist: name, hops: entry.hops } });
+      }
+    }
+    if (entry.hops >= maxHops) continue;
+    for (const neighbor of neighbors.get(entry.artist) || []) {
+      if (visited.has(neighbor)) continue;
+      visited.add(neighbor); queue.push({ artist: neighbor, hops: entry.hops + 1 });
+    }
+  }
+  return found;
+}
+
 function cleanFeedback(value) {
   const stations = {};
   for (const [key, station] of Object.entries(value?.stations || {})) {
@@ -185,15 +232,18 @@ function cleanFeedback(value) {
 class MusicRadio {
   constructor({ dataDir, random = Math.random, now = Date.now, onDecision = () => {}, getFamiliarity = () => 'balanced', getTuning = () => ({}) }) {
     this.file = path.join(dataDir, 'music-history.json'); this.random = random; this.now = now; this.onDecision = onDecision; this.getFamiliarity = getFamiliarity; this.getTuning = getTuning;
-    this.history = []; this.error = ''; this.lastDecision = null; this.artistSet = null; this.artistStation = null; this.exploreStation = null;
+    this.history = []; this.error = ''; this.lastDecision = null; this.artistSet = null; this.artistStation = null; this.exploreStation = null; this.stationArtistLast = new Map();
     this.feedbackFile = path.join(dataDir, 'local-radio-feedback.json'); this.feedback = { version: 1, stations: {} };
     try { const saved = JSON.parse(fs.readFileSync(this.file, 'utf8')); if (Array.isArray(saved)) this.history = saved.filter(item => typeof item?.key === 'string' && Number.isFinite(item?.at)).slice(0, 5000); }
     catch (error) { if (error.code !== 'ENOENT') this.error = 'Music history could not be read; Local Radio is paused to protect repeat history.'; }
     try { this.feedback = cleanFeedback(JSON.parse(fs.readFileSync(this.feedbackFile, 'utf8'))); } catch {}
   }
   getLastDecision() { return this.lastDecision ? JSON.parse(JSON.stringify(this.lastDecision)) : null; }
-  beginSession() { this.artistSet = null; this.artistStation = null; this.exploreStation = null; }
+  beginSession() { this.artistSet = null; this.artistStation = null; this.exploreStation = null; this.stationArtistLast.clear(); }
   beginExploreSession(seed) { this.exploreStation = seed ? { root: { ...seed }, current: { ...seed }, hops: 0 } : null; }
+  isExploringAwayFromSeed() {
+    return Boolean(this.exploreStation && artistKey(this.exploreStation.current) && artistKey(this.exploreStation.current) !== artistKey(this.exploreStation.root));
+  }
   beginArtistSession(seed) {
     const artist = artistKey(seed);
     // The song the listener clicked is the first artist selection. Starting
@@ -201,7 +251,9 @@ class MusicRadio {
     this.artistStation = artist ? { artist, seedSelections: 1 } : null;
   }
   record(track) {
-    this.history.unshift({ key: track.songKey, artist: track.artist, album: track.album, at: this.now() }); this.history = this.history.slice(0, 5000);
+    const at = this.now();
+    this.history.unshift({ key: track.songKey, artist: track.artist, album: track.album, at }); this.history = this.history.slice(0, 5000);
+    const artist = artistKey(track); if (artist) this.stationArtistLast.set(artist, at);
     try { fs.mkdirSync(path.dirname(this.file), { recursive: true }); fs.writeFileSync(this.file + '.tmp', JSON.stringify(this.history)); fs.renameSync(this.file + '.tmp', this.file); }
     catch { this.error = 'Music history could not be saved; check that Data is writable.'; }
   }
@@ -256,7 +308,8 @@ class MusicRadio {
     // Mixes continue to use the listener's Song Familiarity setting.
     const familiarity = artistRadio ? 'balanced' : (['hits', 'balanced', 'deep-cuts'].includes(this.getFamiliarity()) ? this.getFamiliarity() : 'balanced');
     const lastFmOnlyMix = mode === 'mix' && settings.localMixFavorLastFm;
-    this.history.forEach(item => { if (!context.last.has(item.key)) context.last.set(item.key, item); if (!context.artistLast.has(artistKey(item))) context.artistLast.set(artistKey(item), item.at); });
+    this.history.forEach(item => { if (!context.last.has(item.key)) context.last.set(item.key, item); });
+    context.artistLast = new Map(this.stationArtistLast);
     const forcedArtist = this.artistSet?.remaining?.length ? this.artistSet.artist : '';
     const scored = tracks.filter(track => !excluded.has(track.id) && (!forcedArtist || artistKey(track) === forcedArtist)).map(track => {
       const item = { track, ...scoreTrack(track, selectionSeed, scoreMode, this.history, now, context, familiarity) };
@@ -285,6 +338,7 @@ class MusicRadio {
       : (!artistRadio && !personalCandidates.length && (personalLibraryMix || familiarity === 'hits')
         ? credibleCandidates.filter(item => hasLastFmFamiliarity(item.track)) : []);
     let candidates = personalCandidates.length ? personalCandidates : (lastFmCandidates.length ? lastFmCandidates : credibleCandidates);
+    let rescueUsed = false;
     let artistLane = '';
     if (artistRadio) {
       const seedArtist = artistKey(seed);
@@ -296,6 +350,20 @@ class MusicRadio {
       // that can turn Artist Radio into a different station.
       candidates = takePalateChange ? relatedCandidates : seedCandidates;
       artistLane = takePalateChange ? 'related artist palate change' : 'seed artist';
+    }
+    // If the current Explore Radio path is exhausted, look for another small,
+    // credible route from the original seed. Do not use genre similarity here:
+    // every bridge comes from the stored related-artist graph.
+    if (exploring && !forcedArtist && !candidates.length) {
+      const rescuePool = exploreRescueCandidates(
+        tracks, this.exploreStation?.root || seed, excluded, this.history, now, context, familiarity,
+        Math.min(3, exploreLimit)
+      );
+      const rescuePersonal = rescuePool.filter(item => hasPersonalSignal(item.track, familiarity));
+      const rescueLastFm = !rescuePersonal.length && familiarity === 'hits'
+        ? rescuePool.filter(item => hasLastFmFamiliarity(item.track)) : [];
+      candidates = rescuePersonal.length ? rescuePersonal : (rescueLastFm.length ? rescueLastFm : rescuePool);
+      rescueUsed = candidates.length > 0;
     }
     // A two-fer/three-play/four-play is planned before the first song starts.
     // Do not begin a set unless there are enough playable tracks to complete it.
@@ -345,13 +413,17 @@ class MusicRadio {
     if (selected && exploring && this.exploreStation) {
       const oldArtist = artistKey(this.exploreStation.current);
       this.exploreStation.current = { ...selected };
-      this.exploreStation.hops = returningToSeed ? 0 : this.exploreStation.hops + (artistKey(selected) !== oldArtist ? 1 : 0);
+      this.exploreStation.hops = picked?.rescue
+        ? picked.rescue.hops
+        : (returningToSeed
+          ? (artistKey(selected) === artistKey(this.exploreStation.root) ? 0 : 1)
+          : this.exploreStation.hops + (artistKey(selected) !== oldArtist ? 1 : 0));
     }
     const diagnostic = item => ({ diagnosticId: stableId(item.track), title: item.track.title, artist: item.track.artist, album: item.track.album, eligibilityReasons: item.relationship.reasons, score: item.score, additions: item.additions, multipliers: item.multipliers, favorite: item.track.favorite === true, rating: ratingOutOfTen(item.track), popularity: item.popularity, tags: item.relationship.tags });
     const ranked = [...candidates].sort((a, b) => b.score - a.score).slice(0, 8);
     const threshold = FAMILIARITY_RATINGS[familiarity].minimum;
-    const poolLabel = artistRadio ? artistLane : (lastFmOnlyMix ? 'Last.fm popularity' : (personalCandidates.length ? `personal ${threshold}–10/Favorite` : (lastFmCandidates.length ? 'Last.fm familiar' : 'credible')));
-    this.lastDecision = { at: new Date(now).toISOString(), mode, stationKey, selectionTrigger, seed: { diagnosticId: stableId(seed), title: seed?.title || seed?.name || '', artist: seed?.artist || '', album: seed?.album || '', genres: seed?.genres || [] }, policy: artistRadio ? 'artist-radio-v1' : (exploring ? 'explore-radio-v1' : 'automatic-local-radio-v2'), familiarity, tuning: settings, explore: exploring ? { distance: settings.localRadioExploreDistance, limit: exploreLimit, returningToSeed, anchorArtist: selectionSeed?.artist || '', hops: this.exploreStation?.hops || 0 } : null, artistSet: { size: artistSetSize, remaining: this.artistSet?.remaining?.length || 0 }, artistRadio: artistRadio ? { seedTargetPercent: 90, seedSelectionsSinceRelated: this.artistStation?.seedSelections || 0 } : null, counts: { totalTracks: tracks.length, skippedByPlaybackError: excluded.size, skippedForCooldown: cooldownExcluded, skippedForArtistCooldown: artistCooldownExcluded, skippedForDoNotPlay: doNotPlayExcluded, credible: credibleCount, personal: personalCandidates.length, personalMinimum: threshold, lastFmFamiliar: lastFmCandidates.length, finalPool: candidates.length }, selected: selected ? diagnostic(picked) : null, diagnostics: { topFinalCandidates: ranked.map(diagnostic), recentHistory: this.history.slice(0, 12).map(item => ({ diagnosticId: stableId({ songKey: item.key }), artist: item.artist, album: item.album, at: new Date(item.at).toISOString() })) }, reason: selected ? `Picked from ${candidates.length} ${poolLabel} Local Radio candidates${exploring ? (returningToSeed ? ' while returning toward the seed.' : ' while exploring from the current artist.') : ''}.` : (artistRadio ? 'No eligible seed-artist song is currently available; Artist Radio is waiting rather than taking over with related music.' : 'No credible Local Radio song is currently available; waiting rather than making a poor leap.') };
+    const poolLabel = rescueUsed ? 'related-artist rescue route' : (artistRadio ? artistLane : (lastFmOnlyMix ? 'Last.fm popularity' : (personalCandidates.length ? `personal ${threshold}–10/Favorite` : (lastFmCandidates.length ? 'Last.fm familiar' : 'credible'))));
+    this.lastDecision = { at: new Date(now).toISOString(), mode, stationKey, selectionTrigger, seed: { diagnosticId: stableId(seed), title: seed?.title || seed?.name || '', artist: seed?.artist || '', album: seed?.album || '', genres: seed?.genres || [] }, policy: artistRadio ? 'artist-radio-v1' : (exploring ? 'explore-radio-v1' : 'automatic-local-radio-v2'), familiarity, tuning: settings, explore: exploring ? { distance: settings.localRadioExploreDistance, limit: exploreLimit, rescueUsed, returningToSeed, anchorArtist: selected && picked?.rescue ? picked.rescue.artist : (selectionSeed?.artist || ''), hops: this.exploreStation?.hops || 0, awayFromSeed: this.isExploringAwayFromSeed() } : null, artistSet: { size: artistSetSize, remaining: this.artistSet?.remaining?.length || 0 }, artistRadio: artistRadio ? { seedTargetPercent: 90, seedSelectionsSinceRelated: this.artistStation?.seedSelections || 0 } : null, counts: { totalTracks: tracks.length, skippedByPlaybackError: excluded.size, skippedForCooldown: cooldownExcluded, skippedForArtistCooldown: artistCooldownExcluded, skippedForDoNotPlay: doNotPlayExcluded, credible: credibleCount, personal: personalCandidates.length, personalMinimum: threshold, lastFmFamiliar: lastFmCandidates.length, finalPool: candidates.length }, selected: selected ? diagnostic(picked) : null, diagnostics: { topFinalCandidates: ranked.map(diagnostic), recentHistory: this.history.slice(0, 12).map(item => ({ diagnosticId: stableId({ songKey: item.key }), artist: item.artist, album: item.album, at: new Date(item.at).toISOString() })) }, reason: selected ? `Picked from ${candidates.length} ${poolLabel} Local Radio candidates${exploring ? (rescueUsed ? ' through a nearby related-artist route.' : (returningToSeed ? ' while returning toward the seed.' : ' while exploring from the current artist.')) : ''}.` : (artistRadio ? 'No eligible seed-artist song is currently available; Artist Radio is waiting rather than taking over with related music.' : 'No credible Local Radio song is currently available; waiting rather than making a poor leap.') };
     try { this.onDecision(this.getLastDecision()); } catch {}
     return selected;
   }

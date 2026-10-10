@@ -1,9 +1,9 @@
 # WaveDeck Opus Branch Handoff
 
-## WaveDeck Opus 1.0.20
+## WaveDeck Opus 1.0.21
 
 - This is the separate **`opus-portable`** branch. It is a Linux-only personal edition; `main` remains the normal cross-platform WaveDeck product.
-- Release artifact: **`WaveDeckOpus.AppImage`**. Its release workflow is `.github/workflows/opus-portable.yml` and publishes tag `opus-v1.0.20` without touching the main WaveDeck release.
+- Release artifact: **`WaveDeckOpus.AppImage`**. Its release workflow is `.github/workflows/opus-portable.yml` and publishes tag `opus-v1.0.21` without touching the main WaveDeck release.
 - WaveDeck Opus changes only the sibling portable `Music` folder. The optional Additional Music Folder is always read-only.
 - Portable MP3, FLAC, M4A/AAC, WAV, WMA, and OGG sources are converted one at a time in the background to 96 kbps Opus. Each output is validated before its source is removed. Existing valid Opus outputs and `.opus.part` recovery files are handled safely at the next pass.
 - Only these tags are carried into Opus: title, artist, album, Album Artist, track number, disc number, year, genre, `RATING`, `FAVORITE`, `DO_NOT_PLAY`, and `AMP_TRACK_ID`. Embedded artwork, loose image files, lyric/sidecar files, and other metadata are intentionally discarded from the portable Music tree.
@@ -30,17 +30,19 @@
 - 1.0.19 adds the Local Radio Controls toggle **Favor Last.fm Data for Local Mixes**. When enabled, a Local Mix still obeys its format book, Do Not Play, artist sets, and repeat waits, but only tracks with Last.fm popularity can play and the weighted choice is strictly that popularity—ratings, Favorites, feedback, and familiarity do not influence it. Main-window Local Music searching now uses a persisted FTS index containing only visible tracks, enriches only returned results, and can run between background scan filesystem operations rather than waiting for a full scan.
 - The 1.0.19 AppImage refreshes the pinned upstream FFmpeg/FFprobe hashes after BtbN's moving `latest` archive changed again. The archive and both extracted binaries were verified before updating the pins.
 - 1.0.20 adds native Local Music scrobbling. Settings → Local Music → Last.fm Music Data has a one-time Connect Last.fm link; it opens the normal browser authorization page, stores the resulting portable session in `Data/lastfm-scrobbling.json`, sends Now Playing, scrobbles after 30 seconds and half the song or four minutes (whichever comes first), and retains unsent scrobbles for later. It also adds Explore Radio: a related-artist route that moves outward one, three, or six artist hops before returning toward the seed. Its control is **How Far Should We Stray From the Seed?** with Close to Home, Take a Detour, and Go Exploring. The Last.fm enrichment donut now smoothly shifts red → orange → gold → green as the percent enriched rises; the portable-storage donut remains unchanged. It also refreshes the BtbN FFmpeg/FFprobe checksums after upstream moved its `latest` archive again.
+- 1.0.21 makes artist-repeat protection station-specific: starting any new Local Radio station clears the prior station’s artist-rest list while exact-song repeat history remains intact. Explore Radio now performs a small (at most three-hop) Last.fm related-artist rescue search from the original seed when its current route is exhausted, rather than immediately waiting. While an Explore route is away from its original seed, the gold current-station label changes to orange and returns to gold at the seed. Explore Radio thumbs-up is enabled in both the main player and Mini Player.
+- The 1.0.21 AppImage refreshes the pinned FFmpeg/FFprobe hashes after BtbN updated the moving `latest` archive again. The verified archive SHA-256 is `e4fba844d3451bd9b386dd007180a3db0ac343909d7796b0600eb4845b442aab`; extracted `ffmpeg` is `e35727315569a41ca0d13726648c96ae33a040e108f1bc25de1529cd4e257ea2`; `ffprobe` is `2d06053fcdfb69bdbe844fd8ff725a9a960af83ffad21f665d81c0c666234c0b`.
 
 # WaveDeck Project Handoff
 
-This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.20**.
+This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.21**.
 
 ## Current published state
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `main`
-- Current version: **1.0.20**
-- Current release: 1.0.20 — Local Music scrobbling, Explore Radio, and a progress-colored Last.fm donut.
+- Current version: **1.0.21**
+- Current release: 1.0.21 — station-specific artist rest and resilient Explore Radio routes.
 - Current commit: the verified 1.0.20 release commit at the head of `opus-portable`.
 - 0.11.8 commit: `8118e235eed4b4a18c378f12ced8a86be83ed4b9` — monitor-safe main-window bounds persistence and portable Windows build.
 - 0.11.7 commit: `c8b69b7b8842dd6c310dda05b22b8d52870d3e84` — superseded source correction after the first portable Windows build.

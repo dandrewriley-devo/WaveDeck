@@ -156,6 +156,16 @@ async function run() {
     assert.equal(exploreRadio.choose([exploreFirst, exploreSecond], exploreSeed, 'explore').id, 'explore-first', 'Explore Radio starts from a direct neighbor of the seed');
     exploreRadio.record(exploreFirst);
     assert.equal(exploreRadio.choose([exploreFirst, exploreSecond], exploreSeed, 'explore').id, 'explore-second', 'Explore Radio daisy-chains through the current related artist');
+    const rescueRoot = track('rescue-root', { artist: 'Root Artist', artists: ['Root Artist'], albumArtist: 'Root Artist', similarArtists: ['Blocked Branch', 'Rescue Branch'] });
+    const blockedBranch = track('blocked-branch', { artist: 'Blocked Branch', artists: ['Blocked Branch'], albumArtist: 'Blocked Branch', similarArtists: ['Stuck Branch'] });
+    const stuckBranch = track('stuck-branch', { artist: 'Stuck Branch', artists: ['Stuck Branch'], albumArtist: 'Stuck Branch', similarArtists: ['Blocked Branch'] });
+    const rescueBranch = track('rescue-branch', { artist: 'Rescue Branch', artists: ['Rescue Branch'], albumArtist: 'Rescue Branch', similarArtists: ['Root Artist'] });
+    const rescueRadio = new MusicRadio({ dataDir: path.join(temp, 'explore-rescue'), now: () => now, random: () => 0, getTuning: () => ({ localRadioExploreDistance: 'explore', artistRepeatMinutes: 180 }) });
+    rescueRadio.beginSession(); rescueRadio.beginExploreSession(rescueRoot); rescueRadio.record(blockedBranch); rescueRadio.record(stuckBranch);
+    rescueRadio.exploreStation.current = { ...stuckBranch }; rescueRadio.exploreStation.hops = 2;
+    assert.equal(rescueRadio.choose([blockedBranch, stuckBranch, rescueBranch], rescueRoot, 'explore').id, rescueBranch.id, 'Explore Radio uses a nearby unblocked related-artist route when its current path runs dry');
+    assert.equal(rescueRadio.getLastDecision().explore.rescueUsed, true, 'Explore Radio diagnostics identify a rescue route');
+    assert.equal(rescueRadio.isExploringAwayFromSeed(), true, 'Explore Radio exposes when the current route is away from its original seed');
     assert(weight(seedArtist, seed, 'artist', [], now) > weight(similar, seed, 'artist', [], now), 'Artist Radio returns to seed artist');
     assert(weight(similar, seed, 'artist', [], now) > 0 && weight(specificTag, seed, 'radio', [], now) > 0, 'Last.fm and specific tags are meaningful links');
     assert.equal(weight(country, seed, 'radio', [], now), 0);
@@ -219,6 +229,8 @@ async function run() {
     const artistWaitRadio = new MusicRadio({ dataDir: path.join(temp, 'artist-wait'), now: () => now, random: () => 0, getTuning: () => ({ songRepeatHours: 2, artistRepeatMinutes: 90, artistSetSize: 1 }) });
     assert.equal(artistWaitRadio.choose([rotationA], seed, 'radio').id, rotationA.id); artistWaitRadio.record(rotationA);
     assert.equal(artistWaitRadio.choose([rotationB], seed, 'radio'), null, 'artist repeat wait blocks a different song by the same artist');
+    artistWaitRadio.beginSession();
+    assert.equal(artistWaitRadio.choose([rotationB], seed, 'radio').id, rotationB.id, 'starting a new Local Radio station resets artist rest while retaining exact-song history');
     const twoFerRadio = new MusicRadio({ dataDir: path.join(temp, 'two-fer'), now: () => now, random: () => 0, getTuning: () => ({ songRepeatHours: 2, artistRepeatMinutes: 90, artistSetSize: 2 }) });
     assert.equal(twoFerRadio.choose([rotationA, rotationB], seed, 'radio').id, rotationA.id); twoFerRadio.record(rotationA);
     assert.equal(twoFerRadio.choose([rotationA, rotationB], seed, 'radio').id, rotationB.id, 'Artist Sets intentionally continues the selected artist');
