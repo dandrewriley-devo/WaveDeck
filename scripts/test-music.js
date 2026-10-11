@@ -294,6 +294,25 @@ async function run() {
     twoFerRadio.record(rotationA);
     assert.equal(twoFerRadio.choose([rotationA, rotationB], seed, 'radio').id, rotationB.id, 'Artist Sets intentionally continues the selected artist');
     assert.equal(twoFerRadio.getLastDecision().artistSet.proposed, null, 'later tracks do not repeat the proposed-set diagnostic');
+    const setSeed = track('set-seed', { artist: 'Set Seed', artists: ['Set Seed'], albumArtist: 'Set Seed', similarArtists: ['Set Artist'] });
+    const duplicateRollOne = track('roll-box', { songKey: 'roll-box', title: 'Roll With It', artist: 'Set Artist', artists: ['Set Artist'], albumArtist: 'Set Artist', rating: 8 });
+    const duplicateRollTwo = track('roll-compilation', { songKey: 'roll-compilation', title: 'Roll With It', artist: 'Set Artist', artists: ['Set Artist'], albumArtist: 'Set Artist', rating: 8 });
+    const higherLove = track('higher-love', { title: 'Higher Love', artist: 'Set Artist', artists: ['Set Artist'], albumArtist: 'Set Artist', rating: 8 });
+    const duplicateSetRadio = new MusicRadio({ dataDir: path.join(temp, 'duplicate-set'), now: () => now, random: () => 0, getTuning: () => ({ artistSetSize: 3 }) });
+    assert.equal(duplicateSetRadio.choose([duplicateRollOne, duplicateRollTwo, higherLove], setSeed, 'radio').id, duplicateRollOne.id);
+    assert.deepEqual(duplicateSetRadio.getLastDecision().artistSet.proposed.map(item => item.title), ['Roll With It', 'Higher Love'], 'Artist Sets never propose the same song twice from a box set and compilation copy');
+    duplicateSetRadio.record(duplicateRollOne);
+    assert.equal(duplicateSetRadio.choose([duplicateRollOne, duplicateRollTwo, higherLove], setSeed, 'radio').id, higherLove.id, 'Artist Sets continue to a distinct planned song after an equivalent copy is resting');
+    const resilientFirst = track('resilient-first', { title: 'First', artist: 'Resilient Artist', artists: ['Resilient Artist'], albumArtist: 'Resilient Artist', rating: 8 });
+    const resilientUnavailable = track('resilient-unavailable', { title: 'Unavailable', artist: 'Resilient Artist', artists: ['Resilient Artist'], albumArtist: 'Resilient Artist', rating: 8 });
+    const resilientThird = track('resilient-third', { title: 'Third', artist: 'Resilient Artist', artists: ['Resilient Artist'], albumArtist: 'Resilient Artist', rating: 8 });
+    const resilientSeed = track('resilient-seed', { artist: 'Resilient Seed', artists: ['Resilient Seed'], albumArtist: 'Resilient Seed', similarArtists: ['Resilient Artist'] });
+    const resilientSetRadio = new MusicRadio({ dataDir: path.join(temp, 'resilient-set'), now: () => now, random: () => 0, getTuning: () => ({ artistSetSize: 3 }) });
+    assert.equal(resilientSetRadio.choose([resilientFirst, resilientUnavailable, resilientThird], resilientSeed, 'radio').id, resilientFirst.id);
+    resilientSetRadio.record(resilientFirst); resilientUnavailable.doNotPlay = true;
+    const shiftedAnchor = track('shifted-anchor', { artist: 'Different Route', artists: ['Different Route'], albumArtist: 'Different Route' });
+    assert.equal(resilientSetRadio.choose([resilientFirst, resilientUnavailable, resilientThird], shiftedAnchor, 'radio').id, resilientThird.id, 'Artist Sets skip an unavailable planned song and retain their approved artist connection when the radio route moves');
+    assert.equal(resilientSetRadio.getLastDecision().howPicked.artistSet.skipped[0].title, 'Unavailable', 'Artist Set diagnostics record a skipped planned song');
 
     const feedbackDir = path.join(temp, 'feedback');
     const feedbackRadio = new MusicRadio({ dataDir: feedbackDir, now: () => now, random: () => 0.99 });

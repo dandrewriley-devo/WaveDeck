@@ -1,5 +1,12 @@
 # WaveDeck Opus Branch Handoff
 
+## WaveDeck Opus 1.0.26
+
+- Artist Sets now use a normalized artist-and-song identity, so the same ordinary song from a box set and a greatest-hits compilation is never proposed twice in one set and shares the Song Repeat Wait across copies. Meaningful versions such as Live, Acoustic, and Demo remain distinct.
+- Planned Artist Sets are resilient: if one planned track becomes unavailable, it is skipped and the rest of the set continues. The station moves to a new artist only after every remaining planned track is unavailable. Live Radio Log entries now explain any skipped or early-ended set track in plain language.
+- The Station Seed log card now labels Seed song, Artist, and Album separately.
+- Local Radio Controls now includes the compact reminder: “Starting a new station resets artist rest. Song rest carries over.”
+
 ## WaveDeck Opus 1.0.21
 
 - This is the separate **`opus-portable`** branch. It is a Linux-only personal edition; `main` remains the normal cross-platform WaveDeck product.
@@ -54,15 +61,15 @@
 
 # WaveDeck Project Handoff
 
-This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.25**.
+This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.26**.
 
 ## Current published state
 
 - Repository: `dandrewriley-devo/WaveDeck`
-- Branch: `main`
-- Current version: **1.0.25**
-- Current release: 1.0.25 — durable Last.fm connection state and clearer Local Radio diagnostics.
-- Current commit: the verified 1.0.25 release commit at the head of `opus-portable`.
+- Branch: `opus-portable`
+- Current version: **1.0.26**
+- Current release: 1.0.26 — resilient Artist Sets and clearer repeat-rule guidance.
+- Current commit: the verified 1.0.26 release commit at the head of `opus-portable`.
 - 0.11.8 commit: `8118e235eed4b4a18c378f12ced8a86be83ed4b9` — monitor-safe main-window bounds persistence and portable Windows build.
 - 0.11.7 commit: `c8b69b7b8842dd6c310dda05b22b8d52870d3e84` — superseded source correction after the first portable Windows build.
 - 0.11.6 commit: `621e44d8c484cd0a4d70eb124106170f6183d0ae` — compact Local Radio Controls and remembered auxiliary-window bounds.

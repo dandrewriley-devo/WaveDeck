@@ -29,5 +29,6 @@ input[type="range"]::-moz-range-thumb { background:var(--green); border:2px soli
 .stops span:last-child { text-align:right; }
 .song-repeat-value { color:var(--muted); font-size:11px; min-height:17px; position:relative; }
 .song-repeat-value output { color:var(--green); left:var(--repeat-stop,13.04%); position:absolute; transform:translateX(-50%); white-space:nowrap; }
+.repeat-note { color:var(--muted); font-size:11px; line-height:1.35; margin:18px 0 0; }
 .status { color:var(--muted); font-size:12px; min-height:18px; padding-top:11px; }
 .status.error { color:#ffb3b3; }

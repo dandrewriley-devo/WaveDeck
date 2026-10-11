@@ -58,6 +58,13 @@ function howPickedLines(decision, selected, manualStart) {
   if (artistSet?.size > 1 && artistSet.position > 1) {
     lines.push(`We’re playing another ${selected.artist || 'artist'} song. This is track ${artistSet.position} of ${artistSet.size} in the artist set.${artistSet.shortened ? ` WaveDeck shortened the requested ${artistSet.requested}-track set so the station could keep playing.` : ''}`);
   }
+  const skippedSetTracks = Array.isArray(artistSet?.skipped) ? artistSet.skipped.filter(item => item?.title) : [];
+  for (const skipped of skippedSetTracks) lines.push(`WaveDeck skipped ${quoted(skipped.title)}${skipped.reason ? ` because it ${skipped.reason}` : ''}.`);
+  const endedSet = info.artistSetRecovery;
+  if (endedSet?.artist && Array.isArray(endedSet.skipped) && endedSet.skipped.length) {
+    const skipped = endedSet.skipped[0];
+    lines.push(`The planned ${endedSet.artist} set ended early because ${quoted(skipped.title)}${skipped.reason ? ` ${skipped.reason}` : ' was no longer available'}.`);
+  }
   const related = naturalList(info.relatedArtists);
   if (!artistSet?.size || artistSet.size <= 1) {
     if (related) lines.push(`Related artists available in your library were ${related}.`);
@@ -177,8 +184,9 @@ function renderDecision(decision, { prepend = true } = {}) {
   body.append(track);
   const grid = element('div', '', 'grid');
   addBox(grid, 'Station seed', [
-    `${decision.seed?.title || 'Unknown song'} — ${decision.seed?.artist || 'Unknown artist'}`,
-    decision.seed?.album || 'No album'
+    `Seed song: ${decision.seed?.title || 'Unknown song'}`,
+    `Artist: ${decision.seed?.artist || 'Unknown artist'}`,
+    `Album: ${decision.seed?.album || 'No album'}`
   ]);
   addBox(grid, manualStart ? 'Start type' : 'Local Radio Controls', manualStart ? [
     'You selected this opening track',
