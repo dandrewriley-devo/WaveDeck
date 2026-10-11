@@ -23,7 +23,7 @@ class LastFmScrobbler {
     this.onStatus = onStatus;
     this.now = now;
     this.pollMs = pollMs;
-    this.data = { version: 1, sessionKey: '', username: '', pending: [] };
+    this.data = { version: 2, sessionKey: '', username: '', pending: [], lastMessage: '', lastScrobbled: null };
     this.connecting = false;
     this.connectMessage = '';
     this.connectToken = '';
@@ -38,7 +38,15 @@ class LastFmScrobbler {
     try {
       const saved = JSON.parse(fs.readFileSync(this.file, 'utf8'));
       const pending = Array.isArray(saved?.pending) ? saved.pending.map(item => this.cleanScrobble(item)).filter(Boolean).slice(-500) : [];
-      this.data = { version: 1, sessionKey: /^[a-f0-9]{32}$/i.test(String(saved?.sessionKey || '')) ? String(saved.sessionKey) : '', username: cleanText(saved?.username, 120), pending };
+      const lastScrobbled = this.cleanScrobble(saved?.lastScrobbled);
+      this.data = {
+        version: 2,
+        sessionKey: /^[a-f0-9]{32}$/i.test(String(saved?.sessionKey || '')) ? String(saved.sessionKey) : '',
+        username: cleanText(saved?.username, 120),
+        pending,
+        lastMessage: cleanText(saved?.lastMessage, 500),
+        lastScrobbled
+      };
     } catch {}
   }
 
@@ -52,7 +60,13 @@ class LastFmScrobbler {
     return { artist, track, timestamp, album: cleanText(value?.album), albumArtist: cleanText(value?.albumArtist), trackNumber: Math.max(0, Math.floor(Number(value?.trackNumber) || 0)), duration: Math.max(0, Math.floor(Number(value?.duration) || 0)) };
   }
 
-  getStatus() { return { connected: Boolean(this.data.sessionKey), username: this.data.username, pending: this.data.pending.length, connecting: this.connecting, message: this.connectMessage }; }
+  getStatus() {
+    return {
+      connected: Boolean(this.data.sessionKey), username: this.data.username, pending: this.data.pending.length,
+      connecting: this.connecting, message: this.connectMessage, lastMessage: this.data.lastMessage || '',
+      lastScrobbled: this.data.lastScrobbled || null
+    };
+  }
   emit() { this.onStatus(this.getStatus()); return this.getStatus(); }
 
   async request(method, parameters = {}, { post = false } = {}) {
@@ -70,7 +84,8 @@ class LastFmScrobbler {
     if (this.connecting) return this.getStatus();
     const payload = await this.request('auth.getToken'); const token = cleanText(payload?.token, 80);
     if (!token) throw new Error('Last.fm did not return an authorization token.');
-    this.connecting = true; this.connectToken = token; this.connectStartedAt = this.now(); this.connectMessage = 'Finish connecting in your browser.'; this.emit();
+    this.connecting = true; this.connectToken = token; this.connectStartedAt = this.now(); this.connectMessage = 'Finish connecting in your browser.';
+    this.data.lastMessage = ''; this.save(); this.emit();
     try {
       await this.openExternal(`https://www.last.fm/api/auth/?${new URLSearchParams({ api_key: LASTFM_API_KEY, token })}`);
     } catch (error) {
@@ -88,15 +103,26 @@ class LastFmScrobbler {
       const payload = await this.request('auth.getSession', { token: this.connectToken });
       const sessionKey = cleanText(payload?.session?.key, 80); const username = cleanText(payload?.session?.name, 120);
       if (!sessionKey || !username) throw new Error('Last.fm did not return a usable session.');
-      this.data.sessionKey = sessionKey; this.data.username = username; this.save(); this.stopConnecting(`Connected as ${username}.`); void this.flush();
+      this.data.sessionKey = sessionKey; this.data.username = username; this.data.lastMessage = ''; this.save(); this.stopConnecting(`Connected as ${username}.`); void this.flush();
     } catch (error) {
-      if ([4, 14].includes(error.code)) return;
-      this.stopConnecting(`Could not connect Last.fm: ${error.message}`);
+      const detail = `Last.fm session check: ${cleanText(error?.message, 300) || 'unknown error'}`;
+      this.data.lastMessage = detail;
+      // Last.fm returns 14 until the browser approval has fully propagated. Keep the
+      // desktop flow alive for transient network/API failures too instead of giving
+      // up before the user has a chance to finish the approval page.
+      this.connectMessage = [4, 14].includes(error.code)
+        ? 'Waiting for approval in your browser.'
+        : `${detail} Retrying automatically.`;
+      this.save(); this.emit();
     }
   }
 
-  stopConnecting(message = '') { clearInterval(this.connectTimer); this.connectTimer = null; this.connecting = false; this.connectToken = ''; this.connectStartedAt = 0; this.connectMessage = message; this.emit(); }
-  disconnect() { this.stopConnecting('Last.fm disconnected.'); this.data = { version: 1, sessionKey: '', username: '', pending: [] }; this.active = null; this.save(); return this.emit(); }
+  stopConnecting(message = '') {
+    clearInterval(this.connectTimer); this.connectTimer = null; this.connecting = false; this.connectToken = ''; this.connectStartedAt = 0; this.connectMessage = message;
+    if (message && !/^Connected as /.test(message)) { this.data.lastMessage = message; this.save(); }
+    this.emit();
+  }
+  disconnect() { this.data = { version: 2, sessionKey: '', username: '', pending: [], lastMessage: 'Last.fm disconnected.', lastScrobbled: null }; this.stopConnecting('Last.fm disconnected.'); this.active = null; this.save(); return this.emit(); }
 
   trackStarted(track) {
     if (!this.data.sessionKey || !track?.artist || !track?.title) return;
@@ -136,7 +162,7 @@ class LastFmScrobbler {
       while (this.data.pending.length && this.data.sessionKey) {
         const item = this.data.pending[0]; const parameters = { artist: item.artist, track: item.track, timestamp: item.timestamp, sk: this.data.sessionKey };
         if (item.album) parameters.album = item.album; if (item.albumArtist) parameters.albumArtist = item.albumArtist; if (item.trackNumber) parameters.trackNumber = item.trackNumber; if (item.duration) parameters.duration = item.duration;
-        await this.request('track.scrobble', parameters, { post: true }); this.data.pending.shift(); this.save(); this.connectMessage = ''; this.emit();
+        await this.request('track.scrobble', parameters, { post: true }); this.data.pending.shift(); this.data.lastScrobbled = item; this.data.lastMessage = ''; this.save(); this.connectMessage = ''; this.emit();
       }
     } catch (error) {
       if (error.code === 9) { this.data.sessionKey = ''; this.data.username = ''; this.save(); this.connectMessage = 'Last.fm needs to be connected again.'; }

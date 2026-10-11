@@ -130,6 +130,30 @@ async function run() {
     assert.equal(scrobbler.getStatus().pending, 0, 'accepted scrobbles leave the offline queue');
     scrobbler.stop();
 
+    let sessionChecks = 0;
+    const connectionStates = [];
+    const connectingScrobbler = new LastFmScrobbler({
+      dataDir: path.join(temp, 'lastfm-connect'), now: () => 1_000_000, pollMs: 999_999,
+      openExternal: async () => {}, onStatus: status => connectionStates.push(status),
+      fetchImpl: async url => {
+        const method = new URL(String(url)).searchParams.get('method');
+        if (method === 'auth.getToken') return { ok: true, json: async () => ({ token: 'c'.repeat(32) }) };
+        sessionChecks += 1;
+        if (sessionChecks === 1) return { ok: true, json: async () => ({ error: 14, message: 'Token has not been authorized' }) };
+        return { ok: true, json: async () => ({ session: { key: 'b'.repeat(32), name: 'Andrew' } }) };
+      }
+    });
+    await connectingScrobbler.connect();
+    await new Promise(resolve => setTimeout(resolve, 0));
+    assert.equal(connectingScrobbler.getStatus().connecting, true, 'Last.fm keeps checking after the browser has not yet authorized a token');
+    assert.match(connectingScrobbler.getStatus().message, /Waiting for approval/, 'Last.fm reports browser authorization state instead of silently resetting');
+    await connectingScrobbler.finishConnect();
+    assert.equal(connectingScrobbler.getStatus().connected, true, 'Last.fm saves the completed desktop session');
+    assert.equal(connectingScrobbler.getStatus().username, 'Andrew', 'Last.fm reports the account that actually connected');
+    assert.equal(connectingScrobbler.getStatus().lastMessage, '', 'a completed Last.fm connection clears earlier authorization diagnostics');
+    assert.ok(connectionStates.some(status => status.connected), 'Last.fm publishes the completed connection state to Settings');
+    connectingScrobbler.stop();
+
     let now = 10_000_000;
     const seed = track('comfortably-numb', { title: 'Comfortably Numb', artist: 'Pink Floyd', artists: ['Pink Floyd'], albumArtist: 'Pink Floyd', album: 'The Wall', genres: ['Progressive Rock', 'Rock'], similarArtists: ['David Gilmour'] });
     const sameAlbum = track('run-like-hell', { title: 'Run Like Hell', artist: 'Pink Floyd', artists: ['Pink Floyd'], albumArtist: 'Pink Floyd', album: 'The Wall', genres: ['Rock'], ratingStars: 5 });

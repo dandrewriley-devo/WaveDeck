@@ -304,9 +304,13 @@ function renderLastFmStatus(status) {
   disconnectLastFmBtn.hidden = !connected;
   connectLastFmBtn.disabled = scrobble.connecting === true;
   disconnectLastFmBtn.disabled = scrobble.connecting === true;
+  const lastScrobbled = scrobble.lastScrobbled?.artist && scrobble.lastScrobbled?.track
+    ? `Last scrobbled: “${scrobble.lastScrobbled.track}” by ${scrobble.lastScrobbled.artist}.`
+    : '';
+  const connectionMessage = scrobble.message || scrobble.lastMessage || '';
   lastFmConnection.textContent = connected
-    ? `Connected as ${scrobble.username || 'Last.fm listener'}${Number(scrobble.pending || 0) ? ` · ${Number(scrobble.pending).toLocaleString()} scrobbles waiting` : ''}${scrobble.message ? ` · ${scrobble.message}` : ''}`
-    : (scrobble.connecting ? (scrobble.message || 'Finish connecting in your browser.') : 'Connect Last.fm to scrobble Local Music.');
+    ? `Connected as ${scrobble.username || 'Last.fm listener'}${Number(scrobble.pending || 0) ? ` · ${Number(scrobble.pending).toLocaleString()} scrobbles waiting` : ''}${lastScrobbled ? ` · ${lastScrobbled}` : ''}${connectionMessage && !/^Connected as /.test(connectionMessage) ? ` · ${connectionMessage}` : ''}`
+    : (scrobble.connecting ? (connectionMessage || 'Finish connecting in your browser.') : (connectionMessage || 'Connect Last.fm to scrobble Local Music.'));
   if (!status.enabled) { lastFmStatus.textContent = 'Last.fm music data is off.'; return; }
   lastFmStatus.textContent = `Last.fm: ${current.toLocaleString()} of ${total.toLocaleString()} tracks current${queued ? ` · ${queued.toLocaleString()} albums queued` : ''}${status.message ? ` · ${status.message}` : ''}`;
 }

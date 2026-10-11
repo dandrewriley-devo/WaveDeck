@@ -41,17 +41,21 @@
 
 - Local Radio now treats artist-set length as a preference instead of a reason to stop: a requested four-play can safely shorten to three, two, or one playable track. Song Radio and Explore Radio use a station-family recovery ladder before ever easing repeat protection: they walk at most three Last.fm-related-artist hops from the original seed, never use broad genre matching, then only relax artist rest and finally exact-song rest inside that verified family. `DO_NOT_PLAY` remains absolute. An exact-song emergency choice is the least recently played credible family track. Any rare no-pick decision is now persisted in the Live Radio Log with its blocking counts. While Song Radio is using a related-route recovery, its station label turns orange. The Log identifies artist-set position (for example, track 2 of 4), shortened sets, route hops, and any eased protection.
 
+## WaveDeck Opus 1.0.24
+
+- Last.fm desktop authorization no longer silently falls back to its disconnected state while Last.fm is still approving or briefly propagating the session. It keeps checking for the full authorization window, retains the exact session-check/connection message across restart, and shows it in Settings instead of hiding it. Once connected, Settings names the actual Last.fm account and remembers the most recently accepted scrobble, so there is a clear confirmation that the connection and scrobbling path work.
+
 # WaveDeck Project Handoff
 
-This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.23**.
+This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.24**.
 
 ## Current published state
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `main`
-- Current version: **1.0.23**
-- Current release: 1.0.23 — resilient station-family recovery without surprise genre leaps.
-- Current commit: the verified 1.0.23 release commit at the head of `opus-portable`.
+- Current version: **1.0.24**
+- Current release: 1.0.24 — resilient Last.fm desktop authorization and clear scrobble status.
+- Current commit: the verified 1.0.24 release commit at the head of `opus-portable`.
 - 0.11.8 commit: `8118e235eed4b4a18c378f12ced8a86be83ed4b9` — monitor-safe main-window bounds persistence and portable Windows build.
 - 0.11.7 commit: `c8b69b7b8842dd6c310dda05b22b8d52870d3e84` — superseded source correction after the first portable Windows build.
 - 0.11.6 commit: `621e44d8c484cd0a4d70eb124106170f6183d0ae` — compact Local Radio Controls and remembered auxiliary-window bounds.
