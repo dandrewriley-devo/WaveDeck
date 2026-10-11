@@ -45,17 +45,23 @@
 
 - Last.fm desktop authorization no longer silently falls back to its disconnected state while Last.fm is still approving or briefly propagating the session. It keeps checking for the full authorization window, retains the exact session-check/connection message across restart, and shows it in Settings instead of hiding it. Once connected, Settings names the actual Last.fm account and remembers the most recently accepted scrobble, so there is a clear confirmation that the connection and scrobbling path work.
 
+## WaveDeck Opus 1.0.25
+
+- Last.fm session persistence now preserves opaque saved session keys across restarts and visibly reports unreadable saved connection data instead of silently presenting a disconnected state.
+- The Local Music toolbar now opens the Library Manager. The Your Library card has compact Manage, Refresh, and View Log links.
+- Live Radio Log cards now show active Local Radio Controls, the actual Song Familiarity effect, concrete Rejected Tracks counts, and—on the first track only—a compact Artist Sets card with the complete proposed artist set. How it was picked and Score Adjustments state exactly when stored thumbs-up feedback or a liked secondary seed affected the choice.
+
 # WaveDeck Project Handoff
 
-This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.24**.
+This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.25**.
 
 ## Current published state
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `main`
-- Current version: **1.0.24**
-- Current release: 1.0.24 — resilient Last.fm desktop authorization and clear scrobble status.
-- Current commit: the verified 1.0.24 release commit at the head of `opus-portable`.
+- Current version: **1.0.25**
+- Current release: 1.0.25 — durable Last.fm connection state and clearer Local Radio diagnostics.
+- Current commit: the verified 1.0.25 release commit at the head of `opus-portable`.
 - 0.11.8 commit: `8118e235eed4b4a18c378f12ced8a86be83ed4b9` — monitor-safe main-window bounds persistence and portable Windows build.
 - 0.11.7 commit: `c8b69b7b8842dd6c310dda05b22b8d52870d3e84` — superseded source correction after the first portable Windows build.
 - 0.11.6 commit: `621e44d8c484cd0a4d70eb124106170f6183d0ae` — compact Local Radio Controls and remembered auxiliary-window bounds.

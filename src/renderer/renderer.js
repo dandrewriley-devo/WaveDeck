@@ -23,6 +23,7 @@ const recordingsSectionToggleBtn = document.getElementById("recordingsSectionTog
 const localPresetSectionToggleBtn = document.getElementById('localPresetSectionToggleBtn');
 const localFavoritesOnlyToggleBtn = document.getElementById('localFavoritesOnlyToggleBtn');
 const localMixesSectionToggleBtn = document.getElementById('localMixesSectionToggleBtn');
+const openPortableMusicLibraryBtn = document.getElementById('openPortableMusicLibraryBtn');
 const sidebarModeBtn = document.getElementById("sidebarModeBtn");
 const streamingToolbar = document.getElementById("streamingToolbar");
 const localMusicToolbar = document.getElementById("localMusicToolbar");
@@ -668,6 +669,7 @@ localMixesSectionToggleBtn.addEventListener('click', async () => {
   } catch (error) { musicStatus.textContent = error.message; }
   finally { localMixesSectionToggleBtn.disabled = false; }
 });
+openPortableMusicLibraryBtn.addEventListener('click', () => { void window.wavedeck.openPortableMusicLibrary(); });
 localThumbUpBtn.addEventListener('click', async () => {
   localThumbUpBtn.disabled = true;
   try {

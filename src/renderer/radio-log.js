@@ -55,7 +55,7 @@ function howPickedLines(decision, selected, manualStart) {
   const seed = info.seed || decision.seed || {};
   const lines = [`This station began with ${quoted(seed.title)} by ${seed.artist || 'Unknown artist'}.`];
   const artistSet = info.artistSet;
-  if (artistSet?.size > 1) {
+  if (artistSet?.size > 1 && artistSet.position > 1) {
     lines.push(`We’re playing another ${selected.artist || 'artist'} song. This is track ${artistSet.position} of ${artistSet.size} in the artist set.${artistSet.shortened ? ` WaveDeck shortened the requested ${artistSet.requested}-track set so the station could keep playing.` : ''}`);
   }
   const related = naturalList(info.relatedArtists);
@@ -81,6 +81,7 @@ function howPickedLines(decision, selected, manualStart) {
   if (resting) lines.push(`Other related artists were played more recently and were resting: ${resting}.`);
   if (artist.eligibleTracks > 0) lines.push(`${chosenArtist} had ${artist.eligibleTracks} eligible ${artist.eligibleTracks === 1 ? 'track' : 'tracks'} based on repeat-protection settings.`);
   const song = info.song || {}; const factors = [];
+  if (song.secondarySeed?.title || song.secondarySeed?.artist) lines.push(`Your thumbs-up on ${quoted(song.secondarySeed.title, 'a liked song')} made it a secondary seed. ${chosenArtist} was considered because it has a credible relationship to that song.`);
   if (song.popularity !== null && song.popularity !== undefined) factors.push(`Last.fm popularity of ${song.popularity}/100`);
   if (song.rating) factors.push(`your ${song.rating}/10 rating`);
   if (song.favorite) factors.push('your Favorite tag');
@@ -88,7 +89,74 @@ function howPickedLines(decision, selected, manualStart) {
   if (song.thumbsDown) factors.push(`${song.thumbsDown} negative feedback mark${song.thumbsDown === 1 ? '' : 's'} for this station`);
   if (song.skips) factors.push(`${song.skips} earlier skip${song.skips === 1 ? '' : 's'} for this station`);
   lines.push(`WaveDeck picked ${quoted(selected.title)} from that pool based on ${naturalList(factors, 99) || 'its relationship to the station and the current variety protections'}.`);
+  if (song.thumbsUp) lines.push(`Your ${song.thumbsUp} thumbs-up${song.thumbsUp === 1 ? '' : 's'} gave this track a ${Math.round(song.thumbsUp * 18)}% selection boost.`);
   return lines;
+}
+
+function familiarityLabel(value) {
+  return ({ hits: 'Favor the Hits', balanced: 'Balanced Mix', 'deep-cuts': 'Play Deep Cuts Too' })[value] || 'Balanced Mix';
+}
+
+function artistSetLabel(size) {
+  return `${size}-song set${size === 1 ? '' : 's'}`;
+}
+
+function songFamiliarityLines(decision, selected) {
+  const popularity = Number(selected.popularity);
+  const multiplier = (selected.multipliers || []).find(item => item.label === 'Song familiarity');
+  if (!Number.isFinite(popularity) || !multiplier) {
+    return ['No Last.fm popularity available', 'Song Familiarity left this choice neutral.'];
+  }
+  const delta = Math.round(Math.abs((Number(multiplier.value) - 1) * 100));
+  const label = familiarityLabel(decision.familiarity);
+  const detail = Number(multiplier.value) >= 1
+    ? `${label} gave this song a ${delta}% boost.`
+    : `${label} reduced this song’s chance by ${delta}%.`;
+  return [`Last.fm popularity: ${Math.round(popularity)}/100`, detail];
+}
+
+function radioControlLines(decision) {
+  const tuning = decision.tuning || {};
+  const hours = Number(tuning.songRepeatHours) || 4;
+  const minutes = Number(tuning.artistRepeatMinutes) || 90;
+  const setSize = Number(tuning.artistSetSize) || 1;
+  return [
+    `Song familiarity: ${familiarityLabel(decision.familiarity)}`,
+    `Song repeat wait: ${hours} ${hours === 1 ? 'hour' : 'hours'}`,
+    `Artist repeat wait: ${minutes} minutes`,
+    `Artist sets: ${setSize === 1 ? 'Single Tracks' : artistSetLabel(setSize)}`,
+    'Credible links only; recovery stays within related artists'
+  ];
+}
+
+function rejectedTrackLines(decision, manualStart) {
+  if (manualStart) return ['No automatic candidate search was needed.'];
+  const counts = decision.counts || {};
+  const lines = [
+    ['Tagged “Do Not Play”', counts.skippedForDoNotPlay],
+    ['Artist played too recently', counts.skippedForArtistCooldown],
+    ['Song played too recently', counts.skippedForCooldown],
+    ['Previously failed to play', counts.skippedByPlaybackError],
+    ['No meaningful connection', counts.noMeaningfulConnection],
+    ['No Last.fm data', counts.missingLastFmData]
+  ].filter(([, value]) => Number(value) > 0).map(([label, value]) => `${label}: ${value}`);
+  return lines.length ? lines : ['No tracks were rejected for this selection.'];
+}
+
+function artistSetLines(info) {
+  const set = info?.artistSet;
+  const proposed = Array.isArray(set?.proposed) ? set.proposed.filter(item => item?.title) : [];
+  if (!set || set.size <= 1 || set.position !== 1 || proposed.length !== set.size) return null;
+  const artist = proposed[0]?.artist || 'artist';
+  return [`${artistSetLabel(set.size)}`, `Proposed ${artist} set:`, ...proposed.map((item, index) => `${index === 0 ? 'This track' : index === 1 ? 'Next' : 'Then'}: ${quoted(item.title)}`)];
+}
+
+function scoreAdjustmentLine(item) {
+  if (item.label === 'Station feedback') {
+    const delta = Math.round((Number(item.value) - 1) * 100);
+    if (item.source?.includes('thumbs-up') && delta > 0) return `Thumbs-up feedback: +${delta}%${item.source ? ` (${item.source})` : ''}`;
+  }
+  return `${item.label}: ×${number(item.value, 3)}${item.source ? ` (${item.source})` : ''}`;
 }
 
 function renderDecision(decision, { prepend = true } = {}) {
@@ -112,35 +180,22 @@ function renderDecision(decision, { prepend = true } = {}) {
     `${decision.seed?.title || 'Unknown song'} — ${decision.seed?.artist || 'Unknown artist'}`,
     decision.seed?.album || 'No album'
   ]);
-  addBox(grid, manualStart ? 'Start type' : 'Local Radio policy', manualStart ? [
+  addBox(grid, manualStart ? 'Start type' : 'Local Radio Controls', manualStart ? [
     'You selected this opening track',
     'The next track will be chosen automatically'
-  ] : [
-    `Song familiarity: ${({ hits: 'Favor the Hits', balanced: 'Balanced Mix', 'deep-cuts': 'Play Deep Cuts Too' })[decision.familiarity] || 'Balanced Mix'}`,
-    'Strong musical links are required',
-    'Poor-fit candidates never play; recovery stays within related artists'
-  ]);
-  addBox(grid, 'Last.fm popularity', [
-    selected.popularity === null || selected.popularity === undefined ? 'Missing — treated as neutral' : `${selected.popularity}/100`,
-    'Adjusted by the Song familiarity preference',
-    'Similar artists can provide a meaningful link'
-  ]);
-  addBox(grid, 'Selection safeguards', [
-    'Same album, artist, credits, Last.fm, or a specific tag',
-    'Broad tags such as Rock or Country do not qualify alone',
-    'DO_NOT_PLAY is an absolute exclusion',
-    'Favorite tags and MP3 ratings lead personal song choice',
-    'Repeat waits bend only after the related-artist safety net is exhausted'
-  ]);
+  ] : radioControlLines(decision));
+  addBox(grid, 'Song Familiarity', songFamiliarityLines(decision, selected));
+  addBox(grid, 'Rejected Tracks', rejectedTrackLines(decision, manualStart));
   addBox(grid, 'Candidates', manualStart ? [
     'No candidate search was needed',
     'This track was selected directly'
   ] : [
     `${decision.counts?.totalTracks ?? 0} total · ${decision.counts?.credible ?? 0} credible`,
     `${decision.counts?.personal ?? 0} personal ${decision.counts?.personalMinimum ?? '—'}–10/Favorite · ${decision.counts?.lastFmFamiliar ?? 0} Last.fm familiar`,
-    `${decision.counts?.finalPool ?? 0} in the final pool`,
-    `Skipped: ${decision.counts?.skippedForCooldown ?? 0} repeat wait, ${decision.counts?.skippedForDoNotPlay ?? 0} Do Not Play`
+    `${decision.counts?.finalPool ?? 0} in the final pool`
   ]);
+  const artistSetCard = artistSetLines(decision.howPicked);
+  if (artistSetCard) addBox(grid, 'Artist Sets', artistSetCard);
   body.append(grid);
   addDetails(body, 'How it was picked', howPickedLines(decision, selected, manualStart), 'WaveDeck did not save a plain-language selection story for this entry.');
   const additions = (selected.additions || []).map(item => `${item.label}: +${number(item.amount)}`);
@@ -148,7 +203,7 @@ function renderDecision(decision, { prepend = true } = {}) {
     ...(selected.eligibilityReasons || []).map(reason => `Acceptable match: ${reason}`),
     ...additions
   ], 'It qualified for the acceptable pool through artist or similarity data.');
-  const multipliers = (selected.multipliers || []).map(item => `${item.label}: ×${number(item.value, 3)}${item.source ? ` (${item.source})` : ''}`);
+  const multipliers = (selected.multipliers || []).map(scoreAdjustmentLine);
   if (!manualStart && !waiting) multipliers.push(`Final score: ${number(selected.score, 3)}`);
   addDetails(body, manualStart ? 'Selection details' : 'Score adjustments', multipliers, manualStart ? 'This seed track was selected directly, so no automatic score was calculated.' : 'No score adjustments recorded.');
   body.append(element('div', `${decision.reason || 'A track was selected.'} Trigger: ${decision.selectionTrigger || 'next'}.`, 'reason'));

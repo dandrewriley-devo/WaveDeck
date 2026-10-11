@@ -380,6 +380,8 @@ class MusicRadio {
     const cooldownExcluded = scored.filter(item => item.excluded === 'cooldown').length;
     const artistCooldownExcluded = scored.filter(item => item.excluded === 'artist cooldown').length;
     const doNotPlayExcluded = scored.filter(item => item.excluded === 'do not play').length;
+    const noMeaningfulConnectionExcluded = scored.filter(item => item.excluded === 'no credible relationship').length;
+    const missingLastFmExcluded = scored.filter(item => item.excluded === 'missing Last.fm popularity').length;
     const personalLibraryMix = mode === 'mix' && seed?.policy?.personalLibrary === true;
     const poolOptions = { lastFmOnlyMix, artistRadio, personalLibraryMix, familiarity };
     const primaryPool = preferredPool(scored, poolOptions);
@@ -475,7 +477,7 @@ class MusicRadio {
       return values.find(item => (remaining -= item.score) < 0) || values.at(-1) || null;
     };
     const selectedSetSize = forcedArtist ? (Number(this.artistSet?.size) || settings.artistSetSize) : effectiveArtistSetSize;
-    let picked = null;
+    let picked = null; let proposedSet = null;
     if (forcedArtist) {
       const nextId = this.artistSet.remaining[0];
       picked = candidates.find(item => item.track.id === nextId) || null;
@@ -494,13 +496,17 @@ class MusicRadio {
         if (!this.artistSet.remaining.length) this.artistSet = null;
       } else if (selectedSetSize > 1) {
         const sameArtist = candidates.filter(item => item.track.id !== selected.id && artistKey(item.track) === artistKey(selected));
-        const planned = [];
+        const planned = []; const plannedTracks = [];
         while (planned.length < selectedSetSize - 1 && sameArtist.length) {
           const next = weightedPick(sameArtist);
           planned.push(next.track.id);
+          plannedTracks.push(next.track);
           sameArtist.splice(sameArtist.indexOf(next), 1);
         }
-        this.artistSet = planned.length === selectedSetSize - 1 ? { artist: artistKey(selected), remaining: planned, size: selectedSetSize } : null;
+        if (planned.length === selectedSetSize - 1) {
+          this.artistSet = { artist: artistKey(selected), remaining: planned, size: selectedSetSize };
+          proposedSet = [selected, ...plannedTracks].map(track => ({ title: track.title || '', artist: track.artist || '' }));
+        } else this.artistSet = null;
       }
       if (artistRadio && this.artistStation) {
         this.artistStation.seedSelections = isSeedArtistTrack(selected, this.artistStation.artist)
@@ -530,18 +536,21 @@ class MusicRadio {
     const feedback = selected ? (this.feedbackFor(stationKey)[selected.songKey || selected.id] || {}) : {};
     const exploreDetails = exploring ? { distance: settings.localRadioExploreDistance, limit: exploreLimit, hops: this.exploreStation?.hops || 0, awayFromSeed: this.isExploringAwayFromSeed(), returningToSeed, rescueUsed: recovery?.kind === 'related-route', activeAnchor: selected && picked?.rescue ? picked.rescue.artist : (selectionSeed?.artist || '') } : null;
     const setRemaining = this.artistSet?.remaining?.length || 0;
-    const artistSetDetails = selectedSetSize > 1 ? { requested: settings.artistSetSize, size: selectedSetSize, position: selectedSetSize - setRemaining, shortened: artistSetShortened } : null;
+    const artistSetDetails = selectedSetSize > 1 ? { requested: settings.artistSetSize, size: selectedSetSize, position: selectedSetSize - setRemaining, shortened: artistSetShortened, proposed: proposedSet } : null;
     const recoveryDetails = recovery ? { ...recovery, setShortened: artistSetShortened, requestedSetSize: settings.artistSetSize, selectedSetSize } : null;
+    const secondaryReason = String(picked?.relationship?.reasons?.find(reason => String(reason).startsWith('thumbs-up secondary seed:')) || '');
+    const secondaryArtist = secondaryReason.replace(/^thumbs-up secondary seed:\s*/i, '');
+    const secondaryTrack = secondaryArtist ? context.secondarySeeds.find(track => matches(track.artist, secondaryArtist)) : null;
     const howPicked = {
       manualStart: false,
       seed: { title: seed?.title || seed?.name || '', artist: seed?.artist || '' },
       relatedArtists,
       restingRelatedArtists,
       artist: { name: selectedArtist?.artist || selected?.artist || '', eligibleTracks: selectedArtist?.eligibleTracks || 0, reason: choiceReason(selected, picked, selectionSeed), relatedArtistsEligible: artistChoices.filter(group => group.related && group.eligibleTracks > 0).length },
-      song: { title: selected?.title || '', popularity: Number.isFinite(Number(picked?.popularity)) ? Number(picked.popularity) : null, rating: ratingOutOfTen(selected), favorite: selected?.favorite === true, thumbsUp: Math.max(0, Number(feedback.up) || 0), thumbsDown: Math.max(0, Number(feedback.down) || 0), skips: Math.max(0, Number(feedback.skips) || 0), poolLabel, poolSize: candidates.length },
+      song: { title: selected?.title || '', popularity: Number.isFinite(Number(picked?.popularity)) ? Number(picked.popularity) : null, rating: ratingOutOfTen(selected), favorite: selected?.favorite === true, thumbsUp: Math.max(0, Number(feedback.up) || 0), thumbsDown: Math.max(0, Number(feedback.down) || 0), skips: Math.max(0, Number(feedback.skips) || 0), poolLabel, poolSize: candidates.length, secondarySeed: secondaryTrack ? { title: secondaryTrack.title || '', artist: secondaryTrack.artist || '' } : null },
       explore: exploreDetails, artistSet: artistSetDetails, recovery: recoveryDetails, waiting: !selected
     };
-    this.lastDecision = { at: new Date(now).toISOString(), mode, stationKey, selectionTrigger, seed: { diagnosticId: stableId(seed), title: seed?.title || seed?.name || '', artist: seed?.artist || '', album: seed?.album || '', genres: seed?.genres || [] }, policy: artistRadio ? 'artist-radio-v1' : (exploring ? 'explore-radio-v1' : 'automatic-local-radio-v2'), familiarity, tuning: settings, explore: exploreDetails, howPicked, artistSet: { size: selectedSetSize, remaining: setRemaining, requested: settings.artistSetSize, shortened: artistSetShortened }, artistRadio: artistRadio ? { seedTargetPercent: 90, seedSelectionsSinceRelated: this.artistStation?.seedSelections || 0 } : null, counts: { totalTracks: tracks.length, skippedByPlaybackError: excluded.size, skippedForCooldown: cooldownExcluded, skippedForArtistCooldown: artistCooldownExcluded, skippedForDoNotPlay: doNotPlayExcluded, credible: credibleCount, personal: personalCandidates.length, personalMinimum: threshold, lastFmFamiliar: lastFmCandidates.length, finalPool: candidates.length }, selected: selected ? diagnostic(picked) : null, diagnostics: { topFinalCandidates: ranked.map(diagnostic), recentHistory: this.history.slice(0, 12).map(item => ({ diagnosticId: stableId({ songKey: item.key }), artist: item.artist, album: item.album, at: new Date(item.at).toISOString() })) }, reason: selected ? `Picked from ${candidates.length} ${poolLabel} Local Radio candidates${recovery?.kind === 'related-route' ? ' through a related-artist recovery route.' : ''}${recovery?.relaxedRepeat === 'artist' ? ' after easing artist rest to keep the station playing.' : ''}${recovery?.relaxedRepeat === 'song' ? ' after using the least-recently-played credible song to keep the station playing.' : ''}` : 'No playable track was found, even after WaveDeck exhausted its related-artist and repeat-protection recovery steps.' };
+    this.lastDecision = { at: new Date(now).toISOString(), mode, stationKey, selectionTrigger, seed: { diagnosticId: stableId(seed), title: seed?.title || seed?.name || '', artist: seed?.artist || '', album: seed?.album || '', genres: seed?.genres || [] }, policy: artistRadio ? 'artist-radio-v1' : (exploring ? 'explore-radio-v1' : 'automatic-local-radio-v2'), familiarity, tuning: settings, explore: exploreDetails, howPicked, artistSet: { size: selectedSetSize, remaining: setRemaining, requested: settings.artistSetSize, shortened: artistSetShortened, proposed: proposedSet }, artistRadio: artistRadio ? { seedTargetPercent: 90, seedSelectionsSinceRelated: this.artistStation?.seedSelections || 0 } : null, counts: { totalTracks: tracks.length, skippedByPlaybackError: excluded.size, skippedForCooldown: cooldownExcluded, skippedForArtistCooldown: artistCooldownExcluded, skippedForDoNotPlay: doNotPlayExcluded, noMeaningfulConnection: noMeaningfulConnectionExcluded, missingLastFmData: missingLastFmExcluded, credible: credibleCount, personal: personalCandidates.length, personalMinimum: threshold, lastFmFamiliar: lastFmCandidates.length, finalPool: candidates.length }, selected: selected ? diagnostic(picked) : null, diagnostics: { topFinalCandidates: ranked.map(diagnostic), recentHistory: this.history.slice(0, 12).map(item => ({ diagnosticId: stableId({ songKey: item.key }), artist: item.artist, album: item.album, at: new Date(item.at).toISOString() })) }, reason: selected ? `Picked from ${candidates.length} ${poolLabel} Local Radio candidates${recovery?.kind === 'related-route' ? ' through a related-artist recovery route.' : ''}${recovery?.relaxedRepeat === 'artist' ? ' after easing artist rest to keep the station playing.' : ''}${recovery?.relaxedRepeat === 'song' ? ' after using the least-recently-played credible song to keep the station playing.' : ''}` : 'No playable track was found, even after WaveDeck exhausted its related-artist and repeat-protection recovery steps.' };
     try { this.onDecision(this.getLastDecision()); } catch {}
     return selected;
   }

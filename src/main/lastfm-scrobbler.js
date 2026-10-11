@@ -37,17 +37,22 @@ class LastFmScrobbler {
   load() {
     try {
       const saved = JSON.parse(fs.readFileSync(this.file, 'utf8'));
+      if (!saved || typeof saved !== 'object' || Array.isArray(saved)) throw new Error('Saved connection data is not valid.');
       const pending = Array.isArray(saved?.pending) ? saved.pending.map(item => this.cleanScrobble(item)).filter(Boolean).slice(-500) : [];
       const lastScrobbled = this.cleanScrobble(saved?.lastScrobbled);
       this.data = {
         version: 2,
-        sessionKey: /^[a-f0-9]{32}$/i.test(String(saved?.sessionKey || '')) ? String(saved.sessionKey) : '',
+        // Last.fm session keys are opaque credentials. Keep a non-empty saved
+        // key rather than assuming every valid key will always be 32 hex chars.
+        sessionKey: cleanText(saved?.sessionKey, 160),
         username: cleanText(saved?.username, 120),
         pending,
         lastMessage: cleanText(saved?.lastMessage, 500),
         lastScrobbled
       };
-    } catch {}
+    } catch (error) {
+      if (error?.code !== 'ENOENT') this.data.lastMessage = 'WaveDeck could not read the saved Last.fm connection. Connect Last.fm again.';
+    }
   }
 
   save() {

@@ -68,6 +68,7 @@ const portableImportSpace = document.getElementById('portableImportSpace');
 const portableImportRequiredSpace = document.getElementById('portableImportRequiredSpace');
 const portableImportAvailableSpace = document.getElementById('portableImportAvailableSpace');
 const openPortableMusicLibraryBtn = document.getElementById('openPortableMusicLibraryBtn');
+const openMusicDebugLogBtn = document.getElementById('openMusicDebugLogBtn');
 const musicLibraryStatus = document.getElementById('musicLibraryStatus');
 const portableTrackCount = document.getElementById('portableTrackCount');
 const libraryTotalAvailable = document.getElementById('libraryTotalAvailable');
@@ -1282,6 +1283,7 @@ portableImportBtn.addEventListener('click', async () => {
 });
 portableImportSpeed.addEventListener('change', async () => { renderProMusicSettings(await window.wavedeck.setPortableImportWorkers(Number(portableImportSpeed.value))); });
 openPortableMusicLibraryBtn.addEventListener('click', () => { void window.wavedeck.openPortableMusicLibrary(); });
+openMusicDebugLogBtn.addEventListener('click', () => { void window.wavedeck.openMusicDebugLog(); });
 manageLocalMixesBtn.addEventListener('click', () => {
   localMixDetails.open = true;
   void loadLocalMixManager();

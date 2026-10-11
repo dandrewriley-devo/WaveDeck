@@ -128,6 +128,8 @@ async function run() {
     await new Promise(resolve => setTimeout(resolve, 0));
     assert.ok(scrobbleRequests.some(request => String(request.options.body || '').includes('method=track.scrobble')), 'Local Music queues and submits a scrobble after genuine listening');
     assert.equal(scrobbler.getStatus().pending, 0, 'accepted scrobbles leave the offline queue');
+    scrobbler.data.sessionKey = 'opaque-lastfm-session-key'; scrobbler.data.username = 'Andrew'; scrobbler.save();
+    assert.equal(new LastFmScrobbler({ dataDir: path.join(temp, 'lastfm-scrobble'), fetchImpl: async () => ({ ok: true, json: async () => ({}) }) }).getStatus().connected, true, 'a saved opaque Last.fm session survives application restart');
     scrobbler.stop();
 
     let sessionChecks = 0;
@@ -287,8 +289,11 @@ async function run() {
     artistWaitRadio.beginSession();
     assert.equal(artistWaitRadio.choose([rotationB], seed, 'radio').id, rotationB.id, 'starting a new Local Radio station resets artist rest while retaining exact-song history');
     const twoFerRadio = new MusicRadio({ dataDir: path.join(temp, 'two-fer'), now: () => now, random: () => 0, getTuning: () => ({ songRepeatHours: 2, artistRepeatMinutes: 90, artistSetSize: 2 }) });
-    assert.equal(twoFerRadio.choose([rotationA, rotationB], seed, 'radio').id, rotationA.id); twoFerRadio.record(rotationA);
+    assert.equal(twoFerRadio.choose([rotationA, rotationB], seed, 'radio').id, rotationA.id);
+    assert.deepEqual(twoFerRadio.getLastDecision().artistSet.proposed.map(item => item.title), [rotationA.title, rotationB.title], 'the first entry in an artist set records the complete proposed set');
+    twoFerRadio.record(rotationA);
     assert.equal(twoFerRadio.choose([rotationA, rotationB], seed, 'radio').id, rotationB.id, 'Artist Sets intentionally continues the selected artist');
+    assert.equal(twoFerRadio.getLastDecision().artistSet.proposed, null, 'later tracks do not repeat the proposed-set diagnostic');
 
     const feedbackDir = path.join(temp, 'feedback');
     const feedbackRadio = new MusicRadio({ dataDir: feedbackDir, now: () => now, random: () => 0.99 });
