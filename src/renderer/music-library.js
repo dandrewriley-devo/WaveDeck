@@ -5,7 +5,7 @@ const summary = $('summary');
 const ROW_HEIGHT = 49;
 const LOADING_DETAIL_HEIGHT = 62;
 let artists = [], query = '', activeArtist = '', detail = null, activeRelease = '', editingTrack = '', playingTrack = '';
-let expandedDetailHeight = 0, viewport = null, searchTimer = 0;
+let expandedDetailHeight = 0, viewport = null, searchTimer = 0, focusedTrack = '';
 
 const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 const duration = seconds => { const whole = Math.max(0, Math.round(Number(seconds) || 0)); return whole ? `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, '0')}` : '—'; };
@@ -73,6 +73,11 @@ function trackEditor(track) {
 }
 function trackRow(track) {
   const wrap = document.createElement('div'); wrap.className = 'track-wrap'; const row = document.createElement('div'); row.className = `track-row${track.doNotPlay ? ' disabled-track' : ''}`;
+  if (focusedTrack === track.id) {
+    wrap.classList.add('focused-track');
+    wrap.style.background = 'rgba(112, 184, 90, .2)';
+    wrap.style.boxShadow = 'inset 3px 0 #70b85a';
+  }
   row.append(smallButton(playingTrack === track.id ? '●' : '▶', 'Play this track now', async () => { playingTrack = track.id; render(currentScroll()); await window.wavedeck.playMusic(track.id, 'song'); }));
   const number = document.createElement('span'); number.className = 'track-number'; number.textContent = track.track ? String(track.track) : '—'; row.append(number);
   const title = document.createElement('button'); title.className = 'track-title'; title.textContent = track.title || 'Untitled track'; title.title = 'Edit track details';
@@ -120,4 +125,16 @@ function render(scrollTop = currentScroll()) {
   nextViewport.onscroll = draw; nextViewport.scrollTop = Math.min(scrollTop, Math.max(0, Number.parseInt(stage.style.height, 10) - nextViewport.clientHeight)); draw();
 }
 search.oninput = () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { query = search.value.trim(); void loadArtists(); }, 120); };
-loadArtists().catch(error => { summary.textContent = error.message; });
+async function focusPortableTrack(target = {}) {
+  if (!target.artistKey || !target.releaseKey || !target.trackId) return;
+  query = ''; search.value = '';
+  await loadArtists();
+  if (!artists.some(artist => artist.key === target.artistKey)) return;
+  activeArtist = target.artistKey; activeRelease = target.releaseKey; editingTrack = ''; focusedTrack = target.trackId; expandedDetailHeight = 0;
+  detail = await window.wavedeck.getPortableMusicArtistDetail(activeArtist, '');
+  const index = artists.findIndex(artist => artist.key === activeArtist);
+  render(Math.max(0, index * ROW_HEIGHT - 16));
+  setTimeout(() => { if (focusedTrack === target.trackId) { focusedTrack = ''; render(currentScroll()); } }, 4200);
+}
+const initialLoad = loadArtists().catch(error => { summary.textContent = error.message; });
+window.wavedeck.onPortableMusicTrackFocus(target => { void initialLoad.then(() => focusPortableTrack(target)).catch(error => { summary.textContent = error.message; }); });

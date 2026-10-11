@@ -172,6 +172,17 @@ async function run() {
     assert.equal(diagnosticSelections.length, 2, 'The selected opening Song Radio track is recorded in diagnostics');
     assert.equal(diagnosticSelections.at(-1).selectionTrigger, 'start');
     assert.equal(diagnosticSelections.at(-1).selected.title, 'Comfortably Numb');
+    const initialSetSeed = track('initial-set-seed', { title: 'Seed Song', artist: 'Initial Set Artist', artists: ['Initial Set Artist'], albumArtist: 'Initial Set Artist', rating: 8 });
+    const initialSetSecond = track('initial-set-second', { title: 'Second Song', artist: 'Initial Set Artist', artists: ['Initial Set Artist'], albumArtist: 'Initial Set Artist', rating: 8 });
+    const initialSetThird = track('initial-set-third', { title: 'Third Song', artist: 'Initial Set Artist', artists: ['Initial Set Artist'], albumArtist: 'Initial Set Artist', rating: 8 });
+    const initialSetRadio = new MusicRadio({ dataDir: path.join(temp, 'initial-artist-set'), now: () => now, random: () => 0, getTuning: () => ({ artistSetSize: 3 }) });
+    initialSetRadio.beginSession();
+    const initialPlan = initialSetRadio.planInitialArtistSet([initialSetSeed, initialSetSecond, initialSetThird], initialSetSeed, 'radio', 'radio:initial-set');
+    assert.deepEqual(initialPlan.proposed.map(item => item.title), ['Seed Song', 'Second Song', 'Third Song'], 'a manually selected Song Radio seed becomes track one of its first Artist Set');
+    initialSetRadio.record(initialSetSeed);
+    const initialDiagnostic = initialSetRadio.recordManualStart(initialSetSeed, 'radio', 'radio:initial-set', initialPlan);
+    assert.equal(initialDiagnostic.howPicked.artistSet.position, 1, 'the opening seed records its Artist Set proposal in the Live Radio Log');
+    assert.equal(initialSetRadio.choose([initialSetSeed, initialSetSecond, initialSetThird], initialSetSeed, 'radio', new Set(), 'next', 'radio:initial-set').id, initialSetSecond.id, 'the next Song Radio choice follows the opening Artist Set plan');
     assert.equal(radio.choose([country], seed, 'radio'), null, 'a broad Rock tag alone is never enough');
     assert.equal(radio.choose([sameAlbum, country], seed, 'radio').id, sameAlbum.id, 'same-album songs lead Song Radio');
     const waitingDiagnostics = [];

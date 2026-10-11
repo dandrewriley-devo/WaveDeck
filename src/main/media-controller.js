@@ -351,6 +351,9 @@ class MediaController {
     this.music = { seed: track, albumArtistSeed, mode, radioKey: `${mode}:${track.songKey || track.id}`, current: null, queue: mode === 'album' ? album.map(t => t.id) : [], back: [], failed: new Set(), waiting: false, initialRadioSelectionPending: ['radio', 'artist', 'explore'].includes(mode) };
     if (mode === 'artist') this.musicRadio?.beginArtistSession?.(track);
     if (mode === 'explore') this.musicRadio?.beginExploreSession?.(track);
+    if (mode === 'radio' || mode === 'explore') {
+      this.music.initialArtistSet = this.musicRadio?.planInitialArtistSet?.(this.musicLibrary.tracks, track, mode, this.music.radioKey) || null;
+    }
     this.onLocalStationStart(this.music.radioKey);
     this.onStationChanged(null);
     return this.loadMusic(mode === 'album' ? this.music.queue.shift() : id);
@@ -397,7 +400,7 @@ class MediaController {
     this.musicRadio.record(track);
     if (this.music.initialRadioSelectionPending) {
       this.music.initialRadioSelectionPending = false;
-      this.musicRadio.recordManualStart?.(track, this.music.mode, this.music.radioKey);
+      this.musicRadio.recordManualStart?.(track, this.music.mode, this.music.radioKey, this.music.initialArtistSet);
     }
     try { this.onMusicTrack(track); } catch {}
     this.onStateChanged(this.getStatus());
