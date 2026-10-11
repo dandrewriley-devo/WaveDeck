@@ -1,6 +1,6 @@
 # WaveDeck Opus Branch Handoff
 
-## WaveDeck Opus 1.0.27
+## WaveDeck Opus 1.0.28
 
 - Song Radio and Explore Radio now include the manually selected seed as track one of the first Artist Set. The set is planned before playback starts, shortens cleanly when the artist does not have enough distinct eligible songs, and appears on the seed’s Live Radio Log entry.
 - Clicking the title of a currently playing Portable Music track opens Manage Portable Music directly to that artist, release, and track. The row is briefly highlighted. Streaming and Additional Music Folder titles remain unchanged and do nothing.
@@ -66,15 +66,15 @@
 
 # WaveDeck Project Handoff
 
-This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.27**.
+This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.28**.
 
 ## Current published state
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `opus-portable`
-- Current version: **1.0.27**
-- Current release: 1.0.27 — opening Artist Sets and direct Music Manager navigation.
-- Current commit: the verified 1.0.27 release commit at the head of `opus-portable`.
+- Current version: **1.0.28**
+- Current release: 1.0.28 — opening Artist Sets and direct Music Manager navigation.
+- Current commit: the verified 1.0.28 release commit at the head of `opus-portable`.
 - 0.11.8 commit: `8118e235eed4b4a18c378f12ced8a86be83ed4b9` — monitor-safe main-window bounds persistence and portable Windows build.
 - 0.11.7 commit: `c8b69b7b8842dd6c310dda05b22b8d52870d3e84` — superseded source correction after the first portable Windows build.
 - 0.11.6 commit: `621e44d8c484cd0a4d70eb124106170f6183d0ae` — compact Local Radio Controls and remembered auxiliary-window bounds.
