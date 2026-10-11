@@ -601,7 +601,12 @@ class MusicRadio {
           : 0;
       }
     } else if (forcedArtist) this.artistSet = null;
-    if (selected && exploring && this.exploreStation) {
+    // A planned Artist Set is one Explore Radio move, not several. The first
+    // song establishes the new anchor and hop count; its already-approved
+    // follow-ups must not make the route look as if it jumped back to the
+    // original seed (especially when the first song reached the hop limit).
+    const continuingExploreArtistSet = Boolean(exploring && forcedArtist && artistSetSnapshot && artistSetSnapshot.played > 1);
+    if (selected && exploring && this.exploreStation && !continuingExploreArtistSet) {
       const oldArtist = artistKey(this.exploreStation.current);
       this.exploreStation.current = { ...selected };
       this.exploreStation.hops = picked?.rescue
