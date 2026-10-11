@@ -50,6 +50,7 @@
 - Last.fm session persistence now preserves opaque saved session keys across restarts and visibly reports unreadable saved connection data instead of silently presenting a disconnected state.
 - The Local Music toolbar now opens the Library Manager. The Your Library card has compact Manage, Refresh, and View Log links.
 - Live Radio Log cards now show active Local Radio Controls, the actual Song Familiarity effect, concrete Rejected Tracks counts, and—on the first track only—a compact Artist Sets card with the complete proposed artist set. How it was picked and Score Adjustments state exactly when stored thumbs-up feedback or a liked secondary seed affected the choice.
+- The verified pinned BtbN FFmpeg archive for the AppImage release is now archive `ad8ac3c3ebc161a2feaa3289f91de9418bc4b8a7e28b335235c3ab4c037a5899`; extracted `ffmpeg` is `2e590909abcb2059cc3d1f839b53c8ffd82fe9122a5560f042e09e21ffbf50c7`; `ffprobe` is `8873050ba193b5dc82529dddb437f7423dcb4842a1a3fd21ef4eaa1856fbf33f`.
 
 # WaveDeck Project Handoff
 
