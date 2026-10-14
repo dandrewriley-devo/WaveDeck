@@ -404,7 +404,7 @@ class MediaController {
     return true;
   }
 
-  #commitMusicTrack(track, id, deferredDecision = null) {
+  #commitMusicTrack(track, id, deferredDecision = null, preparationDelay = 1000) {
     this.music.current = { ...track }; delete this.music.current.path;
     this.music.waiting = false;
     this.mediaState = 'playing';
@@ -417,7 +417,7 @@ class MediaController {
     if (deferredDecision) this.musicRadio?.publishDecision?.(deferredDecision);
     try { this.onMusicTrack(track); } catch {}
     this.onStateChanged(this.getStatus());
-    this.#scheduleMusicPreparation(this.musicGeneration);
+    this.#scheduleMusicPreparation(this.musicGeneration, preparationDelay);
   }
 
   #nextMusicId(reason, { usePrepared = true, deferDecision = false } = {}) {
@@ -534,7 +534,11 @@ class MediaController {
       await this.player.crossfadeTo(track.path, durationMs);
       if (!this.music || generation !== this.musicGeneration) return false;
       if (this.music?.pendingPreparedDecision?.id === id) this.music.pendingPreparedDecision = null;
-      this.#commitMusicTrack(track, id, deferredDecision);
+      // Selecting the following fresh artist can be expensive in a large
+      // library. Do not run it while the equal-power volume ramp is active:
+      // that ramp lives on this same process and a blocked timer would let the
+      // incoming song advance silently before it becomes audible.
+      this.#commitMusicTrack(track, id, deferredDecision, Math.max(1000, Math.round(durationMs) + 250));
       this.#scheduleMusicCrossfade(track, generation);
       return true;
     } catch (error) {

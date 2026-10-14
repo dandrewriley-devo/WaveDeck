@@ -513,6 +513,30 @@ async function run() {
     assert.equal(preparedCrossfadeDiagnostics.at(-1).preparation.usedBy, 'crossfade', 'prepared diagnostics show that the choice was used by a crossfade');
     assert.equal(preparedCrossfadeResolveCount, 3, 'the crossfade reuses the already resolved prepared track instead of resolving it a second time');
     await preparedCrossfadeController.stop();
+    let deferredPreparationPosition = 0; let deferredPreparationResolveCount = 0;
+    const deferredPreparationPlayer = {
+      isCrossfading: false,
+      getStatus: () => ({ playing: true, position: deferredPreparationPosition, duration: 2 }),
+      setStationGain: async () => {}, play: async () => {}, stop: async () => {}, setPaused: async () => {}, seek: async () => {},
+      crossfadeTo: async () => { deferredPreparationPosition = 0; }
+    };
+    const deferredPreparationTracks = [
+      track('deferred-preparation-a', { artist: 'Deferred Preparation Artist', artists: ['Deferred Preparation Artist'], albumArtist: 'Deferred Preparation Artist', duration: 2 }),
+      track('deferred-preparation-b', { artist: 'Deferred Preparation Artist', artists: ['Deferred Preparation Artist'], albumArtist: 'Deferred Preparation Artist', duration: 2 }),
+      track('deferred-preparation-c', { artist: 'Deferred Preparation Artist', artists: ['Deferred Preparation Artist'], albumArtist: 'Deferred Preparation Artist', duration: 2 })
+    ];
+    const deferredPreparationLibrary = { tracks: deferredPreparationTracks, resolve: async id => {
+      deferredPreparationResolveCount++;
+      const found = deferredPreparationTracks.find(item => item.id === id); return { ...found, path: `/${id}` };
+    } };
+    const deferredPreparationController = serializeTransport(new MediaController({ player: deferredPreparationPlayer, getStations: () => [], getCrossfadeEnabled: () => true }));
+    deferredPreparationController.configureMusic(deferredPreparationLibrary, new MusicRadio({ dataDir: path.join(temp, 'deferred-crossfade-preparation'), now: () => now, random: () => 0 }));
+    await deferredPreparationController.playMusic('deferred-preparation-a', 'artist');
+    deferredPreparationPosition = 1.5;
+    await new Promise(resolve => setTimeout(resolve, 400));
+    await new Promise(resolve => setTimeout(resolve, 1100));
+    assert.equal(deferredPreparationResolveCount, 3, 'the next Local Radio selection waits until the active crossfade has finished');
+    await deferredPreparationController.stop();
     console.log('Music tests passed: read-only MP3 scan, Last.fm enrichment, Local Radio tuning, repeat protection, diagnostics, album handoff, and source switching.');
   } finally { library?.close(); await fs.rm(temp, { recursive: true, force: true }); }
 }
