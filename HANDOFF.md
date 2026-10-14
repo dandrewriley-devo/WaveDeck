@@ -6,6 +6,7 @@
 - Existing portable libraries receive an idle, worker-thread identity rebuild after Local Music is already available. New imports, conversions, rescans, and portable metadata edits mark identities for an automatic background refresh. This work never alters audio files or tags.
 - Artist Set planning retains near-title safeguards without quadratic work. It uses compact title signatures for newly arrived tracks and stored identities thereafter; a 12,000-track artist pool is covered by regression tests.
 - Internal maintenance shortcut: `Ctrl+Alt+Shift+I` forces a complete portable identity rebuild and reports its completion. It is intentionally not exposed in the normal UI.
+- The mutable BtbN `latest` FFmpeg archive changed on Oct. 14. 1.0.32 pins the verified archive hash `80742938a95f9ecf9e0635192b417b7af61ddd53c4ab511898a11da5dad81667`, with `ffmpeg` `00550c65fc35d8e21acae12c4262bdbf74df9b79fa996eb71c85a014571d8542` and `ffprobe` `effc9977f8dcb67e8f459822138b0663c44434aafaf4fef058b5c67dfb6dd8c4`.
 
 ## WaveDeck Opus 1.0.31
 
