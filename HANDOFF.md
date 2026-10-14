@@ -1,5 +1,12 @@
 # WaveDeck Opus Branch Handoff
 
+## WaveDeck Opus 1.0.32
+
+- Portable tracks now retain a persistent `radioIdentity` in `Data/music.sqlite`. It makes album/box-set/compilation copies of the same song one stored radio choice, so Artist Set planning does not repeatedly compare an artist’s entire candidate pool.
+- Existing portable libraries receive an idle, worker-thread identity rebuild after Local Music is already available. New imports, conversions, rescans, and portable metadata edits mark identities for an automatic background refresh. This work never alters audio files or tags.
+- Artist Set planning retains near-title safeguards without quadratic work. It uses compact title signatures for newly arrived tracks and stored identities thereafter; a 12,000-track artist pool is covered by regression tests.
+- Internal maintenance shortcut: `Ctrl+Alt+Shift+I` forces a complete portable identity rebuild and reports its completion. It is intentionally not exposed in the normal UI.
+
 ## WaveDeck Opus 1.0.31
 
 - Local Radio and Local Mix selection no longer repeatedly search the complete playback history for every track in a large library. Repeat protection now uses in-memory song-identity and artist indexes, preserving same-song/near-duplicate safeguards without blocking the app at the end of a song.
@@ -85,15 +92,15 @@
 
 # WaveDeck Project Handoff
 
-This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.31**.
+This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.32**.
 
 ## Current published state
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `opus-portable`
-- Current version: **1.0.31**
-- Current release: 1.0.31 — responsive Local Radio preparation and persistence.
-- Current commit: the verified 1.0.31 release commit at the head of `opus-portable`.
+- Current version: **1.0.32**
+- Current release: 1.0.32 — persistent radio identities and linear Artist Set planning.
+- Current commit: the verified 1.0.32 release commit at the head of `opus-portable`.
 - 0.11.8 commit: `8118e235eed4b4a18c378f12ced8a86be83ed4b9` — monitor-safe main-window bounds persistence and portable Windows build.
 - 0.11.7 commit: `c8b69b7b8842dd6c310dda05b22b8d52870d3e84` — superseded source correction after the first portable Windows build.
 - 0.11.6 commit: `621e44d8c484cd0a4d70eb124106170f6183d0ae` — compact Local Radio Controls and remembered auxiliary-window bounds.

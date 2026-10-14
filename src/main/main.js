@@ -99,6 +99,7 @@ const MINI_PLAYER_MIN_WIDTH = 360;
 const RADIO_LOG_SHORTCUT = "CommandOrControl+Alt+Shift+L";
 const LASTFM_REFRESH_SHORTCUT = "CommandOrControl+Alt+Shift+F";
 const MINI_PLAYER_SHORTCUT = "CommandOrControl+Alt+Shift+M";
+const RADIO_IDENTITY_REBUILD_SHORTCUT = "CommandOrControl+Alt+Shift+I";
 const DISPLAY_VERSION = require("../../package.json").wavedeckVersion || app.getVersion();
 
 let mainWindow = null;
@@ -2088,6 +2089,18 @@ if (!hasSingleInstanceLock) {
     })) {
       console.warn("WaveDeck could not register the Last.fm refresh shortcut.");
     }
+    if (!globalShortcut.register(RADIO_IDENTITY_REBUILD_SHORTCUT, () => {
+      void (async () => {
+        try {
+          await musicLibrary?.enable();
+          sendToMain('app:warning', 'Rebuilding portable song identities in the background. Local playback stays available.');
+          const result = await musicLibrary?.rebuildRadioIdentities(true);
+          sendToMain('app:warning', `Portable song identity rebuild finished: ${result?.changed || 0} of ${result?.total || 0} tracks updated.`);
+        } catch (error) { sendToMain('app:warning', error.message); }
+      })();
+    })) {
+      console.warn("WaveDeck could not register the portable song-identity rebuild shortcut.");
+    }
     if (supportsMiniPlayer() && !globalShortcut.register(MINI_PLAYER_SHORTCUT, () => {
       void toggleMiniPlayer().catch((error) => console.warn(`Could not toggle Mini Player: ${error.message}`));
     })) {
@@ -2144,6 +2157,7 @@ function finishShutdown() {
   tray = null;
   try { globalShortcut.unregister(RADIO_LOG_SHORTCUT); } catch {}
   try { globalShortcut.unregister(LASTFM_REFRESH_SHORTCUT); } catch {}
+  try { globalShortcut.unregister(RADIO_IDENTITY_REBUILD_SHORTCUT); } catch {}
   try { globalShortcut.unregister(MINI_PLAYER_SHORTCUT); } catch {}
   lastFmEnricher?.stop();
   lastFmScrobbler?.stop();

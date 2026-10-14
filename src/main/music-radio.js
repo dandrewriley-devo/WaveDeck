@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { normalize, radioArtist } = require('./music-tags');
+const { artistKey, baseSongIdentity, comparisonSignatures, songIdentity, sameSong } = require('./song-identity');
 const { isTrackEligibleForMix } = require('./local-mixes');
 
 const COOLDOWN = 4 * 60 * 60 * 1000;
@@ -11,12 +12,6 @@ const matches = (a, b) => Boolean(a && b && normalize(a) === normalize(b));
 const artistList = track => Array.isArray(track?.artists) && track.artists.length ? track.artists : [track?.artist];
 const overlaps = (left = [], right = []) => left.some(a => right.some(b => matches(a, b)));
 const stableId = track => crypto.createHash('sha256').update(String(track?.songKey || track?.id || '')).digest('hex').slice(0, 16);
-const artistKey = track => normalize(radioArtist(track) || track?.artist || '');
-function songIdentity(track) {
-  const title = String(track?.title || track?.name || '')
-    .replace(/\s*[\[(]?\s*(?:(?:digital\s+)?remaster(?:ed)?(?:\s+\d{4})?|\d{4}\s+remaster(?:ed)?)(?:\s+version)?\s*[\])]?\s*$/i, '');
-  return `${artistKey(track)}\u0000${normalize(title)}`;
-}
 function historyIndexes(history = []) {
   const last = new Map();
   const lastByIdentity = new Map();
@@ -42,24 +37,6 @@ function lastPlayedFor(track, history, context) {
   const artistHistory = context?.historyByArtist?.get(artistKey(track));
   if (artistHistory) return artistHistory.find(item => sameSong(track, item)) || null;
   return history.find(item => item.key === track.songKey || sameSong(track, item)) || null;
-}
-function titleForComparison(track) { return String(track?.title || track?.name || '').replace(/\s*[(\[]?\s*(?:live|acoustic|demo|radio edit|single version)[^\])]*[\])]?\s*$/i, '').replace(/[^\p{L}\p{N}]+/gu, '').toLowerCase(); }
-function editDistanceAtMostOne(left, right) {
-  if (left === right) return true;
-  if (!left || !right || Math.abs(left.length - right.length) > 1) return false;
-  let index = 0; let other = 0; let edits = 0;
-  while (index < left.length && other < right.length) {
-    if (left[index] === right[other]) { index += 1; other += 1; continue; }
-    if (++edits > 1) return false;
-    if (left.length > right.length) index += 1; else if (right.length > left.length) other += 1; else { index += 1; other += 1; }
-  }
-  return true;
-}
-function sameSong(track, other) {
-  if (!track || !other || artistKey(track) !== artistKey(other)) return false;
-  if (songIdentity(track) === songIdentity(other)) return true;
-  const left = titleForComparison(track); const right = titleForComparison(other); const durationLeft = Number(track.duration); const durationRight = Number(other.duration);
-  return left.length >= 8 && right.length >= 8 && Number.isFinite(durationLeft) && Number.isFinite(durationRight) && Math.abs(durationLeft - durationRight) <= 4 && editDistanceAtMostOne(left, right);
 }
 function localRadioTuning(value = {}) {
   const songRepeatHours = Number(value.songRepeatHours ?? value.localRadioSongRepeatHours);
@@ -273,16 +250,40 @@ function exploreRescueCandidates(tracks, root, excluded, history, now, context, 
   return found;
 }
 
+function artistSetIdentityMap(items = []) {
+  const identities = new Map(); const artists = new Map();
+  for (const item of items) {
+    const key = artistKey(item.track); const state = artists.get(key) || { buckets: new Map() };
+    artists.set(key, state);
+    // Persisted identities make this an immediate lookup. For a track that has
+    // just arrived, the small signature index retains near-title protection
+    // without ever falling back to an all-against-all comparison.
+    const stored = item.track?.radioIdentity;
+    const candidates = new Set();
+    if (!stored) for (const signature of comparisonSignatures(item.track)) for (const group of state.buckets.get(signature) || []) candidates.add(group);
+    let group = stored ? { track: item.track, identity: songIdentity(item.track) } : [...candidates].find(candidate => sameSong(candidate.track, item.track));
+    if (!group) {
+      group = { track: item.track, identity: baseSongIdentity(item.track) };
+      for (const signature of comparisonSignatures(item.track)) {
+        const groups = state.buckets.get(signature) || []; groups.push(group); state.buckets.set(signature, groups);
+      }
+    }
+    identities.set(item, group.identity);
+  }
+  return identities;
+}
+
 function applyArtistSetPreference(items, requestedSize) {
   const requested = Math.max(1, Number(requestedSize) || 1);
   if (requested === 1 || !items.length) return { items, requested, size: 1, shortened: false };
+  const identities = artistSetIdentityMap(items);
   for (let size = requested; size >= 1; size -= 1) {
     const counts = new Map();
     for (const item of items) {
-      const artist = artistKey(item.track); const songs = counts.get(artist) || [];
-      if (!songs.some(track => sameSong(track, item.track))) songs.push(item.track); counts.set(artist, songs);
+      const artist = artistKey(item.track); const songs = counts.get(artist) || new Set();
+      songs.add(identities.get(item)); counts.set(artist, songs);
     }
-    const eligible = items.filter(item => (counts.get(artistKey(item.track))?.length || 0) >= size);
+    const eligible = items.filter(item => (counts.get(artistKey(item.track))?.size || 0) >= size);
     if (eligible.length) return { items: eligible, requested, size, shortened: size < requested };
   }
   return { items: [], requested, size: 1, shortened: requested > 1 };
@@ -421,11 +422,10 @@ class MusicRadio {
       .filter(track => artistKey(track) === artistKey(seed) && !sameSong(track, seed))
       .map(track => ({ track, ...scoreTrack(track, seed, 'radio', this.history, now, context, familiarity) }));
     const pool = preferredPool(scored, { familiarity }).candidates;
-    const identities = [];
-    for (const item of pool) if (!identities.some(track => sameSong(track, item.track))) identities.push(item.track);
+    const identities = new Set(artistSetIdentityMap(pool).values());
     let size = 1;
     for (let candidateSize = requested; candidateSize >= 2; candidateSize -= 1) {
-      if (identities.length >= candidateSize - 1) { size = candidateSize; break; }
+      if (identities.size >= candidateSize - 1) { size = candidateSize; break; }
     }
     if (size <= 1) return null;
     const weightedPick = values => {

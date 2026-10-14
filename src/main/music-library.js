@@ -24,6 +24,14 @@ class MusicLibrary {
     this.worker = new Worker(path.join(__dirname, 'music-worker.js'), { workerData: { dataDir: this.dataDir, additionalMusicFolder: this.additionalMusicFolder } });
     this.worker.on('message', message => {
       if (message.event === 'status') { this.onStatus(message.value); return; }
+      if (message.event === 'radio-identities') {
+        // The worker's idle migration changes only radio bookkeeping. Refresh
+        // the in-memory track objects without disturbing visible Local Music.
+        if (!message.value?.rebuilding && this.enabled) {
+          void this.call('all').then(tracks => { this.tracks = tracks.map(canonicalTrack); }).catch(() => {});
+        }
+        return;
+      }
       if (message.event === 'local-mixes') {
         this.localMixAvailability = {
           ...message.value,
@@ -116,6 +124,7 @@ class MusicLibrary {
     await this.call('track:update', next);
     return next;
   }
+  async rebuildRadioIdentities(force = true) { return this.call('radio-identities:rebuild', force === true); }
   async completeLastFmAlbum(key) { return this.call('lastfm:complete', key); }
   applyLastFmTrack(value) {
     const index = this.tracks.findIndex(track => track.id === value?.id);

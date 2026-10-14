@@ -53,6 +53,10 @@ async function run() {
     const unchangedScan = await library.rescan();
     assert.equal(unchangedScan.changed, false, 'an unchanged library scan reports that it found nothing new');
     assert.equal(library.revision, indexedRevision, 'an unchanged library scan keeps the ready in-memory index intact');
+    const identityRebuild = await library.rebuildRadioIdentities(true);
+    assert.equal(identityRebuild.total, 1, 'the portable identity rebuild checks the indexed portable library');
+    const identityTracks = await library.call('all');
+    assert.ok(identityTracks[0].radioIdentity, 'the portable music database persists each track’s radio identity');
     assert.equal(library.tracks[0].ratingStars, 4, 'ratings are copied into the local index');
     assert.equal(library.tracks[0].favorite, true, 'Favorite tags are copied into the local index');
     assert.equal(library.tracks[0].doNotPlay, true, 'Do Not Play tags are copied into the local index');
@@ -184,6 +188,19 @@ async function run() {
     const initialDiagnostic = initialSetRadio.recordManualStart(initialSetSeed, 'radio', 'radio:initial-set', initialPlan);
     assert.equal(initialDiagnostic.howPicked.artistSet.position, 1, 'the opening seed records its Artist Set proposal in the Live Radio Log');
     assert.equal(initialSetRadio.choose([initialSetSeed, initialSetSecond, initialSetThird], initialSetSeed, 'radio', new Set(), 'next', 'radio:initial-set').id, initialSetSecond.id, 'the next Song Radio choice follows the opening Artist Set plan');
+    const largeArtist = Array.from({ length: 12000 }, (_value, index) => track(`large-artist-${index}`, {
+      title: `Large Artist Song ${index}`, artist: 'Large Artist', artists: ['Large Artist'], albumArtist: 'Large Artist', album: 'Large Artist Collection', duration: 180 + (index % 40), rating: 8
+    }));
+    const largeSeed = largeArtist[0];
+    const largeSetRadio = new MusicRadio({ dataDir: path.join(temp, 'large-artist-set'), now: () => now, random: () => 0, getTuning: () => ({ artistSetSize: 4 }) });
+    const planningStarted = Date.now();
+    const largePlan = largeSetRadio.planInitialArtistSet(largeArtist, largeSeed, 'radio', 'radio:large-artist-set');
+    assert.equal(largePlan.size, 4, 'a large artist retains the requested Artist Set size');
+    assert.ok(Date.now() - planningStarted < 2500, 'Artist Set planning stays linear for a large artist library');
+    const largeChoiceRadio = new MusicRadio({ dataDir: path.join(temp, 'large-artist-choice'), now: () => now, random: () => 0, getTuning: () => ({ artistSetSize: 4 }) });
+    const selectionStarted = Date.now();
+    assert.ok(largeChoiceRadio.choose(largeArtist, largeSeed, 'radio'), 'a large artist remains playable');
+    assert.ok(Date.now() - selectionStarted < 2500, 'choosing from a large artist pool stays responsive');
     assert.equal(radio.choose([country], seed, 'radio'), null, 'a broad Rock tag alone is never enough');
     const compoundBroad = track('compound-broad', { artist: 'Billy Joel', artists: ['Billy Joel'], albumArtist: 'Billy Joel', album: 'The Longest Time', genres: ['Rock, Pop'] });
     const hipHopSeed = track('hip-hop-seed', { artist: 'Beastie Boys', artists: ['Beastie Boys'], albumArtist: 'Beastie Boys', album: 'Intergalactic', genres: ['Hip-Hop'] });
