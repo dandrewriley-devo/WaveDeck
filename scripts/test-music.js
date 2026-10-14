@@ -5,6 +5,8 @@ const path = require('path');
 const crypto = require('crypto');
 const { MusicLibrary } = require('../src/main/music-library');
 const { MusicRadio, weight, COOLDOWN } = require('../src/main/music-radio');
+const { RadioSelection } = require('../src/main/radio-selection');
+const { PortableManagerIndex, portableManagerArtistKey, portableManagerReleaseKey } = require('../src/main/portable-manager-index');
 const { extractTrack, radioArtist } = require('../src/main/music-tags');
 const { OpusOptimizer, OPUS_BITRATE, SOURCE_EXTENSIONS, outputFor, stableAmpId } = require('../src/main/opus-optimizer');
 const { trackKey } = require('../src/main/portable-importer');
@@ -430,6 +432,74 @@ async function run() {
     const modernColdplay = track('coldplay', { artist: 'Coldplay', artists: ['Coldplay'], title: 'Charlie Brown', year: 2011, rating: 10, similarArtists: ['U2'] });
     assert.equal(classicRadio.choose([...classicSeedTracks, modernColdplay], classicMix, 'mix').artist, 'Boston', 'Last.fm similarity cannot admit a non-format Classic Rock artist');
     assert.throws(() => resolveLocalMix('yacht-rock', classicSeedTracks, portableMixData), /no longer available/, 'the retired Yacht Rock book is removed from portable Data');
+    const managerIndex = new PortableManagerIndex();
+    const managerTracks = Array.from({ length: 38000 }, (_, index) => track(`manager-${index}`, {
+      library: 'portable', artist: `Artist ${Math.floor(index / 10)}`, album: `Release ${Math.floor(index / 5)}`,
+      title: `Song ${index}`, genres: index === 37 ? ['Dream Pop'] : ['Rock'], rating: index === 37 ? 8 : 0
+    }));
+    managerIndex.ensure(managerTracks, 1);
+    assert.equal(managerIndex.summaries().length, 3800, 'a large portable library is grouped once by artist');
+    const cachedGroups = managerIndex.groups;
+    assert.equal(managerIndex.summaries('Dream Pop').length, 1, 'genre search returns artist rows without rebuilding the index');
+    assert.ok(managerIndex.summaries('Song 37').some(summary => summary.artist === 'Artist 3'), 'song search returns the matching artist');
+    assert.strictEqual(managerIndex.groups, cachedGroups, 'search queries reuse the same artist index');
+    const managerArtist = portableManagerArtistKey(managerTracks[37].artist);
+    assert.equal(managerIndex.tracksForArtist(managerArtist).length, 10, 'the target artist opens without scanning every portable track');
+    assert.equal(portableManagerReleaseKey(managerTracks[37]).startsWith('album:'), true);
+    const updatedManagerTrack = { ...managerTracks[37], rating: 0, title: 'Changed Title' };
+    managerTracks[37] = updatedManagerTrack;
+    managerIndex.replaceTrack(track('manager-37', { ...updatedManagerTrack, title: 'Song 37', rating: 8 }), updatedManagerTrack, 2);
+    assert.equal(managerIndex.summaries('Changed Title')[0].ratedCount, 0, 'a track edit updates only its artist instead of rebuilding 38,000 rows');
+    assert.equal(managerIndex.summaries('Song 37').some(summary => summary.key === managerArtist), false);
+
+    const workerTracks = [
+      track('worker-seed', { artist: 'Worker Artist', artists: ['Worker Artist'], albumArtist: 'Worker Artist' }),
+      track('worker-next', { artist: 'Worker Artist', artists: ['Worker Artist'], albumArtist: 'Worker Artist' }),
+      track('worker-blocked', { artist: 'Worker Artist', artists: ['Worker Artist'], albumArtist: 'Worker Artist', doNotPlay: true })
+    ];
+    const workerDecisions = [];
+    const selection = new RadioSelection({ dataDir: path.join(temp, 'radio-worker'), onDecision: value => workerDecisions.push(value) });
+    try {
+      await selection.setTracks(workerTracks, 1);
+      await selection.beginSession();
+      await selection.beginArtistSession(workerTracks[0]);
+      await selection.record(workerTracks[0]);
+      await selection.recordManualStart(workerTracks[0], 'artist', 'artist:worker-seed');
+      assert.equal(workerDecisions.length, 1, 'the opening station decision still reaches the Live Radio Log');
+      const workerChoice = await selection.choose(workerTracks, workerTracks[0], 'artist', new Set(), 'prepared', 'artist:worker-seed', true);
+      assert.equal(workerChoice.id, 'worker-next', 'the worker keeps Local Radio eligibility and repeat protection');
+      assert.equal(workerDecisions.length, 1, 'a prepared decision remains hidden until its song starts');
+      assert.equal(selection.getLastDecision().selected.title, 'worker-next');
+      await selection.publishDecision(selection.getLastDecision());
+      assert.equal(workerDecisions.length, 2, 'the deferred worker decision is published at the audible handoff');
+      const largeRadioPool = [...workerTracks, ...Array.from({ length: 8000 }, (_, index) => track(`worker-large-${index}`, {
+        artist: 'Worker Artist', artists: ['Worker Artist'], albumArtist: 'Worker Artist'
+      }))];
+      await selection.setTracks(largeRadioPool, 2);
+      let selectionSettled = false;
+      const largeChoice = selection.choose(largeRadioPool, workerTracks[0], 'artist', new Set(), 'next', 'artist:worker-seed', true)
+        .then(value => { selectionSettled = true; return value; });
+      await new Promise(resolve => setImmediate(resolve));
+      assert.equal(selectionSettled, false, 'a large artist selection runs off the main event loop');
+      assert.ok((await largeChoice)?.id, 'the off-thread selection still returns a playable choice');
+      const canceledChoice = selection.choose(largeRadioPool, workerTracks[0], 'artist', new Set(), 'prepared', 'artist:worker-seed', true);
+      selection.cancelPending();
+      await assert.rejects(canceledChoice, /selection canceled/, 'switching stations cancels queued or active old selections');
+      await selection.beginSession();
+      const workerPlayer = { getStatus: () => ({ playing: true, position: 0 }), setStationGain: async () => {}, play: async () => {}, stop: async () => {}, setPaused: async () => {} };
+      const workerLibrary = { tracks: workerTracks, revision: 3, resolve: async id => ({ ...workerTracks.find(item => item.id === id), path: `/${id}` }) };
+      const workerController = serializeTransport(new MediaController({ player: workerPlayer, getStations: () => [] }));
+      workerController.configureMusic(workerLibrary, selection);
+      await workerController.playMusic('worker-seed', 'artist');
+      await new Promise(resolve => setTimeout(resolve, 1100));
+      await workerController.handleEnded({ reason: 'eof' });
+      assert.equal(workerController.getStatus().currentMusic.track.id, 'worker-next', 'the real playback controller consumes the prepared worker choice');
+      assert.equal(workerDecisions.at(-1).preparation.usedBy, 'advance', 'worker preparation diagnostics follow the actual handoff');
+      assert.ok(Number.isFinite(workerDecisions.at(-1).preparation.workerSelectionMs), 'diagnostics separate worker selection time from the total handoff time');
+      await workerController.stop();
+      await selection.flush();
+      assert.equal(JSON.parse(await fs.readFile(path.join(temp, 'radio-worker', 'music-history.json'), 'utf8')).length, 3, 'worker history flushes on quit');
+    } finally { selection.close(); }
     const grungeTracks = [
       track('grunge-1', { artist: 'Nirvana', title: 'Come as You Are', year: 1991 }),
       track('grunge-2', { artist: 'Pearl Jam', title: 'Even Flow', year: 1991 }),
@@ -464,6 +534,33 @@ async function run() {
     assert.equal(preparedDiagnostics.at(-1).selected.title, 'Prepared B', 'the prepared choice enters the Live Radio Log only when it starts');
     assert.equal(preparedDiagnostics.at(-1).preparation.usedBy, 'advance', 'prepared diagnostics show that the selection was used by the normal advance path');
     await preparedController.stop();
+    const albumPreparationTracks = [1, 2, 3].map(index => track(`album-prepared-${index}`, { track: index, album: 'Prepared Album' }));
+    const albumPreparationLibrary = { tracks: albumPreparationTracks, resolve: async id => ({ ...albumPreparationTracks.find(item => item.id === id), path: `/${id}` }) };
+    const albumPreparationController = serializeTransport(new MediaController({ player, getStations: () => [] }));
+    albumPreparationController.configureMusic(albumPreparationLibrary, new MusicRadio({ dataDir: path.join(temp, 'album-preparation') }));
+    await albumPreparationController.playMusic('album-prepared-1', 'album');
+    await new Promise(resolve => setTimeout(resolve, 1100));
+    await albumPreparationController.handleEnded({ reason: 'eof' });
+    assert.equal(albumPreparationController.getStatus().currentMusic.track.id, 'album-prepared-2', 'prepared albums consume their reserved next song before remaining queue entries');
+    await albumPreparationController.handleEnded({ reason: 'eof' });
+    assert.equal(albumPreparationController.getStatus().currentMusic.track.id, 'album-prepared-3', 'album preparation does not skip a track when the next handoff arrives early');
+    await albumPreparationController.stop();
+    const inFlightTracks = [
+      track('inflight-a', { artist: 'In Flight', artists: ['In Flight'], albumArtist: 'In Flight' }),
+      track('inflight-b', { artist: 'In Flight', artists: ['In Flight'], albumArtist: 'In Flight' })
+    ];
+    const inFlightRadio = new MusicRadio({ dataDir: path.join(temp, 'inflight-preparation'), random: () => 0 });
+    const realChoose = inFlightRadio.choose.bind(inFlightRadio);
+    let inFlightChoices = 0;
+    inFlightRadio.choose = async (...args) => { inFlightChoices += 1; await new Promise(resolve => setTimeout(resolve, 300)); return realChoose(...args); };
+    const inFlightController = serializeTransport(new MediaController({ player, getStations: () => [] }));
+    inFlightController.configureMusic({ tracks: inFlightTracks, resolve: async id => ({ ...inFlightTracks.find(item => item.id === id), path: `/${id}` }) }, inFlightRadio);
+    await inFlightController.playMusic('inflight-a', 'artist');
+    await new Promise(resolve => setTimeout(resolve, 1050));
+    await inFlightController.handleEnded({ reason: 'eof' });
+    assert.equal(inFlightController.getStatus().currentMusic.track.id, 'inflight-b');
+    assert.equal(inFlightChoices, 1, 'an EOF waits for in-flight preparation instead of making a second radio selection');
+    await inFlightController.stop();
     let position = 0; const crossfades = [];
     const crossfadePlayer = {
       isCrossfading: false,

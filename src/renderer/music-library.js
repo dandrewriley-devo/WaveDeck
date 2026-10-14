@@ -6,6 +6,7 @@ const ROW_HEIGHT = 49;
 const LOADING_DETAIL_HEIGHT = 62;
 let artists = [], query = '', activeArtist = '', detail = null, activeRelease = '', editingTrack = '', playingTrack = '';
 let expandedDetailHeight = 0, viewport = null, searchTimer = 0, focusedTrack = '';
+let artistsLoad = null, artistsLoadQuery = '', focusRequest = 0;
 
 const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 const duration = seconds => { const whole = Math.max(0, Math.round(Number(seconds) || 0)); return whole ? `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, '0')}` : '—'; };
@@ -17,12 +18,19 @@ function expandedHeight() {
   const release = detail.releases.find(value => value.key === activeRelease);
   return expandedDetailHeight || (98 + detail.releases.length * 43 + (release ? release.tracks.length * 39 + (editingTrack ? 60 : 0) : 0));
 }
-async function loadArtists({ keepOpen = false } = {}) {
+function loadArtists({ keepOpen = false } = {}) {
   const scrollTop = currentScroll();
-  artists = await window.wavedeck.getPortableMusicArtists(query);
-  if (!keepOpen || !artists.some(artist => artist.key === activeArtist)) { activeArtist = ''; detail = null; activeRelease = ''; editingTrack = ''; expandedDetailHeight = 0; }
-  summary.textContent = `${artists.length.toLocaleString()} artists in Portable Music`;
-  render(scrollTop);
+  const requestedQuery = query;
+  const request = window.wavedeck.getPortableMusicArtists(requestedQuery).then(result => {
+    if (query !== requestedQuery) return;
+    artists = result;
+    if (!keepOpen || !artists.some(artist => artist.key === activeArtist)) { activeArtist = ''; detail = null; activeRelease = ''; editingTrack = ''; expandedDetailHeight = 0; }
+    summary.textContent = `${artists.length.toLocaleString()} artists in Portable Music`;
+    render(scrollTop);
+  });
+  artistsLoadQuery = requestedQuery;
+  artistsLoad = request;
+  return request;
 }
 async function openArtist(key) {
   const scrollTop = currentScroll();
@@ -132,14 +140,21 @@ function render(scrollTop = currentScroll()) {
 search.oninput = () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { query = search.value.trim(); void loadArtists(); }, 120); };
 async function focusPortableTrack(target = {}) {
   if (!target.artistKey || !target.releaseKey || !target.trackId) return;
+  const request = ++focusRequest;
+  const hadFilter = Boolean(query);
   query = ''; search.value = '';
-  await loadArtists();
+  // The window is already loading the complete artist list on first open.
+  // Reuse that request, and fetch only this artist's releases in parallel.
+  const list = hadFilter || artistsLoadQuery ? loadArtists() : (artistsLoad || loadArtists());
+  const targetDetail = window.wavedeck.getPortableMusicArtistDetail(target.artistKey, '');
+  const [, focusedDetail] = await Promise.all([list, targetDetail]);
+  if (request !== focusRequest) return;
   if (!artists.some(artist => artist.key === target.artistKey)) return;
   activeArtist = target.artistKey; activeRelease = target.releaseKey; editingTrack = ''; focusedTrack = target.trackId; expandedDetailHeight = 0;
-  detail = await window.wavedeck.getPortableMusicArtistDetail(activeArtist, '');
+  detail = focusedDetail;
   const index = artists.findIndex(artist => artist.key === activeArtist);
   render(Math.max(0, index * ROW_HEIGHT - 16));
   setTimeout(() => { if (focusedTrack === target.trackId) { focusedTrack = ''; render(currentScroll()); } }, 4200);
 }
-const initialLoad = loadArtists().catch(error => { summary.textContent = error.message; });
-window.wavedeck.onPortableMusicTrackFocus(target => { void initialLoad.then(() => focusPortableTrack(target)).catch(error => { summary.textContent = error.message; }); });
+void loadArtists().catch(error => { summary.textContent = error.message; });
+window.wavedeck.onPortableMusicTrackFocus(target => { void focusPortableTrack(target).catch(error => { summary.textContent = error.message; }); });

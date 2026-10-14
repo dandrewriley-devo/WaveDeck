@@ -20,7 +20,8 @@ const { copyLegacyData } = require("./data-migration");
 const { RecordingLibrary } = require("./recording-library");
 const { MusicLibrary } = require('./music-library');
 const { OpusOptimizer } = require('./opus-optimizer');
-const { MusicRadio } = require('./music-radio');
+const { RadioSelection } = require('./radio-selection');
+const { PortableManagerIndex, portableManagerArtistKey, portableManagerReleaseKey, portableManagerReleaseYear } = require('./portable-manager-index');
 const { normalize } = require('./music-tags');
 const { mixBookSignature } = require('./local-mixes');
 const { LastFmEnricher } = require('./lastfm-enricher');
@@ -122,6 +123,8 @@ let activeAdditionalMusicFolder = '';
 let additionalMusicFolderMode = 'none';
 let portableImporter = null;
 let manualArtistRelationships = {};
+let relationshipsAppliedTo = null;
+const portableManagerIndex = new PortableManagerIndex();
 let quietMusicCheckTimer = null;
 const QUIET_MUSIC_MAINTENANCE_MS = 180000;
 let player = null;
@@ -245,6 +248,7 @@ function scheduleQuietMusicMaintenance() {
 
 function enableLocalMusic() {
   return musicLibrary.enable({ scanOnEnable: false }).then(() => {
+    applyManualArtistRelationships();
     musicLibrary.setLocalMixSourceSignature(mixBookSignature(getDataDir()));
     lastFmEnricher?.configure();
     setTimeout(pruneUnavailableRecentLocalStations, 0);
@@ -589,45 +593,24 @@ function relationshipsFile() { return path.join(getDataDir(), 'artist-relationsh
 function loadArtistRelationships() { try { manualArtistRelationships = JSON.parse(fs.readFileSync(relationshipsFile(), 'utf8')) || {}; } catch { manualArtistRelationships = {}; } }
 function saveArtistRelationships() { const file = relationshipsFile(); const temporary = `${file}.tmp`; fs.writeFileSync(temporary, `${JSON.stringify(manualArtistRelationships, null, 2)}\n`); fs.renameSync(temporary, file); }
 function relatedForArtist(artist) { return [...new Set(manualArtistRelationships[relationshipKey(artist)] || [])]; }
-function applyManualArtistRelationships() { if (musicLibrary) musicLibrary.tracks = musicLibrary.tracks.map(track => ({ ...track, similarArtists: [...new Set([...(track.similarArtists || []), ...relatedForArtist(track.artist)])] })); }
-function portableManagerTracks() { return (musicLibrary?.tracks || []).filter(track => track.library === 'portable'); }
-function portableManagerArtistKey(artist) { return relationshipKey(artist || 'Unknown Artist') || 'unknown artist'; }
-function portableManagerMatches(track, query) {
-  const needle = String(query || '').trim().toLocaleLowerCase();
-  if (!needle) return true;
-  return [track.artist, track.albumArtist, track.album, track.title, ...(track.genres || [])]
-    .some(value => String(value || '').toLocaleLowerCase().includes(needle));
+function applyManualArtistRelationships(force = false) {
+  if (!musicLibrary || (!force && relationshipsAppliedTo === musicLibrary.tracks)) return;
+  musicLibrary.tracks = musicLibrary.tracks.map(track => ({ ...track, similarArtists: [...new Set([...(track.similarArtists || []), ...relatedForArtist(track.artist)])] }));
+  relationshipsAppliedTo = musicLibrary.tracks;
 }
-function portableManagerReleaseKey(track) {
-  const album = String(track.album || '').trim();
-  return album ? `album:${relationshipKey(track.albumArtist || track.artist)}\n${album.toLocaleLowerCase()}` : `single:${track.id}`;
-}
-function portableManagerReleaseYear(tracks = []) {
-  const years = tracks.map(track => Number(track.year)).filter(year => Number.isInteger(year) && year >= 1000 && year <= 9999);
-  if (!years.length) return null;
-  const counts = new Map();
-  for (const year of years) counts.set(year, (counts.get(year) || 0) + 1);
-  return [...counts].sort((left, right) => (counts.get(right) - counts.get(left)) || (left - right))[0];
+function currentPortableManagerIndex() {
+  portableManagerIndex.ensure(musicLibrary?.tracks || [], `${musicLibrary?.revision || 0}:${musicLibrary?.metadataRevision || 0}`);
+  return portableManagerIndex;
 }
 function portableManagerArtistSummaries(query = '') {
-  const all = portableManagerTracks(); const matched = all.filter(track => portableManagerMatches(track, query)); const groups = new Map();
-  for (const track of all) {
-    const key = portableManagerArtistKey(track.artist); if (!groups.has(key)) groups.set(key, { key, artist: String(track.artist || 'Unknown Artist').trim() || 'Unknown Artist', tracks: [], matched: false, releases: new Set() });
-    const group = groups.get(key); group.tracks.push(track); group.releases.add(portableManagerReleaseKey(track));
-  }
-  for (const track of matched) { const group = groups.get(portableManagerArtistKey(track.artist)); if (group) group.matched = true; }
-  return [...groups.values()].filter(group => group.matched).map(group => ({
-    key: group.key, artist: group.artist, itemCount: group.releases.size,
-    trackCount: group.tracks.length,
-    ratedCount: group.tracks.filter(track => Number(track.rating) > 0).length,
-    ratedPercent: group.tracks.length ? Math.round((group.tracks.filter(track => Number(track.rating) > 0).length / group.tracks.length) * 100) : 0
-  })).sort((left, right) => left.artist.localeCompare(right.artist, undefined, { sensitivity: 'base' }));
+  return currentPortableManagerIndex().summaries(query);
 }
 function portableManagerArtistDetail(key, query = '') {
   const artistKey = String(key || ''); const manual = relatedForArtist(artistKey);
-  const all = portableManagerTracks().filter(track => portableManagerArtistKey(track.artist) === artistKey);
+  const index = currentPortableManagerIndex();
+  const all = index.tracksForArtist(artistKey);
   if (!all.length) throw new Error('That artist is no longer available in Portable Music.');
-  const shown = String(query || '').trim() ? all.filter(track => portableManagerMatches(track, query)) : all;
+  const shown = index.tracksForArtist(artistKey, query);
   const lastFmRelated = [...new Set(all.flatMap(track => track.similarArtists || []))]
     .filter(value => !manual.some(related => relationshipKey(related) === relationshipKey(value)))
     .sort((left, right) => left.localeCompare(right, undefined, { sensitivity: 'base' }));
@@ -635,7 +618,7 @@ function portableManagerArtistDetail(key, query = '') {
   for (const track of shown) {
     const releaseKey = portableManagerReleaseKey(track);
     if (!releases.has(releaseKey)) releases.set(releaseKey, { key: releaseKey, title: String(track.album || track.title || 'Loose Track'), compilation: /^(various( artists)?|va|v\.a\.|soundtrack)/i.test(String(track.albumArtist || '')), tracks: [] });
-    releases.get(releaseKey).tracks.push({ id: track.id, title: track.title, artist: track.artist, album: track.album, albumArtist: track.albumArtist, track: track.track, disc: track.disc, duration: track.duration, rating: track.rating, favorite: track.favorite === true, doNotPlay: track.doNotPlay === true, holiday: track.holiday === true, popularity: track.popularity });
+    releases.get(releaseKey).tracks.push({ id: track.id, title: track.title, artist: track.artist, album: track.album, albumArtist: track.albumArtist, year: track.year, track: track.track, disc: track.disc, duration: track.duration, rating: track.rating, favorite: track.favorite === true, doNotPlay: track.doNotPlay === true, holiday: track.holiday === true, popularity: track.popularity });
   }
   return { key: artistKey, artist: all[0].artist || 'Unknown Artist', manualRelated: manual, lastFmRelated, releases: [...releases.values()].map(release => ({ ...release, year: portableManagerReleaseYear(release.tracks), holiday: release.tracks.length > 0 && release.tracks.every(track => track.holiday === true) })).sort((left, right) => (left.year || Infinity) - (right.year || left.title.localeCompare(right.title, undefined, { sensitivity: 'base' }))).map(release => ({ ...release, tracks: release.tracks.sort((left, right) => (left.disc - right.disc) || (left.track - right.track) || left.title.localeCompare(right.title)) })) };
 }
@@ -1688,16 +1671,16 @@ function installIpcHandlers() {
     openPortableMusicLibraryWindow({ artistKey: portableManagerArtistKey(track.artist), releaseKey: portableManagerReleaseKey(track), trackId: track.id });
     return true;
   });
-  ipcMain.handle('music:library:get', async () => { await requireMusic(); applyManualArtistRelationships(); return musicLibrary.tracks.filter(track => track.library === 'portable').map(track => ({ ...track, manualRelatedArtists: relatedForArtist(track.artist) })); });
-  ipcMain.handle('music:library:artists', async (_event, query = '') => { await requireMusic(); applyManualArtistRelationships(); return portableManagerArtistSummaries(query); });
-  ipcMain.handle('music:library:artist-detail', async (_event, key, query = '') => { await requireMusic(); applyManualArtistRelationships(); return portableManagerArtistDetail(key, query); });
+  ipcMain.handle('music:library:get', async () => { await requireMusic(); return musicLibrary.tracks.filter(track => track.library === 'portable').map(track => ({ ...track, manualRelatedArtists: relatedForArtist(track.artist) })); });
+  ipcMain.handle('music:library:artists', async (_event, query = '') => { await requireMusic(); return portableManagerArtistSummaries(query); });
+  ipcMain.handle('music:library:artist-detail', async (_event, key, query = '') => { await requireMusic(); return portableManagerArtistDetail(key, query); });
   ipcMain.handle('music:library:relationships:get', async (_event, artist) => ({ artist: String(artist || ''), related: relatedForArtist(artist) }));
   ipcMain.handle('music:library:relationships:save', async (_event, artist, related) => {
     const name = String(artist || '').trim(); const key = relationshipKey(name); if (!key) throw new Error('Choose an artist first.');
     const values = [...new Set((Array.isArray(related) ? related : []).map(value => String(value || '').trim()).filter(Boolean))].slice(0, 100);
     manualArtistRelationships[key] = values;
     for (const value of values) { const other = relationshipKey(value); if (other) manualArtistRelationships[other] = [...new Set([...(manualArtistRelationships[other] || []), name])]; }
-    saveArtistRelationships(); applyManualArtistRelationships(); return { artist: name, related: values };
+    saveArtistRelationships(); applyManualArtistRelationships(true); return { artist: name, related: values };
   });
   ipcMain.handle('music:library:save-track', async (_event, update = {}) => {
     await requireMusic(); const id = String(update.id || ''); const track = musicLibrary.tracks.find(item => item.id === id && item.library === 'portable');
@@ -1705,6 +1688,7 @@ function installIpcHandlers() {
     const clean = value => String(value ?? '').replace(/[\u0000\r\n]/g, ' ').trim().slice(0, 500);
     const next = { ...track, title: clean(update.title ?? track.title), artist: clean(update.artist ?? track.artist), album: clean(update.album ?? track.album), albumArtist: clean(update.albumArtist ?? track.albumArtist), year: Number(update.year ?? track.year) || '', genres: Array.isArray(update.genres) ? update.genres.map(clean).filter(Boolean) : (track.genres || []), track: Number(update.track ?? track.track) || 0, disc: Number(update.disc ?? track.disc) || 0, rating: Math.max(0, Math.min(10, Number(update.rating ?? track.rating) || 0)), favorite: update.favorite === undefined ? track.favorite === true : update.favorite === true, doNotPlay: update.doNotPlay === undefined ? track.doNotPlay === true : update.doNotPlay === true, holiday: update.holiday === undefined ? track.holiday === true : update.holiday === true };
     await musicLibrary.updatePortableTrack(next);
+    portableManagerIndex.replaceTrack(track, next, `${musicLibrary.revision}:${musicLibrary.metadataRevision}`, `${musicLibrary.revision - 1}:${musicLibrary.metadataRevision}`);
     queuePortableTrackTagWrite(next);
     if (next.doNotPlay !== track.doNotPlay || next.holiday !== track.holiday) void analyzeLocalMixes();
     return next;
@@ -1712,7 +1696,7 @@ function installIpcHandlers() {
   ipcMain.handle('music:library:save-release-holiday', async (_event, ids = [], holiday = false) => {
     await requireMusic(); const matches = [...new Set(Array.isArray(ids) ? ids.map(String) : [])].map(id => musicLibrary.tracks.find(track => track.id === id && track.library === 'portable')).filter(Boolean);
     if (!matches.length) throw new Error('That portable release is no longer available.');
-    for (const track of matches) { const next = await musicLibrary.updatePortableTrack({ ...track, holiday: holiday === true }); queuePortableTrackTagWrite(next); }
+    for (const track of matches) { const next = await musicLibrary.updatePortableTrack({ ...track, holiday: holiday === true }); portableManagerIndex.replaceTrack(track, next, `${musicLibrary.revision}:${musicLibrary.metadataRevision}`, `${musicLibrary.revision - 1}:${musicLibrary.metadataRevision}`); queuePortableTrackTagWrite(next); }
     void analyzeLocalMixes(); return { ids: matches.map(track => track.id), holiday: holiday === true };
   });
   ipcMain.handle('music:play', async (_event, id, mode) => { await requireMusic(); return mediaController.playMusic(String(id), mode); });
@@ -1987,6 +1971,7 @@ if (!hasSingleInstanceLock) {
 
     musicLibrary = new MusicLibrary({
       dataDir: getDataDir(), additionalMusicFolder: activeAdditionalMusicFolder,
+      onTracksChanged: () => applyManualArtistRelationships(),
       onStatus: status => {
         latestMusicLibraryStatus = status;
         if (!status.scanning) applyManualArtistRelationships();
@@ -2024,7 +2009,7 @@ if (!hasSingleInstanceLock) {
         onComplete: async () => { await musicLibrary.rescan(); await analyzeLocalMixes(); beginOpusOptimization(); }
       });
     }
-    musicRadio = new MusicRadio({ dataDir: getDataDir(), onDecision: sendToRadioLog,
+    musicRadio = new RadioSelection({ dataDir: getDataDir(), onDecision: sendToRadioLog,
       getFamiliarity: () => storage.getUiPreferences().localRadioFamiliarity,
       getTuning: () => storage.getUiPreferences() });
     lastFmScrobbler = new LastFmScrobbler({
@@ -2169,6 +2154,7 @@ function finishShutdown() {
   mediaController?.clearMusic();
   opusOptimizer?.close();
   musicLibrary?.close();
+  musicRadio?.close();
 }
 
 app.on("before-quit", (event) => {

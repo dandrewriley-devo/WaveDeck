@@ -225,7 +225,10 @@ function exploreRescueCandidates(tracks, root, excluded, history, now, context, 
       addNeighbor(artist, relatedKey); addNeighbor(relatedKey, artist);
     }
   };
-  for (const track of tracks) addTrack(track);
+  for (let index = 0; index < tracks.length; index += 1) {
+    if ((index & 127) === 0 && context.shouldCancel?.()) throw new Error('Local Radio selection canceled.');
+    addTrack(tracks[index]);
+  }
   addTrack(root);
 
   const rootArtist = artistKey(root); if (!rootArtist) return [];
@@ -236,6 +239,7 @@ function exploreRescueCandidates(tracks, root, excluded, history, now, context, 
       const name = artistNames.get(entry.artist) || entry.artist;
       const anchor = { artist: name, artists: [name], similarArtists: [...(neighbors.get(entry.artist) || [])] };
       for (const candidate of artistTracks.get(entry.artist) || []) {
+        if (context.shouldCancel?.()) throw new Error('Local Radio selection canceled.');
         if (excluded.has(candidate.id)) continue;
         const scored = scoreTrack(candidate, anchor, 'radio', history, now, context, familiarity);
         if (scored.score > 0) found.push({ track: candidate, ...scored, rescue: { artist: name, hops: entry.hops } });
@@ -335,8 +339,8 @@ function cleanFeedback(value) {
 }
 
 class MusicRadio {
-  constructor({ dataDir, random = Math.random, now = Date.now, onDecision = () => {}, getFamiliarity = () => 'balanced', getTuning = () => ({}) }) {
-    this.file = path.join(dataDir, 'music-history.json'); this.random = random; this.now = now; this.onDecision = onDecision; this.getFamiliarity = getFamiliarity; this.getTuning = getTuning;
+  constructor({ dataDir, random = Math.random, now = Date.now, onDecision = () => {}, getFamiliarity = () => 'balanced', getTuning = () => ({}), shouldCancel = () => false }) {
+    this.file = path.join(dataDir, 'music-history.json'); this.random = random; this.now = now; this.onDecision = onDecision; this.getFamiliarity = getFamiliarity; this.getTuning = getTuning; this.shouldCancel = shouldCancel;
     this.history = []; this.error = ''; this.lastDecision = null; this.artistSet = null; this.artistSetNote = null; this.artistStation = null; this.exploreStation = null; this.stationArtistLast = new Map(); this.recoveryAwayFromSeed = false; this.emergencySongRepeats = new Set();
     this.historySaveTimer = null; this.historyWriting = null; this.historyDirty = false;
     this.feedbackFile = path.join(dataDir, 'local-radio-feedback.json'); this.feedback = { version: 1, stations: {} };
@@ -418,9 +422,12 @@ class MusicRadio {
       setArtist: artistKey(seed), feedback: this.feedbackFor(stationKey),
       secondarySeeds: mode === 'radio' ? this.secondarySeeds(stationKey, tracks) : []
     };
-    const scored = tracks
-      .filter(track => artistKey(track) === artistKey(seed) && !sameSong(track, seed))
-      .map(track => ({ track, ...scoreTrack(track, seed, 'radio', this.history, now, context, familiarity) }));
+    const scored = [];
+    for (let index = 0; index < tracks.length; index += 1) {
+      if ((index & 127) === 0 && this.shouldCancel()) throw new Error('Local Radio selection canceled.');
+      const track = tracks[index];
+      if (artistKey(track) === artistKey(seed) && !sameSong(track, seed)) scored.push({ track, ...scoreTrack(track, seed, 'radio', this.history, now, context, familiarity) });
+    }
     const pool = preferredPool(scored, { familiarity }).candidates;
     const identities = new Set(artistSetIdentityMap(pool).values());
     let size = 1;
@@ -499,27 +506,33 @@ class MusicRadio {
     const selectionSeed = exploring ? (returningToSeed ? this.exploreStation.root : this.exploreStation.current) : seed;
     const scoreMode = exploring ? 'radio' : mode;
     const history = historyIndexes(this.history);
-    const context = { ...history, historyByArtist: history.byArtist, artistLast: new Map(), songCooldown: settings.songRepeatHours * 60 * 60 * 1000, artistCooldown: settings.artistRepeatMinutes * 60 * 1000, setArtist: this.artistSet?.artist || '', feedback: this.feedbackFor(stationKey), secondarySeeds: mode === 'radio' ? this.secondarySeeds(stationKey, tracks) : [] };
+    const context = { ...history, historyByArtist: history.byArtist, artistLast: new Map(), songCooldown: settings.songRepeatHours * 60 * 60 * 1000, artistCooldown: settings.artistRepeatMinutes * 60 * 1000, setArtist: this.artistSet?.artist || '', feedback: this.feedbackFor(stationKey), secondarySeeds: mode === 'radio' ? this.secondarySeeds(stationKey, tracks) : [], shouldCancel: this.shouldCancel };
     // Artist Radio has a fixed, balanced taste profile. Song Radio and Local
     // Mixes continue to use the listener's Song Familiarity setting.
     const familiarity = artistRadio ? 'balanced' : (['hits', 'balanced', 'deep-cuts'].includes(this.getFamiliarity()) ? this.getFamiliarity() : 'balanced');
     const lastFmOnlyMix = mode === 'mix' && settings.localMixFavorLastFm;
     context.artistLast = new Map(this.stationArtistLast);
     const forcedArtist = this.artistSet?.remaining?.length ? this.artistSet.artist : '';
-    const scoreItems = (scoreContext, requiredArtist = '') => tracks.filter(track => !excluded.has(track.id) && (!requiredArtist || artistKey(track) === requiredArtist)).map(track => {
-      const item = { track, ...scoreTrack(track, selectionSeed, scoreMode, this.history, now, scoreContext, familiarity) };
-      if (!lastFmOnlyMix || item.excluded) return item;
-      const popularity = Number(track?.popularity);
-      if (!Number.isFinite(popularity)) return { ...item, score: 0, excluded: 'missing Last.fm popularity', multipliers: [] };
-      return {
-        ...item,
-        // In this mode a format book remains the eligibility gate, but the
-        // weighted pick itself is Last.fm popularity and nothing else.
-        score: Math.max(1, popularity),
-        multipliers: [{ label: 'Last.fm popularity', value: Math.max(1, popularity), source: `${Math.round(popularity)}/100` }],
-        popularity
-      };
-    });
+    const scoreItems = (scoreContext, requiredArtist = '') => {
+      const items = [];
+      for (let index = 0; index < tracks.length; index += 1) {
+        if ((index & 127) === 0 && this.shouldCancel()) throw new Error('Local Radio selection canceled.');
+        const track = tracks[index];
+        if (excluded.has(track.id) || (requiredArtist && artistKey(track) !== requiredArtist)) continue;
+        const item = { track, ...scoreTrack(track, selectionSeed, scoreMode, this.history, now, scoreContext, familiarity) };
+        if (!lastFmOnlyMix || item.excluded) { items.push(item); continue; }
+        const popularity = Number(track?.popularity);
+        if (!Number.isFinite(popularity)) { items.push({ ...item, score: 0, excluded: 'missing Last.fm popularity', multipliers: [] }); continue; }
+        items.push({
+          ...item,
+          // Format books still gate eligibility; only popularity weighs the pick.
+          score: Math.max(1, popularity),
+          multipliers: [{ label: 'Last.fm popularity', value: Math.max(1, popularity), source: `${Math.round(popularity)}/100` }],
+          popularity
+        });
+      }
+      return items;
+    };
     const scored = scoreItems(context, forcedArtist);
     const cooldownExcluded = scored.filter(item => item.excluded === 'cooldown').length;
     const artistCooldownExcluded = scored.filter(item => item.excluded === 'artist cooldown').length;

@@ -11,9 +11,9 @@ function canonicalTrack(track) {
   return { ...track, artist, albumArtist, artists, songKey: `${String(artist).toLowerCase()}\n${String(track.title || '').toLowerCase()}` };
 }
 class MusicLibrary {
-  constructor({ dataDir, onStatus = () => {}, onLocalMixAvailability = () => {}, additionalMusicFolder = '' }) {
+  constructor({ dataDir, onStatus = () => {}, onTracksChanged = () => {}, onLocalMixAvailability = () => {}, additionalMusicFolder = '' }) {
     this.dataDir = dataDir; this.onStatus = onStatus; this.pending = new Map(); this.sequence = 0;
-    this.tracks = []; this.enabled = false; this.worker = null; this.revision = 0;
+    this.tracks = []; this.enabled = false; this.worker = null; this.revision = 0; this.metadataRevision = 0; this.onTracksChanged = onTracksChanged;
     this.onLocalMixAvailability = onLocalMixAvailability;
     this.localMixAvailability = { analyzing: false, completed: 0, total: 0, mixes: [] };
     this.mixAnalysisPromise = null;
@@ -28,7 +28,7 @@ class MusicLibrary {
         // The worker's idle migration changes only radio bookkeeping. Refresh
         // the in-memory track objects without disturbing visible Local Music.
         if (!message.value?.rebuilding && this.enabled) {
-          void this.call('all').then(tracks => { this.tracks = tracks.map(canonicalTrack); }).catch(() => {});
+          void this.call('all').then(tracks => { this.tracks = tracks.map(canonicalTrack); this.revision += 1; this.onTracksChanged(); }).catch(() => {});
         }
         return;
       }
@@ -136,18 +136,22 @@ class MusicLibrary {
       genres: [...new Set([...(current.genres || []), ...(value.tags || [])])],
       lastFm: { source: 'lastfm', status: value.status, updatedAt: value.updatedAt || '', listeners: value.listeners || 0, playCount: value.playCount || 0, popularity: value.popularity }
     };
+    this.metadataRevision += 1;
   }
   applyLastFmArtist(value) {
     const key = normalize(value?.artist || '');
+    let changed = false;
     for (let index = 0; index < this.tracks.length; index++) {
       const track = this.tracks[index];
       if (!(track.artists || [track.artist]).some(artist => normalize(artist) === key)) continue;
       this.tracks[index] = { ...track, similarArtists: [...new Set([...(track.similarArtists || []), ...(value.similarArtists || [])])] };
+      changed = true;
     }
+    if (changed) this.metadataRevision += 1;
   }
   async resolve(id) {
     let track = this.tracks.find(t => t.id === id);
-    if (!track) { this.tracks = (await this.call('all')).map(canonicalTrack); track = this.tracks.find(t => t.id === id); }
+    if (!track) { this.tracks = (await this.call('all')).map(canonicalTrack); this.revision += 1; this.onTracksChanged(); track = this.tracks.find(t => t.id === id); }
     if (!track) throw new Error('That song is no longer indexed. Rescan Music.');
     const rootPath = track.library === 'additional' ? this.additionalMusicFolder : path.join(path.dirname(this.dataDir), 'Music');
     if (!rootPath) throw new Error('The additional music folder is no longer selected.');

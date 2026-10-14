@@ -1,5 +1,12 @@
 # WaveDeck Opus Branch Handoff
 
+## WaveDeck Opus 1.0.35
+
+- Local Radio decision-making now runs in its own ordered worker thread with a library snapshot that is sent only when tracks or enrichment change. Expensive artist searches no longer block Electron's UI, playback, or equal-power crossfade timers. Switching stations cancels obsolete work; opening seeds, Artist Sets, feedback, deferred Live Radio decisions, and history persistence retain their ordering.
+- The prepared-next handoff awaits any selection already in flight instead of starting a second choice. It also consumes prepared album songs before the rest of the album queue. Preparation diagnostics distinguish worker scoring time from total selection and file-resolution time.
+- Manage Portable Music caches its artist, release-count, rating, and search index across queries. Track edits update just the affected artist, and a jump from the playing title reuses the initial artist-list request while loading that artist's releases in parallel. Last.fm metadata has a separate cache revision so enrichment does not repeatedly invalidate Local Mix readiness.
+- `npm test` now includes large-library index/worker responsiveness, prepared worker playback, in-flight EOF, and album-order regressions. This is an internal performance update; the visible About changelog remains unchanged.
+
 ## WaveDeck Opus 1.0.34
 
 - Fixes a 1.0.33 crossfade regression. Selecting the next fresh Local Radio move can scan a very large library synchronously. 1.0.33 could start that selection one second into the current eight-second equal-power fade, blocking the same main-process timer that raises the incoming lane’s volume. The track could therefore advance silently and become audible in the middle.
@@ -104,15 +111,15 @@
 
 # WaveDeck Project Handoff
 
-This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.34**.
+This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.35**.
 
 ## Current published state
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `opus-portable`
-- Current version: **1.0.34**
-- Current release: 1.0.34 — prevents prepared selection from interrupting the active crossfade.
-- Current commit: the verified 1.0.34 release commit at the head of `opus-portable`.
+- Current version: **1.0.35**
+- Current release: 1.0.35 — off-thread Local Radio decisions and indexed Music Manager navigation.
+- Current commit: the verified 1.0.35 release commit at the head of `opus-portable`.
 - 0.11.8 commit: `8118e235eed4b4a18c378f12ced8a86be83ed4b9` — monitor-safe main-window bounds persistence and portable Windows build.
 - 0.11.7 commit: `c8b69b7b8842dd6c310dda05b22b8d52870d3e84` — superseded source correction after the first portable Windows build.
 - 0.11.6 commit: `621e44d8c484cd0a4d70eb124106170f6183d0ae` — compact Local Radio Controls and remembered auxiliary-window bounds.
