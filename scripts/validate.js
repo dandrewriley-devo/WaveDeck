@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck-opus");
-assert.strictEqual(packageJson.version, "1.0.32");
-assert.strictEqual(packageJson.wavedeckVersion, "1.0.32");
+assert.strictEqual(packageJson.version, "1.0.33");
+assert.strictEqual(packageJson.wavedeckVersion, "1.0.33");
 assert.strictEqual(packageJson.desktopName, "wavedeck-opus.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck Opus");
 assert.strictEqual(packageJson.build.appId, "com.a17press.wavedeckopus");
@@ -889,8 +889,13 @@ listeningHistory.handleStatus({
   currentMusic: { mode: "artist", label: "Pink Floyd Radio", seed: { id: "seed-2", title: "Wish You Were Here", artist: "Pink Floyd" } }
 });
 assert.deepStrictEqual(listeningHistory.getStats().recentLocalStations.map(station => station.key), ["portable:artist:seed-2", "portable:radio:seed-1"]);
+listeningHistory.handleStatus({
+  state: "playing", playing: true, mediaState: "playing", currentStation: null,
+  currentMusic: { mode: "explore", label: "Comfortably Numb Explore Radio", seed: { id: "seed-3", title: "Comfortably Numb", artist: "Pink Floyd" } }
+});
+assert.deepStrictEqual(listeningHistory.getStats().recentLocalStations.map(station => station.key), ["portable:explore:seed-3", "portable:artist:seed-2", "portable:radio:seed-1"], 'Explore stations appear in Recently Played Local Stations');
 assert.strictEqual(listeningHistory.toggleLocalStationPreset(listeningHistory.getStats().recentLocalStations[0]).saved, true);
-assert.deepStrictEqual(listeningHistory.getStats().localStationPresets.map(station => station.key), ["portable:artist:seed-2"]);
+assert.deepStrictEqual(listeningHistory.getStats().localStationPresets.map(station => station.key), ["portable:explore:seed-3"]);
 assert.strictEqual(listeningHistory.toggleLocalStationPreset(listeningHistory.getStats().recentLocalStations[0]).saved, false);
 assert.deepStrictEqual(listeningHistory.getStats().localStationPresets, []);
 listeningHistory.close();
@@ -1808,10 +1813,10 @@ assert.ok(windowsWorkflow.includes('chmod 755 "$appimage"'));
 const opusWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "opus-portable.yml"), "utf8");
 assert.ok(opusWorkflow.includes("branches: [opus-portable]"));
 assert.ok(opusWorkflow.includes("npm run dist:linux -- --publish never"));
-assert.ok(opusWorkflow.includes("WaveDeckOpus-1.0.32-Linux"));
+assert.ok(opusWorkflow.includes("WaveDeckOpus-1.0.33-Linux"));
 assert.ok(opusWorkflow.includes("dist/WaveDeckOpus.AppImage"));
-assert.ok(opusWorkflow.includes("tag_name: opus-v1.0.32"));
-assert.ok(opusWorkflow.includes("Publish WaveDeck Opus 1.0.32"));
+assert.ok(opusWorkflow.includes("tag_name: opus-v1.0.33"));
+assert.ok(opusWorkflow.includes("Publish WaveDeck Opus 1.0.33"));
 const musicLibraryHtml = fs.readFileSync(path.join(root, "src", "renderer", "music-library.html"), "utf8");
 const musicLibraryRenderer = fs.readFileSync(path.join(root, "src", "renderer", "music-library.js"), "utf8");
 assert.ok(musicLibraryHtml.includes('Search artists, albums, songs, or genres'));

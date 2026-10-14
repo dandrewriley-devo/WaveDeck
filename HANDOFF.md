@@ -1,5 +1,11 @@
 # WaveDeck Opus Branch Handoff
 
+## WaveDeck Opus 1.0.33
+
+- Fixes the real prepared-transition defect in Local Music. A prepared choice used by an eight-second crossfade now carries its deferred Live Radio decision through to the new track and clears the pending state. Previously that decision was left pending, which silently prevented every later track from being prepared; fresh artist moves then had to search the full library at the crossfade boundary.
+- Prepared choices now resolve their portable file path before the handoff and reuse it for either a normal advance or crossfade. The saved diagnostic decision includes internal preparation timing (selection, resolve, and total milliseconds) plus whether it was used by advance or crossfade, so future logs can verify the path is active.
+- Explore Radio stations are now retained in Recently Played Local Stations and can be starred as presets, just like Song and Artist Radio.
+
 ## WaveDeck Opus 1.0.32
 
 - Portable tracks now retain a persistent `radioIdentity` in `Data/music.sqlite`. It makes album/box-set/compilation copies of the same song one stored radio choice, so Artist Set planning does not repeatedly compare an artist’s entire candidate pool.
@@ -93,15 +99,15 @@
 
 # WaveDeck Project Handoff
 
-This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.32**.
+This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.33**.
 
 ## Current published state
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `opus-portable`
-- Current version: **1.0.32**
-- Current release: 1.0.32 — persistent radio identities and linear Artist Set planning.
-- Current commit: the verified 1.0.32 release commit at the head of `opus-portable`.
+- Current version: **1.0.33**
+- Current release: 1.0.33 — repaired prepared Local Music transitions and Explore history.
+- Current commit: the verified 1.0.33 release commit at the head of `opus-portable`.
 - 0.11.8 commit: `8118e235eed4b4a18c378f12ced8a86be83ed4b9` — monitor-safe main-window bounds persistence and portable Windows build.
 - 0.11.7 commit: `c8b69b7b8842dd6c310dda05b22b8d52870d3e84` — superseded source correction after the first portable Windows build.
 - 0.11.6 commit: `621e44d8c484cd0a4d70eb124106170f6183d0ae` — compact Local Radio Controls and remembered auxiliary-window bounds.

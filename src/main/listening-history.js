@@ -25,7 +25,7 @@ function cleanListeningHistory(value) {
   const recentLocalStations = [];
   for (const rawStation of Array.isArray(value?.recentLocalStations) ? value.recentLocalStations : []) {
     if (!rawStation || typeof rawStation !== 'object' || Array.isArray(rawStation)) continue;
-    const mode = rawStation.mode === 'artist' ? 'artist' : rawStation.mode === 'radio' ? 'radio' : '';
+    const mode = ['artist', 'radio', 'explore'].includes(rawStation.mode) ? rawStation.mode : '';
     const seedId = String(rawStation.seedId ?? '').trim();
     const libraryProfile = String(rawStation.libraryProfile || 'portable').trim().slice(0, 180) || 'portable';
     const key = `${libraryProfile}:${mode}:${seedId}`;
@@ -45,7 +45,7 @@ function cleanListeningHistory(value) {
   const localStationPresets = [];
   for (const rawStation of Array.isArray(value?.localStationPresets) ? value.localStationPresets : []) {
     if (!rawStation || typeof rawStation !== 'object' || Array.isArray(rawStation)) continue;
-    const mode = rawStation.mode === 'artist' ? 'artist' : rawStation.mode === 'radio' ? 'radio' : '';
+    const mode = ['artist', 'radio', 'explore'].includes(rawStation.mode) ? rawStation.mode : '';
     const seedId = String(rawStation.seedId ?? '').trim();
     const libraryProfile = String(rawStation.libraryProfile || 'portable').trim().slice(0, 180) || 'portable';
     const key = `${libraryProfile}:${mode}:${seedId}`;
@@ -233,7 +233,7 @@ class ListeningHistory {
 
   #localStation(status) {
     const music = status?.currentMusic;
-    const mode = music?.mode === 'artist' ? 'artist' : music?.mode === 'radio' ? 'radio' : '';
+    const mode = ['artist', 'radio', 'explore'].includes(music?.mode) ? music.mode : '';
     const seed = music?.seed;
     const seedId = String(seed?.id ?? '').trim();
     if (!mode || !seedId || status?.mediaState !== 'playing' || status?.state === 'error') return null;

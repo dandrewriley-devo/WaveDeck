@@ -379,10 +379,17 @@ class MediaController {
   async loadMusic(id) {
     clearInterval(this.musicCrossfadeTimer); this.musicCrossfadeTimer = null;
     const generation = this.musicGeneration;
-    const deferredDecision = this.music?.pendingPreparedDecision?.id === id
+    const prepared = this.music?.pendingPreparedDecision?.id === id
+      ? this.music.pendingPreparedDecision
+      : null;
+    const deferredDecision = prepared
       ? this.music.pendingPreparedDecision.decision
       : null;
-    const track = await this.musicLibrary.resolve(id);
+    if (deferredDecision?.preparation) {
+      deferredDecision.preparation.usedBy = 'advance';
+      deferredDecision.preparation.usedAt = new Date().toISOString();
+    }
+    const track = prepared?.track || await this.musicLibrary.resolve(id);
     if (track.doNotPlay) throw new Error('This song is marked Do Not Play.');
     if (!this.music || generation !== this.musicGeneration) return false;
     this.music.waiting = false;
@@ -437,22 +444,43 @@ class MediaController {
     return id;
   }
 
-  #scheduleMusicPreparation(generation) {
+  #scheduleMusicPreparation(generation, delay = 1000) {
     clearTimeout(this.musicPreparationTimer); this.musicPreparationTimer = null;
     if (!this.music || this.music.mode === 'song' || this.music.waiting) return;
     this.musicPreparationTimer = setTimeout(() => {
       this.musicPreparationTimer = null;
-      this.#prepareUpcomingMusic(generation);
-    }, 1000);
+      void this.#prepareUpcomingMusic(generation);
+    }, delay);
     this.musicPreparationTimer.unref?.();
   }
 
-  #prepareUpcomingMusic(generation) {
-    if (!this.music || generation !== this.musicGeneration || this.musicBusy || this.music.prepared || this.music.pendingPreparedDecision || this.music.waiting) return false;
+  async #prepareUpcomingMusic(generation) {
+    if (!this.music || generation !== this.musicGeneration || this.music.prepared || this.music.pendingPreparedDecision || this.music.waiting) return false;
+    if (this.musicBusy) {
+      // A player handoff can still be finishing when the original timer fires.
+      // Keep trying briefly rather than silently losing the prepared-next path.
+      this.#scheduleMusicPreparation(generation, 250);
+      return false;
+    }
     try {
+      const preparationStartedAt = Date.now();
+      const selectionStartedAt = Date.now();
       const id = this.#nextMusicId('prepared', { usePrepared: false, deferDecision: true });
       if (!id || !this.music || generation !== this.musicGeneration) return false;
-      this.music.prepared = { id, decision: this.musicRadio?.getLastDecision?.() || null };
+      const selectionMs = Date.now() - selectionStartedAt;
+      const resolveStartedAt = Date.now();
+      const track = await this.musicLibrary.resolve(id);
+      if (track.doNotPlay) throw new Error('This song is marked Do Not Play.');
+      if (!this.music || generation !== this.musicGeneration) return false;
+      const timing = {
+        preparedAt: new Date(preparationStartedAt).toISOString(),
+        selectionMs,
+        resolveMs: Date.now() - resolveStartedAt,
+        totalMs: Date.now() - preparationStartedAt
+      };
+      const decision = this.musicRadio?.getLastDecision?.() || null;
+      if (decision) decision.preparation = timing;
+      this.music.prepared = { id, track, decision, timing };
       return true;
     } catch {
       // A future choice is an optimization only. The normal transition path
@@ -490,12 +518,23 @@ class MediaController {
     try {
       id = this.#nextMusicId('crossfade');
       if (!id) return false;
-      const track = await this.musicLibrary.resolve(id);
+      const deferredDecision = this.music?.pendingPreparedDecision?.id === id
+        ? this.music.pendingPreparedDecision.decision
+        : null;
+      if (deferredDecision?.preparation) {
+        deferredDecision.preparation.usedBy = 'crossfade';
+        deferredDecision.preparation.usedAt = new Date().toISOString();
+      }
+      const preparedTrack = this.music?.pendingPreparedDecision?.id === id
+        ? this.music.pendingPreparedDecision.track
+        : null;
+      const track = preparedTrack || await this.musicLibrary.resolve(id);
       if (track.doNotPlay) throw new Error('This song is marked Do Not Play.');
       if (!this.music || generation !== this.musicGeneration) return false;
       await this.player.crossfadeTo(track.path, durationMs);
       if (!this.music || generation !== this.musicGeneration) return false;
-      this.#commitMusicTrack(track, id);
+      if (this.music?.pendingPreparedDecision?.id === id) this.music.pendingPreparedDecision = null;
+      this.#commitMusicTrack(track, id, deferredDecision);
       this.#scheduleMusicCrossfade(track, generation);
       return true;
     } catch (error) {

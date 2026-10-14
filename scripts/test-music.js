@@ -462,6 +462,7 @@ async function run() {
     await preparedController.handleEnded({ reason: 'eof' });
     assert.equal(preparedController.getStatus().currentMusic.track.id, 'prepared-b', 'the prepared next Local Radio song is used after a thumbs-up instead of being replaced');
     assert.equal(preparedDiagnostics.at(-1).selected.title, 'Prepared B', 'the prepared choice enters the Live Radio Log only when it starts');
+    assert.equal(preparedDiagnostics.at(-1).preparation.usedBy, 'advance', 'prepared diagnostics show that the selection was used by the normal advance path');
     await preparedController.stop();
     let position = 0; const crossfades = [];
     const crossfadePlayer = {
@@ -485,6 +486,33 @@ async function run() {
     assert.equal(crossfades[0].file, '/crossfade-b');
     assert.equal(crossfadeController.getStatus().currentMusic.track.id, 'crossfade-b');
     await crossfadeController.stop();
+    let preparedCrossfadePosition = 0; const preparedCrossfades = []; const preparedCrossfadeDiagnostics = []; let preparedCrossfadeResolveCount = 0;
+    const preparedCrossfadePlayer = {
+      isCrossfading: false,
+      getStatus: () => ({ playing: true, position: preparedCrossfadePosition, duration: 2 }),
+      setStationGain: async () => {}, play: async () => {}, stop: async () => {}, setPaused: async () => {}, seek: async () => {},
+      crossfadeTo: async (file, duration) => { preparedCrossfades.push({ file, duration }); preparedCrossfadePosition = 0; }
+    };
+    const preparedCrossfadeTracks = [
+      track('prepared-crossfade-a', { artist: 'Prepared Crossfade Artist', artists: ['Prepared Crossfade Artist'], albumArtist: 'Prepared Crossfade Artist', duration: 2 }),
+      track('prepared-crossfade-b', { artist: 'Prepared Crossfade Artist', artists: ['Prepared Crossfade Artist'], albumArtist: 'Prepared Crossfade Artist', duration: 2 })
+    ];
+    const preparedCrossfadeLibrary = { tracks: preparedCrossfadeTracks, resolve: async id => {
+      preparedCrossfadeResolveCount++;
+      const found = preparedCrossfadeTracks.find(item => item.id === id); return { ...found, path: `/${id}` };
+    } };
+    const preparedCrossfadeController = serializeTransport(new MediaController({ player: preparedCrossfadePlayer, getStations: () => [], getCrossfadeEnabled: () => true }));
+    preparedCrossfadeController.configureMusic(preparedCrossfadeLibrary, new MusicRadio({ dataDir: path.join(temp, 'prepared-crossfade'), now: () => now, random: () => 0, onDecision: decision => preparedCrossfadeDiagnostics.push(decision) }));
+    await preparedCrossfadeController.playMusic('prepared-crossfade-a', 'artist');
+    await new Promise(resolve => setTimeout(resolve, 1100));
+    preparedCrossfadePosition = 1.5;
+    await new Promise(resolve => setTimeout(resolve, 350));
+    assert.equal(preparedCrossfades.length, 1, 'a prepared Local Radio choice is used at the crossfade boundary');
+    assert.equal(preparedCrossfadeDiagnostics.at(-1).selected.id, undefined, 'diagnostic tracks remain public-safe');
+    assert.equal(preparedCrossfadeDiagnostics.at(-1).selected.title, preparedCrossfadeTracks[1].title, 'the prepared crossfade choice reaches the Live Radio Log');
+    assert.equal(preparedCrossfadeDiagnostics.at(-1).preparation.usedBy, 'crossfade', 'prepared diagnostics show that the choice was used by a crossfade');
+    assert.equal(preparedCrossfadeResolveCount, 3, 'the crossfade reuses the already resolved prepared track instead of resolving it a second time');
+    await preparedCrossfadeController.stop();
     console.log('Music tests passed: read-only MP3 scan, Last.fm enrichment, Local Radio tuning, repeat protection, diagnostics, album handoff, and source switching.');
   } finally { library?.close(); await fs.rm(temp, { recursive: true, force: true }); }
 }
