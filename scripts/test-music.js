@@ -71,11 +71,12 @@ async function run() {
     assert.equal(tenPointRating.ratingStars, 2.5, 'custom RATING=5 means 2.5 stars');
     const doNotPlayTag = extractTrack({ common: {}, native: { 'ID3v2.4': [{ id: 'TXXX:DO_NOT_PLAY', value: 'yes' }, { id: 'TXXX:FAVORITE', value: 'true' }] } }, 'skip.mp3');
     assert.equal(doNotPlayTag.doNotPlay, true); assert.equal(doNotPlayTag.favorite, true);
-    const opusTag = extractTrack({ common: { title: 'Opus Song', artist: 'Artist' }, native: { vorbis: [{ id: 'RATING', value: '8' }, { id: 'FAVORITE', value: '1' }, { id: 'DO_NOT_PLAY', value: '1' }, { id: 'AMP_TRACK_ID', value: 'wdop_test' }] } }, 'same-song.opus');
+    const opusTag = extractTrack({ common: { title: 'Opus Song', artist: 'Artist' }, native: { vorbis: [{ id: 'RATING', value: '8' }, { id: 'FAVORITE', value: '1' }, { id: 'DO_NOT_PLAY', value: '1' }, { id: 'HOLIDAY', value: '1' }, { id: 'AMP_TRACK_ID', value: 'wdop_test' }] } }, 'same-song.opus');
     const mp3Tag = extractTrack({ common: { title: 'MP3 Song', artist: 'Artist' }, native: {} }, 'same-song.mp3');
     assert.equal(opusTag.rating, 8, 'Opus Vorbis comments retain WaveDeck’s 0–10 RATING tag');
     assert.equal(opusTag.favorite, true, 'Opus Vorbis comments retain FAVORITE');
     assert.equal(opusTag.doNotPlay, true, 'Opus Vorbis comments retain DO_NOT_PLAY');
+    assert.equal(opusTag.holiday, true, 'Opus Vorbis comments retain HOLIDAY');
     assert.equal(opusTag.id, mp3Tag.id, 'an MP3 and its Opus counterpart keep one Local Music identity');
     assert.equal(OPUS_BITRATE, '96k', 'WaveDeck Opus targets 96 kbps Opus audio');
     const optimizeRoot = path.join(temp, 'opus-portable', 'Music'); const optimizeSource = path.join(optimizeRoot, 'Album', 'song.mp3');
@@ -184,6 +185,9 @@ async function run() {
     assert.equal(initialDiagnostic.howPicked.artistSet.position, 1, 'the opening seed records its Artist Set proposal in the Live Radio Log');
     assert.equal(initialSetRadio.choose([initialSetSeed, initialSetSecond, initialSetThird], initialSetSeed, 'radio', new Set(), 'next', 'radio:initial-set').id, initialSetSecond.id, 'the next Song Radio choice follows the opening Artist Set plan');
     assert.equal(radio.choose([country], seed, 'radio'), null, 'a broad Rock tag alone is never enough');
+    const compoundBroad = track('compound-broad', { artist: 'Billy Joel', artists: ['Billy Joel'], albumArtist: 'Billy Joel', album: 'The Longest Time', genres: ['Rock, Pop'] });
+    const hipHopSeed = track('hip-hop-seed', { artist: 'Beastie Boys', artists: ['Beastie Boys'], albumArtist: 'Beastie Boys', album: 'Intergalactic', genres: ['Hip-Hop'] });
+    assert.equal(radio.choose([compoundBroad], hipHopSeed, 'radio'), null, 'a compound broad tag never becomes a fake specific relationship');
     assert.equal(radio.choose([sameAlbum, country], seed, 'radio').id, sameAlbum.id, 'same-album songs lead Song Radio');
     const waitingDiagnostics = [];
     const waitingRadio = new MusicRadio({ dataDir: path.join(temp, 'waiting-diagnostics'), now: () => now, random: () => 0, onDecision: decision => waitingDiagnostics.push(decision) });
@@ -210,6 +214,15 @@ async function run() {
     songRestRadio.record(sameAlbum);
     assert.equal(songRestRadio.choose([sameAlbum], seed, 'radio').id, sameAlbum.id, 'the least-recent credible station-family song is used only after every other recovery step fails');
     assert.equal(songRestRadio.getLastDecision().howPicked.recovery.relaxedRepeat, 'song', 'song-rest recovery is recorded');
+    const holidayTrack = track('holiday-track', { artist: 'Pink Floyd', artists: ['Pink Floyd'], albumArtist: 'Pink Floyd', album: 'Christmas', title: 'Holiday Song', holiday: true });
+    assert.equal(new MusicRadio({ dataDir: path.join(temp, 'holiday-radio'), now: () => now }).choose([holidayTrack], seed, 'radio'), null, 'Holiday Music is excluded from ordinary Local Radio');
+    const spellingOne = track('smokey', { artist: 'Ronnie Milsap', artists: ['Ronnie Milsap'], albumArtist: 'Ronnie Milsap', title: 'Smokey Mountain Rain', duration: 240 });
+    const spellingTwo = track('smoky', { artist: 'Ronnie Milsap', artists: ['Ronnie Milsap'], albumArtist: 'Ronnie Milsap', title: 'Smoky Mountain Rain', duration: 241 });
+    const anotherMilsap = track('another-milsap', { artist: 'Ronnie Milsap', artists: ['Ronnie Milsap'], albumArtist: 'Ronnie Milsap', title: 'Stranger in My House', duration: 230 });
+    const spellingSeed = track('spelling-seed', { artist: 'Seed Artist', artists: ['Seed Artist'], similarArtists: ['Ronnie Milsap'] });
+    const spellingRadio = new MusicRadio({ dataDir: path.join(temp, 'near-duplicate-set'), now: () => now, random: () => 0, getTuning: () => ({ artistSetSize: 3 }) });
+    assert.equal(spellingRadio.choose([spellingOne, spellingTwo, anotherMilsap], spellingSeed, 'radio').id, spellingOne.id);
+    assert.deepEqual(spellingRadio.getLastDecision().artistSet.proposed.map(item => item.title), ['Smokey Mountain Rain', 'Stranger in My House'], 'near-identical song titles cannot share an Artist Set');
     const exploreSeed = track('explore-seed', { artist: 'Seed Artist', artists: ['Seed Artist'], albumArtist: 'Seed Artist', similarArtists: ['First Neighbor'] });
     const exploreFirst = track('explore-first', { artist: 'First Neighbor', artists: ['First Neighbor'], albumArtist: 'First Neighbor', similarArtists: ['Second Neighbor'] });
     const exploreSecond = track('explore-second', { artist: 'Second Neighbor', artists: ['Second Neighbor'], albumArtist: 'Second Neighbor', similarArtists: ['Seed Artist'] });
@@ -372,6 +385,8 @@ async function run() {
     await fs.writeFile(path.join(portableMixData, 'local-mixes', 'holiday-christmas.json'), JSON.stringify({ id: 'holiday-christmas', name: 'Holiday & Christmas', description: 'Holiday tag test', coreArtists: ['The Beach Boys'], formatPolicy: { genreTags: ['Christmas', 'Holiday', 'Xmas'] } }));
     const holidayMix = loadLocalMixes(portableMixData).find(mix => mix.id === 'holiday-christmas');
     assert.equal(isTrackEligibleForMix(track('holiday-tagged', { artist: 'Unknown Artist', genres: ['Christmas Music'], year: 2020 }), holidayMix).eligible, true, 'Holiday & Christmas admits an explicit Christmas genre tag');
+    assert.equal(isTrackEligibleForMix(track('holiday-flagged', { artist: 'Unknown Artist', holiday: true, genres: ['Rock'] }), holidayMix).eligible, true, 'Holiday & Christmas admits an explicit Holiday Music album tag');
+    assert.equal(isTrackEligibleForMix(track('holiday-outside', { artist: 'Boston', holiday: true, genres: ['Rock'], year: 1976 }), { id: 'classic-rock' }).eligible, false, 'Holiday Music stays out of ordinary Local Mixes');
     assert.equal(isTrackEligibleForMix(track('not-holiday', { artist: 'The Beach Boys', genres: ['Pop'], year: 1966 }), holidayMix).eligible, false, 'Holiday & Christmas never admits an ordinary song by a listed artist');
     const classicMix = resolveLocalMix('classic-rock', classicSeedTracks, portableMixData);
     assert.equal(classicMix.seeds.length, 4, 'Classic Rock resolves its curated seed tracks from the Local Music library');

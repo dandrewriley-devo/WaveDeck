@@ -17,6 +17,24 @@ function songIdentity(track) {
     .replace(/\s*[\[(]?\s*(?:(?:digital\s+)?remaster(?:ed)?(?:\s+\d{4})?|\d{4}\s+remaster(?:ed)?)(?:\s+version)?\s*[\])]?\s*$/i, '');
   return `${artistKey(track)}\u0000${normalize(title)}`;
 }
+function titleForComparison(track) { return String(track?.title || track?.name || '').replace(/\s*[(\[]?\s*(?:live|acoustic|demo|radio edit|single version)[^\])]*[\])]?\s*$/i, '').replace(/[^\p{L}\p{N}]+/gu, '').toLowerCase(); }
+function editDistanceAtMostOne(left, right) {
+  if (left === right) return true;
+  if (!left || !right || Math.abs(left.length - right.length) > 1) return false;
+  let index = 0; let other = 0; let edits = 0;
+  while (index < left.length && other < right.length) {
+    if (left[index] === right[other]) { index += 1; other += 1; continue; }
+    if (++edits > 1) return false;
+    if (left.length > right.length) index += 1; else if (right.length > left.length) other += 1; else { index += 1; other += 1; }
+  }
+  return true;
+}
+function sameSong(track, other) {
+  if (!track || !other || artistKey(track) !== artistKey(other)) return false;
+  if (songIdentity(track) === songIdentity(other)) return true;
+  const left = titleForComparison(track); const right = titleForComparison(other); const durationLeft = Number(track.duration); const durationRight = Number(other.duration);
+  return left.length >= 8 && right.length >= 8 && Number.isFinite(durationLeft) && Number.isFinite(durationRight) && Math.abs(durationLeft - durationRight) <= 4 && editDistanceAtMostOne(left, right);
+}
 function localRadioTuning(value = {}) {
   const songRepeatHours = Number(value.songRepeatHours ?? value.localRadioSongRepeatHours);
   const artistRepeatMinutes = Number(value.artistRepeatMinutes ?? value.localRadioArtistRepeatMinutes);
@@ -31,10 +49,12 @@ function localRadioTuning(value = {}) {
 }
 
 function specificSharedTags(left = [], right = []) {
+  const tokens = values => values.flatMap(value => String(value || '').split(/[;,|/]+/)).map(value => value.trim()).filter(Boolean);
+  const rightTags = tokens(right);
   const result = [];
-  for (const tag of left) {
+  for (const tag of tokens(left)) {
     const key = normalize(tag);
-    if (!key || COMMON_TAGS.has(key) || !right.some(other => matches(tag, other))) continue;
+    if (!key || COMMON_TAGS.has(key) || !rightTags.some(other => matches(tag, other))) continue;
     if (!result.some(other => matches(other, tag))) result.push(String(tag));
   }
   return result;
@@ -135,7 +155,7 @@ function familiarityMultiplier(popularity, familiarity) {
   return { value: 1 + (score * 0.002), note: 'Balanced Mix' };
 }
 function scoreTrack(track, seed, mode, history = [], now = Date.now(), context = null, familiarity = 'balanced') {
-  const last = context?.last?.get(track.songKey) || history.find(item => item.key === track.songKey);
+  const last = context?.last?.get(track.songKey) || history.find(item => item.key === track.songKey || sameSong(track, item));
   const relation = mode === 'mix' ? mixRelationship(track, seed) : relationship(track, seed, mode);
   if (mode === 'radio' && Array.isArray(context?.secondarySeeds)) {
     for (const secondary of context.secondarySeeds) {
@@ -147,6 +167,7 @@ function scoreTrack(track, seed, mode, history = [], now = Date.now(), context =
     }
   }
   if (track?.doNotPlay) return { score: 0, excluded: 'do not play', relationship: relation, additions: [], multipliers: [] };
+  if (track?.holiday && !(mode === 'mix' && seed?.id === 'holiday-christmas')) return { score: 0, excluded: 'holiday music', relationship: relation, additions: [], multipliers: [] };
   const songCooldown = Number.isFinite(Number(context?.songCooldown)) ? Number(context.songCooldown) : COOLDOWN;
   if (last && now - last.at < songCooldown) return { score: 0, excluded: 'cooldown', relationship: relation, additions: [], multipliers: [] };
   const heardArtistAt = context?.artistLast?.get(artistKey(track));
@@ -232,10 +253,10 @@ function applyArtistSetPreference(items, requestedSize) {
   for (let size = requested; size >= 1; size -= 1) {
     const counts = new Map();
     for (const item of items) {
-      const artist = artistKey(item.track); const songs = counts.get(artist) || new Set();
-      songs.add(songIdentity(item.track)); counts.set(artist, songs);
+      const artist = artistKey(item.track); const songs = counts.get(artist) || [];
+      if (!songs.some(track => sameSong(track, item.track))) songs.push(item.track); counts.set(artist, songs);
     }
-    const eligible = items.filter(item => (counts.get(artistKey(item.track))?.size || 0) >= size);
+    const eligible = items.filter(item => (counts.get(artistKey(item.track))?.length || 0) >= size);
     if (eligible.length) return { items: eligible, requested, size, shortened: size < requested };
   }
   return { items: [], requested, size: 1, shortened: requested > 1 };
@@ -289,14 +310,14 @@ function cleanFeedback(value) {
 class MusicRadio {
   constructor({ dataDir, random = Math.random, now = Date.now, onDecision = () => {}, getFamiliarity = () => 'balanced', getTuning = () => ({}) }) {
     this.file = path.join(dataDir, 'music-history.json'); this.random = random; this.now = now; this.onDecision = onDecision; this.getFamiliarity = getFamiliarity; this.getTuning = getTuning;
-    this.history = []; this.error = ''; this.lastDecision = null; this.artistSet = null; this.artistSetNote = null; this.artistStation = null; this.exploreStation = null; this.stationArtistLast = new Map(); this.recoveryAwayFromSeed = false;
+    this.history = []; this.error = ''; this.lastDecision = null; this.artistSet = null; this.artistSetNote = null; this.artistStation = null; this.exploreStation = null; this.stationArtistLast = new Map(); this.recoveryAwayFromSeed = false; this.emergencySongRepeats = new Set();
     this.feedbackFile = path.join(dataDir, 'local-radio-feedback.json'); this.feedback = { version: 1, stations: {} };
     try { const saved = JSON.parse(fs.readFileSync(this.file, 'utf8')); if (Array.isArray(saved)) this.history = saved.filter(item => typeof item?.key === 'string' && Number.isFinite(item?.at)).slice(0, 5000); }
     catch (error) { if (error.code !== 'ENOENT') this.error = 'Music history could not be read; Local Radio is paused to protect repeat history.'; }
     try { this.feedback = cleanFeedback(JSON.parse(fs.readFileSync(this.feedbackFile, 'utf8'))); } catch {}
   }
   getLastDecision() { return this.lastDecision ? JSON.parse(JSON.stringify(this.lastDecision)) : null; }
-  beginSession() { this.artistSet = null; this.artistSetNote = null; this.artistStation = null; this.exploreStation = null; this.recoveryAwayFromSeed = false; this.stationArtistLast.clear(); }
+  beginSession() { this.artistSet = null; this.artistSetNote = null; this.artistStation = null; this.exploreStation = null; this.recoveryAwayFromSeed = false; this.emergencySongRepeats.clear(); this.stationArtistLast.clear(); }
   beginExploreSession(seed) { this.exploreStation = seed ? { root: { ...seed }, current: { ...seed }, hops: 0 } : null; }
   isExploringAwayFromSeed() {
     return Boolean(this.exploreStation && artistKey(this.exploreStation.current) && artistKey(this.exploreStation.current) !== artistKey(this.exploreStation.root));
@@ -327,15 +348,15 @@ class MusicRadio {
       setArtist: artistKey(seed), feedback: this.feedbackFor(stationKey),
       secondarySeeds: mode === 'radio' ? this.secondarySeeds(stationKey, tracks) : []
     };
-    const seedIdentity = songIdentity(seed);
     const scored = tracks
-      .filter(track => artistKey(track) === artistKey(seed) && songIdentity(track) !== seedIdentity)
+      .filter(track => artistKey(track) === artistKey(seed) && !sameSong(track, seed))
       .map(track => ({ track, ...scoreTrack(track, seed, 'radio', this.history, now, context, familiarity) }));
     const pool = preferredPool(scored, { familiarity }).candidates;
-    const identities = new Set(pool.map(item => songIdentity(item.track)));
+    const identities = [];
+    for (const item of pool) if (!identities.some(track => sameSong(track, item.track))) identities.push(item.track);
     let size = 1;
     for (let candidateSize = requested; candidateSize >= 2; candidateSize -= 1) {
-      if (identities.size >= candidateSize - 1) { size = candidateSize; break; }
+      if (identities.length >= candidateSize - 1) { size = candidateSize; break; }
     }
     if (size <= 1) return null;
     const weightedPick = values => {
@@ -345,9 +366,9 @@ class MusicRadio {
     const available = [...pool]; const planned = []; const plannedTracks = [];
     while (planned.length < size - 1 && available.length) {
       const next = weightedPick(available); if (!next) break;
-      planned.push({ id: next.track.id, songKey: next.track.songKey || '', identity: songIdentity(next.track), title: next.track.title || '', artist: next.track.artist || '' });
+      planned.push({ id: next.track.id, songKey: next.track.songKey || '', identity: songIdentity(next.track), title: next.track.title || '', artist: next.track.artist || '', duration: Number(next.track.duration) || 0 });
       plannedTracks.push(next.track);
-      for (let index = available.length - 1; index >= 0; index -= 1) if (songIdentity(available[index].track) === songIdentity(next.track)) available.splice(index, 1);
+      for (let index = available.length - 1; index >= 0; index -= 1) if (sameSong(available[index].track, next.track)) available.splice(index, 1);
     }
     if (planned.length !== size - 1) return null;
     this.artistSet = { artist: artistKey(seed), remaining: planned, size, played: 1, skipped: [] };
@@ -355,7 +376,7 @@ class MusicRadio {
   }
   record(track) {
     const at = this.now();
-    this.history.unshift({ key: track.songKey, artist: track.artist, album: track.album, at }); this.history = this.history.slice(0, 5000);
+    this.history.unshift({ key: track.songKey, artist: track.artist, album: track.album, title: track.title || '', duration: Number(track.duration) || 0, at }); this.history = this.history.slice(0, 5000);
     const artist = artistKey(track); if (artist) this.stationArtistLast.set(artist, at);
     try { fs.mkdirSync(path.dirname(this.file), { recursive: true }); fs.writeFileSync(this.file + '.tmp', JSON.stringify(this.history)); fs.renameSync(this.file + '.tmp', this.file); }
     catch { this.error = 'Music history could not be saved; check that Data is writable.'; }
@@ -436,6 +457,7 @@ class MusicRadio {
     const cooldownExcluded = scored.filter(item => item.excluded === 'cooldown').length;
     const artistCooldownExcluded = scored.filter(item => item.excluded === 'artist cooldown').length;
     const doNotPlayExcluded = scored.filter(item => item.excluded === 'do not play').length;
+    const holidayExcluded = scored.filter(item => item.excluded === 'holiday music').length;
     const noMeaningfulConnectionExcluded = scored.filter(item => item.excluded === 'no credible relationship').length;
     const missingLastFmExcluded = scored.filter(item => item.excluded === 'missing Last.fm popularity').length;
     const personalLibraryMix = mode === 'mix' && seed?.policy?.personalLibrary === true;
@@ -514,6 +536,7 @@ class MusicRadio {
     let emergencySongRepeat = false;
     if (!candidates.length && !forcedArtist) {
       const songRecovery = recoveryCandidates('song');
+      songRecovery.candidates = songRecovery.candidates.filter(item => !this.emergencySongRepeats.has(songIdentity(item.track)));
       if (songRecovery.candidates.length) {
         candidates = songRecovery.candidates; explanationItems = songRecovery.source;
         effectiveArtistSetSize = songRecovery.setPlan.size; artistSetShortened = songRecovery.setPlan.shortened;
@@ -581,14 +604,13 @@ class MusicRadio {
       if (forcedArtist) {
         if (!this.artistSet.remaining.length) this.artistSet = null;
       } else if (selectedSetSize > 1) {
-        const selectedIdentity = songIdentity(selected);
-        const sameArtist = candidates.filter(item => item.track.id !== selected.id && artistKey(item.track) === artistKey(selected) && songIdentity(item.track) !== selectedIdentity);
+        const sameArtist = candidates.filter(item => item.track.id !== selected.id && artistKey(item.track) === artistKey(selected) && !sameSong(item.track, selected));
         const planned = []; const plannedTracks = [];
         while (planned.length < selectedSetSize - 1 && sameArtist.length) {
           const next = weightedPick(sameArtist);
-          planned.push({ id: next.track.id, songKey: next.track.songKey || '', identity: songIdentity(next.track), title: next.track.title || '', artist: next.track.artist || '' });
+          planned.push({ id: next.track.id, songKey: next.track.songKey || '', identity: songIdentity(next.track), title: next.track.title || '', artist: next.track.artist || '', duration: Number(next.track.duration) || 0 });
           plannedTracks.push(next.track);
-          for (let index = sameArtist.length - 1; index >= 0; index -= 1) if (songIdentity(sameArtist[index].track) === songIdentity(next.track)) sameArtist.splice(index, 1);
+          for (let index = sameArtist.length - 1; index >= 0; index -= 1) if (sameSong(sameArtist[index].track, next.track)) sameArtist.splice(index, 1);
         }
         if (planned.length === selectedSetSize - 1) {
           this.artistSet = { artist: artistKey(selected), remaining: planned, size: selectedSetSize, played: 1, skipped: [] };
@@ -626,7 +648,8 @@ class MusicRadio {
     const relatedArtists = artistChoices.filter(group => group.related).map(group => group.artist);
     const restingRelatedArtists = artistChoices.filter(group => group.related && group.key !== selectedArtistKey && group.artistRestTracks > 0).map(group => group.artist);
     const feedback = selected ? (this.feedbackFor(stationKey)[selected.songKey || selected.id] || {}) : {};
-    const exploreDetails = exploring ? { distance: settings.localRadioExploreDistance, limit: exploreLimit, hops: this.exploreStation?.hops || 0, awayFromSeed: this.isExploringAwayFromSeed(), returningToSeed, rescueUsed: recovery?.kind === 'related-route', activeAnchor: selected && picked?.rescue ? picked.rescue.artist : (selectionSeed?.artist || '') } : null;
+    if (selected && emergencySongRepeat) this.emergencySongRepeats.add(songIdentity(selected));
+    const exploreDetails = exploring ? { distance: settings.localRadioExploreDistance, limit: exploreLimit, hops: this.exploreStation?.hops || 0, awayFromSeed: this.isExploringAwayFromSeed(), returningToSeed, rescueUsed: recovery?.kind === 'related-route', activeAnchor: selected && picked?.rescue ? picked.rescue.artist : (continuingExploreArtistSet ? selected?.artist : (selectionSeed?.artist || '')) } : null;
     const decisionSet = artistSetSnapshot || this.artistSet;
     const setRemaining = decisionSet?.remaining?.length || 0;
     const skippedSetTracks = decisionSet?.skipped || [];
@@ -644,7 +667,7 @@ class MusicRadio {
       song: { title: selected?.title || '', popularity: Number.isFinite(Number(picked?.popularity)) ? Number(picked.popularity) : null, rating: ratingOutOfTen(selected), favorite: selected?.favorite === true, thumbsUp: Math.max(0, Number(feedback.up) || 0), thumbsDown: Math.max(0, Number(feedback.down) || 0), skips: Math.max(0, Number(feedback.skips) || 0), poolLabel, poolSize: candidates.length, secondarySeed: secondaryTrack ? { title: secondaryTrack.title || '', artist: secondaryTrack.artist || '' } : null },
       explore: exploreDetails, artistSet: artistSetDetails, artistSetRecovery: carriedArtistSetNote, recovery: recoveryDetails, waiting: !selected
     };
-    this.lastDecision = { at: new Date(now).toISOString(), mode, stationKey, selectionTrigger, seed: { diagnosticId: stableId(seed), title: seed?.title || seed?.name || '', artist: seed?.artist || '', album: seed?.album || '', genres: seed?.genres || [] }, policy: artistRadio ? 'artist-radio-v1' : (exploring ? 'explore-radio-v1' : 'automatic-local-radio-v2'), familiarity, tuning: settings, explore: exploreDetails, howPicked, artistSet: { size: selectedSetSize, remaining: setRemaining, requested: settings.artistSetSize, shortened: artistSetShortened, proposed: proposedSet }, artistRadio: artistRadio ? { seedTargetPercent: 90, seedSelectionsSinceRelated: this.artistStation?.seedSelections || 0 } : null, counts: { totalTracks: tracks.length, skippedByPlaybackError: excluded.size, skippedForCooldown: cooldownExcluded, skippedForArtistCooldown: artistCooldownExcluded, skippedForDoNotPlay: doNotPlayExcluded, noMeaningfulConnection: noMeaningfulConnectionExcluded, missingLastFmData: missingLastFmExcluded, credible: credibleCount, personal: personalCandidates.length, personalMinimum: threshold, lastFmFamiliar: lastFmCandidates.length, finalPool: candidates.length }, selected: selected ? diagnostic(picked) : null, diagnostics: { topFinalCandidates: ranked.map(diagnostic), recentHistory: this.history.slice(0, 12).map(item => ({ diagnosticId: stableId({ songKey: item.key }), artist: item.artist, album: item.album, at: new Date(item.at).toISOString() })) }, reason: selected ? `Picked from ${candidates.length} ${poolLabel} Local Radio candidates${recovery?.kind === 'related-route' ? ' through a related-artist recovery route.' : ''}${recovery?.relaxedRepeat === 'artist' ? ' after easing artist rest to keep the station playing.' : ''}${recovery?.relaxedRepeat === 'song' ? ' after using the least-recently-played credible song to keep the station playing.' : ''}` : 'No playable track was found, even after WaveDeck exhausted its related-artist and repeat-protection recovery steps.' };
+    this.lastDecision = { at: new Date(now).toISOString(), mode, stationKey, selectionTrigger, seed: { diagnosticId: stableId(seed), title: seed?.title || seed?.name || '', artist: seed?.artist || '', album: seed?.album || '', genres: seed?.genres || [] }, policy: artistRadio ? 'artist-radio-v1' : (exploring ? 'explore-radio-v1' : 'automatic-local-radio-v2'), familiarity, tuning: settings, explore: exploreDetails, howPicked, artistSet: { size: selectedSetSize, remaining: setRemaining, requested: settings.artistSetSize, shortened: artistSetShortened, proposed: proposedSet }, artistRadio: artistRadio ? { seedTargetPercent: 90, seedSelectionsSinceRelated: this.artistStation?.seedSelections || 0 } : null, counts: { totalTracks: tracks.length, skippedByPlaybackError: excluded.size, skippedForCooldown: cooldownExcluded, skippedForArtistCooldown: artistCooldownExcluded, skippedForDoNotPlay: doNotPlayExcluded, skippedForHolidayMusic: holidayExcluded, noMeaningfulConnection: noMeaningfulConnectionExcluded, missingLastFmData: missingLastFmExcluded, credible: credibleCount, personal: personalCandidates.length, personalMinimum: threshold, lastFmFamiliar: lastFmCandidates.length, finalPool: candidates.length }, selected: selected ? diagnostic(picked) : null, diagnostics: { topFinalCandidates: ranked.map(diagnostic), recentHistory: this.history.slice(0, 12).map(item => ({ diagnosticId: stableId({ songKey: item.key }), artist: item.artist, album: item.album, at: new Date(item.at).toISOString() })) }, reason: selected ? `Picked from ${candidates.length} ${poolLabel} Local Radio candidates${recovery?.kind === 'related-route' ? ' through a related-artist recovery route.' : ''}${recovery?.relaxedRepeat === 'artist' ? ' after easing artist rest to keep the station playing.' : ''}${recovery?.relaxedRepeat === 'song' ? ' after using the least-recently-played credible song to keep the station playing.' : ''}` : 'No playable connected track was found without repeating the station’s emergency fallback songs.' };
     try { this.onDecision(this.getLastDecision()); } catch {}
     return selected;
   }

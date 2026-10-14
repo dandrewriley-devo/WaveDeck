@@ -1,5 +1,13 @@
 # WaveDeck Opus Branch Handoff
 
+## WaveDeck Opus 1.0.30
+
+- Portable Music Manager releases can be marked **Holiday Music**. WaveDeck writes `HOLIDAY=1` to every portable Opus track on that release, preserves it through optimization and duplicate cleanup, keeps it out of ordinary automatic Local Radio and Local Mixes, and reserves it for Holiday & Christmas. Manual playback remains available.
+- Artist identity now normalizes harmless typographic punctuation, so names such as `Jane's Addiction` and `Jane’s Addiction` share Music Manager grouping, Last.fm relationships, repeat protection, and Local Radio eligibility.
+- Compound broad tags such as `Rock, Pop` are split before eligibility is evaluated; broad genres can no longer masquerade as a specific Radio relationship.
+- Artist Sets and repeat protection now conservatively recognize same-artist, near-identical titles with nearly identical running times as the same song. This prevents variant spellings such as Smokey/Smoky Mountain Rain from landing together.
+- Emergency exact-song recovery now uses each fallback song only once per station, preventing endless small loops after every connected route is exhausted. Explore-log active anchors now retain the actual artist while continuing a planned Artist Set.
+
 ## WaveDeck Opus 1.0.29
 
 - Explore Radio now treats a complete Artist Set as one move along its related-artist route. The first song establishes the route; the remaining planned songs keep that anchor and hop distance, then the next fresh choice returns toward the original seed when appropriate.
@@ -70,15 +78,15 @@
 
 # WaveDeck Project Handoff
 
-This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.29**.
+This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.30**.
 
 ## Current published state
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `opus-portable`
-- Current version: **1.0.29**
-- Current release: 1.0.29 — Explore Radio Artist Sets retain their real route and hop distance.
-- Current commit: the verified 1.0.29 release commit at the head of `opus-portable`.
+- Current version: **1.0.30**
+- Current release: 1.0.30 — Holiday tags and safer related-radio identity/recovery.
+- Current commit: the verified 1.0.30 release commit at the head of `opus-portable`.
 - 0.11.8 commit: `8118e235eed4b4a18c378f12ced8a86be83ed4b9` — monitor-safe main-window bounds persistence and portable Windows build.
 - 0.11.7 commit: `c8b69b7b8842dd6c310dda05b22b8d52870d3e84` — superseded source correction after the first portable Windows build.
 - 0.11.6 commit: `621e44d8c484cd0a4d70eb124106170f6183d0ae` — compact Local Radio Controls and remembered auxiliary-window bounds.

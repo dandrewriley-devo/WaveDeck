@@ -24,6 +24,7 @@ contextBridge.exposeInMainWorld("wavedeck", {
   getPortableMusicArtists: query => ipcRenderer.invoke('music:library:artists', query),
   getPortableMusicArtistDetail: (key, query) => ipcRenderer.invoke('music:library:artist-detail', key, query),
   savePortableMusicTrack: track => ipcRenderer.invoke('music:library:save-track', track),
+  savePortableMusicReleaseHoliday: (ids, holiday) => ipcRenderer.invoke('music:library:save-release-holiday', ids, holiday),
   getArtistRelationships: artist => ipcRenderer.invoke('music:library:relationships:get', artist),
   saveArtistRelationships: (artist, related) => ipcRenderer.invoke('music:library:relationships:save', artist, related),
   playMusic: (id, mode) => ipcRenderer.invoke('music:play', id, mode),

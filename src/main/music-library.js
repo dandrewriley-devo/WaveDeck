@@ -1,7 +1,7 @@
 const { Worker } = require('worker_threads');
 const fs = require('fs/promises');
 const path = require('path');
-const { canonicalArtist } = require('./music-tags');
+const { canonicalArtist, normalize } = require('./music-tags');
 function canonicalTrack(track) {
   if (!track || typeof track !== 'object') return track;
   const artist = canonicalArtist(track.artist);
@@ -129,10 +129,10 @@ class MusicLibrary {
     };
   }
   applyLastFmArtist(value) {
-    const key = String(value?.artist || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+    const key = normalize(value?.artist || '');
     for (let index = 0; index < this.tracks.length; index++) {
       const track = this.tracks[index];
-      if (!(track.artists || [track.artist]).some(artist => String(artist).normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim() === key)) continue;
+      if (!(track.artists || [track.artist]).some(artist => normalize(artist) === key)) continue;
       this.tracks[index] = { ...track, similarArtists: [...new Set([...(track.similarArtists || []), ...(value.similarArtists || [])])] };
     }
   }

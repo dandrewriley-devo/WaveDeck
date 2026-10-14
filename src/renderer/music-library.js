@@ -52,6 +52,11 @@ async function saveTrack(track, patch) {
   try { await window.wavedeck.savePortableMusicTrack({ id: track.id, ...patch }); }
   catch (error) { applyTrackPatch(next, track); summary.textContent = error.message; render(scrollTop); }
 }
+async function saveReleaseHoliday(release, holiday) {
+  const scrollTop = currentScroll(); release.holiday = holiday; release.tracks.forEach(track => { track.holiday = holiday; }); render(scrollTop);
+  try { await window.wavedeck.savePortableMusicReleaseHoliday(release.tracks.map(track => track.id), holiday); }
+  catch (error) { release.holiday = !holiday; release.tracks.forEach(track => { track.holiday = !holiday; }); summary.textContent = error.message; render(scrollTop); }
+}
 function smallButton(label, title, action, className = '') {
   const button = document.createElement('button'); button.className = `icon-button ${className}`; button.textContent = label; button.title = title;
   button.onclick = event => { event.stopPropagation(); void action(); }; return button;
@@ -102,7 +107,7 @@ function artistDetail() {
     const entry = document.createElement('section'); entry.className = 'release'; const button = document.createElement('button'); button.className = `release-row${activeRelease === release.key ? ' expanded' : ''}`;
     button.innerHTML = `<span class="release-caret">›</span><span>${esc(release.title)}${release.year ? ` <span class="release-year">(${release.year})</span>` : ''}</span><span>${release.tracks.length} track${release.tracks.length === 1 ? '' : 's'}${release.compilation ? ' · Compilation' : ''}</span>`;
     button.onclick = () => { activeRelease = activeRelease === release.key ? '' : release.key; editingTrack = ''; expandedDetailHeight = 0; render(currentScroll()); };
-    entry.append(button); if (activeRelease === release.key) { const tracks = document.createElement('div'); tracks.className = 'track-list'; release.tracks.forEach(track => tracks.append(trackRow(track))); entry.append(tracks); } releases.append(entry);
+    entry.append(button); if (activeRelease === release.key) { const holiday = document.createElement('label'); holiday.className = 'holiday-toggle'; const input = document.createElement('input'); input.type = 'checkbox'; input.checked = release.holiday === true; input.onchange = () => void saveReleaseHoliday(release, input.checked); holiday.append(input, document.createTextNode('Holiday Music')); const tracks = document.createElement('div'); tracks.className = 'track-list'; release.tracks.forEach(track => tracks.append(trackRow(track))); entry.append(holiday, tracks); } releases.append(entry);
   }
   box.append(releases); return box;
 }

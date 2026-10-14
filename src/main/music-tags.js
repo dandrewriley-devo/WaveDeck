@@ -1,8 +1,12 @@
 const path = require('path');
 const crypto = require('crypto');
-const normalize = (value) => String(value ?? '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+// Tags come from many programs. Treat typographic punctuation as the ordinary
+// punctuation the listener expects, so Jane's and Jane’s are one artist.
+const normalize = (value) => String(value ?? '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+  .replace(/[‘’‛`´]/g, "'").replace(/[“”„]/g, '"').replace(/[‐‑‒–—―]/g, '-')
+  .replace(/\s+/g, ' ').toLowerCase().trim();
 const list = (value) => (Array.isArray(value) ? value : String(value || '').split(/[;|]/)).map(String).map(s => s.trim()).filter(Boolean);
-const PORTABLE_CUSTOM_TAGS = new Set(['RATING', 'FAVORITE', 'DO_NOT_PLAY', 'PLAY_COUNT', 'PLAYCOUNT', 'SKIP_COUNT', 'SKIPCOUNT', 'LAST_PLAYED', 'LASTFM_TRACK_POPULARITY_0_100', 'LASTFM_ARTIST_SIMILAR', 'MOOD', 'AMP_TRACK_ID']);
+const PORTABLE_CUSTOM_TAGS = new Set(['RATING', 'FAVORITE', 'DO_NOT_PLAY', 'HOLIDAY', 'PLAY_COUNT', 'PLAYCOUNT', 'SKIP_COUNT', 'SKIPCOUNT', 'LAST_PLAYED', 'LASTFM_TRACK_POPULARITY_0_100', 'LASTFM_ARTIST_SIMILAR', 'MOOD', 'AMP_TRACK_ID']);
 // Some ID3 readers treat the slash in AC/DC as an artist separator and leave
 // only "AC" in the primary artist field. Canonicalize that known legacy form
 // everywhere WaveDeck displays or matches an artist.
@@ -75,6 +79,7 @@ function extractTrack(metadata, relativePath, library = 'portable') {
     ratingSource: ratingEntry?.source || '',
     favorite: /^(1|true|yes)$/i.test(String(custom.FAVORITE || '')),
     doNotPlay: /^(1|true|yes)$/i.test(String(custom.DO_NOT_PLAY || '')),
+    holiday: /^(1|true|yes)$/i.test(String(custom.HOLIDAY || '')),
     playCount: number('PLAY_COUNT', 'PLAYCOUNT') || 0, skipCount: number('SKIP_COUNT', 'SKIPCOUNT') || 0,
     lastPlayed: String(custom.LAST_PLAYED || ''),
     popularity: number('LASTFM_TRACK_POPULARITY_0_100'),

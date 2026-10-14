@@ -21,6 +21,7 @@ const { RecordingLibrary } = require("./recording-library");
 const { MusicLibrary } = require('./music-library');
 const { OpusOptimizer } = require('./opus-optimizer');
 const { MusicRadio } = require('./music-radio');
+const { normalize } = require('./music-tags');
 const { mixBookSignature } = require('./local-mixes');
 const { LastFmEnricher } = require('./lastfm-enricher');
 const { LastFmScrobbler } = require('./lastfm-scrobbler');
@@ -552,7 +553,7 @@ function closeAuxiliaryWindows() {
   }
 }
 
-const relationshipKey = value => String(value || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+const relationshipKey = value => normalize(value || '');
 function relationshipsFile() { return path.join(getDataDir(), 'artist-relationships.json'); }
 function loadArtistRelationships() { try { manualArtistRelationships = JSON.parse(fs.readFileSync(relationshipsFile(), 'utf8')) || {}; } catch { manualArtistRelationships = {}; } }
 function saveArtistRelationships() { const file = relationshipsFile(); const temporary = `${file}.tmp`; fs.writeFileSync(temporary, `${JSON.stringify(manualArtistRelationships, null, 2)}\n`); fs.renameSync(temporary, file); }
@@ -603,16 +604,16 @@ function portableManagerArtistDetail(key, query = '') {
   for (const track of shown) {
     const releaseKey = portableManagerReleaseKey(track);
     if (!releases.has(releaseKey)) releases.set(releaseKey, { key: releaseKey, title: String(track.album || track.title || 'Loose Track'), compilation: /^(various( artists)?|va|v\.a\.|soundtrack)/i.test(String(track.albumArtist || '')), tracks: [] });
-    releases.get(releaseKey).tracks.push({ id: track.id, title: track.title, artist: track.artist, album: track.album, albumArtist: track.albumArtist, track: track.track, disc: track.disc, duration: track.duration, rating: track.rating, favorite: track.favorite === true, doNotPlay: track.doNotPlay === true, popularity: track.popularity });
+    releases.get(releaseKey).tracks.push({ id: track.id, title: track.title, artist: track.artist, album: track.album, albumArtist: track.albumArtist, track: track.track, disc: track.disc, duration: track.duration, rating: track.rating, favorite: track.favorite === true, doNotPlay: track.doNotPlay === true, holiday: track.holiday === true, popularity: track.popularity });
   }
-  return { key: artistKey, artist: all[0].artist || 'Unknown Artist', manualRelated: manual, lastFmRelated, releases: [...releases.values()].map(release => ({ ...release, year: portableManagerReleaseYear(release.tracks) })).sort((left, right) => (left.year || Infinity) - (right.year || Infinity) || left.title.localeCompare(right.title, undefined, { sensitivity: 'base' })).map(release => ({ ...release, tracks: release.tracks.sort((left, right) => (left.disc - right.disc) || (left.track - right.track) || left.title.localeCompare(right.title)) })) };
+  return { key: artistKey, artist: all[0].artist || 'Unknown Artist', manualRelated: manual, lastFmRelated, releases: [...releases.values()].map(release => ({ ...release, year: portableManagerReleaseYear(release.tracks), holiday: release.tracks.length > 0 && release.tracks.every(track => track.holiday === true) })).sort((left, right) => (left.year || Infinity) - (right.year || left.title.localeCompare(right.title, undefined, { sensitivity: 'base' }))).map(release => ({ ...release, tracks: release.tracks.sort((left, right) => (left.disc - right.disc) || (left.track - right.track) || left.title.localeCompare(right.title)) })) };
 }
 const portableTagWriteQueue = new Map();
 let portableTagWriteRunning = false;
 async function writePortableTrackTags(track) {
   const target = (await musicLibrary.resolve(track.id)).path;
   const temporary = `${target}.editing`;
-  const args = ['-hide_banner','-loglevel','error','-nostdin','-i',target,'-map','0:a:0','-map_metadata','-1','-vn','-sn','-dn','-c:a','copy','-metadata',`title=${track.title}`,'-metadata',`artist=${track.artist}`,'-metadata',`album=${track.album}`,'-metadata',`album_artist=${track.albumArtist}`,'-metadata',`track=${track.track || ''}`,'-metadata',`disc=${track.disc || ''}`,'-metadata',`date=${track.year || ''}`,'-metadata',`genre=${(track.genres || []).join('; ')}`,'-metadata',`RATING=${track.rating || ''}`,'-metadata',`FAVORITE=${track.favorite ? '1' : ''}`,'-metadata',`DO_NOT_PLAY=${track.doNotPlay ? '1' : ''}`,'-metadata',`AMP_TRACK_ID=${track.ampId || ''}`,'-f','opus','-y',temporary];
+  const args = ['-hide_banner','-loglevel','error','-nostdin','-i',target,'-map','0:a:0','-map_metadata','-1','-vn','-sn','-dn','-c:a','copy','-metadata',`title=${track.title}`,'-metadata',`artist=${track.artist}`,'-metadata',`album=${track.album}`,'-metadata',`album_artist=${track.albumArtist}`,'-metadata',`track=${track.track || ''}`,'-metadata',`disc=${track.disc || ''}`,'-metadata',`date=${track.year || ''}`,'-metadata',`genre=${(track.genres || []).join('; ')}`,'-metadata',`RATING=${track.rating || ''}`,'-metadata',`FAVORITE=${track.favorite ? '1' : ''}`,'-metadata',`DO_NOT_PLAY=${track.doNotPlay ? '1' : ''}`,'-metadata',`HOLIDAY=${track.holiday ? '1' : ''}`,'-metadata',`AMP_TRACK_ID=${track.ampId || ''}`,'-f','opus','-y',temporary];
   await new Promise((resolve, reject) => execFile(portableFfmpegExecutable, args, { windowsHide: true, maxBuffer: 1024 * 1024 }, error => error ? reject(error) : resolve()));
   fs.renameSync(temporary, target);
 }
@@ -1671,11 +1672,17 @@ function installIpcHandlers() {
     await requireMusic(); const id = String(update.id || ''); const track = musicLibrary.tracks.find(item => item.id === id && item.library === 'portable');
     if (!track) throw new Error('That portable track is no longer available.');
     const clean = value => String(value ?? '').replace(/[\u0000\r\n]/g, ' ').trim().slice(0, 500);
-    const next = { ...track, title: clean(update.title ?? track.title), artist: clean(update.artist ?? track.artist), album: clean(update.album ?? track.album), albumArtist: clean(update.albumArtist ?? track.albumArtist), year: Number(update.year ?? track.year) || '', genres: Array.isArray(update.genres) ? update.genres.map(clean).filter(Boolean) : (track.genres || []), track: Number(update.track ?? track.track) || 0, disc: Number(update.disc ?? track.disc) || 0, rating: Math.max(0, Math.min(10, Number(update.rating ?? track.rating) || 0)), favorite: update.favorite === undefined ? track.favorite === true : update.favorite === true, doNotPlay: update.doNotPlay === undefined ? track.doNotPlay === true : update.doNotPlay === true };
+    const next = { ...track, title: clean(update.title ?? track.title), artist: clean(update.artist ?? track.artist), album: clean(update.album ?? track.album), albumArtist: clean(update.albumArtist ?? track.albumArtist), year: Number(update.year ?? track.year) || '', genres: Array.isArray(update.genres) ? update.genres.map(clean).filter(Boolean) : (track.genres || []), track: Number(update.track ?? track.track) || 0, disc: Number(update.disc ?? track.disc) || 0, rating: Math.max(0, Math.min(10, Number(update.rating ?? track.rating) || 0)), favorite: update.favorite === undefined ? track.favorite === true : update.favorite === true, doNotPlay: update.doNotPlay === undefined ? track.doNotPlay === true : update.doNotPlay === true, holiday: update.holiday === undefined ? track.holiday === true : update.holiday === true };
     await musicLibrary.updatePortableTrack(next);
     queuePortableTrackTagWrite(next);
-    if (next.doNotPlay !== track.doNotPlay) void analyzeLocalMixes();
+    if (next.doNotPlay !== track.doNotPlay || next.holiday !== track.holiday) void analyzeLocalMixes();
     return next;
+  });
+  ipcMain.handle('music:library:save-release-holiday', async (_event, ids = [], holiday = false) => {
+    await requireMusic(); const matches = [...new Set(Array.isArray(ids) ? ids.map(String) : [])].map(id => musicLibrary.tracks.find(track => track.id === id && track.library === 'portable')).filter(Boolean);
+    if (!matches.length) throw new Error('That portable release is no longer available.');
+    for (const track of matches) { const next = await musicLibrary.updatePortableTrack({ ...track, holiday: holiday === true }); queuePortableTrackTagWrite(next); }
+    void analyzeLocalMixes(); return { ids: matches.map(track => track.id), holiday: holiday === true };
   });
   ipcMain.handle('music:play', async (_event, id, mode) => { await requireMusic(); return mediaController.playMusic(String(id), mode); });
   ipcMain.handle('music:mixes', async () => {
