@@ -7,6 +7,7 @@
 - Compound broad tags such as `Rock, Pop` are split before eligibility is evaluated; broad genres can no longer masquerade as a specific Radio relationship.
 - Artist Sets and repeat protection now conservatively recognize same-artist, near-identical titles with nearly identical running times as the same song. This prevents variant spellings such as Smokey/Smoky Mountain Rain from landing together.
 - Emergency exact-song recovery now uses each fallback song only once per station, preventing endless small loops after every connected route is exhausted. Explore-log active anchors now retain the actual artist while continuing a planned Artist Set.
+- The moving BtbN FFmpeg archive was re-verified for this AppImage build: archive `f632249a99c08789190ae1c3bc94d1b53e093039b72e93815e8ed5d2a4a61eb8`; extracted `ffmpeg` `e5906b59bb42f4b8cd356d47042d0bc6f62c95a392f90bda8d3b69849d730f23`; extracted `ffprobe` `91cf4daf79e376b8e3019252a0edf0dd244adeff15bc5f4a54f6f58911eeb73f`.
 
 ## WaveDeck Opus 1.0.29
 

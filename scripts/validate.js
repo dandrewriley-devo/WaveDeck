@@ -1830,7 +1830,7 @@ assert.ok(opusOptimizerSource.includes('same-release-tags-different-audio'));
 assert.ok(mainSource.includes('musicLibraryWindowBounds'));
 const linuxFfmpegScript = fs.readFileSync(path.join(root, "scripts", "prepare-linux-ffmpeg.js"), "utf8");
 assert.ok(linuxFfmpegScript.includes('PROBE_SHA256'));
-assert.ok(linuxFfmpegScript.includes('ad8ac3c3ebc161a2feaa3289f91de9418bc4b8a7e28b335235c3ab4c037a5899'));
+assert.ok(linuxFfmpegScript.includes('f632249a99c08789190ae1c3bc94d1b53e093039b72e93815e8ed5d2a4a61eb8'));
 const lastFmScrobblerSource = fs.readFileSync(path.join(root, "src", "main", "lastfm-scrobbler.js"), "utf8");
 assert.ok(lastFmScrobblerSource.includes("track.scrobble"));
 assert.ok(lastFmScrobblerSource.includes("track.updateNowPlaying"));
