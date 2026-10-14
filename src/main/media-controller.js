@@ -97,6 +97,7 @@ class MediaController {
     this.musicGeneration = 0;
     this.musicRetry = null;
     this.musicCrossfadeTimer = null;
+    this.musicPreparationTimer = null;
     this.musicBusy = false;
   }
 
@@ -332,7 +333,7 @@ class MediaController {
   }
 
   clearMusic() {
-    this.musicGeneration++; clearTimeout(this.musicRetry); clearInterval(this.musicCrossfadeTimer); this.musicCrossfadeTimer = null; this.music = null;
+    this.musicGeneration++; clearTimeout(this.musicRetry); clearInterval(this.musicCrossfadeTimer); clearTimeout(this.musicPreparationTimer); this.musicCrossfadeTimer = null; this.musicPreparationTimer = null; this.music = null;
   }
 
   async playMusic(id, mode = 'song') {
@@ -348,7 +349,7 @@ class MediaController {
       .sort((a, b) => a.disc - b.disc || a.track - b.track || a.relativePath.localeCompare(b.relativePath));
     if (mode === 'album' && !album.length) album.push(track);
     const albumArtistSeed = mode === 'album' ? artistRadioSeedForAlbum(track) : null;
-    this.music = { seed: track, albumArtistSeed, mode, radioKey: `${mode}:${track.songKey || track.id}`, current: null, queue: mode === 'album' ? album.map(t => t.id) : [], back: [], failed: new Set(), waiting: false, initialRadioSelectionPending: ['radio', 'artist', 'explore'].includes(mode) };
+    this.music = { seed: track, albumArtistSeed, mode, radioKey: `${mode}:${track.songKey || track.id}`, current: null, queue: mode === 'album' ? album.map(t => t.id) : [], back: [], failed: new Set(), waiting: false, prepared: null, pendingPreparedDecision: null, initialRadioSelectionPending: ['radio', 'artist', 'explore'].includes(mode) };
     if (mode === 'artist') this.musicRadio?.beginArtistSession?.(track);
     if (mode === 'explore') this.musicRadio?.beginExploreSession?.(track);
     if (mode === 'radio' || mode === 'explore') {
@@ -368,7 +369,7 @@ class MediaController {
     this.music = {
       seed: { id: `mix:${mix.id}`, title: mix.name, artist: '', album: '', genres: [] },
       profile: mix, mixId: mix.id, label: mix.name, mode: 'mix', radioKey: `mix:${mix.id}`,
-      current: null, queue: [], back: [], failed: new Set(), waiting: false
+      current: null, queue: [], back: [], failed: new Set(), waiting: false, prepared: null, pendingPreparedDecision: null
     };
     this.onLocalStationStart(this.music.radioKey);
     this.onStationChanged(null);
@@ -378,6 +379,9 @@ class MediaController {
   async loadMusic(id) {
     clearInterval(this.musicCrossfadeTimer); this.musicCrossfadeTimer = null;
     const generation = this.musicGeneration;
+    const deferredDecision = this.music?.pendingPreparedDecision?.id === id
+      ? this.music.pendingPreparedDecision.decision
+      : null;
     const track = await this.musicLibrary.resolve(id);
     if (track.doNotPlay) throw new Error('This song is marked Do Not Play.');
     if (!this.music || generation !== this.musicGeneration) return false;
@@ -387,12 +391,13 @@ class MediaController {
     if (!this.music || generation !== this.musicGeneration) return false;
     await this.player.play(track.path);
     if (!this.music || generation !== this.musicGeneration) return false;
-    this.#commitMusicTrack(track, id);
+    if (this.music?.pendingPreparedDecision?.id === id) this.music.pendingPreparedDecision = null;
+    this.#commitMusicTrack(track, id, deferredDecision);
     this.#scheduleMusicCrossfade(track, generation);
     return true;
   }
 
-  #commitMusicTrack(track, id) {
+  #commitMusicTrack(track, id, deferredDecision = null) {
     this.music.current = { ...track }; delete this.music.current.path;
     this.music.waiting = false;
     this.mediaState = 'playing';
@@ -402,12 +407,20 @@ class MediaController {
       this.music.initialRadioSelectionPending = false;
       this.musicRadio.recordManualStart?.(track, this.music.mode, this.music.radioKey, this.music.initialArtistSet);
     }
+    if (deferredDecision) this.musicRadio?.publishDecision?.(deferredDecision);
     try { this.onMusicTrack(track); } catch {}
     this.onStateChanged(this.getStatus());
+    this.#scheduleMusicPreparation(this.musicGeneration);
   }
 
-  #nextMusicId(reason) {
+  #nextMusicId(reason, { usePrepared = true, deferDecision = false } = {}) {
     let id = this.music.queue.shift();
+    if (!id && usePrepared && this.music.prepared?.id) {
+      const prepared = this.music.prepared;
+      this.music.prepared = null;
+      this.music.pendingPreparedDecision = prepared;
+      return prepared.id;
+    }
     if (!id && this.music.mode === 'album') {
       const artistSeed = this.music.albumArtistSeed;
       if (!artistSeed) {
@@ -420,8 +433,36 @@ class MediaController {
       this.musicRadio?.beginArtistSession?.(artistSeed);
       this.onLocalStationStart(this.music.radioKey);
     }
-    if (!id) id = this.musicRadio.choose(this.musicLibrary.tracks, this.music.profile || this.music.seed, this.music.mode, this.music.failed, reason, this.music.radioKey)?.id;
+    if (!id) id = this.musicRadio.choose(this.musicLibrary.tracks, this.music.profile || this.music.seed, this.music.mode, this.music.failed, reason, this.music.radioKey, deferDecision)?.id;
     return id;
+  }
+
+  #scheduleMusicPreparation(generation) {
+    clearTimeout(this.musicPreparationTimer); this.musicPreparationTimer = null;
+    if (!this.music || this.music.mode === 'song' || this.music.waiting) return;
+    this.musicPreparationTimer = setTimeout(() => {
+      this.musicPreparationTimer = null;
+      this.#prepareUpcomingMusic(generation);
+    }, 1000);
+    this.musicPreparationTimer.unref?.();
+  }
+
+  #prepareUpcomingMusic(generation) {
+    if (!this.music || generation !== this.musicGeneration || this.musicBusy || this.music.prepared || this.music.pendingPreparedDecision || this.music.waiting) return false;
+    try {
+      const id = this.#nextMusicId('prepared', { usePrepared: false, deferDecision: true });
+      if (!id || !this.music || generation !== this.musicGeneration) return false;
+      this.music.prepared = { id, decision: this.musicRadio?.getLastDecision?.() || null };
+      return true;
+    } catch {
+      // A future choice is an optimization only. The normal transition path
+      // will retry the selection and surface a real playback error if needed.
+      return false;
+    }
+  }
+
+  #discardPreparedDecision(id) {
+    if (this.music?.pendingPreparedDecision?.id === id) this.music.pendingPreparedDecision = null;
   }
 
   #scheduleMusicCrossfade(track, generation) {
@@ -458,6 +499,7 @@ class MediaController {
       this.#scheduleMusicCrossfade(track, generation);
       return true;
     } catch (error) {
+      this.#discardPreparedDecision(id);
       if (this.music && generation === this.musicGeneration && id) this.music.failed.add(id);
       return false;
     } finally { this.musicBusy = false; }
@@ -487,7 +529,7 @@ class MediaController {
           return false;
         }
         try { return await this.loadMusic(id); }
-        catch (error) { if (!this.music || generation !== this.musicGeneration) return false; this.music.failed.add(id); }
+        catch (error) { this.#discardPreparedDecision(id); if (!this.music || generation !== this.musicGeneration) return false; this.music.failed.add(id); }
       }
     } finally { this.musicBusy = false; }
     return false;

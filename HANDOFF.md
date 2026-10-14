@@ -1,5 +1,11 @@
 # WaveDeck Opus Branch Handoff
 
+## WaveDeck Opus 1.0.31
+
+- Local Radio and Local Mix selection no longer repeatedly search the complete playback history for every track in a large library. Repeat protection now uses in-memory song-identity and artist indexes, preserving same-song/near-duplicate safeguards without blocking the app at the end of a song.
+- While a Local Music track is playing, WaveDeck prepares one upcoming station move (a single track or the already-planned Artist Set continuation). The prepared choice is used at the transition, including a manual skip or crossfade. Thumbs-up and ordinary skips do **not** replace it; their feedback applies to the next fresh choice. Station changes still discard it.
+- The Live Radio Log and playback history now save asynchronously in coalesced background snapshots (at most every five and two minutes respectively) rather than synchronously rewriting their complete JSON files at every track transition. Both flush during a normal quit. This keeps USB-backed playback responsive while retaining the same persistent log/history behavior.
+
 ## WaveDeck Opus 1.0.30
 
 - Portable Music Manager releases can be marked **Holiday Music**. WaveDeck writes `HOLIDAY=1` to every portable Opus track on that release, preserves it through optimization and duplicate cleanup, keeps it out of ordinary automatic Local Radio and Local Mixes, and reserves it for Holiday & Christmas. Manual playback remains available.
@@ -79,15 +85,15 @@
 
 # WaveDeck Project Handoff
 
-This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.30**.
+This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.31**.
 
 ## Current published state
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `opus-portable`
-- Current version: **1.0.30**
-- Current release: 1.0.30 — Holiday tags and safer related-radio identity/recovery.
-- Current commit: the verified 1.0.30 release commit at the head of `opus-portable`.
+- Current version: **1.0.31**
+- Current release: 1.0.31 — responsive Local Radio preparation and persistence.
+- Current commit: the verified 1.0.31 release commit at the head of `opus-portable`.
 - 0.11.8 commit: `8118e235eed4b4a18c378f12ced8a86be83ed4b9` — monitor-safe main-window bounds persistence and portable Windows build.
 - 0.11.7 commit: `c8b69b7b8842dd6c310dda05b22b8d52870d3e84` — superseded source correction after the first portable Windows build.
 - 0.11.6 commit: `621e44d8c484cd0a4d70eb124106170f6183d0ae` — compact Local Radio Controls and remembered auxiliary-window bounds.

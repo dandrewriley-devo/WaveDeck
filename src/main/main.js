@@ -151,6 +151,7 @@ let sidebarTransitioning = false;
 let floatingBounds = null;
 let sectionVisibility = { presets: false, localPresets: false, localMixes: true, localFavoritesOnly: false, favoritesOnly: false, mostPlayed: false, activeTab: "streaming", collapsedGroups: [], collapsedSubgroups: [] };
 let quitFinalizingRecording = false;
+let quitFlushingRadioData = false;
 let cleanupComplete = false;
 const startupWarnings = [];
 
@@ -440,6 +441,9 @@ function sendToRadioLog(decision) {
 }
 
 function radioDiagnosticsPath() { return path.join(getDataDir(), 'radio-diagnostics.json'); }
+let radioDiagnosticsDirty = false;
+let radioDiagnosticsWrite = null;
+let radioDiagnosticsSaveTimer = null;
 function loadRadioDiagnostics() {
   try {
     const saved = JSON.parse(fs.readFileSync(radioDiagnosticsPath(), 'utf8'));
@@ -449,12 +453,38 @@ function loadRadioDiagnostics() {
   } catch {}
 }
 function persistRadioDiagnostics() {
-  try {
-    const destination = radioDiagnosticsPath();
-    fs.mkdirSync(path.dirname(destination), { recursive: true });
-    fs.writeFileSync(destination + '.tmp', JSON.stringify({ version: 1, stationKey: radioDiagnosticStationKey, selections: radioDiagnosticSession }) + '\n', 'utf8');
-    fs.renameSync(destination + '.tmp', destination);
-  } catch {}
+  radioDiagnosticsDirty = true;
+  if (radioDiagnosticsSaveTimer || radioDiagnosticsWrite) return;
+  radioDiagnosticsSaveTimer = setTimeout(() => {
+    radioDiagnosticsSaveTimer = null;
+    void flushRadioDiagnostics();
+  }, 5 * 60 * 1000);
+  radioDiagnosticsSaveTimer.unref?.();
+}
+async function flushRadioDiagnostics() {
+  if (radioDiagnosticsWrite) {
+    await radioDiagnosticsWrite;
+    return flushRadioDiagnostics();
+  }
+  if (!radioDiagnosticsDirty) return false;
+  if (radioDiagnosticsSaveTimer) clearTimeout(radioDiagnosticsSaveTimer);
+  radioDiagnosticsSaveTimer = null;
+  radioDiagnosticsDirty = false;
+  const destination = radioDiagnosticsPath();
+  const payload = JSON.stringify({ version: 1, stationKey: radioDiagnosticStationKey, selections: radioDiagnosticSession }) + '\n';
+  radioDiagnosticsWrite = (async () => {
+    try {
+      await fs.promises.mkdir(path.dirname(destination), { recursive: true });
+      await fs.promises.writeFile(destination + '.tmp', payload, 'utf8');
+      await fs.promises.rename(destination + '.tmp', destination);
+    } catch {}
+  })();
+  try { await radioDiagnosticsWrite; }
+  finally {
+    radioDiagnosticsWrite = null;
+    if (radioDiagnosticsDirty) void flushRadioDiagnostics();
+  }
+  return true;
 }
 function clearRadioDiagnostics() {
   radioDiagnosticStationKey = '';
@@ -2132,6 +2162,15 @@ app.on("before-quit", (event) => {
     event.preventDefault();
     quitFinalizingRecording = true;
     void recorder.close().finally(() => {
+      finishShutdown();
+      app.quit();
+    });
+    return;
+  }
+  if (!quitFlushingRadioData) {
+    event.preventDefault();
+    quitFlushingRadioData = true;
+    void Promise.all([flushRadioDiagnostics(), musicRadio?.flush?.()]).catch(() => {}).finally(() => {
       finishShutdown();
       app.quit();
     });

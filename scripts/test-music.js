@@ -429,6 +429,23 @@ async function run() {
     const playbackDiagnostics = [];
     const controller = serializeTransport(new MediaController({ player, getStations: () => [{ id: 's', url: 'https://example.org', name: 'Streaming', preset: true }] })); controller.configureMusic(fakeLibrary, new MusicRadio({ dataDir: path.join(temp, 'playback'), now: () => now, onDecision: decision => playbackDiagnostics.push(decision) }));
     await controller.playMusic('2', 'album'); assert.equal(controller.getStatus().currentMusic.track.id, '1'); await controller.handleEnded({ reason: 'eof' }); assert.equal(controller.getStatus().currentMusic.track.id, '2'); await controller.handleEnded({ reason: 'eof' }); assert.equal(controller.getStatus().currentMusic.mode, 'artist'); await controller.playMusic('va-1', 'album'); assert.equal(controller.getStatus().currentMusic.track.id, 'va-1'); await controller.handleEnded({ reason: 'eof' }); assert.equal(controller.getStatus().currentMusic.track.id, 'va-2'); await controller.handleEnded({ reason: 'eof' }); assert.equal(controller.getStatus().currentMusic, null, 'Various Artists albums stop when the album ends'); await controller.playMusic('1', 'radio'); assert.equal(controller.getStatus().currentMusic.seed.id, '1'); assert.equal(playbackDiagnostics.at(-1).selectionTrigger, 'start', 'Song Radio logs its opening seed track after playback begins'); await assert.rejects(controller.playMusic('blocked', 'radio'), /marked Do Not Play/); await controller.playStationById('s'); assert.equal(controller.getStatus().currentMusic, null);
+    const preparedTracks = [
+      track('prepared-a', { title: 'Prepared A', artist: 'Prepared Artist', artists: ['Prepared Artist'], albumArtist: 'Prepared Artist', duration: 240 }),
+      track('prepared-b', { title: 'Prepared B', artist: 'Prepared Artist', artists: ['Prepared Artist'], albumArtist: 'Prepared Artist', duration: 240 }),
+      track('prepared-c', { title: 'Prepared C', artist: 'Prepared Artist', artists: ['Prepared Artist'], albumArtist: 'Prepared Artist', duration: 240 })
+    ];
+    const preparedDiagnostics = [];
+    const preparedLibrary = { tracks: preparedTracks, resolve: async id => ({ ...preparedTracks.find(item => item.id === id), path: `/${id}` }) };
+    const preparedController = serializeTransport(new MediaController({ player, getStations: () => [] }));
+    preparedController.configureMusic(preparedLibrary, new MusicRadio({ dataDir: path.join(temp, 'prepared-next'), now: () => now, random: () => 0, onDecision: decision => preparedDiagnostics.push(decision) }));
+    await preparedController.playMusic('prepared-a', 'radio');
+    await new Promise(resolve => setTimeout(resolve, 1100));
+    assert.equal(preparedDiagnostics.length, 1, 'the prepared next Local Radio choice stays out of the visible log until it actually begins');
+    await preparedController.rateMusic('up');
+    await preparedController.handleEnded({ reason: 'eof' });
+    assert.equal(preparedController.getStatus().currentMusic.track.id, 'prepared-b', 'the prepared next Local Radio song is used after a thumbs-up instead of being replaced');
+    assert.equal(preparedDiagnostics.at(-1).selected.title, 'Prepared B', 'the prepared choice enters the Live Radio Log only when it starts');
+    await preparedController.stop();
     let position = 0; const crossfades = [];
     const crossfadePlayer = {
       isCrossfading: false,
