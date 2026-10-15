@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck-opus");
-assert.strictEqual(packageJson.version, "1.0.37");
-assert.strictEqual(packageJson.wavedeckVersion, "1.0.37");
+assert.strictEqual(packageJson.version, "1.0.38");
+assert.strictEqual(packageJson.wavedeckVersion, "1.0.38");
 assert.strictEqual(packageJson.desktopName, "wavedeck-opus.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck Opus");
 assert.strictEqual(packageJson.build.appId, "com.a17press.wavedeckopus");
@@ -165,6 +165,10 @@ assert.deepStrictEqual(packageJson.build.extraResources, [
   {
     from: ".cache/wavedeck-tools/linux/ffprobe",
     to: "recording/ffprobe"
+  },
+  {
+    from: ".cache/wavedeck-tools/linux/icecast",
+    to: "streaming"
   }
 ]);
 assert.strictEqual(packageJson.build.linux.syncDesktopName, true);
@@ -1387,6 +1391,7 @@ assert.ok(settingsHtml.includes("Local Music Setup and Music Information"));
 assert.ok(settingsHtml.includes("How Local Radio Chooses Music"));
 assert.ok(settingsHtml.includes("0.11.0 — Various Refinements"));
 assert.ok(settingsHtml.includes('<h3>WaveDeck 1.0 - Full Release - Oct 2, 2026</h3>'));
+assert.ok(settingsHtml.includes('<h3>WaveDeck 1.0.1 - Streaming Update</h3>'));
 assert.ok(settingsHtml.includes('<p class="about-scripture">"Whatever you do, do it all for the glory of God."</p>'));
 assert.ok(settingsHtml.indexOf('WaveDeck 1.0 - Full Release - Oct 2, 2026</h3>') < settingsHtml.indexOf('0.11.0 — Various Refinements'));
 assert.ok(!settingsHtml.includes("<h3>WaveDeck 0.11.2"));
@@ -1828,10 +1833,10 @@ assert.ok(windowsWorkflow.includes('chmod 755 "$appimage"'));
 const opusWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "opus-portable.yml"), "utf8");
 assert.ok(opusWorkflow.includes("branches: [opus-portable]"));
 assert.ok(opusWorkflow.includes("npm run dist:linux -- --publish never"));
-assert.ok(opusWorkflow.includes("WaveDeckOpus-1.0.37-Linux"));
+assert.ok(opusWorkflow.includes("WaveDeckOpus-1.0.38-Linux"));
 assert.ok(opusWorkflow.includes("dist/WaveDeckOpus.AppImage"));
-assert.ok(opusWorkflow.includes("tag_name: opus-v1.0.37"));
-assert.ok(opusWorkflow.includes("Publish WaveDeck Opus 1.0.37"));
+assert.ok(opusWorkflow.includes("tag_name: opus-v1.0.38"));
+assert.ok(opusWorkflow.includes("Publish WaveDeck Opus 1.0.38"));
 const musicLibraryHtml = fs.readFileSync(path.join(root, "src", "renderer", "music-library.html"), "utf8");
 const musicLibraryRenderer = fs.readFileSync(path.join(root, "src", "renderer", "music-library.js"), "utf8");
 assert.ok(musicLibraryHtml.includes('Search artists, albums, songs, or genres'));

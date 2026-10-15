@@ -1,4 +1,4 @@
-const { contextBridge, ipcRenderer } = require("electron");
+const { contextBridge, ipcRenderer, clipboard } = require("electron");
 
 function subscribe(channel, callback) {
   if (typeof callback !== "function") return () => {};
@@ -112,6 +112,12 @@ contextBridge.exposeInMainWorld("wavedeck", {
   getLibraryUpdateState: () => ipcRenderer.invoke("library-update:get-state"),
   setLibraryUpdatesEnabled: (enabled) => ipcRenderer.invoke("library-update:set-enabled", enabled),
   testStreamUrl: (url) => ipcRenderer.invoke("stream:test", url),
+  getPersonalStream: () => ipcRenderer.invoke('personal-stream:state'),
+  setPersonalStreamEnabled: enabled => ipcRenderer.invoke('personal-stream:set-enabled', enabled),
+  setPersonalStreamHost: host => ipcRenderer.invoke('personal-stream:set-host', host),
+  getPersonalStreamQr: () => ipcRenderer.invoke('personal-stream:qr'),
+  copyPersonalStreamUrl: async () => { const state = await ipcRenderer.invoke('personal-stream:state'); if (state.url) clipboard.writeText(state.url); },
+  onPersonalStreamChanged: callback => subscribe('personal-stream:changed', callback),
 
   playStation: (stationId) => ipcRenderer.invoke("player:play-station", stationId),
   playPause: () => ipcRenderer.invoke("player:play-pause"),

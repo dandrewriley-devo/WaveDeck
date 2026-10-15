@@ -1,7 +1,7 @@
 {
   "name": "wavedeck-opus",
-  "version": "1.0.37",
-  "wavedeckVersion": "1.0.37",
+  "version": "1.0.38",
+  "wavedeckVersion": "1.0.38",
   "description": "WaveDeck Opus portable music player for Linux",
   "author": "Andrew Riley",
   "license": "MIT",
@@ -10,9 +10,10 @@
   "scripts": {
     "prestart": "node scripts/ensure-music-dependencies.js",
     "prepare:linux-recorder": "node scripts/prepare-linux-ffmpeg.js",
+    "prepare:linux-icecast": "node scripts/prepare-linux-icecast.js",
     "start": "npm run prepare:linux-recorder && electron .",
     "test": "node scripts/validate.js && node scripts/test-music.js",
-    "dist:linux": "npm run prepare:linux-recorder && electron-builder --linux AppImage --x64",
+    "dist:linux": "npm run prepare:linux-recorder && npm run prepare:linux-icecast && electron-builder --linux AppImage --x64",
     "dist:windows": "electron-builder --win portable --x64 --config electron-builder.windows.json",
     "dist:macos": "electron-builder --mac dir --universal --config electron-builder.macos.json"
   },
@@ -40,6 +41,10 @@
       {
         "from": ".cache/wavedeck-tools/linux/ffprobe",
         "to": "recording/ffprobe"
+      },
+      {
+        "from": ".cache/wavedeck-tools/linux/icecast",
+        "to": "streaming"
       }
     ],
     "directories": {
@@ -63,6 +68,7 @@
   "dependencies": {
     "dbus-next": "^0.10.2",
     "music-metadata": "11.9.0",
+    "qrcode": "1.5.4",
     "sql.js": "1.13.0",
     "x11": "^4.1.0"
   }

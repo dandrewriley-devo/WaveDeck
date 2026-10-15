@@ -4,6 +4,7 @@ const panels = new Map([
   ["stations", document.getElementById("tab-stations")],
   ["groups", document.getElementById("tab-groups")],
   ["localmusic", document.getElementById("tab-localmusic")],
+  ["personalstream", document.getElementById("tab-personalstream")],
   ["musicmanager", document.getElementById("tab-musicmanager")],
   ["radiolog", document.getElementById("tab-radiolog")],
   ["about", document.getElementById("tab-about")]
@@ -128,6 +129,7 @@ const platform = window.wavedeck.platform;
 
 const sidebarPlatform = platform === "linux" || platform === "win32";
 if (platform !== "linux") document.querySelectorAll(".linux-launcher-only").forEach((node) => { node.hidden = true; });
+if (platform !== 'linux') document.querySelectorAll('.linux-stream-only').forEach(node => { node.hidden = true; });
 if (!sidebarPlatform) document.querySelectorAll(".mini-player-platform-only").forEach((node) => { node.hidden = true; });
 
 let stations = [];
@@ -525,6 +527,52 @@ function showTab(name) {
   if (frame && !frame.getAttribute('src')) frame.setAttribute('src', frame.dataset.src);
   if (selected === 'musicmanager') deliverFocusedTrack();
 }
+
+const streamEnabled = document.getElementById('personalStreamEnabled');
+const streamStatus = document.getElementById('personalStreamStatus');
+const streamHost = document.getElementById('personalStreamHost');
+const streamAddressNote = document.getElementById('personalStreamAddressNote');
+const streamUrl = document.getElementById('personalStreamUrl');
+const streamQr = document.getElementById('personalStreamQr');
+const streamMessage = document.getElementById('personalStreamMessage');
+let streamState = null;
+let qrRequest = 0;
+async function renderPersonalStream(state) {
+  if (!state) return;
+  streamState = state;
+  streamEnabled.checked = state.enabled === true;
+  streamStatus.textContent = state.status === 'broadcasting' ? `Broadcasting · ${state.format}`
+    : state.status === 'starting' ? 'Starting your station…'
+    : state.status === 'error' ? `Could not start: ${state.error}` : 'Off';
+  if (document.activeElement !== streamHost) streamHost.value = state.host || '';
+  streamAddressNote.textContent = state.internetReady
+    ? 'Internet address saved. The router must also forward TCP port 18037 to this computer.'
+    : `Showing your home-network address${state.localHost ? ` (${state.localHost})` : ''}. Add your public IP or hostname above for use away from home.`;
+  streamUrl.textContent = state.url || 'No address available';
+  const request = ++qrRequest;
+  if (state.url) {
+    try {
+      const data = await window.wavedeck.getPersonalStreamQr();
+      if (request === qrRequest) { streamQr.src = data; streamQr.hidden = !data; }
+    } catch { if (request === qrRequest) streamQr.hidden = true; }
+  } else streamQr.hidden = true;
+}
+window.wavedeck.onPersonalStreamChanged(renderPersonalStream);
+streamEnabled.addEventListener('change', async () => {
+  streamEnabled.disabled = true; streamMessage.textContent = '';
+  try { await renderPersonalStream(await window.wavedeck.setPersonalStreamEnabled(streamEnabled.checked)); }
+  catch (error) { streamMessage.textContent = error.message; await renderPersonalStream(await window.wavedeck.getPersonalStream()); }
+  finally { streamEnabled.disabled = false; }
+});
+document.getElementById('personalStreamSaveHost').addEventListener('click', async () => {
+  try { await renderPersonalStream(await window.wavedeck.setPersonalStreamHost(streamHost.value)); streamMessage.textContent = 'Address saved.'; }
+  catch (error) { streamMessage.textContent = error.message; }
+});
+document.getElementById('personalStreamCopy').addEventListener('click', async () => {
+  if (!streamState?.url) return;
+  try { await window.wavedeck.copyPersonalStreamUrl(); streamMessage.textContent = 'Address copied.'; }
+  catch (error) { streamMessage.textContent = error.message; }
+});
 
 function deliverFocusedTrack() {
   if (!pendingFocusedTrack || musicManagerFrame.dataset.loaded !== 'true') return;
@@ -1470,6 +1518,7 @@ window.wavedeck.onLocalMixesChanged(() => {
     loadUiPreferences(),
     loadLibraryUpdateState()
   ]);
+  if (platform === 'linux') await renderPersonalStream(await window.wavedeck.getPersonalStream());
   clearForm();
   initialized = true;
   if (pendingEditId) {

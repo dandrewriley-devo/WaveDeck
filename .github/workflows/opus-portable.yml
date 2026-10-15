@@ -17,6 +17,7 @@ jobs:
         with:
           node-version: 24
           cache: npm
+      - run: sudo DEBIAN_FRONTEND=noninteractive apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y icecast2
       - run: npm install --package-lock=false --no-audit --no-fund
       - run: npm test
       - run: npm run dist:linux -- --publish never
@@ -36,7 +37,7 @@ jobs:
           sha256sum "$appimage"
       - uses: actions/upload-artifact@v4
         with:
-          name: WaveDeckOpus-1.0.37-Linux
+          name: WaveDeckOpus-1.0.38-Linux
           path: dist/WaveDeckOpus.AppImage
           if-no-files-found: error
           compression-level: 0
@@ -48,7 +49,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: WaveDeckOpus-1.0.37-Linux
+          name: WaveDeckOpus-1.0.38-Linux
           path: release-assets
       - name: Inspect release asset
         shell: bash
@@ -56,13 +57,13 @@ jobs:
           set -euo pipefail
           test -f release-assets/WaveDeckOpus.AppImage
           sha256sum release-assets/WaveDeckOpus.AppImage
-      - name: Publish WaveDeck Opus 1.0.37
+      - name: Publish WaveDeck Opus 1.0.38
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: opus-v1.0.37
+          tag_name: opus-v1.0.38
           target_commitish: ${{ github.sha }}
-          name: WaveDeck Opus 1.0.37
-          body: Linux x64 WaveDeck Opus build. Keep WaveDeckOpus.AppImage beside its own Data and Music folders. It automatically converts portable Music to lean Opus files; an External Music Folder is never changed.
+          name: WaveDeck Opus 1.0.38
+          body: Linux x64 WaveDeck Opus build with optional personal Icecast stream. Keep WaveDeckOpus.AppImage beside its own Data and Music folders. Streaming requires a PulseAudio-compatible sound server and the normal external router setup.
           files: release-assets/WaveDeckOpus.AppImage
           overwrite_files: true
           fail_on_unmatched_files: true

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; style-src 'self'; script-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+        content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'">
   <title>WaveDeck Opus Settings</title>
   <link rel="stylesheet" href="./settings.css">
 </head>
@@ -17,6 +17,7 @@
         <button class="tab" data-tab="stations">Stations</button>
         <button class="tab" data-tab="groups">Groups</button>
         <button class="tab" data-tab="localmusic" hidden>Local Music</button>
+        <button class="tab linux-stream-only" data-tab="personalstream">Stream</button>
         <button class="tab" data-tab="musicmanager" hidden>Manage Portable Music</button>
         <button class="tab" data-tab="radiolog" hidden>Live Radio Log</button>
         <button class="tab" data-tab="about">About</button>
@@ -24,6 +25,32 @@
     </header>
 
     <main>
+      <section id="tab-personalstream" class="panel hidden linux-stream-only">
+        <div class="general-sections">
+          <section class="general-card">
+            <div class="general-card-header"><div class="label">Personal Stream</div>
+              <div class="hint">WaveDeck broadcasts whatever it plays, including Local Music and Streaming stations. Your speaker volume and mute do not change the stream.</div>
+            </div>
+            <div class="general-card-body">
+              <label class="preference-toggle"><input id="personalStreamEnabled" type="checkbox"><span class="toggle-switch" aria-hidden="true"></span><span>Enable Personal Stream</span></label>
+              <div id="personalStreamStatus" class="hint" role="status">Off</div>
+              <p class="hint">WaveDeck needs to remain open on this computer. The stream is shared live with anyone who has its address; it is not listed in public radio directories.</p>
+            </div>
+          </section>
+          <section class="general-card">
+            <div class="general-card-header"><div class="label">Listen on your phone</div>
+              <div class="hint">Set your public IP or a hostname once your TP-Link router forwards TCP port 18037 to this computer. Use the QR code to add the station to Pladio.</div>
+            </div>
+            <div class="general-card-body">
+              <label for="personalStreamHost">Internet address (hostname or public IPv4)</label>
+              <div class="stream-host-row"><input class="input" id="personalStreamHost" type="text" spellcheck="false" placeholder="Your public IP or hostname"><button class="btn" id="personalStreamSaveHost" type="button">Save address</button></div>
+              <div id="personalStreamAddressNote" class="hint"></div>
+              <div class="stream-share"><img id="personalStreamQr" alt="QR code for the listening address" width="220" height="220"><div><div class="label">Listening address</div><code id="personalStreamUrl"></code><button class="btn" id="personalStreamCopy" type="button">Copy address</button><div class="hint">Add this address as a custom station in Pladio. Anyone with the link can listen, so share it only with people you trust.</div></div></div>
+              <div id="personalStreamMessage" class="status" role="status"></div>
+            </div>
+          </section>
+        </div>
+      </section>
       <!-- INTERFACE -->
       <section id="tab-interface" class="panel hidden">
         <div class="general-meta">
@@ -397,6 +424,8 @@
         <div class="about-divider"></div>
         <div class="changelog current-changelog">
           <h2>Changelog</h2>
+          <h3>WaveDeck 1.0.1 - Streaming Update</h3>
+          <ul><li>Added a one-switch personal radio stream for listening to WaveDeck over the internet, with a QR code for CarPlay radio apps.</li></ul>
           <h3>WaveDeck 1.0 - Full Release - Oct 2, 2026</h3>
           <h3>0.11.0 — Various Refinements</h3><ul><li>Artist Radio now stays 90% focused on the selected artist.</li><li>Finished albums now transition into Artist Radio when possible.</li><li>Closing the main WaveDeck window now also closes Settings and Live Radio Log, then fully exits the app.</li></ul>
           <h3>0.10.0 — Interface Tuning</h3><ul><li>Reorganized player controls, toolbars, station rows, and Station Gain styling.</li><li>Unified Streaming and Local Music row styling.</li><li>Added a built-in User Guide and a simplified in-app changelog.</li></ul>

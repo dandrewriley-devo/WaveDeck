@@ -1,5 +1,15 @@
 # WaveDeck Opus Branch Handoff
 
+## WaveDeck Opus 1.0.38 — Streaming Update
+
+- Adds a Linux-only **Personal Stream** tab in Settings. Its single switch launches and stops WaveDeck's bundled private Icecast server and encoder automatically; the user does not run a separate application.
+- WaveDeck moves its two MPV playback lanes to a private PulseAudio/PipeWire-compatible bus while the stream is on. The bus feeds both Icecast and a loopback to the normal speaker. The stream always remains full volume even if WaveDeck's local volume is lowered or muted. Local Music crossfades therefore arrive at the stream intact.
+- Both Local Music and ordinary Streaming stations are broadcast. Streaming metadata and Local Music artist/title updates are sent to Icecast for compatible clients such as Pladio.
+- The Stream tab shows status, a stable random unlisted station path, a copy button, and a QR code. The user enters a public hostname/IP after router setup; WaveDeck uses TCP port 18037 and an unlisted 128 kbps MP3 mount for broad iPhone/CarPlay compatibility.
+- The AppImage bundles Icecast and its shared dependencies. It relies on the standard Linux PulseAudio/PipeWire compatibility utilities `pactl` and `parec`, expected on Linux Mint desktop installations.
+- Router configuration remains a manual follow-up: reserve this computer's LAN address, forward TCP 18037 to it, and establish either a stable public hostname or update the Stream tab's address after WAN IP changes. The random link is intentionally unlisted but it is not true listener authentication.
+- Visible About changelog entry: `WaveDeck 1.0.1 - Streaming Update` (Andrew's requested name). Package/release version: 1.0.38.
+
 ## WaveDeck Opus 1.0.37
 
 - Live Radio Log's embedded Settings tab loads its message bridge before the log renderer, restoring saved history and live decisions.

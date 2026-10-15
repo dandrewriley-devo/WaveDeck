@@ -5,6 +5,7 @@ const os = require("os");
 const path = require("path");
 
 const { CrossfadeMpvPlayer, getIpcPath, getMpvExecutable } = require("./player");
+const { PersonalStream } = require('./personal-stream');
 const { MediaController, serializeTransport } = require("./media-controller");
 const {
   StreamRecorder,
@@ -130,6 +131,8 @@ let portableFfmpegExecutable = "";
 let portableFfprobeExecutable = "";
 let mediaController = null;
 let recorder = null;
+let personalStream = null;
+let lastStreamSong = '';
 let mprisService = null;
 let platformMediaKeys = null;
 let listeningHistory = null;
@@ -492,6 +495,11 @@ function sendLastFmStatus(status) {
 
 function broadcastPlayerStatus(status = player?.getStatus()) {
   const combinedStatus = mediaController ? mediaController.getStatus(status) : status;
+  const track = combinedStatus?.currentMusic?.track;
+  if (track && combinedStatus.mediaState === 'playing') {
+    const song = [track.artist, track.title].filter(Boolean).join(' - ');
+    if (song && song !== lastStreamSong) { lastStreamSong = song; personalStream?.updateSong(song); }
+  }
   lastFmScrobbler?.observe?.(combinedStatus);
   listeningHistory?.handleStatus(combinedStatus);
   sendToAll("player:status-changed", combinedStatus);
@@ -500,6 +508,7 @@ function broadcastPlayerStatus(status = player?.getStatus()) {
 }
 
 function broadcastStationChanged(station) {
+  lastStreamSong = '';
   sendToAll("player:station-changed", station);
   mprisService?.update(mediaController?.getStatus());
   reclaimMediaKeys();
@@ -1705,6 +1714,14 @@ function installIpcHandlers() {
   ipcMain.handle("player:stop", () => mediaController.stop());
   ipcMain.handle("player:volume", (_event, value) => player.setVolume(value));
   ipcMain.handle("player:mute", () => player.toggleMute());
+  ipcMain.handle('personal-stream:state', () => personalStream?.state() || { enabled: false, status: 'unavailable' });
+  ipcMain.handle('personal-stream:set-enabled', (_event, enabled) => personalStream.setEnabled(enabled === true));
+  ipcMain.handle('personal-stream:set-host', (_event, host) => personalStream.setHost(host));
+  ipcMain.handle('personal-stream:qr', async () => {
+    const state = personalStream.state();
+    if (!state.url) return '';
+    return require('qrcode').toDataURL(state.url, { width: 280, margin: 2, errorCorrectionLevel: 'M' });
+  });
 
   ipcMain.handle("recording:get-state", () => recorder?.getState() || {
     available: false,
@@ -1905,10 +1922,28 @@ if (!hasSingleInstanceLock) {
     player = new CrossfadeMpvPlayer({
       executable,
       ipcPath,
-      onMetadata: (metadata) => sendToAll("player:metadata", metadata),
+      onMetadata: (metadata) => { sendToAll("player:metadata", metadata); if (!mediaController?.music) personalStream?.updateSong(metadata); },
       onStatus: (status) => broadcastPlayerStatus(status),
       onEnded: (event) => { void mediaController?.handleEnded(event); }
     });
+
+    if (process.platform === 'linux') {
+      const bundledIcecast = app.isPackaged
+        ? path.join(process.resourcesPath, 'streaming', 'icecast2')
+        : (process.env.WAVEDECK_ICECAST_PATH || '/usr/bin/icecast2');
+      let icecastExecutable = bundledIcecast;
+      try {
+        if (app.isPackaged) icecastExecutable = prepareFfmpegExecutable({
+          executable: bundledIcecast, runtimeDir: getRuntimeDir(), packaged: true, toolName: 'icecast2'
+        });
+      } catch (error) { console.warn(`Personal Stream is unavailable: ${error.message}`); }
+      personalStream = new PersonalStream({
+        dataDir: getDataDir(), player, ffmpeg: portableFfmpegExecutable,
+        icecast: icecastExecutable,
+        icecastLibDir: app.isPackaged ? path.join(process.resourcesPath, 'streaming', 'lib') : '',
+        onChanged: state => sendToAll('personal-stream:changed', state)
+      });
+    }
 
     mediaController = serializeTransport(new MediaController({
       player,
@@ -2061,6 +2096,7 @@ if (!hasSingleInstanceLock) {
     } catch (error) {
       console.error(error.message);
     }
+    if (personalStream?.config.enabled) void personalStream.setEnabled(true).catch(error => console.warn(`Personal Stream: ${error.message}`));
     startPlaybackHeartbeat();
 
     await mprisService?.start();
@@ -2104,6 +2140,7 @@ function finishShutdown() {
   platformMediaKeys?.close();
   mprisService?.close();
   windowsSidebar?.close();
+  personalStream?.close();
   player?.close();
   mediaController?.clearMusic();
   opusOptimizer?.close();
