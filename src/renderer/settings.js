@@ -4,6 +4,8 @@ const panels = new Map([
   ["stations", document.getElementById("tab-stations")],
   ["groups", document.getElementById("tab-groups")],
   ["localmusic", document.getElementById("tab-localmusic")],
+  ["musicmanager", document.getElementById("tab-musicmanager")],
+  ["radiolog", document.getElementById("tab-radiolog")],
   ["about", document.getElementById("tab-about")]
 ]);
 
@@ -13,6 +15,32 @@ const statusGroups = document.getElementById("statusGroups");
 const statusImportExport = document.getElementById("statusImportExport");
 const statusLocalMusic = document.getElementById("statusLocalMusic");
 const localMusicTab = document.querySelector('[data-tab="localmusic"]');
+const musicManagerTab = document.querySelector('[data-tab="musicmanager"]');
+const radioLogTab = document.querySelector('[data-tab="radiolog"]');
+const musicManagerFrame = document.getElementById('musicManagerFrame');
+const radioLogFrame = document.getElementById('radioLogFrame');
+let pendingFocusedTrack = null;
+let requestedAdvancedTab = '';
+const embeddedMethods = new Set([
+  'getPortableMusicArtists', 'getPortableMusicArtistDetail', 'playMusic',
+  'saveArtistRelationships', 'savePortableMusicReleaseHoliday', 'savePortableMusicTrack',
+  'clearMusicDebugHistory', 'getMusicDebugHistory', 'saveMusicDebugLog'
+]);
+window.addEventListener('message', async event => {
+  if (![musicManagerFrame.contentWindow, radioLogFrame.contentWindow].includes(event.source)) return;
+  const { type, id, method, args } = event.data || {};
+  if (type === 'embedded-ready') {
+    if (event.source === musicManagerFrame.contentWindow) { musicManagerFrame.dataset.loaded = 'true'; deliverFocusedTrack(); }
+    return;
+  }
+  if (type !== 'embedded-request' || !embeddedMethods.has(method) || !Number.isSafeInteger(id) || !Array.isArray(args)) return;
+  try {
+    const result = await window.wavedeck[method](...args);
+    event.source.postMessage({ type: 'embedded-response', id, result }, '*');
+  } catch (error) {
+    event.source.postMessage({ type: 'embedded-response', id, error: error?.message || 'The request failed.' }, '*');
+  }
+});
 const stationSearch = document.getElementById("stationSearch");
 const stationGroupFilter = document.getElementById("stationGroupFilter");
 const newStationBtn = document.getElementById("newStationBtn");
@@ -71,6 +99,8 @@ const openPortableMusicLibraryBtn = document.getElementById('openPortableMusicLi
 const openMusicDebugLogBtn = document.getElementById('openMusicDebugLogBtn');
 const musicLibraryStatus = document.getElementById('musicLibraryStatus');
 const portableTrackCount = document.getElementById('portableTrackCount');
+const externalTrackCountWrap = document.getElementById('externalTrackCountWrap');
+const externalTrackCount = document.getElementById('externalTrackCount');
 const libraryTotalAvailable = document.getElementById('libraryTotalAvailable');
 const rescanMusicBtn = document.getElementById('rescanMusicBtn');
 const portableMusicProgressWrap = document.getElementById('portableMusicProgressWrap');
@@ -171,7 +201,7 @@ function renderPortableImport(status = {}) {
 
 async function loadPortableImport() {
   const folder = additionalMusicFolder.value;
-  if (!folder) { portableImportFolder = ''; renderPortableImport({ state: 'waiting', message: 'Choose an Additional Music Folder to see import options.' }); return; }
+  if (!folder) { portableImportFolder = ''; renderPortableImport({ state: 'waiting', message: 'Choose an External Music Folder to see import options.' }); return; }
   if (portableImportLoading || portableImportFolder === folder) return;
   portableImportLoading = true; portableImportFolder = folder;
   try { renderPortableImport(await window.wavedeck.getPortableImportPreview()); }
@@ -194,6 +224,8 @@ function renderMusicLibraryStatus(status = {}) {
     portableMusicProgress.setAttribute('aria-valuetext', `${converted.toLocaleString()} of ${total.toLocaleString()} portable tracks converted`);
   }
   portableTrackCount.textContent = portableCount.toLocaleString();
+  externalTrackCountWrap.hidden = !additionalMusicFolder.value;
+  externalTrackCount.textContent = Number(status.additionalCount || 0).toLocaleString();
   libraryTotalAvailable.hidden = !additionalMusicFolder.value;
   if (additionalMusicFolder.value) libraryTotalAvailable.textContent = `${count.toLocaleString()} total tracks available`;
   musicLibraryStatus.textContent = status.optimizing
@@ -208,9 +240,9 @@ function renderMusicLibraryStatus(status = {}) {
   if (additionalMusicFolder.value) {
     additionalMusicFolderStatus.textContent = status.scanning
       ? `Scanning Local Music… ${Number(status.checked || 0).toLocaleString()} files checked`
-      : `${Number(status.additionalCount || 0).toLocaleString()} tracks in this computer’s Additional Music Folder`;
+      : `${Number(status.additionalCount || 0).toLocaleString()} tracks in this computer’s External Music Folder`;
   } else {
-    additionalMusicFolderStatus.textContent = 'No Additional Music Folder selected for this computer.';
+    additionalMusicFolderStatus.textContent = 'No External Music Folder selected for this computer.';
   }
   if (!status.scanning && additionalMusicFolder.value) void loadPortableImport();
   if (!status.scanning) void loadPortableStorage();
@@ -225,14 +257,19 @@ function renderProMusicSettings(preferences) {
   const folder = String(preferences?.additionalMusicFolder || '');
   if (advancedFeaturesOff) advancedFeaturesOff.hidden = proEnabled;
   localMusicTab.hidden = !proEnabled;
+  musicManagerTab.hidden = !proEnabled;
+  radioLogTab.hidden = !proEnabled;
   panels.get('localmusic').hidden = !proEnabled;
-  if (!proEnabled && document.querySelector('.tab.active')?.dataset.tab === 'localmusic') showTab('interface');
+  panels.get('musicmanager').hidden = !proEnabled;
+  panels.get('radiolog').hidden = !proEnabled;
+  if (!proEnabled && ['localmusic', 'musicmanager', 'radiolog'].includes(document.querySelector('.tab.active')?.dataset.tab)) showTab('interface');
   additionalMusicFolder.value = folder;
   clearAdditionalMusicFolderBtn.disabled = !folder;
   additionalMusicFolderChoice.hidden = preferences?.additionalMusicFolderNeedsDecision !== true;
   lastFmEnabled.checked = preferences?.lastFmEnabled !== false;
   portableImportSpeed.value = String([2, 6, 12].includes(Number(preferences?.portableImportWorkers)) ? preferences.portableImportWorkers : 2);
   if (proEnabled) {
+    if (requestedAdvancedTab) { const requested = requestedAdvancedTab; requestedAdvancedTab = ''; showTab(requested); }
     void loadLastFmStatus(); void loadLocalMixSummary(); void loadMusicLibraryStatus(); void loadRememberedMusicComputers(); void loadPortableStorage();
     if (localMixDetails.open) void loadLocalMixManager();
   }
@@ -480,10 +517,29 @@ function setStatus(node, message = "", success = true) {
 }
 
 function showTab(name) {
-  const selected = panels.has(name) && (name !== 'localmusic' || !localMusicTab.hidden) ? name : (name === 'localmusic' ? 'interface' : 'stations');
+  const advanced = ['localmusic', 'musicmanager', 'radiolog'].includes(name);
+  const selected = panels.has(name) && (!advanced || !localMusicTab.hidden) ? name : (advanced ? 'interface' : 'stations');
   tabs.forEach((tab) => tab.classList.toggle("active", tab.dataset.tab === selected));
   for (const [panelName, panel] of panels) panel.classList.toggle("hidden", panelName !== selected);
+  const frame = selected === 'musicmanager' ? musicManagerFrame : selected === 'radiolog' ? radioLogFrame : null;
+  if (frame && !frame.getAttribute('src')) frame.setAttribute('src', frame.dataset.src);
+  if (selected === 'musicmanager') deliverFocusedTrack();
 }
+
+function deliverFocusedTrack() {
+  if (!pendingFocusedTrack || musicManagerFrame.dataset.loaded !== 'true') return;
+  musicManagerFrame.contentWindow.postMessage({ type: 'focus-portable-track', track: pendingFocusedTrack }, '*');
+  pendingFocusedTrack = null;
+}
+window.wavedeck.onPortableMusicTrackFocus(track => {
+  pendingFocusedTrack = track;
+  requestedAdvancedTab = 'musicmanager';
+  if (!localMusicTab.hidden) { requestedAdvancedTab = ''; showTab('musicmanager'); }
+});
+window.wavedeck.onSettingsTabRequested(tab => {
+  if (['musicmanager', 'radiolog'].includes(tab) && localMusicTab.hidden) requestedAdvancedTab = tab;
+  else showTab(tab);
+});
 
 function renderLauncherStatus(status) {
   const available = status?.available === true;
@@ -1260,7 +1316,7 @@ clearAdditionalMusicFolderBtn.addEventListener('click', async () => {
   clearAdditionalMusicFolderBtn.disabled = true;
   try {
     renderProMusicSettings(await window.wavedeck.removeAdditionalMusicFolder());
-    setStatus(statusLocalMusic, 'Additional music folder removed.');
+    setStatus(statusLocalMusic, 'External music folder removed.');
   } catch (error) {
     setStatus(statusLocalMusic, `Could not remove the music folder: ${error.message}`, false);
   }
@@ -1391,6 +1447,12 @@ window.wavedeck.onUiPreferencesChanged((preferences) => {
   if (sidebarPlatform) launchInSidebarMode.checked = preferences?.launchInSidebarMode === true;
 });
 window.wavedeck.onLastFmChanged(renderLastFmStatus);
+window.wavedeck.onMusicDebugLog(decision => {
+  if (radioLogFrame.getAttribute('src')) radioLogFrame.contentWindow?.postMessage({ type: 'embedded-event', name: 'debug-log', data: decision }, '*');
+});
+window.wavedeck.onMusicDebugReset(() => {
+  if (radioLogFrame.getAttribute('src')) radioLogFrame.contentWindow?.postMessage({ type: 'embedded-event', name: 'debug-reset' }, '*');
+});
 window.wavedeck.onMusicChanged(renderMusicLibraryStatus);
 window.wavedeck.onMusicOptimizationChanged(renderMusicLibraryStatus);
 window.wavedeck.onMusicImportChanged(renderPortableImport);

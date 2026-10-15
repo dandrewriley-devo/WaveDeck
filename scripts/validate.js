@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck-opus");
-assert.strictEqual(packageJson.version, "1.0.35");
-assert.strictEqual(packageJson.wavedeckVersion, "1.0.35");
+assert.strictEqual(packageJson.version, "1.0.36");
+assert.strictEqual(packageJson.wavedeckVersion, "1.0.36");
 assert.strictEqual(packageJson.desktopName, "wavedeck-opus.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck Opus");
 assert.strictEqual(packageJson.build.appId, "com.a17press.wavedeckopus");
@@ -353,6 +353,7 @@ try {
     localMixFavorLastFm: false,
     localRadioExploreDistance: "detour",
     localMusicCrossfadeEnabled: true,
+    finishCurrentSongOnStationChange: false,
     portableImportWorkers: 2,
     miniPlayerDisplayMode: "now-playing",
     miniPlayerColorScheme: "default",
@@ -392,6 +393,7 @@ try {
     localMixFavorLastFm: false,
     localRadioExploreDistance: "detour",
     localMusicCrossfadeEnabled: true,
+    finishCurrentSongOnStationChange: false,
     portableImportWorkers: 2,
     miniPlayerDisplayMode: "now-playing",
     miniPlayerColorScheme: "default",
@@ -415,6 +417,7 @@ try {
   assert.strictEqual(storage.setLocalMixFavorLastFm(true).localMixFavorLastFm, true);
   assert.strictEqual(storage.setLocalRadioExploreDistance('explore').localRadioExploreDistance, 'explore');
   assert.strictEqual(storage.setLocalMusicCrossfadeEnabled(false).localMusicCrossfadeEnabled, false);
+  assert.strictEqual(storage.setFinishCurrentSongOnStationChange(true).finishCurrentSongOnStationChange, true);
   assert.strictEqual(storage.setPortableImportWorkers(6).portableImportWorkers, 6);
   assert.strictEqual(storage.setPortableImportWorkers(12).portableImportWorkers, 12);
   assert.strictEqual(storage.setMiniPlayerDisplayMode('source').miniPlayerDisplayMode, 'source');
@@ -495,6 +498,7 @@ try {
     localMixFavorLastFm: true,
     localRadioExploreDistance: "explore",
     localMusicCrossfadeEnabled: false,
+    finishCurrentSongOnStationChange: true,
     portableImportWorkers: 12,
     miniPlayerDisplayMode: "source",
     miniPlayerColorScheme: "bamboo",
@@ -1612,8 +1616,8 @@ assert.ok(mainSource.includes("function openLocalRadioControlsWindow()"));
 assert.ok(mainSource.includes("localRadioControlsWindow"));
 assert.ok(mainSource.includes("localRadioControlsWindowBounds"));
 assert.ok(mainSource.includes("storage.setLocalRadioControlsWindowBounds(bounds)"));
-assert.ok(mainSource.includes("musicLibraryWindowBounds"));
-assert.ok(mainSource.includes("storage.setMusicLibraryWindowBounds"));
+assert.ok(mainSource.includes("openSettingsWindow('', 'musicmanager'"));
+assert.ok(mainSource.includes("openSettingsWindow('', 'radiolog'"));
 assert.ok(mainSource.includes("mainWindowBounds"));
 assert.ok(mainSource.includes("storage.setMainWindowBounds(bounds)"));
 assert.ok(mainSource.includes("function toggleMiniPlayer()"));
@@ -1813,10 +1817,10 @@ assert.ok(windowsWorkflow.includes('chmod 755 "$appimage"'));
 const opusWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "opus-portable.yml"), "utf8");
 assert.ok(opusWorkflow.includes("branches: [opus-portable]"));
 assert.ok(opusWorkflow.includes("npm run dist:linux -- --publish never"));
-assert.ok(opusWorkflow.includes("WaveDeckOpus-1.0.35-Linux"));
+assert.ok(opusWorkflow.includes("WaveDeckOpus-1.0.36-Linux"));
 assert.ok(opusWorkflow.includes("dist/WaveDeckOpus.AppImage"));
-assert.ok(opusWorkflow.includes("tag_name: opus-v1.0.35"));
-assert.ok(opusWorkflow.includes("Publish WaveDeck Opus 1.0.35"));
+assert.ok(opusWorkflow.includes("tag_name: opus-v1.0.36"));
+assert.ok(opusWorkflow.includes("Publish WaveDeck Opus 1.0.36"));
 const musicLibraryHtml = fs.readFileSync(path.join(root, "src", "renderer", "music-library.html"), "utf8");
 const musicLibraryRenderer = fs.readFileSync(path.join(root, "src", "renderer", "music-library.js"), "utf8");
 assert.ok(musicLibraryHtml.includes('Search artists, albums, songs, or genres'));
@@ -1832,7 +1836,17 @@ assert.ok(mainSource.includes('opus-dedup-diagnostics.json'));
 assert.ok(opusOptimizerSource.includes('fingerprintCache'));
 assert.ok(opusOptimizerSource.includes('same-copy-name-different-audio'));
 assert.ok(opusOptimizerSource.includes('same-release-tags-different-audio'));
-assert.ok(mainSource.includes('musicLibraryWindowBounds'));
+assert.ok(settingsHtml.includes('data-tab="musicmanager"'));
+assert.ok(settingsHtml.includes('data-tab="radiolog"'));
+assert.ok(settingsHtml.includes('External Tracks'));
+assert.ok(settingsHtml.includes('data-src="./music-library.html"'));
+assert.ok(settingsHtml.includes('data-src="./radio-log.html"'));
+assert.ok(localRadioControlsHtml.includes('Finish current song when changing stations'));
+assert.ok(preloadSource.includes('settings:open-tab'));
+assert.ok(preloadSource.includes('music:local-radio:set-finish-current'));
+const embeddedBridgeSource = fs.readFileSync(path.join(root, 'src', 'renderer', 'embedded-settings-bridge.js'), 'utf8');
+assert.ok(embeddedBridgeSource.includes('embedded-request'));
+assert.ok(embeddedBridgeSource.includes('getPortableMusicArtistDetail'));
 const linuxFfmpegScript = fs.readFileSync(path.join(root, "scripts", "prepare-linux-ffmpeg.js"), "utf8");
 assert.ok(linuxFfmpegScript.includes('PROBE_SHA256'));
 assert.ok(linuxFfmpegScript.includes('80742938a95f9ecf9e0635192b417b7af61ddd53c4ab511898a11da5dad81667'));

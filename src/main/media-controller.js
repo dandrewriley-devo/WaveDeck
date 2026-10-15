@@ -79,6 +79,7 @@ class MediaController {
     beforeStop,
     dataDir = '',
     getCrossfadeEnabled = () => false,
+    getFinishCurrentSongOnStationChange = () => false,
     onLocalStationStart = () => {}
   }) {
     this.player = player;
@@ -89,6 +90,7 @@ class MediaController {
     this.beforeStop = beforeStop || (async () => {});
     this.dataDir = dataDir;
     this.getCrossfadeEnabled = getCrossfadeEnabled;
+    this.getFinishCurrentSongOnStationChange = getFinishCurrentSongOnStationChange;
     this.onLocalStationStart = onLocalStationStart;
     this.currentStation = null;
     this.currentRecording = null;
@@ -99,6 +101,8 @@ class MediaController {
     this.musicCrossfadeTimer = null;
     this.musicPreparationTimer = null;
     this.musicBusy = false;
+    this.pendingStation = null;
+    this.pendingStationTimer = null;
   }
 
   getCurrentStation() {
@@ -115,6 +119,7 @@ class MediaController {
       mediaState: this.mediaState,
       currentStation: this.getCurrentStation(),
       currentRecording: publicRecording(this.currentRecording),
+      queuedStation: this.pendingStation ? (this.pendingStation.target.profile?.name || musicContextLabel({ mode: this.pendingStation.target.mode, seed: this.pendingStation.target.track })) : '',
       currentMusic: this.music ? {
         track: this.music.current,
         seed: (() => { const seed = { ...this.music.seed }; delete seed.path; return seed; })(),
@@ -291,6 +296,7 @@ class MediaController {
       if (['radio', 'artist', 'explore', 'mix'].includes(this.music.mode) && this.music.current) {
         void Promise.resolve(this.musicRadio?.recordFeedback(this.music.radioKey, this.music.current, 'skip')).catch(() => {});
       }
+      if (this.pendingStation) return this.#startPendingStation(this.pendingStation);
       return this.advanceMusic('skip');
     }
     return this.#movePreset(1);
@@ -298,6 +304,7 @@ class MediaController {
 
   async previousPreset() {
     if (this.music) {
+      if (this.pendingStation) { this.pendingStation = null; clearInterval(this.pendingStationTimer); this.pendingStationTimer = null; this.musicRadio?.cancelPending?.(); this.onStateChanged(this.getStatus()); }
       if (this.musicBusy) return false;
       if ((this.player.getStatus().position || 0) > 3) { await this.player.seek(0); return true; }
       if (this.music.back.length > 1) {
@@ -333,14 +340,111 @@ class MediaController {
   }
 
   clearMusic() {
+    this.pendingStation = null; clearInterval(this.pendingStationTimer); this.pendingStationTimer = null;
     this.musicGeneration++; clearTimeout(this.musicRetry); clearInterval(this.musicCrossfadeTimer); clearTimeout(this.musicPreparationTimer); this.musicCrossfadeTimer = null; this.musicPreparationTimer = null; this.music = null;
     this.musicRadio?.cancelPending?.();
+  }
+
+  #queueStationChange(target) {
+    if (!this.getFinishCurrentSongOnStationChange() || !this.music?.current || this.mediaState !== 'playing') return false;
+    const status = this.player.getStatus();
+    if (!(Number(status.duration) > 1) || !(Number(status.position) >= 0)) return false;
+    clearInterval(this.musicCrossfadeTimer); this.musicCrossfadeTimer = null;
+    clearTimeout(this.musicPreparationTimer); this.musicPreparationTimer = null;
+    this.music.prepared = null;
+    this.musicRadio?.cancelPending?.();
+    const pending = { target, ready: null, preparing: null };
+    this.pendingStation = pending;
+    pending.preparing = this.#prepareStationChange(pending).catch(error => {
+      if (this.pendingStation !== pending) return;
+      pending.error = error;
+      this.pendingStation = null;
+      clearInterval(this.pendingStationTimer); this.pendingStationTimer = null;
+      this.onStateChanged({ ...this.getStatus(), message: `Could not change stations: ${error.message}` });
+      if (this.music?.current) this.#scheduleMusicCrossfade(this.music.current, this.musicGeneration);
+    });
+    clearInterval(this.pendingStationTimer);
+    this.pendingStationTimer = setInterval(() => {
+      if (this.pendingStation !== pending || !pending.ready || this.mediaState !== 'playing' || this.player.isCrossfading || this.musicBusy) return;
+      const playback = this.player.getStatus();
+      const duration = Number(playback.duration) || 0;
+      const position = Number(playback.position) || 0;
+      const fadeSeconds = Math.min(8, Math.max(1, duration - 0.5));
+      if (this.getCrossfadeEnabled() && duration > 1 && position >= duration - fadeSeconds) {
+        clearInterval(this.pendingStationTimer); this.pendingStationTimer = null;
+        void this.#startPendingStation(pending, fadeSeconds * 1000).catch(error => this.musicError(error));
+      }
+    }, 250);
+    this.pendingStationTimer.unref?.();
+    this.onStateChanged(this.getStatus());
+    return true;
+  }
+
+  async #prepareStationChange(pending) {
+    const { target } = pending;
+    await this.musicRadio?.beginSession?.();
+    if (this.pendingStation !== pending) return;
+    let track = target.track;
+    let plannedSet = null;
+    let decision = null;
+    if (target.mode === 'artist') await this.musicRadio?.beginArtistSession?.(track);
+    if (target.mode === 'explore') await this.musicRadio?.beginExploreSession?.(track);
+    if (target.mode === 'radio' || target.mode === 'explore') {
+      await this.musicRadio?.setTracks?.(this.musicLibrary.tracks, `${this.musicLibrary.revision}:${this.musicLibrary.metadataRevision || 0}`);
+      if (this.pendingStation !== pending) return;
+      plannedSet = await this.musicRadio?.planInitialArtistSet?.(this.musicLibrary.tracks, track, target.mode, target.radioKey) || null;
+    }
+    if (target.mode === 'mix') {
+      await this.musicRadio?.setTracks?.(this.musicLibrary.tracks, `${this.musicLibrary.revision}:${this.musicLibrary.metadataRevision || 0}`);
+      if (this.pendingStation !== pending) return;
+      const choice = await this.musicRadio.choose(this.musicLibrary.tracks, target.profile, 'mix', new Set(), 'start', target.radioKey, true);
+      if (this.pendingStation !== pending) return;
+      if (!choice?.id) throw new Error('This Local Mix has no playable tracks.');
+      decision = this.musicRadio?.getLastDecision?.() || null;
+      track = await this.musicLibrary.resolve(choice.id);
+    }
+    if (this.pendingStation !== pending) return;
+    if (track?.doNotPlay) throw new Error('This song is marked Do Not Play.');
+    pending.ready = { track, plannedSet, decision };
+  }
+
+  async #startPendingStation(pending, crossfadeMs = 0) {
+    if (this.pendingStation !== pending || this.musicBusy) return false;
+    this.musicBusy = true;
+    try {
+      await pending.preparing;
+      if (this.pendingStation !== pending) return false;
+      if (pending.error) {
+        this.pendingStation = null;
+        this.onStateChanged({ ...this.getStatus(), message: `Could not change stations: ${pending.error.message}` });
+        if (crossfadeMs && this.music?.current) this.#scheduleMusicCrossfade(this.music.current, this.musicGeneration);
+        return false;
+      }
+      if (!pending.ready) return false;
+      const { target, ready } = pending;
+      await this.beforeStop({ reason: 'music-playback', station: this.getCurrentStation() });
+      if (this.pendingStation !== pending) return false;
+      this.clearMusic();
+      this.currentStation = null; this.currentRecording = null;
+      this.music = {
+        seed: target.mode === 'mix' ? { id: target.radioKey, title: target.profile.name, artist: '', album: '', genres: [] } : target.track,
+        profile: target.profile, mixId: target.profile?.id, label: target.profile?.name,
+        mode: target.mode, radioKey: target.radioKey, current: null, queue: [], back: [], failed: new Set(),
+        waiting: false, prepared: null, preparing: null,
+        pendingPreparedDecision: ready.decision ? { id: ready.track.id, track: ready.track, decision: ready.decision } : null,
+        initialRadioSelectionPending: ['radio', 'artist', 'explore'].includes(target.mode), initialArtistSet: ready.plannedSet
+      };
+      this.onLocalStationStart(this.music.radioKey);
+      this.onStationChanged(null);
+      return await this.loadMusic(ready.track.id, crossfadeMs, ready.track);
+    } finally { this.musicBusy = false; }
   }
 
   async playMusic(id, mode = 'song') {
     if (!['song', 'album', 'artist', 'radio', 'explore'].includes(mode)) throw new Error('Unknown music mode.');
     const track = await this.musicLibrary.resolve(id);
     if (track.doNotPlay) throw new Error('This song is marked Do Not Play.');
+    if (['radio', 'artist', 'explore'].includes(mode) && this.#queueStationChange({ mode, track, radioKey: `${mode}:${track.songKey || track.id}` })) return true;
     await this.beforeStop({ reason: 'music-playback', station: this.getCurrentStation() });
     this.clearMusic();
     await this.musicRadio?.beginSession?.();
@@ -364,6 +468,7 @@ class MediaController {
 
   async playLocalMix(mixId) {
     const mix = resolveLocalMix(mixId, this.musicLibrary.tracks, this.dataDir);
+    if (this.#queueStationChange({ mode: 'mix', profile: mix, radioKey: `mix:${mix.id}` })) return true;
     await this.beforeStop({ reason: 'music-playback', station: this.getCurrentStation() });
     this.clearMusic();
     await this.musicRadio?.beginSession?.();
@@ -378,7 +483,7 @@ class MediaController {
     return this.advanceMusic('start');
   }
 
-  async loadMusic(id) {
+  async loadMusic(id, crossfadeMs = 0, resolvedTrack = null) {
     clearInterval(this.musicCrossfadeTimer); this.musicCrossfadeTimer = null;
     const generation = this.musicGeneration;
     const prepared = this.music?.pendingPreparedDecision?.id === id
@@ -391,14 +496,15 @@ class MediaController {
       deferredDecision.preparation.usedBy = 'advance';
       deferredDecision.preparation.usedAt = new Date().toISOString();
     }
-    const track = prepared?.track || await this.musicLibrary.resolve(id);
+    const track = resolvedTrack || prepared?.track || await this.musicLibrary.resolve(id);
     if (track.doNotPlay) throw new Error('This song is marked Do Not Play.');
     if (!this.music || generation !== this.musicGeneration) return false;
     this.music.waiting = false;
     this.mediaState = 'playing';
     await this.player.setStationGain(0);
     if (!this.music || generation !== this.musicGeneration) return false;
-    await this.player.play(track.path);
+    if (crossfadeMs > 0) await this.player.crossfadeTo(track.path, crossfadeMs);
+    else await this.player.play(track.path);
     if (!this.music || generation !== this.musicGeneration) return false;
     if (this.music?.pendingPreparedDecision?.id === id) this.music.pendingPreparedDecision = null;
     if (!await this.#commitMusicTrack(track, id, deferredDecision)) return false;
@@ -624,6 +730,14 @@ class MediaController {
   async handleEnded(event) {
     if (!this.music || this.mediaState !== 'playing') return;
     try {
+      if (this.pendingStation) {
+        const pending = this.pendingStation;
+        await pending.preparing;
+        if (this.pendingStation === pending && pending.ready) {
+          if (await this.#startPendingStation(pending)) return;
+        }
+        if (this.pendingStation === pending && pending.error) await this.#startPendingStation(pending);
+      }
       if (event?.reason === 'eof' && ['radio', 'artist', 'explore', 'mix'].includes(this.music.mode) && this.music.current) {
         void Promise.resolve(this.musicRadio?.recordFeedback(this.music.radioKey, this.music.current, 'complete')).catch(() => {});
       }

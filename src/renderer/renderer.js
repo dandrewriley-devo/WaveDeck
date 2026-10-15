@@ -122,7 +122,7 @@ function updateCurrentSource(status = currentPlayerStatus) {
   if (music && status?.mediaState !== 'stopped') {
     currentSourceRow.hidden = false;
     currentSourceRow.classList.toggle('exploring-away', music.awayFromSeed === true);
-    currentSourceName.textContent = music.label || 'Local Music';
+    currentSourceName.textContent = `${music.label || 'Local Music'}${status.queuedStation ? ` · Up next: ${status.queuedStation}` : ''}`;
     currentSourceIcon.innerHTML = ICON_LOCAL_MUSIC;
     return;
   }

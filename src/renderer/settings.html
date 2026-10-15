@@ -17,6 +17,8 @@
         <button class="tab" data-tab="stations">Stations</button>
         <button class="tab" data-tab="groups">Groups</button>
         <button class="tab" data-tab="localmusic" hidden>Local Music</button>
+        <button class="tab" data-tab="musicmanager" hidden>Manage Portable Music</button>
+        <button class="tab" data-tab="radiolog" hidden>Live Radio Log</button>
         <button class="tab" data-tab="about">About</button>
       </div>
     </header>
@@ -225,6 +227,7 @@
         <section class="local-music-card dashboard-square library-card" aria-labelledby="portableMusicTitle">
           <div class="card-title" id="portableMusicTitle">Your Library</div>
           <div class="library-track-count"><span id="portableTrackCount">—</span><span>Portable Tracks</span></div>
+          <div id="externalTrackCountWrap" class="library-track-count external-track-count" hidden><span id="externalTrackCount">—</span><span>External Tracks</span></div>
           <div id="libraryTotalAvailable" class="library-total-available" hidden></div>
           <div class="hint library-card-copy">The music you add to WaveDeck’s “Music” folder is converted to 96 kbps Opus files.</div>
           <div id="portableMusicProgressWrap" class="portable-music-progress-wrap" hidden>
@@ -257,7 +260,7 @@
           <div class="card-title" id="portableImportTitle">Import to Portable Music <span class="info-tip" title="WaveDeck copies selected music into Portable Music as compact Opus files. Your original music is never changed." aria-label="Import copies music without changing the source">i</span></div>
           <div id="portableImportReady" class="library-track-count import-ready-count" hidden><span id="portableImportReadyCount">—</span><span>Ready to Import</span></div>
           <div id="portableImportSpace" class="portable-import-space" hidden><span id="portableImportRequiredSpace">Required space: —</span><span id="portableImportAvailableSpace">Available space: —</span></div>
-          <div id="portableImportStatus" class="portable-import-status" role="status">Choose an Additional Music Folder to see import options.</div>
+          <div id="portableImportStatus" class="portable-import-status" role="status">Choose an External Music Folder to see import options.</div>
           <div id="portableImportProgressWrap" class="portable-import-progress-wrap" hidden>
             <progress id="portableImportProgress" class="portable-music-progress" max="1" value="0" aria-label="Portable Music import progress"></progress>
             <span id="portableImportProgressLabel" class="portable-music-progress-label">0 of 0</span>
@@ -266,9 +269,9 @@
           <button id="portableImportBtn" class="btn import-action" type="button" disabled>Import Missing Music</button>
         </section>
         <section class="local-music-card additional-folder-card" aria-labelledby="additionalMusicFolderTitle">
-          <div class="card-title" id="additionalMusicFolderTitle">Additional Music Folder <span>(optional)</span></div>
+          <div class="card-title" id="additionalMusicFolderTitle">External Music Folder <span>(optional)</span></div>
           <div class="pro-music-settings-row">
-            <input id="additionalMusicFolder" class="input" type="text" readonly placeholder="No additional folder selected" />
+            <input id="additionalMusicFolder" class="input" type="text" readonly placeholder="No external folder selected" />
             <button id="chooseAdditionalMusicFolderBtn" class="btn" type="button">Choose Folder…</button>
             <button id="clearAdditionalMusicFolderBtn" class="btn" type="button">Remove</button>
           </div>
@@ -279,7 +282,7 @@
             <button id="useAdditionalMusicFolderThisTimeBtn" class="subtle-link" type="button">Use this time only</button>
           </div>
           <div class="hint">Add one other folder to Local Music search and playback. Its files and tags are never changed.</div>
-          <div class="additional-music-folder-status-row"><span id="additionalMusicFolderStatus" class="additional-music-folder-status" role="status">No Additional Music Folder selected for this computer.</span></div>
+          <div class="additional-music-folder-status-row"><span id="additionalMusicFolderStatus" class="additional-music-folder-status" role="status">No External Music Folder selected for this computer.</span></div>
         </section>
         <section class="local-music-card dashboard-square local-mixes-card" aria-labelledby="localMixSummaryTitle">
           <div class="card-title" id="localMixSummaryTitle">Local Mixes</div>
@@ -297,6 +300,13 @@
           <div id="localMixManager" class="local-mix-manager" aria-live="polite">Checking installed Local Mixes…</div>
         </details>
         <div id="statusLocalMusic" class="status"></div>
+      </section>
+
+      <section id="tab-musicmanager" class="panel embedded-panel hidden" hidden>
+        <iframe id="musicManagerFrame" title="Manage Portable Music" data-src="./music-library.html"></iframe>
+      </section>
+      <section id="tab-radiolog" class="panel embedded-panel hidden" hidden>
+        <iframe id="radioLogFrame" title="Live Radio Log" data-src="./radio-log.html"></iframe>
       </section>
 
       <!-- ABOUT -->
@@ -326,9 +336,10 @@
             <p>You can expand a station briefly to read its information or adjust gain. Station details collapse again after a short time to keep the list tidy. Streaming group headings stay open while their subgroups can be expanded or collapsed.</p>
           </details>
           <details><summary>Local Music Setup and Music Information</summary>
-            <p>Turn on <b>Enable Advanced Features</b> in Settings → General to make Local Music available. WaveDeck Opus creates and scans the portable <code>Music</code> folder beside the app, and you can add one optional Additional Music Folder in Settings → Local Music. Drop MP3s into the portable Music folder and they are available immediately while WaveDeck Opus converts them in the background.</p>
-            <p>Portable Music becomes lean 96 kbps Opus audio. During conversion, WaveDeck Opus preserves title, artist, album, Album Artist, track number, disc number, year, genre, rating, Favorite, Do Not Play, and its stable music ID. It removes embedded artwork, loose cover images, lyric sidecars, and unneeded metadata. The Additional Music Folder stays read-only.</p>
+            <p>Turn on <b>Enable Advanced Features</b> in Settings → General to make Local Music available. WaveDeck Opus creates and scans the portable <code>Music</code> folder beside the app, and you can add one optional External Music Folder in Settings → Local Music. Drop MP3s into the portable Music folder and they are available immediately while WaveDeck Opus converts them in the background.</p>
+            <p>Portable Music becomes lean 96 kbps Opus audio. During conversion, WaveDeck Opus preserves title, artist, album, Album Artist, track number, disc number, year, genre, rating, Favorite, Do Not Play, and its stable music ID. It removes embedded artwork, loose cover images, lyric sidecars, and unneeded metadata. The External Music Folder stays read-only.</p>
             <p>A track marked <code>DO_NOT_PLAY=1</code> is never selected by Local Radio or a Local Mix. A Favorite tag gives that song a stronger chance when it fits the station.</p>
+            <p>With Advanced Features on, Settings also has <b>Manage Portable Music</b> and <b>Live Radio Log</b> tabs. Click a playing portable song’s title to find it in the manager, or use View Log to see why Local Radio chose a song.</p>
           </details>
           <details><summary>Playing Local Music</summary>
             <p>Search your Local Music library by song, artist, album, or year. Each matching song can start <b>Song Radio</b>, <b>Explore Radio</b>, <b>Artist Radio</b>, or <b>Play Album</b>.</p>
@@ -353,10 +364,11 @@
             <p>Open <b>Local Radio Controls</b> from the sliders icon at the left of the Local Music playback controls. It lets you shape Song Radio and Local Mixes. <b>Song Familiarity</b> moves from Play Deep Cuts Too to Balanced Mix to Favor the Hits. <b>How Far Should We Stray From the Seed?</b> controls Explore Radio. These controls change the odds among songs that already fit; they do not make unrelated music eligible.</p>
             <p><b>Song Repeat Wait</b> sets how long a song rests before it can return. <b>Artist Repeat Wait</b> sets the break before an artist returns. <b>Artist Sets</b> can play Single Tracks, Two-fers, Three-way, or Four-play sets. Artist Radio itself uses its fixed artist-focused behavior rather than these taste controls.</p>
             <p><b>Enable 8-second crossfade</b> blends Local Music tracks, Local Radio, Local Mixes, and albums. It is on by default and does not affect Streaming Radio.</p>
+            <p>Turn on <b>Finish current song when changing stations</b> if you want a newly selected Local Radio station or Local Mix to start at the next transition. WaveDeck shows the queued station while your current song plays. With crossfade off, the new station starts when the song ends.</p>
           </details>
           <details><summary>Last.fm Music Data and Live Radio Log</summary>
             <p>When enabled in Settings → Local Music, WaveDeck Opus can refresh song popularity, useful genre tags, and related artists in its own portable music database. Last.fm data stays in that database; it is not written into music files. Connect your Last.fm account there to scrobble Local Music playback.</p>
-            <p>WaveDeck includes the needed Last.fm access. Use <b>Refresh Last.fm Music Data</b> when you want a catch-up refresh. The progress bar shows when music data is already updating. The subtle <b>Open Live Radio Log</b> link opens selection diagnostics, including prior choices recorded while the log was closed.</p>
+            <p>WaveDeck includes the needed Last.fm access. Use the <b>Refresh</b> link on the Last.fm card when you want a catch-up refresh. The <b>Live Radio Log</b> Settings tab shows selection diagnostics, including prior choices recorded while it was closed.</p>
           </details>
           <details><summary>Settings, Library Management, and Updates</summary>
             <p>Settings → Streaming Stations lets you add, edit, search, and organize streams. The Groups tab creates, renames, reorders, and removes groups and optional subgroups. Removing a group moves its stations to Other; removing a subgroup leaves its stations in the main group.</p>

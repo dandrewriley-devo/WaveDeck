@@ -71,7 +71,7 @@ class PortableImporter {
   getStatus() { return { ...this.status }; }
   isRunning() { return Boolean(this.running); }
   async #sources(folder, out = []) {
-    let entries; try { entries = await fs.readdir(folder, { withFileTypes: true }); } catch (error) { throw new Error(`WaveDeck cannot read the Additional Music Folder: ${error.message}`); }
+    let entries; try { entries = await fs.readdir(folder, { withFileTypes: true }); } catch (error) { throw new Error(`WaveDeck cannot read the External Music Folder: ${error.message}`); }
     for (const entry of entries) {
       const file = path.join(folder, entry.name);
       if (entry.isDirectory()) await this.#sources(file, out);
@@ -126,7 +126,7 @@ class PortableImporter {
   async preview() {
     if (this.running) return this.getStatus();
     const folder = String(this.getAdditionalFolder() || '').trim();
-    if (!folder) return this.#emit({ state: 'waiting', eligible: 0, total: 0, completed: 0, estimatedBytes: 0, message: 'Choose an Additional Music Folder to see import options.' });
+    if (!folder) return this.#emit({ state: 'waiting', eligible: 0, total: 0, completed: 0, estimatedBytes: 0, message: 'Choose an External Music Folder to see import options.' });
     this.#emit({ state: 'checking', message: 'Checking music available to import…' });
     const known = new Set((this.getPortableTracks() || []).map(trackKey));
     const files = await this.#sources(folder); const candidates = [];
@@ -151,7 +151,7 @@ class PortableImporter {
     }
     const { availableBytes, totalBytes } = await this.#space();
     this.previewValue = { folder, candidates, estimatedBytes, availableBytes, totalBytes };
-    return this.#emit({ state: 'ready', eligible: candidates.length, total: candidates.length, completed: 0, estimatedBytes, availableBytes, totalBytes, etaSeconds: null, message: candidates.length ? '' : 'Everything supported in this Additional Music Folder is already portable.' });
+    return this.#emit({ state: 'ready', eligible: candidates.length, total: candidates.length, completed: 0, estimatedBytes, availableBytes, totalBytes, etaSeconds: null, message: candidates.length ? '' : 'Everything supported in this External Music Folder is already portable.' });
   }
   async #validOpus(file) {
     if (!await exists(file)) return false;

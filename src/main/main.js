@@ -82,18 +82,10 @@ const SETTINGS_DEFAULT_WIDTH = 1100;
 const SETTINGS_DEFAULT_HEIGHT = 800;
 const SETTINGS_MIN_WIDTH = 700;
 const SETTINGS_MIN_HEIGHT = 500;
-const RADIO_LOG_DEFAULT_WIDTH = 860;
-const RADIO_LOG_DEFAULT_HEIGHT = 700;
-const RADIO_LOG_MIN_WIDTH = 560;
-const RADIO_LOG_MIN_HEIGHT = 400;
 const LOCAL_RADIO_CONTROLS_WIDTH = 480;
-const LOCAL_RADIO_CONTROLS_HEIGHT = 560;
+const LOCAL_RADIO_CONTROLS_HEIGHT = 620;
 const LOCAL_RADIO_CONTROLS_MIN_WIDTH = 360;
 const LOCAL_RADIO_CONTROLS_MIN_HEIGHT = 360;
-const MUSIC_LIBRARY_DEFAULT_WIDTH = 1100;
-const MUSIC_LIBRARY_DEFAULT_HEIGHT = 760;
-const MUSIC_LIBRARY_MIN_WIDTH = 760;
-const MUSIC_LIBRARY_MIN_HEIGHT = 520;
 const MINI_PLAYER_WIDTH = 560;
 const MINI_PLAYER_HEIGHT = 32;
 const MINI_PLAYER_MIN_WIDTH = 360;
@@ -106,9 +98,7 @@ const DISPLAY_VERSION = require("../../package.json").wavedeckVersion || app.get
 let mainWindow = null;
 let tray = null;
 let settingsWindow = null;
-let radioLogWindow = null;
 let localRadioControlsWindow = null;
-let musicLibraryWindow = null;
 let miniPlayerWindow = null;
 let miniPlayerReturnToSidebar = false;
 let miniPlayerSnapTimer = null;
@@ -440,9 +430,7 @@ function sendToRadioLog(decision) {
     if (radioDiagnosticSession.length > RADIO_DIAGNOSTIC_LIMIT) radioDiagnosticSession.shift();
     persistRadioDiagnostics();
   }
-  if (radioLogWindow && !radioLogWindow.isDestroyed()) {
-    radioLogWindow.webContents.send("music:debug-decision", decision);
-  }
+  if (settingsWindow && !settingsWindow.isDestroyed()) settingsWindow.webContents.send('music:debug-decision', decision);
 }
 
 function radioDiagnosticsPath() { return path.join(getDataDir(), 'radio-diagnostics.json'); }
@@ -495,7 +483,7 @@ function clearRadioDiagnostics() {
   radioDiagnosticStationKey = '';
   radioDiagnosticSession.splice(0, radioDiagnosticSession.length);
   persistRadioDiagnostics();
-  if (radioLogWindow && !radioLogWindow.isDestroyed()) radioLogWindow.webContents.send('music:debug:reset');
+  if (settingsWindow && !settingsWindow.isDestroyed()) settingsWindow.webContents.send('music:debug:reset');
 }
 
 function sendLastFmStatus(status) {
@@ -583,7 +571,7 @@ function delay(milliseconds) {
 }
 
 function closeAuxiliaryWindows() {
-  for (const auxiliary of [settingsWindow, radioLogWindow, localRadioControlsWindow, musicLibraryWindow, miniPlayerWindow]) {
+  for (const auxiliary of [settingsWindow, localRadioControlsWindow, miniPlayerWindow]) {
     if (auxiliary && !auxiliary.isDestroyed()) auxiliary.close();
   }
 }
@@ -646,23 +634,7 @@ function queuePortableTrackTagWrite(track) {
   })();
 }
 function openPortableMusicLibraryWindow(focusTrack = null) {
-  const sendFocus = () => {
-    if (focusTrack && musicLibraryWindow && !musicLibraryWindow.isDestroyed()) musicLibraryWindow.webContents.send('music:library:focus-track', focusTrack);
-  };
-  if (musicLibraryWindow && !musicLibraryWindow.isDestroyed()) { musicLibraryWindow.show(); musicLibraryWindow.focus(); sendFocus(); return; }
-  const display = mainWindow && !mainWindow.isDestroyed() ? screen.getDisplayMatching(mainWindow.getBounds()) : screen.getPrimaryDisplay();
-  const savedBounds = storage.getUiPreferences().musicLibraryWindowBounds;
-  const targetDisplay = savedBounds ? screen.getDisplayMatching(savedBounds) : display;
-  const geometry = constrainBoundsToDisplay(targetDisplay, savedBounds || calculateCenteredBounds(display, MUSIC_LIBRARY_DEFAULT_WIDTH, MUSIC_LIBRARY_DEFAULT_HEIGHT), { minWidth: MUSIC_LIBRARY_MIN_WIDTH, minHeight: MUSIC_LIBRARY_MIN_HEIGHT });
-  musicLibraryWindow = createSecureWindow({ ...geometry, minWidth: Math.min(MUSIC_LIBRARY_MIN_WIDTH, geometry.width), minHeight: Math.min(MUSIC_LIBRARY_MIN_HEIGHT, geometry.height), resizable: true, title: 'Manage Portable Music' });
-  musicLibraryWindow.on('close', () => {
-    if (!musicLibraryWindow || musicLibraryWindow.isDestroyed()) return;
-    try { storage.setMusicLibraryWindowBounds(musicLibraryWindow.isMaximized() ? musicLibraryWindow.getNormalBounds() : musicLibraryWindow.getBounds()); }
-    catch (error) { console.warn(`Could not remember the Manage Portable Music window position: ${error.message}`); }
-  });
-  musicLibraryWindow.on('closed', () => { musicLibraryWindow = null; });
-  if (focusTrack) musicLibraryWindow.webContents.once('did-finish-load', sendFocus);
-  musicLibraryWindow.loadFile(path.join(__dirname, '..', 'renderer', 'music-library.html'));
+  openSettingsWindow('', 'musicmanager', focusTrack);
 }
 
 function createMainWindow({
@@ -738,14 +710,20 @@ function createMainWindow({
   return window;
 }
 
-function openSettingsWindow(stationId = "") {
+function openSettingsWindow(stationId = "", requestedTab = '', focusTrack = null) {
   const requestedStationId = String(stationId ?? "").trim();
+  const sendRequestedView = () => {
+    if (!settingsWindow || settingsWindow.isDestroyed()) return;
+    if (requestedTab) settingsWindow.webContents.send('settings:open-tab', requestedTab);
+    if (focusTrack) settingsWindow.webContents.send('music:library:focus-track', focusTrack);
+  };
   if (settingsWindow && !settingsWindow.isDestroyed()) {
     settingsWindow.show();
     settingsWindow.focus();
     if (requestedStationId) {
       settingsWindow.webContents.send("settings:edit-station", requestedStationId);
     }
+    sendRequestedView();
     return;
   }
 
@@ -791,10 +769,11 @@ function openSettingsWindow(stationId = "") {
     scheduleLibraryUpdateCheck(0);
   });
 
-  if (requestedStationId) {
+  if (requestedStationId || requestedTab || focusTrack) {
     settingsWindow.webContents.once("did-finish-load", () => {
       if (settingsWindow && !settingsWindow.isDestroyed()) {
-        settingsWindow.webContents.send("settings:edit-station", requestedStationId);
+        if (requestedStationId) settingsWindow.webContents.send("settings:edit-station", requestedStationId);
+        sendRequestedView();
       }
     });
   }
@@ -802,39 +781,7 @@ function openSettingsWindow(stationId = "") {
 }
 
 function openRadioLogWindow() {
-  if (radioLogWindow && !radioLogWindow.isDestroyed()) {
-    radioLogWindow.show();
-    radioLogWindow.focus();
-    return;
-  }
-  const display = mainWindow && !mainWindow.isDestroyed()
-    ? screen.getDisplayMatching(mainWindow.getBounds())
-    : screen.getPrimaryDisplay();
-  const savedBounds = storage.getUiPreferences().radioLogWindowBounds;
-  const targetDisplay = savedBounds ? screen.getDisplayMatching(savedBounds) : display;
-  const geometry = constrainBoundsToDisplay(targetDisplay, savedBounds || calculateCenteredBounds(
-    display, RADIO_LOG_DEFAULT_WIDTH, RADIO_LOG_DEFAULT_HEIGHT
-  ), { minWidth: RADIO_LOG_MIN_WIDTH, minHeight: RADIO_LOG_MIN_HEIGHT });
-  radioLogWindow = createSecureWindow({
-    ...geometry,
-    minWidth: Math.min(RADIO_LOG_MIN_WIDTH, geometry.width),
-    minHeight: Math.min(RADIO_LOG_MIN_HEIGHT, geometry.height),
-    resizable: true,
-    title: "WaveDeck Opus Live Radio Log"
-  });
-  radioLogWindow.on("close", () => {
-    if (!radioLogWindow || radioLogWindow.isDestroyed()) return;
-    try {
-      const bounds = radioLogWindow.isMaximized()
-        ? radioLogWindow.getNormalBounds()
-        : radioLogWindow.getBounds();
-      storage.setRadioLogWindowBounds(bounds);
-    } catch (error) {
-      console.warn(`Could not remember the Live Radio Log position: ${error.message}`);
-    }
-  });
-  radioLogWindow.on("closed", () => { radioLogWindow = null; });
-  radioLogWindow.loadFile(path.join(__dirname, "..", "renderer", "radio-log.html"));
+  openSettingsWindow('', 'radiolog');
 }
 
 function openLocalRadioControlsWindow() {
@@ -1417,7 +1364,7 @@ function installIpcHandlers() {
   });
   ipcMain.handle('ui:choose-additional-music-folder', async () => {
     const result = await dialog.showOpenDialog(settingsWindow || mainWindow, {
-      title: 'Choose Additional Music Folder', properties: ['openDirectory', 'createDirectory']
+      title: 'Choose External Music Folder', properties: ['openDirectory', 'createDirectory']
     });
     return result.canceled ? '' : (result.filePaths[0] || '');
   });
@@ -1531,6 +1478,12 @@ function installIpcHandlers() {
     sendToAll('ui:preferences-changed', preferences);
     return preferences;
   });
+  ipcMain.handle('music:local-radio:set-finish-current', (_event, enabled) => {
+    requireAdvancedFeatures();
+    const preferences = storage.setFinishCurrentSongOnStationChange(enabled === true);
+    sendToAll('ui:preferences-changed', preferences);
+    return preferences;
+  });
   ipcMain.handle('music:local-radio:open-controls', () => {
     requireAdvancedFeatures();
     openLocalRadioControlsWindow();
@@ -1549,7 +1502,7 @@ function installIpcHandlers() {
   ipcMain.handle('music:debug:save-log', async () => {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const defaultPath = path.join(getDataDir(), `WaveDeck_Radio_Diagnostics_${timestamp}.json`);
-    const result = await dialog.showSaveDialog(radioLogWindow || mainWindow, {
+    const result = await dialog.showSaveDialog(settingsWindow || mainWindow, {
       title: 'Save Radio Diagnostics',
       defaultPath,
       filters: [{ name: 'JSON diagnostic log', extensions: ['json'] }]
@@ -1640,7 +1593,7 @@ function installIpcHandlers() {
   });
   ipcMain.handle('music:additional:refresh', async () => {
     await requireMusic();
-    if (!activeAdditionalMusicFolder) throw new Error('Choose an Additional Music Folder first.');
+    if (!activeAdditionalMusicFolder) throw new Error('Choose an External Music Folder first.');
     const status = await musicLibrary.rescan();
     if (status.changed) void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
     return { ...status, ...(opusOptimizer?.getStatus() || {}) };
@@ -1966,6 +1919,7 @@ if (!hasSingleInstanceLock) {
       beforeStop: () => recorder?.stop(),
       dataDir: getDataDir(),
       getCrossfadeEnabled: () => storage.getUiPreferences().localMusicCrossfadeEnabled === true,
+      getFinishCurrentSongOnStationChange: () => storage.getUiPreferences().finishCurrentSongOnStationChange === true,
       onLocalStationStart: stationKey => beginRadioDiagnosticSession(stationKey)
     }));
 

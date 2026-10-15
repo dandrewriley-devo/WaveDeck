@@ -1,3 +1,4 @@
+const wavedeck = embeddedWavedeck;
 const entries = document.getElementById('entries');
 const clearLog = document.getElementById('clearLog');
 const saveLog = document.getElementById('saveLog');
@@ -224,7 +225,7 @@ clearLog.addEventListener('click', async () => {
   clearLog.disabled = true;
   saveStatus.textContent = '';
   try {
-    await window.wavedeck.clearMusicDebugHistory();
+    await wavedeck.clearMusicDebugHistory();
     entries.replaceChildren();
     saveStatus.textContent = 'Diagnostic history cleared.';
   } catch (error) {
@@ -238,7 +239,7 @@ saveLog.addEventListener('click', async () => {
   saveStatus.textContent = '';
   saveLog.disabled = true;
   try {
-    const result = await window.wavedeck.saveMusicDebugLog();
+    const result = await wavedeck.saveMusicDebugLog();
     if (result?.canceled) {
       saveStatus.textContent = 'Save cancelled.';
     } else {
@@ -251,10 +252,10 @@ saveLog.addEventListener('click', async () => {
   }
 });
 
-window.wavedeck.onMusicDebugLog((decision) => renderDecision(decision));
-window.wavedeck.getMusicDebugHistory().then((decisions) => {
+wavedeck.onMusicDebugLog((decision) => renderDecision(decision));
+wavedeck.getMusicDebugHistory().then((decisions) => {
   for (const decision of (Array.isArray(decisions) ? decisions : []).slice().reverse()) renderDecision(decision, { prepend: false });
 }).catch(() => {});
-window.wavedeck.onMusicDebugReset(() => {
+wavedeck.onMusicDebugReset(() => {
   entries.replaceChildren();
 });

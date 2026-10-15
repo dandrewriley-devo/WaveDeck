@@ -583,6 +583,40 @@ async function run() {
     assert.equal(crossfades[0].file, '/crossfade-b');
     assert.equal(crossfadeController.getStatus().currentMusic.track.id, 'crossfade-b');
     await crossfadeController.stop();
+    let stationPosition = 0;
+    const stationPlays = [], stationFades = [], stationDecisions = [];
+    const stationPlayer = {
+      isCrossfading: false,
+      getStatus: () => ({ playing: true, position: stationPosition, duration: 60 }),
+      setStationGain: async () => {}, stop: async () => {}, setPaused: async () => {}, seek: async () => {},
+      play: async file => { stationPlays.push(file); stationPosition = 0; },
+      crossfadeTo: async (file, ms) => { stationFades.push({ file, ms }); stationPosition = 0; }
+    };
+    const stationTracks = ['station-one', 'station-two', 'station-three'].map((id, index) => track(id, { title: `Station Song ${index + 1}`, artist: `Station Artist ${index + 1}`, duration: 60 }));
+    const stationLibrary = { tracks: stationTracks, revision: 1, resolve: async id => ({ ...stationTracks.find(item => item.id === id), path: `/${id}` }) };
+    const stationController = serializeTransport(new MediaController({ player: stationPlayer, getStations: () => [], getCrossfadeEnabled: () => true, getFinishCurrentSongOnStationChange: () => true }));
+    stationController.configureMusic(stationLibrary, new MusicRadio({ dataDir: path.join(temp, 'pending-station'), onDecision: decision => stationDecisions.push(decision) }));
+    await stationController.playMusic('station-one', 'radio');
+    await stationController.playMusic('station-two', 'radio');
+    await stationController.playMusic('station-three', 'radio');
+    assert.equal(stationController.getStatus().currentMusic.track.id, 'station-one', 'choosing another station leaves the current song playing');
+    assert.deepEqual(stationPlays, ['/station-one'], 'a queued station does not start a second player lane early');
+    await new Promise(resolve => setTimeout(resolve, 350));
+    stationPosition = 53;
+    await new Promise(resolve => setTimeout(resolve, 350));
+    assert.equal(stationFades.length, 1, 'the latest station starts at the fade boundary');
+    assert.equal(stationFades[0].file, '/station-three');
+    assert.equal(stationController.getStatus().currentMusic.track.id, 'station-three');
+    assert.equal(stationDecisions.at(-1).selectionTrigger, 'start', 'the first song of the new station reaches the log at handoff');
+    await stationController.stop();
+    const eofController = serializeTransport(new MediaController({ player: stationPlayer, getStations: () => [], getCrossfadeEnabled: () => false, getFinishCurrentSongOnStationChange: () => true }));
+    eofController.configureMusic(stationLibrary, new MusicRadio({ dataDir: path.join(temp, 'pending-station-eof') }));
+    await eofController.playMusic('station-one', 'radio');
+    await eofController.playMusic('station-two', 'artist');
+    assert.equal(eofController.getStatus().currentMusic.track.id, 'station-one');
+    await eofController.handleEnded({ reason: 'eof' });
+    assert.equal(eofController.getStatus().currentMusic.track.id, 'station-two', 'without crossfade, EOF starts the queued station');
+    await eofController.stop();
     let preparedCrossfadePosition = 0; const preparedCrossfades = []; const preparedCrossfadeDiagnostics = []; let preparedCrossfadeResolveCount = 0;
     const preparedCrossfadePlayer = {
       isCrossfading: false,

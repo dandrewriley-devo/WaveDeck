@@ -1,7 +1,7 @@
 {
   "name": "wavedeck-opus",
-  "version": "1.0.35",
-  "wavedeckVersion": "1.0.35",
+  "version": "1.0.36",
+  "wavedeckVersion": "1.0.36",
   "description": "WaveDeck Opus portable music player for Linux",
   "author": "Andrew Riley",
   "license": "MIT",

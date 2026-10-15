@@ -1,3 +1,4 @@
+const wavedeck = embeddedWavedeck;
 const $ = id => document.getElementById(id);
 const content = $('content');
 const search = $('search');
@@ -21,7 +22,7 @@ function expandedHeight() {
 function loadArtists({ keepOpen = false } = {}) {
   const scrollTop = currentScroll();
   const requestedQuery = query;
-  const request = window.wavedeck.getPortableMusicArtists(requestedQuery).then(result => {
+  const request = wavedeck.getPortableMusicArtists(requestedQuery).then(result => {
     if (query !== requestedQuery) return;
     artists = result;
     if (!keepOpen || !artists.some(artist => artist.key === activeArtist)) { activeArtist = ''; detail = null; activeRelease = ''; editingTrack = ''; expandedDetailHeight = 0; }
@@ -36,12 +37,12 @@ async function openArtist(key) {
   const scrollTop = currentScroll();
   if (activeArtist === key) { activeArtist = ''; detail = null; activeRelease = ''; editingTrack = ''; expandedDetailHeight = 0; render(scrollTop); return; }
   activeArtist = key; activeRelease = ''; editingTrack = ''; detail = null; expandedDetailHeight = 0; render(scrollTop);
-  try { detail = await window.wavedeck.getPortableMusicArtistDetail(key, query); expandedDetailHeight = 0; render(scrollTop); }
+  try { detail = await wavedeck.getPortableMusicArtistDetail(key, query); expandedDetailHeight = 0; render(scrollTop); }
   catch (error) { activeArtist = ''; detail = null; expandedDetailHeight = 0; summary.textContent = error.message; render(scrollTop); }
 }
 async function refreshDetail() {
   if (!activeArtist) return loadArtists();
-  const scrollTop = currentScroll(); detail = await window.wavedeck.getPortableMusicArtistDetail(activeArtist, query); expandedDetailHeight = 0; render(scrollTop);
+  const scrollTop = currentScroll(); detail = await wavedeck.getPortableMusicArtistDetail(activeArtist, query); expandedDetailHeight = 0; render(scrollTop);
 }
 function updateRatedSummary(before, after) {
   const artist = artists.find(value => value.key === activeArtist); if (!artist) return;
@@ -57,12 +58,12 @@ function applyTrackPatch(track, patch) {
 }
 async function saveTrack(track, patch) {
   const scrollTop = currentScroll(), next = applyTrackPatch(track, patch); editingTrack = ''; render(scrollTop);
-  try { await window.wavedeck.savePortableMusicTrack({ id: track.id, ...patch }); }
+  try { await wavedeck.savePortableMusicTrack({ id: track.id, ...patch }); }
   catch (error) { applyTrackPatch(next, track); summary.textContent = error.message; render(scrollTop); }
 }
 async function saveReleaseHoliday(release, holiday) {
   const scrollTop = currentScroll(); release.holiday = holiday; release.tracks.forEach(track => { track.holiday = holiday; }); render(scrollTop);
-  try { await window.wavedeck.savePortableMusicReleaseHoliday(release.tracks.map(track => track.id), holiday); }
+  try { await wavedeck.savePortableMusicReleaseHoliday(release.tracks.map(track => track.id), holiday); }
   catch (error) { release.holiday = !holiday; release.tracks.forEach(track => { track.holiday = !holiday; }); summary.textContent = error.message; render(scrollTop); }
 }
 function smallButton(label, title, action, className = '') {
@@ -91,7 +92,7 @@ function trackRow(track) {
     wrap.style.background = 'rgba(112, 184, 90, .2)';
     wrap.style.boxShadow = 'inset 3px 0 #70b85a';
   }
-  row.append(smallButton(playingTrack === track.id ? '●' : '▶', 'Play this track now', async () => { playingTrack = track.id; render(currentScroll()); await window.wavedeck.playMusic(track.id, 'song'); }));
+  row.append(smallButton(playingTrack === track.id ? '●' : '▶', 'Play this track now', async () => { playingTrack = track.id; render(currentScroll()); await wavedeck.playMusic(track.id, 'song'); }));
   const number = document.createElement('span'); number.className = 'track-number'; number.textContent = track.track ? String(track.track) : '—'; row.append(number);
   const title = document.createElement('button'); title.className = 'track-title'; title.textContent = track.title || 'Untitled track'; title.title = 'Edit track details';
   title.onclick = () => { editingTrack = editingTrack === track.id ? '' : track.id; expandedDetailHeight = 0; render(currentScroll()); }; row.append(title);
@@ -103,9 +104,9 @@ function relatedEditor() {
   const box = document.createElement('div'); box.className = 'related-row'; const lastfm = detail.lastFmRelated.length ? detail.lastFmRelated.join(' · ') : 'No Last.fm related artists yet';
   box.innerHTML = `<div><b>Related artists</b><span class="lastfm-related">Last.fm: ${esc(lastfm)}</span></div>`;
   const manual = document.createElement('div'); manual.className = 'manual-related';
-  for (const artist of detail.manualRelated) { const chip = document.createElement('span'); chip.className = 'related-chip'; chip.textContent = artist; chip.append(smallButton('×', `Remove ${artist}`, async () => { await window.wavedeck.saveArtistRelationships(detail.artist, detail.manualRelated.filter(value => value !== artist)); await refreshDetail(); })); manual.append(chip); }
+  for (const artist of detail.manualRelated) { const chip = document.createElement('span'); chip.className = 'related-chip'; chip.textContent = artist; chip.append(smallButton('×', `Remove ${artist}`, async () => { await wavedeck.saveArtistRelationships(detail.artist, detail.manualRelated.filter(value => value !== artist)); await refreshDetail(); })); manual.append(chip); }
   const form = document.createElement('form'); form.className = 'add-related'; form.innerHTML = '<input placeholder="Add a related artist" aria-label="Add a related artist"><button>Add</button>';
-  form.onsubmit = async event => { event.preventDefault(); const value = form.querySelector('input').value.trim(); if (!value) return; await window.wavedeck.saveArtistRelationships(detail.artist, [...detail.manualRelated, value]); await refreshDetail(); };
+  form.onsubmit = async event => { event.preventDefault(); const value = form.querySelector('input').value.trim(); if (!value) return; await wavedeck.saveArtistRelationships(detail.artist, [...detail.manualRelated, value]); await refreshDetail(); };
   box.append(manual, form); return box;
 }
 function artistDetail() {
@@ -146,7 +147,7 @@ async function focusPortableTrack(target = {}) {
   // The window is already loading the complete artist list on first open.
   // Reuse that request, and fetch only this artist's releases in parallel.
   const list = hadFilter || artistsLoadQuery ? loadArtists() : (artistsLoad || loadArtists());
-  const targetDetail = window.wavedeck.getPortableMusicArtistDetail(target.artistKey, '');
+  const targetDetail = wavedeck.getPortableMusicArtistDetail(target.artistKey, '');
   const [, focusedDetail] = await Promise.all([list, targetDetail]);
   if (request !== focusRequest) return;
   if (!artists.some(artist => artist.key === target.artistKey)) return;
@@ -157,4 +158,8 @@ async function focusPortableTrack(target = {}) {
   setTimeout(() => { if (focusedTrack === target.trackId) { focusedTrack = ''; render(currentScroll()); } }, 4200);
 }
 void loadArtists().catch(error => { summary.textContent = error.message; });
-window.wavedeck.onPortableMusicTrackFocus(target => { void focusPortableTrack(target).catch(error => { summary.textContent = error.message; }); });
+window.addEventListener('message', event => {
+  if (event.source !== window.parent || event.data?.type !== 'focus-portable-track') return;
+  void focusPortableTrack(event.data.track).catch(error => { summary.textContent = error.message; });
+});
+window.parent.postMessage({ type: 'embedded-ready' }, '*');

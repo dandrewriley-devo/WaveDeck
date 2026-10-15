@@ -1,5 +1,13 @@
 # WaveDeck Opus Branch Handoff
 
+## WaveDeck Opus 1.0.36
+
+- Renamed the visible Additional Music Folder language to External Music Folder. The Your Library card shows an External Tracks count when a folder is connected; stored folder identities, settings names, and read-only treatment remain compatible.
+- Local Radio Controls adds an opt-in Finish current song when changing stations setting. New Local Radio and Local Mix choices prepare during the playing track and take over at the ending crossfade (or EOF with crossfade off); the most recent choice wins. Individual track selection, album starts, and Streaming remain immediate.
+- Manage Portable Music and Live Radio Log now open as Advanced-only Settings tabs. Toolbar/Settings links, the title-to-track action, and the log shortcut route to their tabs. Their existing views are hosted in isolated lazy-loaded frames through an explicit limited Settings bridge, so the rest of Settings does not reload when they update.
+- `npm test` includes queued-station handoff regressions. The visible About changelog remains unchanged.
+
+
 ## WaveDeck Opus 1.0.35
 
 - Local Radio decision-making now runs in its own ordered worker thread with a library snapshot that is sent only when tracks or enrichment change. Expensive artist searches no longer block Electron's UI, playback, or equal-power crossfade timers. Switching stations cancels obsolete work; opening seeds, Artist Sets, feedback, deferred Live Radio decisions, and history persistence retain their ordering.
@@ -111,15 +119,15 @@
 
 # WaveDeck Project Handoff
 
-This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.35**.
+This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.36**.
 
 ## Current published state
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `opus-portable`
-- Current version: **1.0.35**
-- Current release: 1.0.35 — off-thread Local Radio decisions and indexed Music Manager navigation.
-- Current commit: the verified 1.0.35 release commit at the head of `opus-portable`.
+- Current version: **1.0.36**
+- Current release: 1.0.36 — External Music Folder wording, delayed station handoff, and integrated Settings tools.
+- Current commit: the verified 1.0.36 release commit at the head of `opus-portable`.
 - 0.11.8 commit: `8118e235eed4b4a18c378f12ced8a86be83ed4b9` — monitor-safe main-window bounds persistence and portable Windows build.
 - 0.11.7 commit: `c8b69b7b8842dd6c310dda05b22b8d52870d3e84` — superseded source correction after the first portable Windows build.
 - 0.11.6 commit: `621e44d8c484cd0a4d70eb124106170f6183d0ae` — compact Local Radio Controls and remembered auxiliary-window bounds.

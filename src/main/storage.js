@@ -317,6 +317,7 @@ function validatePreferences(value) {
     ? value.localRadioExploreDistance
     : 'detour';
   const localMusicCrossfadeEnabled = value?.localMusicCrossfadeEnabled !== false;
+  const finishCurrentSongOnStationChange = value?.finishCurrentSongOnStationChange === true;
   const portableImportWorkers = [2, 6, 12].includes(Number(value?.portableImportWorkers)) ? Number(value.portableImportWorkers) : 2;
   const miniPlayerDisplayMode = value?.miniPlayerDisplayMode === 'source' ? 'source' : 'now-playing';
   const miniPlayerColorScheme = ['default', 'inverted', 'chiefs', 'army', 'cherry', 'gray', 'denim', 'rosewood', 'sapphire', 'bamboo', 'aloe'].includes(value?.miniPlayerColorScheme)
@@ -414,6 +415,7 @@ function validatePreferences(value) {
     localMixFavorLastFm,
     localRadioExploreDistance,
     localMusicCrossfadeEnabled,
+    finishCurrentSongOnStationChange,
     portableImportWorkers,
     miniPlayerDisplayMode,
     miniPlayerColorScheme,
@@ -608,6 +610,7 @@ class PortableStorage {
       localMixFavorLastFm: preferences.localMixFavorLastFm,
       localRadioExploreDistance: preferences.localRadioExploreDistance,
       localMusicCrossfadeEnabled: preferences.localMusicCrossfadeEnabled,
+      finishCurrentSongOnStationChange: preferences.finishCurrentSongOnStationChange,
       portableImportWorkers: preferences.portableImportWorkers,
       miniPlayerDisplayMode: preferences.miniPlayerDisplayMode,
       miniPlayerColorScheme: preferences.miniPlayerColorScheme,
@@ -754,6 +757,12 @@ class PortableStorage {
   setLocalMusicCrossfadeEnabled(enabled) {
     const preferences = this.readPreferences();
     preferences.localMusicCrossfadeEnabled = enabled === true;
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences();
+  }
+  setFinishCurrentSongOnStationChange(enabled) {
+    const preferences = this.readPreferences();
+    preferences.finishCurrentSongOnStationChange = enabled === true;
     this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
     return this.getUiPreferences();
   }
