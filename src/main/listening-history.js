@@ -243,7 +243,7 @@ class ListeningHistory {
       key: `${libraryProfile}:${mode}:${seedId}`,
       mode,
       seedId,
-      label: String(music.label ?? '').trim(),
+      label: mode === 'explore' ? `${String(seed.title || '').trim() || 'Song'} X Radio` : String(music.label ?? '').trim(),
       title: String(seed.title ?? '').trim(),
       artist: String(seed.artist ?? '').trim(),
       album: String(seed.album ?? '').trim(),

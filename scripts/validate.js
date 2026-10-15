@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck-opus");
-assert.strictEqual(packageJson.version, "1.0.36");
-assert.strictEqual(packageJson.wavedeckVersion, "1.0.36");
+assert.strictEqual(packageJson.version, "1.0.37");
+assert.strictEqual(packageJson.wavedeckVersion, "1.0.37");
 assert.strictEqual(packageJson.desktopName, "wavedeck-opus.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck Opus");
 assert.strictEqual(packageJson.build.appId, "com.a17press.wavedeckopus");
@@ -564,6 +564,15 @@ try {
     localStationPresets: [{ mode: 'artist', seedId: 'wish-you-were-here', label: 'Pink Floyd Radio', artist: 'Pink Floyd' }]
   });
   assert.deepStrictEqual(reloadedStorage.readListeningHistory().localStationPresets.map(station => station.key), ['portable:artist:wish-you-were-here']);
+  reloadedStorage.writeListeningHistory({
+    version: 3, stations: {}, recentStationIds: [],
+    recentLocalStations: [{ mode: 'explore', seedId: 'stupid-girl', label: 'Stupid Girl X Radio', title: 'Stupid Girl', artist: 'Garbage' }],
+    localStationPresets: [{ mode: 'explore', seedId: 'stupid-girl', label: 'Stupid Girl X Radio', title: 'Stupid Girl', artist: 'Garbage' }]
+  });
+  const restartedHistory = new PortableStorage({ dataDir, defaultsDir });
+  restartedHistory.initialize();
+  assert.deepStrictEqual(restartedHistory.readListeningHistory().recentLocalStations.map(station => station.key), ['portable:explore:stupid-girl'], 'Explore Radio remains in recents after disk reload');
+  assert.deepStrictEqual(restartedHistory.readListeningHistory().localStationPresets.map(station => station.label), ['Stupid Girl X Radio'], 'starred Explore Radio keeps its short label after disk reload');
 
   const subgroupStations = reloadedStorage.readStations();
   const subgroupGroup = subgroupStations[0].group;
@@ -898,6 +907,7 @@ listeningHistory.handleStatus({
   currentMusic: { mode: "explore", label: "Comfortably Numb Explore Radio", seed: { id: "seed-3", title: "Comfortably Numb", artist: "Pink Floyd" } }
 });
 assert.deepStrictEqual(listeningHistory.getStats().recentLocalStations.map(station => station.key), ["portable:explore:seed-3", "portable:artist:seed-2", "portable:radio:seed-1"], 'Explore stations appear in Recently Played Local Stations');
+assert.strictEqual(listeningHistory.getStats().recentLocalStations[0].label, 'Comfortably Numb X Radio');
 assert.strictEqual(listeningHistory.toggleLocalStationPreset(listeningHistory.getStats().recentLocalStations[0]).saved, true);
 assert.deepStrictEqual(listeningHistory.getStats().localStationPresets.map(station => station.key), ["portable:explore:seed-3"]);
 assert.strictEqual(listeningHistory.toggleLocalStationPreset(listeningHistory.getStats().recentLocalStations[0]).saved, false);
@@ -1336,6 +1346,7 @@ assert.ok(preloadSource.includes("platform: process.platform"));
 assert.ok(!preloadSource.includes("showStationContextMenu"));
 const settingsHtml = fs.readFileSync(path.join(root, "src", "renderer", "settings.html"), "utf8");
 const radioLogHtml = fs.readFileSync(path.join(root, "src", "renderer", "radio-log.html"), "utf8");
+assert.ok(radioLogHtml.indexOf('src="./embedded-settings-bridge.js"') < radioLogHtml.indexOf('src="./radio-log.js"') && radioLogHtml.includes('src="./embedded-settings-bridge.js"'), 'Radio Log loads its Settings bridge before the log renderer');
 const radioLogSource = fs.readFileSync(path.join(root, "src", "renderer", "radio-log.js"), "utf8");
 const musicRadioSource = fs.readFileSync(path.join(root, "src", "main", "music-radio.js"), "utf8");
 const localRadioControlsHtml = fs.readFileSync(path.join(root, "src", "renderer", "local-radio-controls.html"), "utf8");
@@ -1817,10 +1828,10 @@ assert.ok(windowsWorkflow.includes('chmod 755 "$appimage"'));
 const opusWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "opus-portable.yml"), "utf8");
 assert.ok(opusWorkflow.includes("branches: [opus-portable]"));
 assert.ok(opusWorkflow.includes("npm run dist:linux -- --publish never"));
-assert.ok(opusWorkflow.includes("WaveDeckOpus-1.0.36-Linux"));
+assert.ok(opusWorkflow.includes("WaveDeckOpus-1.0.37-Linux"));
 assert.ok(opusWorkflow.includes("dist/WaveDeckOpus.AppImage"));
-assert.ok(opusWorkflow.includes("tag_name: opus-v1.0.36"));
-assert.ok(opusWorkflow.includes("Publish WaveDeck Opus 1.0.36"));
+assert.ok(opusWorkflow.includes("tag_name: opus-v1.0.37"));
+assert.ok(opusWorkflow.includes("Publish WaveDeck Opus 1.0.37"));
 const musicLibraryHtml = fs.readFileSync(path.join(root, "src", "renderer", "music-library.html"), "utf8");
 const musicLibraryRenderer = fs.readFileSync(path.join(root, "src", "renderer", "music-library.js"), "utf8");
 assert.ok(musicLibraryHtml.includes('Search artists, albums, songs, or genres'));

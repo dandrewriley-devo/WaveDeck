@@ -85,6 +85,10 @@ html, body{
 
 }
 
+.station-name[role="button"]{
+  cursor: pointer;
+}
+
 .now-playing{
   color: #fff;
   font-size: 12px;

@@ -1,5 +1,12 @@
 # WaveDeck Opus Branch Handoff
 
+## WaveDeck Opus 1.0.37
+
+- Live Radio Log's embedded Settings tab loads its message bridge before the log renderer, restoring saved history and live decisions.
+- Clickable portable song titles use the hand cursor.
+- Explore Radio recents and starred presets survive disk writes/restarts; saved/listed labels shorten to “X Radio” while the start button and current station retain “Explore Radio.”
+- The visible About changelog remains unchanged.
+
 ## WaveDeck Opus 1.0.36
 
 - Renamed the visible Additional Music Folder language to External Music Folder. The Your Library card shows an External Tracks count when a folder is connected; stored folder identities, settings names, and read-only treatment remain compatible.
@@ -120,15 +127,15 @@
 
 # WaveDeck Project Handoff
 
-This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.36**.
+This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.37**.
 
 ## Current published state
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `opus-portable`
-- Current version: **1.0.36**
-- Current release: 1.0.36 — External Music Folder wording, delayed station handoff, and integrated Settings tools.
-- Current commit: the verified 1.0.36 release commit at the head of `opus-portable`.
+- Current version: **1.0.37**
+- Current release: 1.0.37 — Live Radio Log bridge, clickable-title cursor, and persistent Explore Radio presets.
+- Current commit: the verified 1.0.37 release commit at the head of `opus-portable`.
 - 0.11.8 commit: `8118e235eed4b4a18c378f12ced8a86be83ed4b9` — monitor-safe main-window bounds persistence and portable Windows build.
 - 0.11.7 commit: `c8b69b7b8842dd6c310dda05b22b8d52870d3e84` — superseded source correction after the first portable Windows build.
 - 0.11.6 commit: `621e44d8c484cd0a4d70eb124106170f6183d0ae` — compact Local Radio Controls and remembered auxiliary-window bounds.
