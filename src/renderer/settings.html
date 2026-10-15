@@ -45,6 +45,9 @@
               <label for="personalStreamHost">Internet address (hostname or public IPv4)</label>
               <div class="stream-host-row"><input class="input" id="personalStreamHost" type="text" spellcheck="false" placeholder="Your public IP or hostname"><button class="btn" id="personalStreamSaveHost" type="button">Save address</button></div>
               <div id="personalStreamAddressNote" class="hint"></div>
+              <label for="personalStreamMountName">Station address name (the part before .mp3)</label>
+              <div class="stream-host-row"><input class="input" id="personalStreamMountName" type="text" maxlength="48" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="e.g. andrews-radio"><button class="btn" id="personalStreamSaveMountName" type="button">Save name</button></div>
+              <div class="hint">Use letters, numbers, and hyphens. Changing the name updates the QR code and stops the old address from working. An easy name is easier for others to guess.</div>
               <div class="stream-share"><img id="personalStreamQr" alt="QR code for the listening address" width="220" height="220"><div><div class="label">Listening address</div><code id="personalStreamUrl"></code><button class="btn" id="personalStreamCopy" type="button">Copy address</button><div class="hint">Add this address as a custom station in Pladio. Anyone with the link can listen, so share it only with people you trust.</div></div></div>
               <div id="personalStreamMessage" class="status" role="status"></div>
             </div>

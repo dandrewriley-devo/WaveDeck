@@ -115,6 +115,7 @@ contextBridge.exposeInMainWorld("wavedeck", {
   getPersonalStream: () => ipcRenderer.invoke('personal-stream:state'),
   setPersonalStreamEnabled: enabled => ipcRenderer.invoke('personal-stream:set-enabled', enabled),
   setPersonalStreamHost: host => ipcRenderer.invoke('personal-stream:set-host', host),
+  setPersonalStreamMountName: name => ipcRenderer.invoke('personal-stream:set-mount-name', name),
   getPersonalStreamQr: () => ipcRenderer.invoke('personal-stream:qr'),
   copyPersonalStreamUrl: async () => { const state = await ipcRenderer.invoke('personal-stream:state'); if (state.url) clipboard.writeText(state.url); },
   onPersonalStreamChanged: callback => subscribe('personal-stream:changed', callback),

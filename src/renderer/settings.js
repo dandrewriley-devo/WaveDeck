@@ -531,6 +531,7 @@ function showTab(name) {
 const streamEnabled = document.getElementById('personalStreamEnabled');
 const streamStatus = document.getElementById('personalStreamStatus');
 const streamHost = document.getElementById('personalStreamHost');
+const streamMountName = document.getElementById('personalStreamMountName');
 const streamAddressNote = document.getElementById('personalStreamAddressNote');
 const streamUrl = document.getElementById('personalStreamUrl');
 const streamQr = document.getElementById('personalStreamQr');
@@ -545,6 +546,7 @@ async function renderPersonalStream(state) {
     : state.status === 'starting' ? 'Starting your station…'
     : state.status === 'error' ? `Could not start: ${state.error}` : 'Off';
   if (document.activeElement !== streamHost) streamHost.value = state.host || '';
+  if (document.activeElement !== streamMountName) streamMountName.value = state.mountName || '';
   streamAddressNote.textContent = state.internetReady
     ? 'Internet address saved. The router must also forward TCP port 18037 to this computer.'
     : `Showing your home-network address${state.localHost ? ` (${state.localHost})` : ''}. Add your public IP or hostname above for use away from home.`;
@@ -566,6 +568,10 @@ streamEnabled.addEventListener('change', async () => {
 });
 document.getElementById('personalStreamSaveHost').addEventListener('click', async () => {
   try { await renderPersonalStream(await window.wavedeck.setPersonalStreamHost(streamHost.value)); streamMessage.textContent = 'Address saved.'; }
+  catch (error) { streamMessage.textContent = error.message; }
+});
+document.getElementById('personalStreamSaveMountName').addEventListener('click', async () => {
+  try { await renderPersonalStream(await window.wavedeck.setPersonalStreamMountName(streamMountName.value)); streamMessage.textContent = 'Station name saved. Use the new address in your listening app.'; }
   catch (error) { streamMessage.textContent = error.message; }
 });
 document.getElementById('personalStreamCopy').addEventListener('click', async () => {

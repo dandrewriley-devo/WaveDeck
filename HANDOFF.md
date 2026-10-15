@@ -1,5 +1,11 @@
 # WaveDeck Opus Branch Handoff
 
+## WaveDeck Opus 1.1.1 — Editable stream address
+
+- The Stream tab lets Andrew choose the station address name before `.mp3`, for example `andrews-radio`. It accepts 1–48 letters, numbers, or hyphens (starting and ending with a letter or number), normalizes capitals to lowercase, and saves it in `Data/personal-stream.json`.
+- Existing random addresses remain valid until changed. Changing the name while broadcasting restarts the private server and source, updates the displayed address and QR code, and ends the old address. The stream stays enabled.
+- Short names are easier to type and guess; the Stream tab explains that anyone with the address can listen. No visible About changelog change. Versioning moves to 1.1.1 and future small updates increment the third digit.
+
 ## WaveDeck Opus 1.0.38 — Streaming Update
 
 - Adds a Linux-only **Personal Stream** tab in Settings. Its single switch launches and stops WaveDeck's bundled private Icecast server and encoder automatically; the user does not run a separate application.
@@ -137,15 +143,15 @@
 
 # WaveDeck Project Handoff
 
-This is the internal continuity reference for future WaveDeck work. It reflects the published development build through **1.0.37**.
+This is the internal continuity reference for future WaveDeck work. See the Opus release sections above for updates through **1.1.1**.
 
 ## Current published state
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `opus-portable`
-- Current version: **1.0.37**
-- Current release: 1.0.37 — Live Radio Log bridge, clickable-title cursor, and persistent Explore Radio presets.
-- Current commit: the verified 1.0.37 release commit at the head of `opus-portable`.
+- Current version: **1.1.1**
+- Current release: 1.1.1 — editable Personal Stream station address name.
+- Current commit: the 1.1.1 release commit at the head of `opus-portable`.
 - 0.11.8 commit: `8118e235eed4b4a18c378f12ced8a86be83ed4b9` — monitor-safe main-window bounds persistence and portable Windows build.
 - 0.11.7 commit: `c8b69b7b8842dd6c310dda05b22b8d52870d3e84` — superseded source correction after the first portable Windows build.
 - 0.11.6 commit: `621e44d8c484cd0a4d70eb124106170f6183d0ae` — compact Local Radio Controls and remembered auxiliary-window bounds.

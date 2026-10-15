@@ -13,7 +13,7 @@ const { trackKey } = require('../src/main/portable-importer');
 const { ComputerMusicFolders, resolveComputerIdentity } = require('../src/main/computer-music-folders');
 const { MediaController, serializeTransport } = require('../src/main/media-controller');
 const { CrossfadeMpvPlayer } = require('../src/main/player');
-const { PersonalStream, validHost } = require('../src/main/personal-stream');
+const { PersonalStream, validHost, validMountName } = require('../src/main/personal-stream');
 const { LastFmEnricher, popularityScore } = require('../src/main/lastfm-enricher');
 const { LastFmScrobbler, signatureFor } = require('../src/main/lastfm-scrobbler');
 const { resolveLocalMix, listLocalMixes, loadLocalMixes, getLocalMixAvailability, isTrackEligibleForMix, qualityForTrackCount } = require('../src/main/local-mixes');
@@ -32,6 +32,11 @@ async function run() {
   assert.equal(validHost('music.example.org'), true);
   assert.equal(validHost('example.org/evil'), false);
   assert.equal(validHost('http://example.org'), false);
+  assert.equal(validMountName('andrews-radio'), true);
+  assert.equal(validMountName('a'), true);
+  assert.equal(validMountName('../private'), false);
+  assert.equal(validMountName('name with spaces'), false);
+  assert.equal(validMountName('a'.repeat(49)), false);
   const personalStreamDir = await fs.mkdtemp(path.join(os.tmpdir(), 'wavedeck-personal-stream-test-'));
   try {
     const volumeEvents = []; const audioDevices = [];
@@ -62,6 +67,22 @@ async function run() {
     assert.match(stream.configXml(), /<public>0<\/public>/);
     const reloaded = new PersonalStream({ dataDir: personalStreamDir, player: broadcastPlayer, ffmpeg: 'ffmpeg', icecast: 'icecast2' });
     assert.equal(reloaded.state().url, state.url, 'the QR station address is stable across restarts');
+    assert.throws(() => stream.setMountName('../bad'), /Use 1–48/);
+    const named = await stream.setMountName('Andrews-Radio');
+    assert.equal(named.mountName, 'andrews-radio');
+    assert.equal(named.url, 'http://music.example.org:18037/andrews-radio.mp3');
+    assert.match(stream.configXml(), /<mount-name>\/andrews-radio\.mp3<\/mount-name>/);
+    const namedReloaded = new PersonalStream({ dataDir: personalStreamDir, player: broadcastPlayer, ffmpeg: 'ffmpeg', icecast: 'icecast2' });
+    assert.equal(namedReloaded.state().url, named.url, 'the chosen station name persists across restarts');
+    const restartEvents = [];
+    stream.config.enabled = true;
+    stream.status = 'broadcasting';
+    stream.stopResources = async () => restartEvents.push('stop');
+    stream.start = async () => { restartEvents.push('start'); stream.status = 'broadcasting'; return stream.state(); };
+    const renamed = await stream.setMountName('car-radio');
+    assert.deepEqual(restartEvents, ['stop', 'start'], 'changing an active name restarts the source and server');
+    assert.equal(renamed.url, 'http://music.example.org:18037/car-radio.mp3');
+    assert.equal(renamed.status, 'broadcasting');
   } finally { await fs.rm(personalStreamDir, { recursive: true, force: true }); }
   assert.ok(SOURCE_EXTENSIONS.has('.flac'), 'portable Music recognizes FLAC sources for conversion');
   assert.equal(trackKey(track('1', { title: 'Same Song', track: 1, duration: 245 })), trackKey(track('2', { title: 'Same Song', track: 1, duration: 245 })), 'portable imports identify matching tagged tracks regardless of source path');

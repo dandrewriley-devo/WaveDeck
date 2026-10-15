@@ -1717,6 +1717,7 @@ function installIpcHandlers() {
   ipcMain.handle('personal-stream:state', () => personalStream?.state() || { enabled: false, status: 'unavailable' });
   ipcMain.handle('personal-stream:set-enabled', (_event, enabled) => personalStream.setEnabled(enabled === true));
   ipcMain.handle('personal-stream:set-host', (_event, host) => personalStream.setHost(host));
+  ipcMain.handle('personal-stream:set-mount-name', (_event, name) => personalStream.setMountName(name));
   ipcMain.handle('personal-stream:qr', async () => {
     const state = personalStream.state();
     if (!state.url) return '';

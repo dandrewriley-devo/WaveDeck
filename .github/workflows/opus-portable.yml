@@ -37,7 +37,7 @@ jobs:
           sha256sum "$appimage"
       - uses: actions/upload-artifact@v4
         with:
-          name: WaveDeckOpus-1.0.38-Linux
+          name: WaveDeckOpus-1.1.1-Linux
           path: dist/WaveDeckOpus.AppImage
           if-no-files-found: error
           compression-level: 0
@@ -49,7 +49,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: WaveDeckOpus-1.0.38-Linux
+          name: WaveDeckOpus-1.1.1-Linux
           path: release-assets
       - name: Inspect release asset
         shell: bash
@@ -57,13 +57,13 @@ jobs:
           set -euo pipefail
           test -f release-assets/WaveDeckOpus.AppImage
           sha256sum release-assets/WaveDeckOpus.AppImage
-      - name: Publish WaveDeck Opus 1.0.38
+      - name: Publish WaveDeck Opus 1.1.1
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: opus-v1.0.38
+          tag_name: opus-v1.1.1
           target_commitish: ${{ github.sha }}
-          name: WaveDeck Opus 1.0.38
-          body: Linux x64 WaveDeck Opus build with optional personal Icecast stream. Keep WaveDeckOpus.AppImage beside its own Data and Music folders. Streaming requires a PulseAudio-compatible sound server and the normal external router setup.
+          name: WaveDeck Opus 1.1.1
+          body: Linux x64 WaveDeck Opus with an editable Personal Stream station address name. Keep WaveDeckOpus.AppImage beside its own Data and Music folders. Streaming requires a PulseAudio-compatible sound server and the normal external router setup.
           files: release-assets/WaveDeckOpus.AppImage
           overwrite_files: true
           fail_on_unmatched_files: true

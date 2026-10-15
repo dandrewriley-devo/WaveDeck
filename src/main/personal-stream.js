@@ -28,6 +28,10 @@ function validHost(host) {
     && !host.includes('..') && !host.startsWith('-');
 }
 
+function validMountName(name) {
+  return /^[a-z0-9](?:[a-z0-9-]{0,46}[a-z0-9])?$/.test(name);
+}
+
 function waitForPort(port, child, timeout = 6000) {
   const start = Date.now();
   return new Promise((resolve, reject) => {
@@ -57,7 +61,7 @@ class PersonalStream {
       this.config = {
         enabled: saved.enabled === true,
         host: validHost(saved.host || '') ? saved.host : '',
-        token: /^[a-f0-9]{48}$/.test(saved.token) ? saved.token : random(),
+        token: validMountName(saved.token) ? saved.token : random(),
         sourcePassword: /^[a-f0-9]{48}$/.test(saved.sourcePassword) ? saved.sourcePassword : random(),
         adminPassword: /^[a-f0-9]{48}$/.test(saved.adminPassword) ? saved.adminPassword : random()
       };
@@ -79,7 +83,7 @@ class PersonalStream {
     const host = this.config.host || localAddress();
     return {
       enabled: this.config.enabled, status: this.status, error: this.error,
-      host: this.config.host, localHost: localAddress(), port: PORT,
+      host: this.config.host, mountName: this.config.token, localHost: localAddress(), port: PORT,
       url: host ? `http://${host}:${PORT}/${this.config.token}.mp3` : '',
       internetReady: Boolean(this.config.host),
       format: '128 kbps MP3'
@@ -193,9 +197,15 @@ class PersonalStream {
 
   async stopResources() {
     try { await this.player.setBroadcastOutput(null); } catch {}
+    const icecastExited = this.icecastProcess && this.icecastProcess.exitCode === null
+      ? new Promise(resolve => {
+        const timer = setTimeout(resolve, 2000);
+        this.icecastProcess.once('exit', () => { clearTimeout(timer); resolve(); });
+      }) : Promise.resolve();
     this.encoder?.kill(); this.encoder = null;
     this.capture?.kill(); this.capture = null;
     this.icecastProcess?.kill(); this.icecastProcess = null;
+    await icecastExited;
     if (this.loopModule !== null) { await this.pactlRun('unload-module', String(this.loopModule)).catch(() => {}); this.loopModule = null; }
     if (this.sinkModule !== null) { await this.pactlRun('unload-module', String(this.sinkModule)).catch(() => {}); this.sinkModule = null; }
   }
@@ -217,6 +227,20 @@ class PersonalStream {
     this.config.host = host; this.save(); this.changed(); return this.state();
   }
 
+  setMountName(value) {
+    const name = String(value || '').trim().toLowerCase();
+    if (!validMountName(name)) throw new Error('Use 1–48 letters, numbers, or hyphens. Start and end with a letter or number.');
+    this.operation = this.operation.catch(() => {}).then(async () => {
+      if (name === this.config.token) return this.state();
+      const restart = this.config.enabled;
+      if (restart) { await this.stopResources(); this.status = 'off'; }
+      this.config.token = name;
+      this.save(); this.changed();
+      return restart ? this.start() : this.state();
+    });
+    return this.operation;
+  }
+
   updateSong(song) {
     if (this.status !== 'broadcasting') return;
     const title = String(song || '').trim().slice(0, 250);
@@ -230,4 +254,4 @@ class PersonalStream {
   close() { this.status = 'off'; void this.stopResources(); }
 }
 
-module.exports = { PersonalStream, validHost, PORT };
+module.exports = { PersonalStream, validHost, validMountName, PORT };
