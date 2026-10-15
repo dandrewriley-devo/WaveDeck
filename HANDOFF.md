@@ -6,6 +6,7 @@
 - Local Radio Controls adds an opt-in Finish current song when changing stations setting. New Local Radio and Local Mix choices prepare during the playing track and take over at the ending crossfade (or EOF with crossfade off); the most recent choice wins. Individual track selection, album starts, and Streaming remain immediate.
 - Manage Portable Music and Live Radio Log now open as Advanced-only Settings tabs. Toolbar/Settings links, the title-to-track action, and the log shortcut route to their tabs. Their existing views are hosted in isolated lazy-loaded frames through an explicit limited Settings bridge, so the rest of Settings does not reload when they update.
 - `npm test` includes queued-station handoff regressions. The visible About changelog remains unchanged.
+- The release build refreshed the verified upstream FFmpeg archive and binary hashes after BtbN changed its moving `latest` asset: archive `911ce5c025b528cdc31f8101e144c980c73541859b87ef0099b5d1867a7ba1c4`, FFmpeg `a475edad4aa6be76ccabfd7238073d4f50bacae2162843ae994f970d4d71799b`, FFprobe `f06aa8ef7798b63aa9f2dc47f7762d1b761875b04dbf5f12df0e327f1fcda0d3`.
 
 
 ## WaveDeck Opus 1.0.35

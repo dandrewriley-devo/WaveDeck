@@ -10,9 +10,9 @@ const { spawnSync } = require("child_process");
 // Keep the release URL and both hashes pinned so every AppImage contains the
 // same verified binary instead of ffmpeg-static, which previously crashed.
 const ARCHIVE_URL = "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n8.1-latest-linux64-gpl-8.1.tar.xz";
-const ARCHIVE_SHA256 = "80742938a95f9ecf9e0635192b417b7af61ddd53c4ab511898a11da5dad81667";
-const BINARY_SHA256 = "00550c65fc35d8e21acae12c4262bdbf74df9b79fa996eb71c85a014571d8542";
-const PROBE_SHA256 = "effc9977f8dcb67e8f459822138b0663c44434aafaf4fef058b5c67dfb6dd8c4";
+const ARCHIVE_SHA256 = "911ce5c025b528cdc31f8101e144c980c73541859b87ef0099b5d1867a7ba1c4";
+const BINARY_SHA256 = "a475edad4aa6be76ccabfd7238073d4f50bacae2162843ae994f970d4d71799b";
+const PROBE_SHA256 = "f06aa8ef7798b63aa9f2dc47f7762d1b761875b04dbf5f12df0e327f1fcda0d3";
 const ARCHIVE_ROOT = "ffmpeg-n8.1-latest-linux64-gpl-8.1/bin";
 const ARCHIVE_MEMBERS = ["ffmpeg", "ffprobe"];
 const projectRoot = path.resolve(__dirname, "..");
