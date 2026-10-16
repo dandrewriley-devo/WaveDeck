@@ -37,7 +37,7 @@ jobs:
           sha256sum "$appimage"
       - uses: actions/upload-artifact@v4
         with:
-          name: WaveDeckOpus-1.1.3-Linux
+          name: WaveDeckOpus-1.1.4-Linux
           path: dist/WaveDeckOpus.AppImage
           if-no-files-found: error
           compression-level: 0
@@ -49,7 +49,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: WaveDeckOpus-1.1.3-Linux
+          name: WaveDeckOpus-1.1.4-Linux
           path: release-assets
       - name: Inspect release asset
         shell: bash
@@ -57,12 +57,12 @@ jobs:
           set -euo pipefail
           test -f release-assets/WaveDeckOpus.AppImage
           sha256sum release-assets/WaveDeckOpus.AppImage
-      - name: Publish WaveDeck Opus 1.1.3
+      - name: Publish WaveDeck Opus 1.1.4
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: opus-v1.1.3
+          tag_name: opus-v1.1.4
           target_commitish: ${{ github.sha }}
-          name: WaveDeck Opus 1.1.3
+          name: WaveDeck Opus 1.1.4
           body: Linux x64 WaveDeck Opus with clock-scheduled Half Hour and Top of Hour station IDs, Live Radio Log genres and Station ID entries, and automatic exclusions for Comedy, Stand-up Comedy, and Spoken Word. Put MP3 or Opus clips in Station IDs/Half Hour and Station IDs/Top of Hour beside Data and Music. Keep WaveDeckOpus.AppImage in the same folder. Streaming requires a PulseAudio-compatible sound server and the normal external router setup.
           files: release-assets/WaveDeckOpus.AppImage
           overwrite_files: true
