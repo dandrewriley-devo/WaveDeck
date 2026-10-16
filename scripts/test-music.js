@@ -642,6 +642,55 @@ async function run() {
     assert.equal(crossfades[0].file, '/crossfade-b');
     assert.equal(crossfadeController.getStatus().currentMusic.track.id, 'crossfade-b');
     await crossfadeController.stop();
+    let stationIdClock = 0; let stationIdPosition = 0;
+    const stationIdPlays = []; const stationIdFades = []; const stationIdStarts = [];
+    const stationIdPlayer = {
+      isCrossfading: false,
+      getStatus: () => ({ playing: true, position: stationIdPosition, duration: 60 }),
+      setStationGain: async () => {}, stop: async () => {}, setPaused: async () => {}, seek: async () => {},
+      play: async file => { stationIdPlays.push(file); stationIdPosition = 0; },
+      crossfadeTo: async file => { stationIdFades.push(file); stationIdPosition = 0; }
+    };
+    const stationIdTracks = [1, 2, 3, 4, 5].map(index => track(`id-song-${index}`, { track: index, album: 'ID Album', duration: 60 }));
+    const stationIdLibrary = { tracks: stationIdTracks, resolve: async id => ({ ...stationIdTracks.find(item => item.id === id), path: `/${id}` }) };
+    const stationIdDataDir = path.join(temp, 'station-id-test', 'Data');
+    const stationIdController = serializeTransport(new MediaController({
+      player: stationIdPlayer, getStations: () => [], dataDir: stationIdDataDir,
+      getCrossfadeEnabled: () => true, now: () => stationIdClock, random: () => 0
+    }));
+    stationIdController.configureMusic(stationIdLibrary, new MusicRadio({ dataDir: path.join(temp, 'station-id-radio') }), track => stationIdStarts.push(track.id));
+    const idsDir = path.join(temp, 'station-id-test', 'Station IDs');
+    assert.equal((await fs.stat(idsDir)).isDirectory(), true, 'WaveDeck creates Station IDs beside Data and Music');
+    await fs.rm(idsDir, { recursive: true });
+    await stationIdController.playMusic('id-song-1', 'album');
+    stationIdClock += 31 * 60 * 1000; stationIdPosition = 53;
+    await new Promise(resolve => setTimeout(resolve, 350));
+    assert.deepEqual(stationIdFades, ['/id-song-2'], 'a missing ID folder cannot interrupt a normal crossfade');
+    await fs.mkdir(idsDir);
+    stationIdClock += 31 * 60 * 1000; stationIdPosition = 53;
+    await new Promise(resolve => setTimeout(resolve, 350));
+    assert.deepEqual(stationIdFades, ['/id-song-2', '/id-song-3'], 'an empty ID folder also preserves ordinary playback');
+    await fs.writeFile(path.join(idsDir, 'one.mp3'), 'fixture');
+    await fs.writeFile(path.join(idsDir, 'two.opus'), 'fixture');
+    await fs.writeFile(path.join(idsDir, 'ignore.txt'), 'fixture');
+    stationIdClock += 31 * 60 * 1000; stationIdPosition = 53;
+    await new Promise(resolve => setTimeout(resolve, 350));
+    assert.deepEqual(stationIdFades, ['/id-song-2', '/id-song-3'], 'a due ID waits for the song to finish instead of cutting off its final seconds');
+    await stationIdController.handleEnded({ reason: 'eof' });
+    assert.equal(stationIdController.getStatus().currentMusic.track.stationId, true);
+    assert.equal(stationIdPlays.at(-1), path.join(idsDir, 'one.mp3'));
+    assert.deepEqual(stationIdStarts, ['id-song-1', 'id-song-2', 'id-song-3'], 'an ID is not reported as a library song');
+    await assert.rejects(stationIdController.rateMusic('up'), /Start Local Radio/, 'an ID cannot be rated as the previous song');
+    await stationIdController.handleEnded({ reason: 'eof' });
+    assert.equal(stationIdController.getStatus().currentMusic.track.id, 'id-song-4', 'music resumes after the ID');
+    await stationIdController.pause(); stationIdClock += 3 * 60 * 60 * 1000; await stationIdController.play();
+    assert.equal(stationIdFades.length, 2, 'paused time is excluded from the ID interval');
+    stationIdClock += 31 * 60 * 1000;
+    await stationIdController.handleEnded({ reason: 'eof' });
+    assert.equal(stationIdPlays.at(-1), path.join(idsDir, 'two.opus'), 'consecutive IDs do not repeat when another clip exists');
+    await stationIdController.handleEnded({ reason: 'eof' });
+    assert.equal(stationIdController.getStatus().currentMusic.track.id, 'id-song-5');
+    await stationIdController.stop();
     let stationPosition = 0;
     const stationPlays = [], stationFades = [], stationDecisions = [];
     const stationPlayer = {

@@ -1,5 +1,11 @@
 # WaveDeck Opus Branch Handoff
 
+## WaveDeck Opus 1.1.2 — Station IDs
+
+- WaveDeck creates a `Station IDs` folder beside portable `Data` and `Music`. It accepts regular `.mp3` and `.opus` files in that folder; missing or empty folders are ignored. Station IDs stay outside library scans, Opus conversion, Local Radio choices and Last.fm scrobbling.
+- After 30 minutes of actual Local Music playback, an ID is chosen at the next song boundary, played completely, then the station or album resumes. Pause and internet streaming do not count toward the interval. A due ID waits for the current song to end even when Local Music crossfade is on. Consecutive IDs avoid repeating a clip when alternatives exist. An ID is skipped if its file disappears or cannot play.
+- Local Music and the personal Icecast stream both hear the ID. There is no setting; adding or removing clips controls the feature. The visible About changelog and `package-lock.json` remain unchanged.
+
 ## WaveDeck Opus 1.1.1 — Editable stream address
 
 - The Stream tab lets Andrew choose the station address name before `.mp3`, for example `andrews-radio`. It accepts 1–48 letters, numbers, or hyphens (starting and ending with a letter or number), normalizes capitals to lowercase, and saves it in `Data/personal-stream.json`.
@@ -143,15 +149,15 @@
 
 # WaveDeck Project Handoff
 
-This is the internal continuity reference for future WaveDeck work. See the Opus release sections above for updates through **1.1.1**.
+This is the internal continuity reference for future WaveDeck work. See the Opus release sections above for updates through **1.1.2**.
 
 ## Current published state
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `opus-portable`
-- Current version: **1.1.1**
-- Current release: 1.1.1 — editable Personal Stream station address name.
-- Current commit: the 1.1.1 release commit at the head of `opus-portable`.
+- Current version: **1.1.2**
+- Current release: 1.1.2 — automatic station IDs during Local Music playback.
+- Current commit: the 1.1.2 release commit at the head of `opus-portable`.
 - 0.11.8 commit: `8118e235eed4b4a18c378f12ced8a86be83ed4b9` — monitor-safe main-window bounds persistence and portable Windows build.
 - 0.11.7 commit: `c8b69b7b8842dd6c310dda05b22b8d52870d3e84` — superseded source correction after the first portable Windows build.
 - 0.11.6 commit: `621e44d8c484cd0a4d70eb124106170f6183d0ae` — compact Local Radio Controls and remembered auxiliary-window bounds.

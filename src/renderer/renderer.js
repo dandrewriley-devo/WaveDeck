@@ -621,7 +621,7 @@ function showMusicPlayback(status) {
   }
   if (status.state === 'error') nowPlaying.textContent = status.message;
   updateCurrentSource(status);
-  const feedbackEnabled = active && ['artist', 'radio', 'explore', 'mix'].includes(music.mode) && Boolean(track);
+  const feedbackEnabled = active && ['artist', 'radio', 'explore', 'mix'].includes(music.mode) && Boolean(track) && !track.stationId;
   if (selectedFeedbackTrackId !== String(track?.id || '')) {
     selectedFeedbackTrackId = '';
     selectedFeedbackKind = '';
