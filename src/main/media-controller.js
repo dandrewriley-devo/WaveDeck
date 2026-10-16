@@ -2,7 +2,6 @@ const fs = require('fs');
 const path = require('path');
 const { normalize, compilation, radioArtist } = require('./music-tags');
 const { resolveLocalMix } = require('./local-mixes');
-const STATION_ID_INTERVAL_MS = 30 * 60 * 1000;
 function sortByName(a, b) {
   return String(a?.name ?? "").localeCompare(String(b?.name ?? ""), undefined, {
     sensitivity: "base"
@@ -84,6 +83,7 @@ class MediaController {
     getCrossfadeEnabled = () => false,
     getFinishCurrentSongOnStationChange = () => false,
     onLocalStationStart = () => {},
+    onStationIdPlayed = () => {},
     now = () => Date.now(),
     random = Math.random
   }) {
@@ -97,17 +97,25 @@ class MediaController {
     this.getCrossfadeEnabled = getCrossfadeEnabled;
     this.getFinishCurrentSongOnStationChange = getFinishCurrentSongOnStationChange;
     this.onLocalStationStart = onLocalStationStart;
+    this.onStationIdPlayed = onStationIdPlayed;
     this.now = now;
     this.random = random;
     this.stationIdsDir = dataDir ? path.join(path.dirname(dataDir), 'Station IDs') : '';
+    this.stationIdDirectories = this.stationIdsDir ? {
+      half: path.join(this.stationIdsDir, 'Half Hour'),
+      hour: path.join(this.stationIdsDir, 'Top of Hour')
+    } : {};
     if (this.stationIdsDir) {
-      try { fs.mkdirSync(this.stationIdsDir, { recursive: true }); } catch {}
+      try {
+        fs.mkdirSync(this.stationIdDirectories.half, { recursive: true });
+        fs.mkdirSync(this.stationIdDirectories.hour, { recursive: true });
+      } catch {}
     }
-    this.stationIdListeningMs = 0;
-    this.stationIdStartedAt = null;
     this.stationIdPlaying = null;
     this.stationIdQueued = null;
-    this.lastStationIdPath = '';
+    this.lastStationIdPaths = { half: '', hour: '' };
+    this.lastStationIdSlot = '';
+    this.stationIdClockTimer = null;
     this.currentStation = null;
     this.currentRecording = null;
     this.mediaState = "stopped";
@@ -246,8 +254,6 @@ class MediaController {
     if (this.music) {
       clearTimeout(this.musicRetry);
       await this.player.setPaused(true);
-      this.#accrueStationIdTime();
-      this.stationIdStartedAt = null;
       this.mediaState = 'paused'; this.onStateChanged(this.getStatus()); return true;
     }
     await this.beforeStop({ reason: "pause", station: this.getCurrentStation() });
@@ -286,7 +292,6 @@ class MediaController {
     if (this.music) {
       this.mediaState = 'playing';
       if (this.music.waiting) await this.advanceMusic(); else await this.player.setPaused(false);
-      if (!this.stationIdPlaying && !this.music.waiting && this.stationIdStartedAt === null) this.stationIdStartedAt = this.now();
       this.onStateChanged(this.getStatus()); return true;
     }
     if (this.mediaState === "playing" && this.player.getStatus().playing) return true;
@@ -361,60 +366,73 @@ class MediaController {
   }
 
   clearMusic() {
-    this.#accrueStationIdTime();
-    this.stationIdStartedAt = null;
     this.stationIdPlaying = null;
     this.stationIdQueued = null;
+    clearInterval(this.stationIdClockTimer); this.stationIdClockTimer = null;
     this.pendingStation = null; clearInterval(this.pendingStationTimer); this.pendingStationTimer = null;
     this.musicGeneration++; clearTimeout(this.musicRetry); clearInterval(this.musicCrossfadeTimer); clearTimeout(this.musicPreparationTimer); this.musicCrossfadeTimer = null; this.musicPreparationTimer = null; this.music = null;
     this.musicRadio?.cancelPending?.();
   }
 
-  #accrueStationIdTime() {
-    if (this.stationIdStartedAt === null) return;
-    this.stationIdListeningMs += Math.max(0, this.now() - this.stationIdStartedAt);
-    this.stationIdStartedAt = this.now();
+  #currentStationIdSlot() {
+    const current = new Date(this.now());
+    const minute = current.getMinutes();
+    if (minute < 29) return null;
+    const stamp = [current.getFullYear(), String(current.getMonth() + 1).padStart(2, '0'), String(current.getDate()).padStart(2, '0'), String(current.getHours()).padStart(2, '0')].join('-');
+    if (minute >= 59) return { key: `${stamp}:top`, pool: 'hour', label: 'Top of Hour' };
+    return { key: `${stamp}:half`, pool: 'half', label: 'Half Hour' };
   }
 
   #dueStationId() {
     if (!this.music || this.music.mode === 'song' || this.stationIdPlaying || !this.stationIdsDir) return null;
     if (this.music.mode === 'album' && !this.music.albumArtistSeed && !this.music.queue.length && !this.music.prepared) return null;
-    this.#accrueStationIdTime();
-    if (this.stationIdListeningMs < STATION_ID_INTERVAL_MS) return null;
     if (this.stationIdQueued) return this.stationIdQueued;
+    const slot = this.#currentStationIdSlot();
+    if (!slot || slot.key === this.lastStationIdSlot) return null;
+    this.lastStationIdSlot = slot.key;
     let clips;
     try {
-      clips = fs.readdirSync(this.stationIdsDir, { withFileTypes: true })
+      clips = fs.readdirSync(this.stationIdDirectories[slot.pool], { withFileTypes: true })
         .filter(entry => entry.isFile() && /\.(mp3|opus)$/i.test(entry.name))
-        .map(entry => path.join(this.stationIdsDir, entry.name));
+        .map(entry => path.join(this.stationIdDirectories[slot.pool], entry.name));
     } catch { clips = []; }
-    if (!clips.length) {
-      this.stationIdListeningMs %= STATION_ID_INTERVAL_MS;
-      return null;
-    }
-    const choices = clips.length > 1 ? clips.filter(file => file !== this.lastStationIdPath) : clips;
-    this.stationIdQueued = choices[Math.min(choices.length - 1, Math.floor(this.random() * choices.length))];
+    if (!clips.length) return null;
+    const choices = clips.length > 1 ? clips.filter(file => file !== this.lastStationIdPaths[slot.pool]) : clips;
+    const file = choices[Math.min(choices.length - 1, Math.floor(this.random() * choices.length))] || clips[0];
+    this.stationIdQueued = { file, ...slot };
     return this.stationIdQueued;
   }
 
   async #playStationId() {
-    const file = this.#dueStationId();
-    if (!file) return false;
+    const queued = this.#dueStationId();
+    if (!queued) return false;
     this.stationIdQueued = null;
-    const clip = { id: 'station_id', title: 'Station ID', artist: 'WaveDeck', album: '', stationId: true };
+    const clip = { id: 'station_id', title: 'Station ID', artist: 'WaveDeck', album: '', stationId: true, fileName: path.basename(queued.file), stationIdPool: queued.label };
     this.stationIdPlaying = clip;
-    this.stationIdStartedAt = null;
     try {
-      await this.player.play(file);
-      this.lastStationIdPath = file;
-      this.stationIdListeningMs = Math.max(0, this.stationIdListeningMs - STATION_ID_INTERVAL_MS);
+      await this.player.play(queued.file);
+      this.lastStationIdPaths[queued.pool] = queued.file;
+      try {
+        this.onStationIdPlayed({
+          type: 'station-id', at: new Date(this.now()).toISOString(),
+          stationKey: this.music?.radioKey || '', mode: this.music?.mode || '',
+          fileName: clip.fileName, pool: queued.label
+        });
+      } catch {}
       this.onStateChanged(this.getStatus());
       return true;
     } catch {
       this.stationIdPlaying = null;
-      this.stationIdListeningMs %= STATION_ID_INTERVAL_MS;
       return false;
     }
+  }
+
+  #scheduleStationIdClockCheck() {
+    clearInterval(this.stationIdClockTimer); this.stationIdClockTimer = null;
+    if (!this.music || this.music.mode === 'song') return;
+    this.#dueStationId();
+    this.stationIdClockTimer = setInterval(() => this.#dueStationId(), 15_000);
+    this.stationIdClockTimer.unref?.();
   }
 
   #queueStationChange(target) {
@@ -590,7 +608,6 @@ class MediaController {
     const generation = this.musicGeneration;
     this.music.current = { ...track }; delete this.music.current.path;
     this.stationIdPlaying = null;
-    this.stationIdStartedAt = this.now();
     this.music.waiting = false;
     this.mediaState = 'playing';
     this.music.back.push(id); this.music.back = this.music.back.slice(-100);
@@ -605,6 +622,7 @@ class MediaController {
     if (this.music !== active || generation !== this.musicGeneration) return false;
     try { this.onMusicTrack(track); } catch {}
     this.onStateChanged(this.getStatus());
+    this.#scheduleStationIdClockCheck();
     this.#scheduleMusicPreparation(this.musicGeneration, preparationDelay);
     return true;
   }
@@ -782,7 +800,6 @@ class MediaController {
             return true;
           }
           this.music.waiting = true;
-          this.#accrueStationIdTime(); this.stationIdStartedAt = null;
           await this.player.stop();
           this.onStateChanged({ ...this.getStatus(), message: 'Waiting for a song that fits this radio seed and is eligible to play.' });
           this.musicRetry = setTimeout(() => {
@@ -799,7 +816,6 @@ class MediaController {
 
   musicError(error) {
     if (!this.music) return;
-    this.#accrueStationIdTime(); this.stationIdStartedAt = null;
     clearTimeout(this.musicRetry); this.mediaState = 'paused';
     this.onStateChanged({ ...this.getStatus(), state: 'error', message: error.message });
   }

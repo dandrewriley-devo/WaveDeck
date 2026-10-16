@@ -142,6 +142,7 @@ function rejectedTrackLines(decision, manualStart) {
   const counts = decision.counts || {};
   const lines = [
     ['Tagged “Do Not Play”', counts.skippedForDoNotPlay],
+    ['Non-music genres (Comedy, Stand-up Comedy, Spoken Word)', counts.skippedForNonMusicGenre],
     ['Artist played too recently', counts.skippedForArtistCooldown],
     ['Song played too recently', counts.skippedForCooldown],
     ['Previously failed to play', counts.skippedByPlaybackError],
@@ -167,8 +168,31 @@ function scoreAdjustmentLine(item) {
   return `${item.label}: ×${number(item.value, 3)}${item.source ? ` (${item.source})` : ''}`;
 }
 
+function renderStationId(decision, { prepend = true } = {}) {
+  const entry = element('article', '', 'entry');
+  const head = element('div', '', 'entry-head');
+  head.append(element('b', 'Station ID'));
+  head.append(element('span', new Date(decision.at).toLocaleString(), 'time'));
+  entry.append(head);
+  const body = element('div', '', 'entry-body');
+  const track = element('div', '', 'track');
+  track.append(element('b', decision.pool || 'Station ID'));
+  track.append(element('span', ` — ${decision.fileName || 'Unnamed clip'}`));
+  body.append(track);
+  body.append(element('div', `${decision.pool || 'Station ID'} clip played at the next Local Music song boundary.`, 'reason'));
+  entry.append(body);
+  if (prepend) entries.prepend(entry); else entries.append(entry);
+  while (entries.children.length > MAX_ENTRIES) entries.lastElementChild.remove();
+}
+
+function genreLine(selected) {
+  if (!Array.isArray(selected?.genres)) return 'Genres: not recorded by this older log entry';
+  return `Genres: ${naturalList(selected.genres) || 'No genre tags stored'}`;
+}
+
 function renderDecision(decision, { prepend = true } = {}) {
   if (!decision) return;
+  if (decision.type === 'station-id') return renderStationId(decision, { prepend });
   const waiting = !decision.selected;
   const selected = decision.selected || { title: 'No song selected', artist: '', album: '', popularity: null, eligibilityReasons: [], additions: [], multipliers: [], score: null };
   const manualStart = decision.selectionTrigger === 'start' && decision.policy === 'manual-local-radio-start-v1';
@@ -183,6 +207,7 @@ function renderDecision(decision, { prepend = true } = {}) {
   track.append(element('b', selected.title || 'Untitled track'));
   track.append(element('span', ` — ${selected.artist || 'Unknown artist'}${selected.album ? ` · ${selected.album}` : ''}`));
   body.append(track);
+  body.append(element('div', genreLine(selected), 'muted'));
   const grid = element('div', '', 'grid');
   addBox(grid, 'Station seed', [
     `Seed song: ${decision.seed?.title || 'Unknown song'}`,
@@ -243,7 +268,7 @@ saveLog.addEventListener('click', async () => {
     if (result?.canceled) {
       saveStatus.textContent = 'Save cancelled.';
     } else {
-      saveStatus.textContent = `Saved ${result?.count || 0} radio selections for diagnosis.`;
+      saveStatus.textContent = `Saved ${result?.count || 0} Radio Log entries for diagnosis.`;
     }
   } catch (error) {
     saveStatus.textContent = `Could not save the diagnostic log: ${error?.message || 'Unknown error'}`;

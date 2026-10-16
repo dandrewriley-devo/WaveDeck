@@ -467,7 +467,8 @@ async function flushRadioDiagnostics() {
   radioDiagnosticsSaveTimer = null;
   radioDiagnosticsDirty = false;
   const destination = radioDiagnosticsPath();
-  const payload = JSON.stringify({ version: 1, stationKey: radioDiagnosticStationKey, selections: radioDiagnosticSession }) + '\n';
+  const stationIdCount = radioDiagnosticSession.filter(item => item?.type === 'station-id').length;
+  const payload = JSON.stringify({ version: 2, stationKey: radioDiagnosticStationKey, entryCount: radioDiagnosticSession.length, stationIdCount, selections: radioDiagnosticSession }) + '\n';
   radioDiagnosticsWrite = (async () => {
     try {
       await fs.promises.mkdir(path.dirname(destination), { recursive: true });
@@ -1519,10 +1520,12 @@ function installIpcHandlers() {
     if (result.canceled || !result.filePath) return { canceled: true, count: radioDiagnosticSession.length };
     const diagnostics = {
       format: 'WaveDeck Radio Diagnostics',
-      schemaVersion: 2,
+      schemaVersion: 3,
       appVersion: DISPLAY_VERSION,
       exportedAt: new Date().toISOString(),
-      selectionCount: radioDiagnosticSession.length,
+      entryCount: radioDiagnosticSession.length,
+      selectionCount: radioDiagnosticSession.filter(item => item?.type !== 'station-id').length,
+      stationIdCount: radioDiagnosticSession.filter(item => item?.type === 'station-id').length,
       selections: radioDiagnosticSession
     };
     await fs.promises.writeFile(result.filePath, JSON.stringify(diagnostics, null, 2) + '\n', 'utf8');
@@ -1956,7 +1959,8 @@ if (!hasSingleInstanceLock) {
       dataDir: getDataDir(),
       getCrossfadeEnabled: () => storage.getUiPreferences().localMusicCrossfadeEnabled === true,
       getFinishCurrentSongOnStationChange: () => storage.getUiPreferences().finishCurrentSongOnStationChange === true,
-      onLocalStationStart: stationKey => beginRadioDiagnosticSession(stationKey)
+      onLocalStationStart: stationKey => beginRadioDiagnosticSession(stationKey),
+      onStationIdPlayed: entry => sendToRadioLog(entry)
     }));
 
     musicLibrary = new MusicLibrary({

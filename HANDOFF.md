@@ -1,5 +1,13 @@
 # WaveDeck Opus Branch Handoff
 
+## WaveDeck Opus 1.1.3 — Clock IDs and music-only radio
+
+- Local Radio and every Local Mix now reject tracks whose stored genre is Comedy, Stand-up Comedy, or Spoken Word. The Live Radio Log makes the rejected count visible as a non-music genre exclusion.
+- Radio Log entries and exported diagnostics record the selected track’s actual stored genre tags. The existing relationship `tags` field remains the shared tags used to make the choice, not a replacement for genres.
+- Played Station IDs have compact Live Radio Log and diagnostic entries with their filename, time, and pool. They remain outside normal Local Radio selections, feedback, Last.fm scrobbling, and library statistics.
+- WaveDeck now creates `Station IDs/Half Hour` and `Station IDs/Top of Hour` beside portable `Data` and `Music`. At :29 it queues a random Half Hour MP3/Opus clip; at :59 it queues a random Top of Hour clip. Each waits for the active Local Music song to end, uses its own non-repeating pool, and missing/empty folders simply keep normal playback going. The earlier root `Station IDs` pool and elapsed-30-minute behavior are superseded.
+- The visible About changelog and `package-lock.json` remain unchanged.
+
 ## WaveDeck Opus 1.1.2 — Station IDs
 
 - WaveDeck creates a `Station IDs` folder beside portable `Data` and `Music`. It accepts regular `.mp3` and `.opus` files in that folder; missing or empty folders are ignored. Station IDs stay outside library scans, Opus conversion, Local Radio choices and Last.fm scrobbling.
@@ -149,15 +157,15 @@
 
 # WaveDeck Project Handoff
 
-This is the internal continuity reference for future WaveDeck work. See the Opus release sections above for updates through **1.1.2**.
+This is the internal continuity reference for future WaveDeck work. See the Opus release sections above for updates through **1.1.3**.
 
 ## Current published state
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `opus-portable`
-- Current version: **1.1.2**
-- Current release: 1.1.2 — automatic station IDs during Local Music playback.
-- Current commit: the 1.1.2 release commit at the head of `opus-portable`.
+- Current version: **1.1.3**
+- Current release: 1.1.3 — clock-scheduled Station ID pools, Radio Log genres/ID entries, and non-music genre exclusions.
+- Current commit: the 1.1.3 release commit at the head of `opus-portable`.
 - 0.11.8 commit: `8118e235eed4b4a18c378f12ced8a86be83ed4b9` — monitor-safe main-window bounds persistence and portable Windows build.
 - 0.11.7 commit: `c8b69b7b8842dd6c310dda05b22b8d52870d3e84` — superseded source correction after the first portable Windows build.
 - 0.11.6 commit: `621e44d8c484cd0a4d70eb124106170f6183d0ae` — compact Local Radio Controls and remembered auxiliary-window bounds.

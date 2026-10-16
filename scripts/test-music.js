@@ -4,7 +4,7 @@ const os = require('os');
 const path = require('path');
 const crypto = require('crypto');
 const { MusicLibrary } = require('../src/main/music-library');
-const { MusicRadio, weight, COOLDOWN } = require('../src/main/music-radio');
+const { MusicRadio, scoreTrack, weight, COOLDOWN } = require('../src/main/music-radio');
 const { RadioSelection } = require('../src/main/radio-selection');
 const { PortableManagerIndex, portableManagerArtistKey, portableManagerReleaseKey } = require('../src/main/portable-manager-index');
 const { extractTrack, radioArtist } = require('../src/main/music-tags');
@@ -232,10 +232,19 @@ async function run() {
     const diagnosticRadio = new MusicRadio({ dataDir: path.join(temp, 'persistent-diagnostics'), now: () => now, random: () => 0, onDecision: decision => diagnosticSelections.push(decision) });
     assert.equal(diagnosticRadio.choose([sameAlbum], seed, 'radio').id, sameAlbum.id);
     assert.equal(diagnosticSelections.length, 1, 'Local Radio records every selection through its diagnostic callback without requiring a visible log window');
+    assert.deepEqual(diagnosticSelections[0].selected.genres, ['Rock'], 'automatic Radio Log entries retain the track’s actual stored genre tags');
     diagnosticRadio.recordManualStart(seed, 'radio', 'radio:comfortably-numb');
     assert.equal(diagnosticSelections.length, 2, 'The selected opening Song Radio track is recorded in diagnostics');
     assert.equal(diagnosticSelections.at(-1).selectionTrigger, 'start');
     assert.equal(diagnosticSelections.at(-1).selected.title, 'Comfortably Numb');
+    assert.deepEqual(diagnosticSelections.at(-1).selected.genres, ['Progressive Rock', 'Rock'], 'manual Radio Log entries retain the seed’s actual stored genre tags');
+    const nonMusicTracks = ['Comedy', 'Stand-up Comedy', 'Spoken Word'].map((genre, index) => track(`non-music-${index}`, {
+      title: `${genre} Track`, artist: 'Pink Floyd', artists: ['Pink Floyd'], albumArtist: 'Pink Floyd', album: 'The Wall', genres: [genre]
+    }));
+    const nonMusicRadio = new MusicRadio({ dataDir: path.join(temp, 'non-music-genres'), now: () => now, random: () => 0 });
+    assert.equal(nonMusicRadio.choose(nonMusicTracks, seed, 'radio'), null, 'Comedy, Stand-up Comedy, and Spoken Word never enter Local Radio');
+    assert.equal(nonMusicRadio.getLastDecision().counts.skippedForNonMusicGenre, 3, 'diagnostics count tracks excluded for a non-music genre');
+    assert.equal(scoreTrack(nonMusicTracks[0], { id: 'personal-mix', policy: { personalLibrary: true } }, 'mix', [], now).excluded, 'non-music genre', 'the genre exclusion also applies to every Local Mix');
     const initialSetSeed = track('initial-set-seed', { title: 'Seed Song', artist: 'Initial Set Artist', artists: ['Initial Set Artist'], albumArtist: 'Initial Set Artist', rating: 8 });
     const initialSetSecond = track('initial-set-second', { title: 'Second Song', artist: 'Initial Set Artist', artists: ['Initial Set Artist'], albumArtist: 'Initial Set Artist', rating: 8 });
     const initialSetThird = track('initial-set-third', { title: 'Third Song', artist: 'Initial Set Artist', artists: ['Initial Set Artist'], albumArtist: 'Initial Set Artist', rating: 8 });
@@ -247,6 +256,14 @@ async function run() {
     const initialDiagnostic = initialSetRadio.recordManualStart(initialSetSeed, 'radio', 'radio:initial-set', initialPlan);
     assert.equal(initialDiagnostic.howPicked.artistSet.position, 1, 'the opening seed records its Artist Set proposal in the Live Radio Log');
     assert.equal(initialSetRadio.choose([initialSetSeed, initialSetSecond, initialSetThird], initialSetSeed, 'radio', new Set(), 'next', 'radio:initial-set').id, initialSetSecond.id, 'the next Song Radio choice follows the opening Artist Set plan');
+    const genreSetSeed = track('genre-set-seed', { artist: 'Genre Set Artist', artists: ['Genre Set Artist'], albumArtist: 'Genre Set Artist', rating: 8 });
+    const genreSetSecond = track('genre-set-second', { artist: 'Genre Set Artist', artists: ['Genre Set Artist'], albumArtist: 'Genre Set Artist', rating: 8 });
+    const genreSetThird = track('genre-set-third', { artist: 'Genre Set Artist', artists: ['Genre Set Artist'], albumArtist: 'Genre Set Artist', rating: 8 });
+    const genreSetRadio = new MusicRadio({ dataDir: path.join(temp, 'genre-artist-set'), now: () => now, random: () => 0, getTuning: () => ({ artistSetSize: 3 }) });
+    genreSetRadio.beginSession();
+    genreSetRadio.planInitialArtistSet([genreSetSeed, genreSetSecond, genreSetThird], genreSetSeed, 'radio', 'radio:genre-set');
+    genreSetRadio.record(genreSetSeed); genreSetSecond.genres = ['Comedy'];
+    assert.equal(genreSetRadio.choose([genreSetSeed, genreSetSecond, genreSetThird], genreSetSeed, 'radio', new Set(), 'next', 'radio:genre-set').id, genreSetThird.id, 'Artist Sets keep honoring a new Comedy exclusion before playing a queued follow-up');
     const largeArtist = Array.from({ length: 12000 }, (_value, index) => track(`large-artist-${index}`, {
       title: `Large Artist Song ${index}`, artist: 'Large Artist', artists: ['Large Artist'], albumArtist: 'Large Artist', album: 'Large Artist Collection', duration: 180 + (index % 40), rating: 8
     }));
@@ -642,8 +659,8 @@ async function run() {
     assert.equal(crossfades[0].file, '/crossfade-b');
     assert.equal(crossfadeController.getStatus().currentMusic.track.id, 'crossfade-b');
     await crossfadeController.stop();
-    let stationIdClock = 0; let stationIdPosition = 0;
-    const stationIdPlays = []; const stationIdFades = []; const stationIdStarts = [];
+    let stationIdClock = new Date(2026, 0, 1, 12, 28).getTime(); let stationIdPosition = 0;
+    const stationIdPlays = []; const stationIdFades = []; const stationIdStarts = []; const stationIdLogs = [];
     const stationIdPlayer = {
       isCrossfading: false,
       getStatus: () => ({ playing: true, position: stationIdPosition, duration: 60 }),
@@ -651,45 +668,54 @@ async function run() {
       play: async file => { stationIdPlays.push(file); stationIdPosition = 0; },
       crossfadeTo: async file => { stationIdFades.push(file); stationIdPosition = 0; }
     };
-    const stationIdTracks = [1, 2, 3, 4, 5].map(index => track(`id-song-${index}`, { track: index, album: 'ID Album', duration: 60 }));
+    const stationIdTracks = [1, 2, 3, 4, 5, 6].map(index => track(`id-song-${index}`, { track: index, album: 'ID Album', duration: 60 }));
     const stationIdLibrary = { tracks: stationIdTracks, resolve: async id => ({ ...stationIdTracks.find(item => item.id === id), path: `/${id}` }) };
     const stationIdDataDir = path.join(temp, 'station-id-test', 'Data');
     const stationIdController = serializeTransport(new MediaController({
       player: stationIdPlayer, getStations: () => [], dataDir: stationIdDataDir,
-      getCrossfadeEnabled: () => true, now: () => stationIdClock, random: () => 0
+      getCrossfadeEnabled: () => true, now: () => stationIdClock, random: () => 0,
+      onStationIdPlayed: entry => stationIdLogs.push(entry)
     }));
     stationIdController.configureMusic(stationIdLibrary, new MusicRadio({ dataDir: path.join(temp, 'station-id-radio') }), track => stationIdStarts.push(track.id));
     const idsDir = path.join(temp, 'station-id-test', 'Station IDs');
     assert.equal((await fs.stat(idsDir)).isDirectory(), true, 'WaveDeck creates Station IDs beside Data and Music');
-    await fs.rm(idsDir, { recursive: true });
+    const halfHourIds = path.join(idsDir, 'Half Hour');
+    const topOfHourIds = path.join(idsDir, 'Top of Hour');
+    assert.equal((await fs.stat(halfHourIds)).isDirectory(), true, 'WaveDeck creates the Half Hour Station ID pool');
+    assert.equal((await fs.stat(topOfHourIds)).isDirectory(), true, 'WaveDeck creates the Top of Hour Station ID pool');
+    await fs.writeFile(path.join(halfHourIds, 'one.mp3'), 'fixture');
+    await fs.writeFile(path.join(halfHourIds, 'two.opus'), 'fixture');
+    await fs.writeFile(path.join(halfHourIds, 'ignore.txt'), 'fixture');
     await stationIdController.playMusic('id-song-1', 'album');
-    stationIdClock += 31 * 60 * 1000; stationIdPosition = 53;
+    stationIdPosition = 53;
     await new Promise(resolve => setTimeout(resolve, 350));
-    assert.deepEqual(stationIdFades, ['/id-song-2'], 'a missing ID folder cannot interrupt a normal crossfade');
-    await fs.mkdir(idsDir);
-    stationIdClock += 31 * 60 * 1000; stationIdPosition = 53;
+    assert.deepEqual(stationIdFades, ['/id-song-2'], 'ordinary Local Music still crossfades before an ID is due');
+    stationIdClock = new Date(2026, 0, 1, 12, 29).getTime(); stationIdPosition = 53;
     await new Promise(resolve => setTimeout(resolve, 350));
-    assert.deepEqual(stationIdFades, ['/id-song-2', '/id-song-3'], 'an empty ID folder also preserves ordinary playback');
-    await fs.writeFile(path.join(idsDir, 'one.mp3'), 'fixture');
-    await fs.writeFile(path.join(idsDir, 'two.opus'), 'fixture');
-    await fs.writeFile(path.join(idsDir, 'ignore.txt'), 'fixture');
-    stationIdClock += 31 * 60 * 1000; stationIdPosition = 53;
-    await new Promise(resolve => setTimeout(resolve, 350));
-    assert.deepEqual(stationIdFades, ['/id-song-2', '/id-song-3'], 'a due ID waits for the song to finish instead of cutting off its final seconds');
+    assert.deepEqual(stationIdFades, ['/id-song-2'], 'a :29 ID waits for the song to finish instead of cutting off its final seconds');
     await stationIdController.handleEnded({ reason: 'eof' });
     assert.equal(stationIdController.getStatus().currentMusic.track.stationId, true);
-    assert.equal(stationIdPlays.at(-1), path.join(idsDir, 'one.mp3'));
-    assert.deepEqual(stationIdStarts, ['id-song-1', 'id-song-2', 'id-song-3'], 'an ID is not reported as a library song');
+    assert.equal(stationIdPlays.at(-1), path.join(halfHourIds, 'one.mp3'));
+    assert.deepEqual(stationIdLogs.at(-1), { type: 'station-id', at: new Date(stationIdClock).toISOString(), stationKey: 'album:id-song-1', mode: 'album', fileName: 'one.mp3', pool: 'Half Hour' }, 'each played ID produces a compact Radio Log entry');
+    assert.deepEqual(stationIdStarts, ['id-song-1', 'id-song-2'], 'an ID is not reported as a library song');
     await assert.rejects(stationIdController.rateMusic('up'), /Start Local Radio/, 'an ID cannot be rated as the previous song');
     await stationIdController.handleEnded({ reason: 'eof' });
-    assert.equal(stationIdController.getStatus().currentMusic.track.id, 'id-song-4', 'music resumes after the ID');
-    await stationIdController.pause(); stationIdClock += 3 * 60 * 60 * 1000; await stationIdController.play();
-    assert.equal(stationIdFades.length, 2, 'paused time is excluded from the ID interval');
-    stationIdClock += 31 * 60 * 1000;
+    assert.equal(stationIdController.getStatus().currentMusic.track.id, 'id-song-3', 'music resumes after the ID');
+    stationIdClock = new Date(2026, 0, 1, 12, 59).getTime(); stationIdPosition = 53;
+    await new Promise(resolve => setTimeout(resolve, 350));
+    assert.deepEqual(stationIdFades, ['/id-song-2', '/id-song-4'], 'an empty Top of Hour pool gracefully keeps the normal crossfade');
+    await fs.writeFile(path.join(topOfHourIds, 'top.mp3'), 'fixture');
+    stationIdClock = new Date(2026, 0, 1, 13, 29).getTime(); stationIdPosition = 53;
+    await new Promise(resolve => setTimeout(resolve, 350));
     await stationIdController.handleEnded({ reason: 'eof' });
-    assert.equal(stationIdPlays.at(-1), path.join(idsDir, 'two.opus'), 'consecutive IDs do not repeat when another clip exists');
+    assert.equal(stationIdPlays.at(-1), path.join(halfHourIds, 'two.opus'), 'the Half Hour pool avoids repeating an ID when another clip exists');
     await stationIdController.handleEnded({ reason: 'eof' });
     assert.equal(stationIdController.getStatus().currentMusic.track.id, 'id-song-5');
+    stationIdClock = new Date(2026, 0, 1, 13, 59).getTime(); stationIdPosition = 53;
+    await new Promise(resolve => setTimeout(resolve, 350));
+    await stationIdController.handleEnded({ reason: 'eof' });
+    assert.equal(stationIdPlays.at(-1), path.join(topOfHourIds, 'top.mp3'), 'the Top of Hour has its own Station ID pool');
+    assert.equal(stationIdLogs.at(-1).pool, 'Top of Hour');
     await stationIdController.stop();
     let stationPosition = 0;
     const stationPlays = [], stationFades = [], stationDecisions = [];

@@ -7,11 +7,25 @@ const { isTrackEligibleForMix } = require('./local-mixes');
 
 const COOLDOWN = 4 * 60 * 60 * 1000;
 const COMMON_TAGS = new Set(['rock', 'pop', 'country', 'jazz', 'blues', 'folk', 'metal', 'indie', 'dance', 'electronic', 'hip hop', 'hip-hop', 'rap', 'r&b', 'rnb', 'classical', 'soundtrack', 'alternative', 'soul', 'music']);
+const NON_MUSIC_GENRES = new Set(['comedy', 'stand up comedy', 'spoken word']);
 
 const matches = (a, b) => Boolean(a && b && normalize(a) === normalize(b));
 const artistList = track => Array.isArray(track?.artists) && track.artists.length ? track.artists : [track?.artist];
 const overlaps = (left = [], right = []) => left.some(a => right.some(b => matches(a, b)));
 const stableId = track => crypto.createHash('sha256').update(String(track?.songKey || track?.id || '')).digest('hex').slice(0, 16);
+function storedGenres(track) {
+  const values = Array.isArray(track?.genres) ? track.genres : [track?.genres];
+  return [...new Set(values.map(value => String(value || '').trim()).filter(Boolean))];
+}
+function nonMusicGenre(track) {
+  for (const value of storedGenres(track)) {
+    for (const token of value.split(/[;,|/&]+/)) {
+      const genre = normalize(token).replace(/-/g, ' ');
+      if (NON_MUSIC_GENRES.has(genre)) return genre;
+    }
+  }
+  return '';
+}
 function historyIndexes(history = []) {
   const last = new Map();
   const lastByIdentity = new Map();
@@ -171,6 +185,7 @@ function scoreTrack(track, seed, mode, history = [], now = Date.now(), context =
   }
   if (track?.doNotPlay) return { score: 0, excluded: 'do not play', relationship: relation, additions: [], multipliers: [] };
   if (track?.holiday && !(mode === 'mix' && seed?.id === 'holiday-christmas')) return { score: 0, excluded: 'holiday music', relationship: relation, additions: [], multipliers: [] };
+  if (nonMusicGenre(track)) return { score: 0, excluded: 'non-music genre', relationship: relation, additions: [], multipliers: [] };
   const songCooldown = Number.isFinite(Number(context?.songCooldown)) ? Number(context.songCooldown) : COOLDOWN;
   if (last && now - last.at < songCooldown) return { score: 0, excluded: 'cooldown', relationship: relation, additions: [], multipliers: [] };
   const heardArtistAt = context?.artistLast?.get(artistKey(track));
@@ -465,13 +480,13 @@ class MusicRadio {
       : (['hits', 'balanced', 'deep-cuts'].includes(this.getFamiliarity()) ? this.getFamiliarity() : 'balanced');
     this.lastDecision = {
       at: new Date(now).toISOString(), mode, stationKey, selectionTrigger: 'start',
-      seed: { diagnosticId: stableId(track), title: track.title || track.name || '', artist: track.artist || '', album: track.album || '', genres: track.genres || [] },
+      seed: { diagnosticId: stableId(track), title: track.title || track.name || '', artist: track.artist || '', album: track.album || '', genres: storedGenres(track) },
       policy: 'manual-local-radio-start-v1', familiarity, tuning: settings,
       artistSet: { size: initialArtistSet?.size || 1, remaining: initialArtistSet ? Math.max(0, initialArtistSet.size - 1) : 0, requested: initialArtistSet?.requested || settings.artistSetSize, shortened: initialArtistSet?.shortened === true, proposed: initialArtistSet?.proposed || null },
       artistRadio: mode === 'artist' ? { seedTargetPercent: 90, seedSelectionsSinceRelated: this.artistStation?.seedSelections || 1 } : null,
       howPicked: { manualStart: true, seed: { title: track.title || track.name || '', artist: track.artist || '' }, artistSet: initialArtistSet ? { ...initialArtistSet, position: 1, skipped: [] } : null, explore: mode === 'explore' ? { distance: settings.localRadioExploreDistance, limit: { close: 1, detour: 3, explore: 6 }[settings.localRadioExploreDistance] || 3, hops: 0, awayFromSeed: false } : null },
-      counts: { totalTracks: 0, skippedByPlaybackError: 0, skippedForCooldown: 0, skippedForArtistCooldown: 0, skippedForDoNotPlay: 0, credible: 0, personal: 0, personalMinimum: FAMILIARITY_RATINGS[familiarity].minimum, lastFmFamiliar: 0, finalPool: 0 },
-      selected: { diagnosticId: stableId(track), title: track.title || '', artist: track.artist || '', album: track.album || '', eligibilityReasons: ['Manually selected seed track'], score: null, additions: [], multipliers: [], favorite: track.favorite === true, rating: ratingOutOfTen(track), popularity: Number.isFinite(Number(track.popularity)) ? Number(track.popularity) : null, tags: [] },
+      counts: { totalTracks: 0, skippedByPlaybackError: 0, skippedForCooldown: 0, skippedForArtistCooldown: 0, skippedForDoNotPlay: 0, skippedForNonMusicGenre: 0, credible: 0, personal: 0, personalMinimum: FAMILIARITY_RATINGS[familiarity].minimum, lastFmFamiliar: 0, finalPool: 0 },
+      selected: { diagnosticId: stableId(track), title: track.title || '', artist: track.artist || '', album: track.album || '', genres: storedGenres(track), eligibilityReasons: ['Manually selected seed track'], score: null, additions: [], multipliers: [], favorite: track.favorite === true, rating: ratingOutOfTen(track), popularity: Number.isFinite(Number(track.popularity)) ? Number(track.popularity) : null, tags: [] },
       diagnostics: { topFinalCandidates: [], recentHistory: this.history.slice(0, 12).map(item => ({ diagnosticId: stableId({ songKey: item.key }), artist: item.artist, album: item.album, at: new Date(item.at).toISOString() })) },
       reason: initialArtistSet
         ? `Started from the selected seed track as the first song in a ${initialArtistSet.size}-song Artist Set.`
@@ -538,6 +553,7 @@ class MusicRadio {
     const artistCooldownExcluded = scored.filter(item => item.excluded === 'artist cooldown').length;
     const doNotPlayExcluded = scored.filter(item => item.excluded === 'do not play').length;
     const holidayExcluded = scored.filter(item => item.excluded === 'holiday music').length;
+    const nonMusicGenreExcluded = scored.filter(item => item.excluded === 'non-music genre').length;
     const noMeaningfulConnectionExcluded = scored.filter(item => item.excluded === 'no credible relationship').length;
     const missingLastFmExcluded = scored.filter(item => item.excluded === 'missing Last.fm popularity').length;
     const personalLibraryMix = mode === 'mix' && seed?.policy?.personalLibrary === true;
@@ -646,7 +662,7 @@ class MusicRadio {
         activeSet.remaining.shift();
         const lastPlayed = matching ? context.last.get(matching.track.songKey) : null;
         const songResting = Boolean(lastPlayed && now - lastPlayed.at < context.songCooldown);
-        if (matching && !matching.track.doNotPlay && !songResting) {
+        if (matching && !matching.track.doNotPlay && !nonMusicGenre(matching.track) && !songResting) {
           picked = matching.score > 0 ? matching : {
             ...matching,
             score: 1,
@@ -658,7 +674,7 @@ class MusicRadio {
         }
         const reason = !matching
           ? (tracks.some(track => track.id === plan.id || (plan.songKey && track.songKey === plan.songKey) || (plan.identity && songIdentity(track) === plan.identity)) ? 'previously failed to play' : 'is no longer in your library')
-          : (matching.track.doNotPlay ? 'is tagged Do Not Play' : (songResting ? 'is resting under your song repeat wait' : 'is no longer eligible'));
+          : (matching.track.doNotPlay ? 'is tagged Do Not Play' : (nonMusicGenre(matching.track) ? 'has a non-music genre' : (songResting ? 'is resting under your song repeat wait' : 'is no longer eligible')));
         skipped.push({ title: plan.title || matching?.track?.title || 'Untitled track', artist: plan.artist || matching?.track?.artist || activeSet.artist, reason });
       }
       if (skipped.length) activeSet.skipped = [...(activeSet.skipped || []), ...skipped];
@@ -718,7 +734,7 @@ class MusicRadio {
           : this.exploreStation.hops + (artistKey(selected) !== oldArtist ? 1 : 0));
     }
     this.recoveryAwayFromSeed = Boolean(selected && !exploring && recovery?.kind === 'related-route' && recovery.hops > 0);
-    const diagnostic = item => ({ diagnosticId: stableId(item.track), title: item.track.title, artist: item.track.artist, album: item.track.album, eligibilityReasons: item.relationship.reasons, score: item.score, additions: item.additions, multipliers: item.multipliers, favorite: item.track.favorite === true, rating: ratingOutOfTen(item.track), popularity: item.popularity, tags: item.relationship.tags });
+    const diagnostic = item => ({ diagnosticId: stableId(item.track), title: item.track.title, artist: item.track.artist, album: item.track.album, genres: storedGenres(item.track), eligibilityReasons: item.relationship.reasons, score: item.score, additions: item.additions, multipliers: item.multipliers, favorite: item.track.favorite === true, rating: ratingOutOfTen(item.track), popularity: item.popularity, tags: item.relationship.tags });
     const ranked = [...candidates].sort((a, b) => b.score - a.score).slice(0, 8);
     const threshold = FAMILIARITY_RATINGS[familiarity].minimum;
     const poolLabel = recovery?.kind === 'related-route' ? 'related-artist rescue route' : (artistRadio ? artistLane : (lastFmOnlyMix ? 'Last.fm popularity' : (personalCandidates.length ? `personal ${threshold}–10/Favorite` : (lastFmCandidates.length ? 'Last.fm familiar' : 'credible'))));
@@ -747,7 +763,7 @@ class MusicRadio {
       song: { title: selected?.title || '', popularity: Number.isFinite(Number(picked?.popularity)) ? Number(picked.popularity) : null, rating: ratingOutOfTen(selected), favorite: selected?.favorite === true, thumbsUp: Math.max(0, Number(feedback.up) || 0), thumbsDown: Math.max(0, Number(feedback.down) || 0), skips: Math.max(0, Number(feedback.skips) || 0), poolLabel, poolSize: candidates.length, secondarySeed: secondaryTrack ? { title: secondaryTrack.title || '', artist: secondaryTrack.artist || '' } : null },
       explore: exploreDetails, artistSet: artistSetDetails, artistSetRecovery: carriedArtistSetNote, recovery: recoveryDetails, waiting: !selected
     };
-    this.lastDecision = { at: new Date(now).toISOString(), mode, stationKey, selectionTrigger, seed: { diagnosticId: stableId(seed), title: seed?.title || seed?.name || '', artist: seed?.artist || '', album: seed?.album || '', genres: seed?.genres || [] }, policy: artistRadio ? 'artist-radio-v1' : (exploring ? 'explore-radio-v1' : 'automatic-local-radio-v2'), familiarity, tuning: settings, explore: exploreDetails, howPicked, artistSet: { size: selectedSetSize, remaining: setRemaining, requested: settings.artistSetSize, shortened: artistSetShortened, proposed: proposedSet }, artistRadio: artistRadio ? { seedTargetPercent: 90, seedSelectionsSinceRelated: this.artistStation?.seedSelections || 0 } : null, counts: { totalTracks: tracks.length, skippedByPlaybackError: excluded.size, skippedForCooldown: cooldownExcluded, skippedForArtistCooldown: artistCooldownExcluded, skippedForDoNotPlay: doNotPlayExcluded, skippedForHolidayMusic: holidayExcluded, noMeaningfulConnection: noMeaningfulConnectionExcluded, missingLastFmData: missingLastFmExcluded, credible: credibleCount, personal: personalCandidates.length, personalMinimum: threshold, lastFmFamiliar: lastFmCandidates.length, finalPool: candidates.length }, selected: selected ? diagnostic(picked) : null, diagnostics: { topFinalCandidates: ranked.map(diagnostic), recentHistory: this.history.slice(0, 12).map(item => ({ diagnosticId: stableId({ songKey: item.key }), artist: item.artist, album: item.album, at: new Date(item.at).toISOString() })) }, reason: selected ? `Picked from ${candidates.length} ${poolLabel} Local Radio candidates${recovery?.kind === 'related-route' ? ' through a related-artist recovery route.' : ''}${recovery?.relaxedRepeat === 'artist' ? ' after easing artist rest to keep the station playing.' : ''}${recovery?.relaxedRepeat === 'song' ? ' after using the least-recently-played credible song to keep the station playing.' : ''}` : 'No playable connected track was found without repeating the station’s emergency fallback songs.' };
+    this.lastDecision = { at: new Date(now).toISOString(), mode, stationKey, selectionTrigger, seed: { diagnosticId: stableId(seed), title: seed?.title || seed?.name || '', artist: seed?.artist || '', album: seed?.album || '', genres: storedGenres(seed) }, policy: artistRadio ? 'artist-radio-v1' : (exploring ? 'explore-radio-v1' : 'automatic-local-radio-v2'), familiarity, tuning: settings, explore: exploreDetails, howPicked, artistSet: { size: selectedSetSize, remaining: setRemaining, requested: settings.artistSetSize, shortened: artistSetShortened, proposed: proposedSet }, artistRadio: artistRadio ? { seedTargetPercent: 90, seedSelectionsSinceRelated: this.artistStation?.seedSelections || 0 } : null, counts: { totalTracks: tracks.length, skippedByPlaybackError: excluded.size, skippedForCooldown: cooldownExcluded, skippedForArtistCooldown: artistCooldownExcluded, skippedForDoNotPlay: doNotPlayExcluded, skippedForHolidayMusic: holidayExcluded, skippedForNonMusicGenre: nonMusicGenreExcluded, noMeaningfulConnection: noMeaningfulConnectionExcluded, missingLastFmData: missingLastFmExcluded, credible: credibleCount, personal: personalCandidates.length, personalMinimum: threshold, lastFmFamiliar: lastFmCandidates.length, finalPool: candidates.length }, selected: selected ? diagnostic(picked) : null, diagnostics: { topFinalCandidates: ranked.map(diagnostic), recentHistory: this.history.slice(0, 12).map(item => ({ diagnosticId: stableId({ songKey: item.key }), artist: item.artist, album: item.album, at: new Date(item.at).toISOString() })) }, reason: selected ? `Picked from ${candidates.length} ${poolLabel} Local Radio candidates${recovery?.kind === 'related-route' ? ' through a related-artist recovery route.' : ''}${recovery?.relaxedRepeat === 'artist' ? ' after easing artist rest to keep the station playing.' : ''}${recovery?.relaxedRepeat === 'song' ? ' after using the least-recently-played credible song to keep the station playing.' : ''}` : 'No playable connected track was found without repeating the station’s emergency fallback songs.' };
     if (!deferDecision) this.publishDecision(this.lastDecision);
     return selected;
   }
