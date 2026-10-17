@@ -15,7 +15,7 @@ const {
   resolveFfmpegExecutable,
   verifyFfmpegExecutable
 } = require("./recorder");
-const { ListeningHistory } = require("./listening-history");
+const { ListeningHistory, cleanLocalRadioProfile } = require("./listening-history");
 const { createLibraryUpdater, nodeHttpsFetch } = require("./library-updater");
 const { copyLegacyData } = require("./data-migration");
 const { RecordingLibrary } = require("./recording-library");
@@ -136,6 +136,7 @@ let lastStreamSong = '';
 let mprisService = null;
 let platformMediaKeys = null;
 let listeningHistory = null;
+let activeLocalRadioProfile = null;
 let playbackHeartbeat = null;
 let mediaKeyReclaimTimer = null;
 let mediaKeyReclaimEnabled = false;
@@ -195,6 +196,53 @@ function currentUiPreferences() {
 function activeMusicLibraryProfile() {
   if (!activeAdditionalMusicFolder) return 'portable';
   return `additional:${currentComputer?.id || 'temporary'}:${activeAdditionalMusicFolder}`.slice(0, 180);
+}
+
+function localRadioProfileFromPreferences(preferences = {}) {
+  return cleanLocalRadioProfile(preferences);
+}
+
+function currentLocalRadioControls() {
+  const preferences = currentUiPreferences();
+  return activeLocalRadioProfile
+    ? { ...preferences, ...activeLocalRadioProfile.profile, localRadioStationProfile: { key: activeLocalRadioProfile.key, label: activeLocalRadioProfile.label, mode: activeLocalRadioProfile.mode } }
+    : { ...preferences, localRadioStationProfile: null };
+}
+
+function sendLocalRadioControls() {
+  sendToAll('music:local-radio:controls-changed', currentLocalRadioControls());
+}
+
+function localStationProfileLabel({ mode, seed } = {}) {
+  if (mode === 'explore') return `${String(seed?.title || '').trim() || 'Song'} X Radio`;
+  if (mode === 'artist') return `${String(seed?.albumArtist || seed?.artist || '').trim() || 'Artist'} Radio`;
+  return `${String(seed?.title || '').trim() || 'Song'} Radio`;
+}
+
+function savedLocalStationProfile({ mode, seed } = {}) {
+  if (!['artist', 'radio', 'explore'].includes(mode) || !seed?.id) return null;
+  const libraryProfile = seed.library === 'additional' ? activeMusicLibraryProfile() : 'portable';
+  const saved = listeningHistory?.getLocalStationProfile({ libraryProfile, mode, seedId: seed.id });
+  const profile = saved || localRadioProfileFromPreferences(storage.getUiPreferences());
+  const key = `${libraryProfile}:${mode}:${seed.id}`;
+  const persisted = listeningHistory?.setLocalStationProfile({ libraryProfile, mode, seedId: seed.id, profile }) || profile;
+  return { key, libraryProfile, seedId: seed.id, mode, label: localStationProfileLabel({ mode, seed }), profile: { ...persisted } };
+}
+
+function activateLocalStationProfile(station = {}) {
+  const profile = station?.profile && ['artist', 'radio', 'explore'].includes(station.mode) ? station.profile : null;
+  if (profile) Object.assign(profile, cleanLocalRadioProfile(profile));
+  activeLocalRadioProfile = profile ? { key: station.key, libraryProfile: station.libraryProfile, seedId: station.seedId, mode: station.mode, label: station.label, profile } : null;
+  sendLocalRadioControls();
+}
+
+function updateActiveLocalRadioProfile(changes = {}) {
+  if (!activeLocalRadioProfile) return null;
+  const next = cleanLocalRadioProfile({ ...activeLocalRadioProfile.profile, ...changes });
+  Object.assign(activeLocalRadioProfile.profile, next);
+  if (activeLocalRadioProfile.mode && activeLocalRadioProfile.seedId) listeningHistory?.setLocalStationProfile({ libraryProfile: activeLocalRadioProfile.libraryProfile, mode: activeLocalRadioProfile.mode, seedId: activeLocalRadioProfile.seedId, profile: next });
+  sendLocalRadioControls();
+  return currentLocalRadioControls();
 }
 
 function localStationIsAvailable(station) {
@@ -496,6 +544,7 @@ function sendLastFmStatus(status) {
 
 function broadcastPlayerStatus(status = player?.getStatus()) {
   const combinedStatus = mediaController ? mediaController.getStatus(status) : status;
+  if (!combinedStatus?.currentMusic && activeLocalRadioProfile) activateLocalStationProfile(null);
   const track = combinedStatus?.currentMusic?.track;
   if (track && combinedStatus.mediaState === 'playing') {
     const song = [track.artist, track.title].filter(Boolean).join(' - ');
@@ -1460,39 +1509,61 @@ function installIpcHandlers() {
   });
   ipcMain.handle('music:local-radio:set-familiarity', (_event, familiarity) => {
     requireAdvancedFeatures();
-    const preferences = storage.setLocalRadioFamiliarity(String(familiarity || ''));
+    const value = String(familiarity || '');
+    const active = updateActiveLocalRadioProfile({ localRadioFamiliarity: value });
+    if (active) return active;
+    const preferences = storage.setLocalRadioFamiliarity(value);
     sendToAll('ui:preferences-changed', preferences);
-    return preferences;
+    sendLocalRadioControls();
+    return currentLocalRadioControls();
   });
   ipcMain.handle('music:local-radio:set-tuning', (_event, tuning) => {
     requireAdvancedFeatures();
+    const active = updateActiveLocalRadioProfile({
+      localRadioSongRepeatHours: tuning?.songRepeatHours,
+      localRadioArtistRepeatMinutes: tuning?.artistRepeatMinutes,
+      localRadioArtistSetSize: tuning?.artistSetSize
+    });
+    if (active) return active;
     const preferences = storage.setLocalRadioTuning(tuning || {});
     sendToAll('ui:preferences-changed', preferences);
-    return preferences;
+    sendLocalRadioControls();
+    return currentLocalRadioControls();
   });
   ipcMain.handle('music:local-radio:set-lastfm-mode', (_event, enabled) => {
     requireAdvancedFeatures();
     const preferences = storage.setLocalMixFavorLastFm(enabled === true);
     sendToAll('ui:preferences-changed', preferences);
-    return preferences;
+    sendLocalRadioControls();
+    return currentLocalRadioControls();
   });
   ipcMain.handle('music:local-radio:set-explore-distance', (_event, value) => {
     requireAdvancedFeatures();
-    const preferences = storage.setLocalRadioExploreDistance(String(value || ''));
+    const selected = String(value || '');
+    const active = updateActiveLocalRadioProfile({ localRadioExploreDistance: selected });
+    if (active) return active;
+    const preferences = storage.setLocalRadioExploreDistance(selected);
     sendToAll('ui:preferences-changed', preferences);
-    return preferences;
+    sendLocalRadioControls();
+    return currentLocalRadioControls();
   });
   ipcMain.handle('music:local-radio:set-crossfade', (_event, enabled) => {
     requireAdvancedFeatures();
     const preferences = storage.setLocalMusicCrossfadeEnabled(enabled === true);
     sendToAll('ui:preferences-changed', preferences);
-    return preferences;
+    sendLocalRadioControls();
+    return currentLocalRadioControls();
   });
   ipcMain.handle('music:local-radio:set-finish-current', (_event, enabled) => {
     requireAdvancedFeatures();
     const preferences = storage.setFinishCurrentSongOnStationChange(enabled === true);
     sendToAll('ui:preferences-changed', preferences);
-    return preferences;
+    sendLocalRadioControls();
+    return currentLocalRadioControls();
+  });
+  ipcMain.handle('music:local-radio:get-controls', () => {
+    requireAdvancedFeatures();
+    return currentLocalRadioControls();
   });
   ipcMain.handle('music:local-radio:open-controls', () => {
     requireAdvancedFeatures();
@@ -1959,7 +2030,11 @@ if (!hasSingleInstanceLock) {
       dataDir: getDataDir(),
       getCrossfadeEnabled: () => storage.getUiPreferences().localMusicCrossfadeEnabled === true,
       getFinishCurrentSongOnStationChange: () => storage.getUiPreferences().finishCurrentSongOnStationChange === true,
-      onLocalStationStart: stationKey => beginRadioDiagnosticSession(stationKey),
+      getLocalStationProfile: savedLocalStationProfile,
+      onLocalStationStart: station => {
+        activateLocalStationProfile(station?.stationProfile || null);
+        beginRadioDiagnosticSession(station?.key || '');
+      },
       onStationIdPlayed: entry => sendToRadioLog(entry)
     }));
 

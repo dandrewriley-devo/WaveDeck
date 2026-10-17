@@ -82,6 +82,7 @@ class MediaController {
     dataDir = '',
     getCrossfadeEnabled = () => false,
     getFinishCurrentSongOnStationChange = () => false,
+    getLocalStationProfile = () => null,
     onLocalStationStart = () => {},
     onStationIdPlayed = () => {},
     now = () => Date.now(),
@@ -96,6 +97,7 @@ class MediaController {
     this.dataDir = dataDir;
     this.getCrossfadeEnabled = getCrossfadeEnabled;
     this.getFinishCurrentSongOnStationChange = getFinishCurrentSongOnStationChange;
+    this.getLocalStationProfile = getLocalStationProfile;
     this.onLocalStationStart = onLocalStationStart;
     this.onStationIdPlayed = onStationIdPlayed;
     this.now = now;
@@ -477,17 +479,18 @@ class MediaController {
     let track = target.track;
     let plannedSet = null;
     let decision = null;
+    const radioProfile = this.getLocalStationProfile({ mode: target.mode, seed: track });
     if (target.mode === 'artist') await this.musicRadio?.beginArtistSession?.(track);
     if (target.mode === 'explore') await this.musicRadio?.beginExploreSession?.(track);
     if (target.mode === 'radio' || target.mode === 'explore') {
       await this.musicRadio?.setTracks?.(this.musicLibrary.tracks, `${this.musicLibrary.revision}:${this.musicLibrary.metadataRevision || 0}`);
       if (this.pendingStation !== pending) return;
-      plannedSet = await this.musicRadio?.planInitialArtistSet?.(this.musicLibrary.tracks, track, target.mode, target.radioKey) || null;
+      plannedSet = await this.musicRadio?.planInitialArtistSet?.(this.musicLibrary.tracks, track, target.mode, target.radioKey, radioProfile?.profile) || null;
     }
     if (target.mode === 'mix') {
       await this.musicRadio?.setTracks?.(this.musicLibrary.tracks, `${this.musicLibrary.revision}:${this.musicLibrary.metadataRevision || 0}`);
       if (this.pendingStation !== pending) return;
-      const choice = await this.musicRadio.choose(this.musicLibrary.tracks, target.profile, 'mix', new Set(), 'start', target.radioKey, true);
+      const choice = await this.musicRadio.choose(this.musicLibrary.tracks, target.profile, 'mix', new Set(), 'start', target.radioKey, true, null);
       if (this.pendingStation !== pending) return;
       if (!choice?.id) throw new Error('This Local Mix has no playable tracks.');
       decision = this.musicRadio?.getLastDecision?.() || null;
@@ -495,7 +498,7 @@ class MediaController {
     }
     if (this.pendingStation !== pending) return;
     if (track?.doNotPlay) throw new Error('This song is marked Do Not Play.');
-    pending.ready = { track, plannedSet, decision };
+    pending.ready = { track, plannedSet, decision, radioProfile };
   }
 
   async #startPendingStation(pending, crossfadeMs = 0) {
@@ -522,9 +525,9 @@ class MediaController {
         mode: target.mode, radioKey: target.radioKey, current: null, queue: [], back: [], failed: new Set(),
         waiting: false, prepared: null, preparing: null,
         pendingPreparedDecision: ready.decision ? { id: ready.track.id, track: ready.track, decision: ready.decision } : null,
-        initialRadioSelectionPending: ['radio', 'artist', 'explore'].includes(target.mode), initialArtistSet: ready.plannedSet
+        initialRadioSelectionPending: ['radio', 'artist', 'explore'].includes(target.mode), initialArtistSet: ready.plannedSet, radioProfile: ready.radioProfile
       };
-      this.onLocalStationStart(this.music.radioKey);
+      this.onLocalStationStart({ key: this.music.radioKey, mode: this.music.mode, seed: this.music.seed, profile: this.music.radioProfile?.profile || null, stationProfile: this.music.radioProfile || null });
       this.onStationChanged(null);
       return await this.loadMusic(ready.track.id, crossfadeMs, ready.track);
     } finally { this.musicBusy = false; }
@@ -544,14 +547,15 @@ class MediaController {
       .sort((a, b) => a.disc - b.disc || a.track - b.track || a.relativePath.localeCompare(b.relativePath));
     if (mode === 'album' && !album.length) album.push(track);
     const albumArtistSeed = mode === 'album' ? artistRadioSeedForAlbum(track) : null;
-    this.music = { seed: track, albumArtistSeed, mode, radioKey: `${mode}:${track.songKey || track.id}`, current: null, queue: mode === 'album' ? album.map(t => t.id) : [], back: [], failed: new Set(), waiting: false, prepared: null, preparing: null, pendingPreparedDecision: null, initialRadioSelectionPending: ['radio', 'artist', 'explore'].includes(mode) };
+    const radioProfile = this.getLocalStationProfile({ mode, seed: track });
+    this.music = { seed: track, albumArtistSeed, mode, radioKey: `${mode}:${track.songKey || track.id}`, current: null, queue: mode === 'album' ? album.map(t => t.id) : [], back: [], failed: new Set(), waiting: false, prepared: null, preparing: null, pendingPreparedDecision: null, initialRadioSelectionPending: ['radio', 'artist', 'explore'].includes(mode), radioProfile };
     if (mode === 'artist') await this.musicRadio?.beginArtistSession?.(track);
     if (mode === 'explore') await this.musicRadio?.beginExploreSession?.(track);
     if (mode === 'radio' || mode === 'explore') {
       await this.musicRadio?.setTracks?.(this.musicLibrary.tracks, `${this.musicLibrary.revision}:${this.musicLibrary.metadataRevision || 0}`);
-      this.music.initialArtistSet = await this.musicRadio?.planInitialArtistSet?.(this.musicLibrary.tracks, track, mode, this.music.radioKey) || null;
+      this.music.initialArtistSet = await this.musicRadio?.planInitialArtistSet?.(this.musicLibrary.tracks, track, mode, this.music.radioKey, radioProfile?.profile) || null;
     }
-    this.onLocalStationStart(this.music.radioKey);
+    this.onLocalStationStart({ key: this.music.radioKey, mode: this.music.mode, seed: this.music.seed, profile: this.music.radioProfile?.profile || null, stationProfile: this.music.radioProfile || null });
     this.onStationChanged(null);
     return this.loadMusic(mode === 'album' ? this.music.queue.shift() : id);
   }
@@ -563,12 +567,13 @@ class MediaController {
     this.clearMusic();
     await this.musicRadio?.beginSession?.();
     this.currentStation = null; this.currentRecording = null;
+    const radioProfile = this.getLocalStationProfile({ mode: 'mix', seed: null });
     this.music = {
       seed: { id: `mix:${mix.id}`, title: mix.name, artist: '', album: '', genres: [] },
       profile: mix, mixId: mix.id, label: mix.name, mode: 'mix', radioKey: `mix:${mix.id}`,
-      current: null, queue: [], back: [], failed: new Set(), waiting: false, prepared: null, preparing: null, pendingPreparedDecision: null
+      current: null, queue: [], back: [], failed: new Set(), waiting: false, prepared: null, preparing: null, pendingPreparedDecision: null, radioProfile
     };
-    this.onLocalStationStart(this.music.radioKey);
+    this.onLocalStationStart({ key: this.music.radioKey, mode: this.music.mode, seed: this.music.seed, profile: this.music.radioProfile?.profile || null, stationProfile: this.music.radioProfile || null });
     this.onStationChanged(null);
     return this.advanceMusic('start');
   }
@@ -615,7 +620,7 @@ class MediaController {
     if (this.music !== active || generation !== this.musicGeneration) return false;
     if (this.music.initialRadioSelectionPending) {
       this.music.initialRadioSelectionPending = false;
-      await this.musicRadio.recordManualStart?.(track, this.music.mode, this.music.radioKey, this.music.initialArtistSet);
+      await this.musicRadio.recordManualStart?.(track, this.music.mode, this.music.radioKey, this.music.initialArtistSet, this.music.radioProfile?.profile);
       if (this.music !== active || generation !== this.musicGeneration) return false;
     }
     if (deferredDecision) await this.musicRadio?.publishDecision?.(deferredDecision);
@@ -649,15 +654,16 @@ class MediaController {
       this.music.mode = 'artist';
       this.music.seed = artistSeed;
       this.music.radioKey = `artist:${artistSeed.songKey || artistSeed.id}`;
+      this.music.radioProfile = this.getLocalStationProfile({ mode: 'artist', seed: artistSeed });
       await this.musicRadio?.beginArtistSession?.(artistSeed);
       if (this.music !== active) return '';
-      this.onLocalStationStart(this.music.radioKey);
+      this.onLocalStationStart({ key: this.music.radioKey, mode: this.music.mode, seed: this.music.seed, profile: this.music.radioProfile?.profile || null, stationProfile: this.music.radioProfile || null });
     }
     if (!id) {
       await this.musicRadio?.setTracks?.(this.musicLibrary.tracks, `${this.musicLibrary.revision}:${this.musicLibrary.metadataRevision || 0}`);
       if (this.music !== active) return '';
       try {
-        id = (await this.musicRadio.choose(this.musicLibrary.tracks, this.music.profile || this.music.seed, this.music.mode, this.music.failed, reason, this.music.radioKey, deferDecision))?.id;
+        id = (await this.musicRadio.choose(this.musicLibrary.tracks, this.music.profile || this.music.seed, this.music.mode, this.music.failed, reason, this.music.radioKey, deferDecision, this.music.radioProfile?.profile))?.id;
       } catch (error) {
         if (this.music !== active || error.message === 'Local Radio selection canceled.') return '';
         throw error;

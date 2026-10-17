@@ -592,6 +592,24 @@ async function run() {
     const playbackDiagnostics = [];
     const controller = serializeTransport(new MediaController({ player, getStations: () => [{ id: 's', url: 'https://example.org', name: 'Streaming', preset: true }] })); controller.configureMusic(fakeLibrary, new MusicRadio({ dataDir: path.join(temp, 'playback'), now: () => now, onDecision: decision => playbackDiagnostics.push(decision) }));
     await controller.playMusic('2', 'album'); assert.equal(controller.getStatus().currentMusic.track.id, '1'); await controller.handleEnded({ reason: 'eof' }); assert.equal(controller.getStatus().currentMusic.track.id, '2'); await controller.handleEnded({ reason: 'eof' }); assert.equal(controller.getStatus().currentMusic.mode, 'artist'); await controller.playMusic('va-1', 'album'); assert.equal(controller.getStatus().currentMusic.track.id, 'va-1'); await controller.handleEnded({ reason: 'eof' }); assert.equal(controller.getStatus().currentMusic.track.id, 'va-2'); await controller.handleEnded({ reason: 'eof' }); assert.equal(controller.getStatus().currentMusic, null, 'Various Artists albums stop when the album ends'); await controller.playMusic('1', 'radio'); assert.equal(controller.getStatus().currentMusic.seed.id, '1'); assert.equal(playbackDiagnostics.at(-1).selectionTrigger, 'start', 'Song Radio logs its opening seed track after playback begins'); await assert.rejects(controller.playMusic('blocked', 'radio'), /marked Do Not Play/); await controller.playStationById('s'); assert.equal(controller.getStatus().currentMusic, null);
+    const profileTracks = [
+      track('profile-seed', { title: 'Profile Seed', artist: 'Profile Artist', artists: ['Profile Artist'], albumArtist: 'Profile Artist', similarArtists: ['Profile Neighbor'] }),
+      track('profile-neighbor', { title: 'Profile Neighbor', artist: 'Profile Neighbor', artists: ['Profile Neighbor'], albumArtist: 'Profile Neighbor', similarArtists: ['Profile Artist'] })
+    ];
+    const stationProfiles = [];
+    const profileController = serializeTransport(new MediaController({
+      player, getStations: () => [],
+      getLocalStationProfile: ({ mode, seed }) => mode === 'explore' ? { key: `portable:explore:${seed.id}`, mode, seedId: seed.id, libraryProfile: 'portable', label: `${seed.title} X Radio`, profile: { localRadioFamiliarity: 'deep-cuts', localRadioSongRepeatHours: 6, localRadioArtistRepeatMinutes: 180, localRadioArtistSetSize: 1, localRadioExploreDistance: 'explore' } } : null,
+      onLocalStationStart: station => stationProfiles.push(station)
+    }));
+    const profileRadio = new RadioSelection({ dataDir: path.join(temp, 'station-profile') });
+    profileController.configureMusic({ tracks: profileTracks, revision: 1, resolve: async id => ({ ...profileTracks.find(item => item.id === id), path: `/${id}` }) }, profileRadio);
+    await profileController.playMusic('profile-seed', 'explore');
+    assert.deepStrictEqual(profileController.getStatus().currentMusic.mode, 'explore', 'an Explore Radio station starts normally with its saved profile');
+    assert.equal(profileRadio.getLastDecision().familiarity, 'deep-cuts', 'the opening Explore Radio decision uses the station profile familiarity');
+    assert.equal(profileRadio.getLastDecision().tuning.localRadioExploreDistance, 'explore', 'the opening Explore Radio decision uses the station profile distance');
+    assert.equal(stationProfiles.at(-1).profile.localRadioArtistRepeatMinutes, 180, 'the started station reports its saved profile back to the controls');
+    await profileController.stop(); profileRadio.close();
     const preparedTracks = [
       track('prepared-a', { title: 'Prepared A', artist: 'Prepared Artist', artists: ['Prepared Artist'], albumArtist: 'Prepared Artist', duration: 240 }),
       track('prepared-b', { title: 'Prepared B', artist: 'Prepared Artist', artists: ['Prepared Artist'], albumArtist: 'Prepared Artist', duration: 240 }),

@@ -20,6 +20,7 @@ function validateListeningHistory(value) {
   const recentSource = value && typeof value === "object" && !Array.isArray(value) ? value.recentStationIds : null;
   const localRecentSource = value && typeof value === "object" && !Array.isArray(value) ? value.recentLocalStations : null;
   const localPresetSource = value && typeof value === "object" && !Array.isArray(value) ? value.localStationPresets : null;
+  const localProfileSource = value && typeof value === "object" && !Array.isArray(value) ? value.localStationProfiles : null;
   const stations = {};
   if (source && typeof source === "object" && !Array.isArray(source)) {
     for (const [rawId, rawEntry] of Object.entries(source)) {
@@ -80,7 +81,22 @@ function validateListeningHistory(value) {
       lastPlayedAt: typeof rawStation.lastPlayedAt === "string" ? rawStation.lastPlayedAt : ""
     });
   }
-  return { version: 3, stations, recentStationIds, recentLocalStations, localStationPresets };
+  const localStationProfiles = {};
+  if (localProfileSource && typeof localProfileSource === 'object' && !Array.isArray(localProfileSource)) {
+    for (const [rawKey, rawProfile] of Object.entries(localProfileSource)) {
+      const key = String(rawKey || '').trim().slice(0, 600);
+      if (!/^.+:(artist|radio|explore):.+$/.test(key) || !rawProfile || typeof rawProfile !== 'object' || Array.isArray(rawProfile)) continue;
+      localStationProfiles[key] = {
+        localRadioFamiliarity: ['hits', 'balanced', 'deep-cuts'].includes(rawProfile.localRadioFamiliarity) ? rawProfile.localRadioFamiliarity : 'balanced',
+        localRadioSongRepeatHours: Number.isInteger(Number(rawProfile.localRadioSongRepeatHours)) && Number(rawProfile.localRadioSongRepeatHours) >= 1 && Number(rawProfile.localRadioSongRepeatHours) <= 24 ? Number(rawProfile.localRadioSongRepeatHours) : 4,
+        localRadioArtistRepeatMinutes: [30, 60, 90, 120, 180].includes(Number(rawProfile.localRadioArtistRepeatMinutes)) ? Number(rawProfile.localRadioArtistRepeatMinutes) : 90,
+        localRadioArtistSetSize: [1, 2, 3, 4].includes(Number(rawProfile.localRadioArtistSetSize)) ? Number(rawProfile.localRadioArtistSetSize) : 1,
+        localRadioExploreDistance: ['close', 'detour', 'explore'].includes(rawProfile.localRadioExploreDistance) ? rawProfile.localRadioExploreDistance : 'detour'
+      };
+      if (Object.keys(localStationProfiles).length >= 500) break;
+    }
+  }
+  return { version: 4, stations, recentStationIds, recentLocalStations, localStationPresets, localStationProfiles };
 }
 
 function lowerKey(value) { return String(value ?? "").trim().toLowerCase(); }

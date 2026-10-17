@@ -1,6 +1,17 @@
 const MINIMUM_SESSION_MS = 30_000;
 const FLUSH_INTERVAL_MS = 30_000;
 
+function cleanLocalRadioProfile(value = {}) {
+  const source = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+  return {
+    localRadioFamiliarity: ['hits', 'balanced', 'deep-cuts'].includes(source.localRadioFamiliarity) ? source.localRadioFamiliarity : 'balanced',
+    localRadioSongRepeatHours: Number.isInteger(Number(source.localRadioSongRepeatHours)) && Number(source.localRadioSongRepeatHours) >= 1 && Number(source.localRadioSongRepeatHours) <= 24 ? Number(source.localRadioSongRepeatHours) : 4,
+    localRadioArtistRepeatMinutes: [30, 60, 90, 120, 180].includes(Number(source.localRadioArtistRepeatMinutes)) ? Number(source.localRadioArtistRepeatMinutes) : 90,
+    localRadioArtistSetSize: [1, 2, 3, 4].includes(Number(source.localRadioArtistSetSize)) ? Number(source.localRadioArtistSetSize) : 1,
+    localRadioExploreDistance: ['close', 'detour', 'explore'].includes(source.localRadioExploreDistance) ? source.localRadioExploreDistance : 'detour'
+  };
+}
+
 function cleanListeningHistory(value) {
   const source = value && typeof value === "object" && !Array.isArray(value)
     ? value.stations
@@ -60,7 +71,18 @@ function cleanListeningHistory(value) {
       lastPlayedAt: typeof rawStation.lastPlayedAt === 'string' ? rawStation.lastPlayedAt : ''
     });
   }
-  return { version: 3, stations, recentStationIds, recentLocalStations, localStationPresets };
+  const localStationProfiles = {};
+  const rawProfiles = value?.localStationProfiles;
+  if (rawProfiles && typeof rawProfiles === 'object' && !Array.isArray(rawProfiles)) {
+    for (const [rawKey, rawProfile] of Object.entries(rawProfiles)) {
+      const key = String(rawKey || '').trim().slice(0, 600);
+      if (!/^.+:(artist|radio|explore):.+$/.test(key)) continue;
+      if (!rawProfile || typeof rawProfile !== 'object' || Array.isArray(rawProfile)) continue;
+      localStationProfiles[key] = cleanLocalRadioProfile(rawProfile);
+      if (Object.keys(localStationProfiles).length >= 500) break;
+    }
+  }
+  return { version: 4, stations, recentStationIds, recentLocalStations, localStationPresets, localStationProfiles };
 }
 
 class ListeningHistory {
@@ -126,6 +148,28 @@ class ListeningHistory {
     return { saved, history };
   }
 
+  getLocalStationProfile({ libraryProfile = 'portable', mode, seedId } = {}) {
+    const profile = String(libraryProfile || 'portable').trim().slice(0, 180) || 'portable';
+    const validMode = ['artist', 'radio', 'explore'].includes(mode) ? mode : '';
+    const id = String(seedId || '').trim();
+    if (!validMode || !id) return null;
+    const value = this.history.localStationProfiles?.[`${profile}:${validMode}:${id}`];
+    return value ? { ...cleanLocalRadioProfile(value) } : null;
+  }
+
+  setLocalStationProfile({ libraryProfile = 'portable', mode, seedId, profile } = {}) {
+    const library = String(libraryProfile || 'portable').trim().slice(0, 180) || 'portable';
+    const validMode = ['artist', 'radio', 'explore'].includes(mode) ? mode : '';
+    const id = String(seedId || '').trim();
+    if (!validMode || !id) return null;
+    const key = `${library}:${validMode}:${id}`;
+    const next = cleanLocalRadioProfile(profile);
+    this.history.localStationProfiles = { ...(this.history.localStationProfiles || {}), [key]: next };
+    this.history = cleanListeningHistory(this.history);
+    this.storage.writeListeningHistory(this.history);
+    return { ...next };
+  }
+
   handleStatus(status) {
     const localStation = this.#localStation(status);
     if (localStation) {
@@ -169,7 +213,7 @@ class ListeningHistory {
     const activeStationId = this.session?.stationId || "";
     this.#cancelTimer();
     const cleaned = cleanListeningHistory(this.history);
-    this.history = { version: 3, stations: {}, recentStationIds: cleaned.recentStationIds, recentLocalStations: cleaned.recentLocalStations, localStationPresets: cleaned.localStationPresets };
+    this.history = { version: 4, stations: {}, recentStationIds: cleaned.recentStationIds, recentLocalStations: cleaned.recentLocalStations, localStationPresets: cleaned.localStationPresets, localStationProfiles: cleaned.localStationProfiles };
     this.storage.writeListeningHistory(this.history);
     this.session = activeStationId ? {
       stationId: activeStationId,
@@ -256,5 +300,6 @@ module.exports = {
   FLUSH_INTERVAL_MS,
   ListeningHistory,
   MINIMUM_SESSION_MS,
-  cleanListeningHistory
+  cleanListeningHistory,
+  cleanLocalRadioProfile
 };

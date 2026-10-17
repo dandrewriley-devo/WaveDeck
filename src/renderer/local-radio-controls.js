@@ -7,6 +7,7 @@ const songRepeat = document.getElementById('localRadioSongRepeat');
 const songRepeatValue = document.getElementById('localRadioSongRepeatValue');
 const artistRepeat = document.getElementById('localRadioArtistRepeat');
 const artistSet = document.getElementById('localRadioArtistSet');
+const stationProfile = document.getElementById('localRadioStationProfile');
 const status = document.getElementById('status');
 
 const FAMILIARITY = ['deep-cuts', 'balanced', 'hits'];
@@ -49,6 +50,9 @@ function render(preferences = {}) {
   artistRepeat.value = String(ARTIST_WAITS.indexOf(artistMinutes));
   artistSet.value = String(ARTIST_SETS.indexOf(setSize));
   updateSongRepeatStop(songHours);
+  const savedStation = preferences.localRadioStationProfile;
+  stationProfile.hidden = !savedStation?.label;
+  stationProfile.textContent = savedStation?.label ? `These Local Radio settings are saved with ${savedStation.label}.` : '';
 }
 
 crossfade.addEventListener('change', async () => {
@@ -112,5 +116,5 @@ for (const control of [songRepeat, artistRepeat, artistSet]) {
   });
 }
 
-window.wavedeck.onUiPreferencesChanged(render);
-window.wavedeck.getUiPreferences().then(render).catch(error => showStatus(error.message, true));
+window.wavedeck.onLocalRadioControlsChanged(render);
+window.wavedeck.getLocalRadioControls().then(render).catch(error => showStatus(error.message, true));

@@ -76,16 +76,26 @@ class RadioSelection {
   beginSession() { return this.call('beginSession'); }
   beginArtistSession(seed) { return this.call('beginArtistSession', seed); }
   beginExploreSession(seed) { return this.call('beginExploreSession', seed); }
-  planInitialArtistSet(_tracks, seed, mode, stationKey) {
-    return this.call('planInitialArtistSet', seed, mode, stationKey, this.getFamiliarity(), this.getTuning(), Atomics.load(this.cancellation, 0));
+  profileOptions(profile = null) {
+    const source = profile && typeof profile === 'object' ? profile : {};
+    return {
+      familiarity: ['hits', 'balanced', 'deep-cuts'].includes(source.localRadioFamiliarity) ? source.localRadioFamiliarity : this.getFamiliarity(),
+      tuning: { ...this.getTuning(), ...source }
+    };
+  }
+  planInitialArtistSet(_tracks, seed, mode, stationKey, profile = null) {
+    const options = this.profileOptions(profile);
+    return this.call('planInitialArtistSet', seed, mode, stationKey, options.familiarity, options.tuning, Atomics.load(this.cancellation, 0));
   }
   record(track) { return this.call('record', track); }
-  recordManualStart(track, mode, stationKey, set) {
-    return this.call('recordManualStart', track, mode, stationKey, set, this.getFamiliarity(), this.getTuning());
+  recordManualStart(track, mode, stationKey, set, profile = null) {
+    const options = this.profileOptions(profile);
+    return this.call('recordManualStart', track, mode, stationKey, set, options.familiarity, options.tuning);
   }
   recordFeedback(stationKey, track, kind) { return this.call('recordFeedback', stationKey, track, kind); }
-  async choose(_tracks, seed, mode, excluded, reason, stationKey, deferDecision) {
-    const id = await this.call('choose', seed, mode, [...excluded], reason, stationKey, deferDecision, this.getFamiliarity(), this.getTuning(), Atomics.load(this.cancellation, 0));
+  async choose(_tracks, seed, mode, excluded, reason, stationKey, deferDecision, profile = null) {
+    const options = this.profileOptions(profile);
+    const id = await this.call('choose', seed, mode, [...excluded], reason, stationKey, deferDecision, options.familiarity, options.tuning, Atomics.load(this.cancellation, 0));
     return id ? { id } : null;
   }
   publishDecision(decision) { return this.call('publishDecision', decision); }

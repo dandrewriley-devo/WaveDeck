@@ -1,5 +1,12 @@
 # WaveDeck Opus Branch Handoff
 
+## WaveDeck Opus 1.1.5 — Saved Local Radio profiles
+
+- Each Song Radio, Artist Radio, and Explore Radio station now owns a saved Local Radio profile. The first start snapshots Song Familiarity, Explore distance, Song Repeat Wait, Artist Repeat Wait, and Artist Set size; every later start restores that profile before its first selection.
+- The Local Radio Controls window follows the active saved station, so its sliders update when that station starts. Edits while it is playing update that station’s profile only. New stations still begin from the ordinary global defaults.
+- Crossfade, Finish current song when changing stations, and the Local Mix Last.fm preference remain global. Profiles live in `Data/listening-history.json` and are validated/migrated safely.
+- The visible About changelog and `package-lock.json` remain unchanged.
+
 ## WaveDeck Opus 1.1.4 — Verified AppImage rebuild
 
 - Re-pins the moving BtbN `latest` FFmpeg archive after its October 16 replacement, allowing the AppImage build to verify the archive and its extracted recorder binaries again. Verified SHA-256 values: archive `d7f4653869dffbff91b6a321b17c617d14664d9664765cb8bec955237eaef747`; FFmpeg `689224bddf8acefc220f8d2d06012d49dde494748753e82df6efadc349ff269f`; FFprobe `cd9952e9c3dfb0a159c572705d10af198708f596ec2f52a0fac823610ae1d85a`.
@@ -162,15 +169,15 @@
 
 # WaveDeck Project Handoff
 
-This is the internal continuity reference for future WaveDeck work. See the Opus release sections above for updates through **1.1.4**.
+This is the internal continuity reference for future WaveDeck work. See the Opus release sections above for updates through **1.1.5**.
 
 ## Current published state
 
 - Repository: `dandrewriley-devo/WaveDeck`
 - Branch: `opus-portable`
-- Current version: **1.1.4**
-- Current release: 1.1.4 — verified AppImage rebuild carrying clock-scheduled Station ID pools, Radio Log genres/ID entries, and non-music genre exclusions.
-- Current commit: the 1.1.4 release commit at the head of `opus-portable`.
+- Current version: **1.1.5**
+- Current release: 1.1.5 — saved per-station Local Radio profiles with slider restoration.
+- Current commit: the 1.1.5 release commit at the head of `opus-portable`.
 - 0.11.8 commit: `8118e235eed4b4a18c378f12ced8a86be83ed4b9` — monitor-safe main-window bounds persistence and portable Windows build.
 - 0.11.7 commit: `c8b69b7b8842dd6c310dda05b22b8d52870d3e84` — superseded source correction after the first portable Windows build.
 - 0.11.6 commit: `621e44d8c484cd0a4d70eb124106170f6183d0ae` — compact Local Radio Controls and remembered auxiliary-window bounds.

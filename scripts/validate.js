@@ -145,8 +145,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck-opus");
-assert.strictEqual(packageJson.version, "1.1.4");
-assert.strictEqual(packageJson.wavedeckVersion, "1.1.4");
+assert.strictEqual(packageJson.version, "1.1.5");
+assert.strictEqual(packageJson.wavedeckVersion, "1.1.5");
 assert.strictEqual(packageJson.desktopName, "wavedeck-opus.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck Opus");
 assert.strictEqual(packageJson.build.appId, "com.a17press.wavedeckopus");
@@ -550,7 +550,7 @@ try {
   assert.strictEqual(exportedLibrary.stations[0].gainDb, undefined);
   const reloadedStorage = new PortableStorage({ dataDir, defaultsDir });
   reloadedStorage.initialize();
-  assert.deepStrictEqual(reloadedStorage.readListeningHistory(), { version: 3, stations: {}, recentStationIds: [], recentLocalStations: [], localStationPresets: [] });
+  assert.deepStrictEqual(reloadedStorage.readListeningHistory(), { version: 4, stations: {}, recentStationIds: [], recentLocalStations: [], localStationPresets: [], localStationProfiles: {} });
   reloadedStorage.writeListeningHistory({
     version: 1,
     stations: { alpha: { seconds: 325, lastListenedAt: "2026-09-02T00:00:00.000Z" } },
@@ -577,6 +577,11 @@ try {
   restartedHistory.initialize();
   assert.deepStrictEqual(restartedHistory.readListeningHistory().recentLocalStations.map(station => station.key), ['portable:explore:stupid-girl'], 'Explore Radio remains in recents after disk reload');
   assert.deepStrictEqual(restartedHistory.readListeningHistory().localStationPresets.map(station => station.label), ['Stupid Girl X Radio'], 'starred Explore Radio keeps its short label after disk reload');
+  reloadedStorage.writeListeningHistory({
+    version: 4, stations: {}, recentStationIds: [], recentLocalStations: [], localStationPresets: [],
+    localStationProfiles: { 'portable:explore:stupid-girl': { localRadioFamiliarity: 'deep-cuts', localRadioSongRepeatHours: 6, localRadioArtistRepeatMinutes: 180, localRadioArtistSetSize: 1, localRadioExploreDistance: 'explore' } }
+  });
+  assert.deepStrictEqual(reloadedStorage.readListeningHistory().localStationProfiles['portable:explore:stupid-girl'], { localRadioFamiliarity: 'deep-cuts', localRadioSongRepeatHours: 6, localRadioArtistRepeatMinutes: 180, localRadioArtistSetSize: 1, localRadioExploreDistance: 'explore' }, 'Local Radio station profiles survive disk validation');
 
   const subgroupStations = reloadedStorage.readStations();
   const subgroupGroup = subgroupStations[0].group;
@@ -916,6 +921,9 @@ assert.strictEqual(listeningHistory.toggleLocalStationPreset(listeningHistory.ge
 assert.deepStrictEqual(listeningHistory.getStats().localStationPresets.map(station => station.key), ["portable:explore:seed-3"]);
 assert.strictEqual(listeningHistory.toggleLocalStationPreset(listeningHistory.getStats().recentLocalStations[0]).saved, false);
 assert.deepStrictEqual(listeningHistory.getStats().localStationPresets, []);
+const savedExploreProfile = listeningHistory.setLocalStationProfile({ libraryProfile: 'portable', mode: 'explore', seedId: 'seed-3', profile: { localRadioFamiliarity: 'deep-cuts', localRadioSongRepeatHours: 6, localRadioArtistRepeatMinutes: 180, localRadioArtistSetSize: 1, localRadioExploreDistance: 'explore' } });
+assert.deepStrictEqual(savedExploreProfile, { localRadioFamiliarity: 'deep-cuts', localRadioSongRepeatHours: 6, localRadioArtistRepeatMinutes: 180, localRadioArtistSetSize: 1, localRadioExploreDistance: 'explore' }, 'a Local Radio station can retain its own controls');
+assert.deepStrictEqual(listeningHistory.getLocalStationProfile({ libraryProfile: 'portable', mode: 'explore', seedId: 'seed-3' }), savedExploreProfile, 'saved Local Radio controls reload by station identity');
 listeningHistory.close();
 
 const profileHistory = new ListeningHistory({
@@ -1836,10 +1844,10 @@ assert.ok(windowsWorkflow.includes('chmod 755 "$appimage"'));
 const opusWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "opus-portable.yml"), "utf8");
 assert.ok(opusWorkflow.includes("branches: [opus-portable]"));
 assert.ok(opusWorkflow.includes("npm run dist:linux -- --publish never"));
-assert.ok(opusWorkflow.includes("WaveDeckOpus-1.1.4-Linux"));
+assert.ok(opusWorkflow.includes("WaveDeckOpus-1.1.5-Linux"));
 assert.ok(opusWorkflow.includes("dist/WaveDeckOpus.AppImage"));
-assert.ok(opusWorkflow.includes("tag_name: opus-v1.1.4"));
-assert.ok(opusWorkflow.includes("Publish WaveDeck Opus 1.1.4"));
+assert.ok(opusWorkflow.includes("tag_name: opus-v1.1.5"));
+assert.ok(opusWorkflow.includes("Publish WaveDeck Opus 1.1.5"));
 const musicLibraryHtml = fs.readFileSync(path.join(root, "src", "renderer", "music-library.html"), "utf8");
 const musicLibraryRenderer = fs.readFileSync(path.join(root, "src", "renderer", "music-library.js"), "utf8");
 assert.ok(musicLibraryHtml.includes('Search artists, albums, songs, or genres'));

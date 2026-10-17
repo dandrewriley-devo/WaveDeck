@@ -52,6 +52,7 @@ contextBridge.exposeInMainWorld("wavedeck", {
   setLocalRadioExploreDistance: value => ipcRenderer.invoke('music:local-radio:set-explore-distance', value),
   setLocalMusicCrossfade: enabled => ipcRenderer.invoke('music:local-radio:set-crossfade', enabled),
   setFinishCurrentSongOnStationChange: enabled => ipcRenderer.invoke('music:local-radio:set-finish-current', enabled),
+  getLocalRadioControls: () => ipcRenderer.invoke('music:local-radio:get-controls'),
   openLocalRadioControls: () => ipcRenderer.invoke('music:local-radio:open-controls'),
   onLastFmChanged: callback => subscribe('music:lastfm-changed', callback),
   onMusicDebugLog: callback => subscribe('music:debug-decision', callback),
@@ -106,6 +107,7 @@ contextBridge.exposeInMainWorld("wavedeck", {
   renameRememberedMusicComputer: (id, label) => ipcRenderer.invoke('ui:rename-remembered-music-computer', id, label),
   forgetRememberedMusicComputer: (id) => ipcRenderer.invoke('ui:forget-remembered-music-computer', id),
   onUiPreferencesChanged: (callback) => subscribe("ui:preferences-changed", callback),
+  onLocalRadioControlsChanged: (callback) => subscribe('music:local-radio:controls-changed', callback),
 
   exportLibrary: () => ipcRenderer.invoke("library:export"),
   importLibrary: (mode) => ipcRenderer.invoke("library:import", mode),

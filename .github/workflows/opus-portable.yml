@@ -37,7 +37,7 @@ jobs:
           sha256sum "$appimage"
       - uses: actions/upload-artifact@v4
         with:
-          name: WaveDeckOpus-1.1.4-Linux
+          name: WaveDeckOpus-1.1.5-Linux
           path: dist/WaveDeckOpus.AppImage
           if-no-files-found: error
           compression-level: 0
@@ -49,7 +49,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: WaveDeckOpus-1.1.4-Linux
+          name: WaveDeckOpus-1.1.5-Linux
           path: release-assets
       - name: Inspect release asset
         shell: bash
@@ -57,13 +57,13 @@ jobs:
           set -euo pipefail
           test -f release-assets/WaveDeckOpus.AppImage
           sha256sum release-assets/WaveDeckOpus.AppImage
-      - name: Publish WaveDeck Opus 1.1.4
+      - name: Publish WaveDeck Opus 1.1.5
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: opus-v1.1.4
+          tag_name: opus-v1.1.5
           target_commitish: ${{ github.sha }}
-          name: WaveDeck Opus 1.1.4
-          body: Linux x64 WaveDeck Opus with clock-scheduled Half Hour and Top of Hour station IDs, Live Radio Log genres and Station ID entries, and automatic exclusions for Comedy, Stand-up Comedy, and Spoken Word. Put MP3 or Opus clips in Station IDs/Half Hour and Station IDs/Top of Hour beside Data and Music. Keep WaveDeckOpus.AppImage in the same folder. Streaming requires a PulseAudio-compatible sound server and the normal external router setup.
+          name: WaveDeck Opus 1.1.5
+          body: Linux x64 WaveDeck Opus. Saved Song Radio, Artist Radio, and Explore Radio stations now retain their own Local Radio profile: familiarity, Explore distance, song and artist repeat waits, and Artist Set size. Starting one restores its sliders; changes while it plays update that station. Crossfade and Finish current song remain global preferences. Includes clock-scheduled Station IDs, Live Radio Log genres and Station ID entries, and automatic exclusions for Comedy, Stand-up Comedy, and Spoken Word. Keep WaveDeckOpus.AppImage in the same folder as Data and Music.
           files: release-assets/WaveDeckOpus.AppImage
           overwrite_files: true
           fail_on_unmatched_files: true
