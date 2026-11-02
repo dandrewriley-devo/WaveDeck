@@ -14,7 +14,7 @@ const INTRO_TEMPLATES = [
 const OUTRO_TEMPLATES = [
   'That was “[title]” by [artist].',
   'You just heard “[title]” by [artist].',
-  '[artist] there with “ [title].”'
+  '[artist] there with “[title].”'
 ];
 const CLIP_BITRATE = '48k';
 const VOICE = 'af_heart';
