@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const MANAGED_MARKER = "X-WaveDeckOpus-Managed=true";
+const MANAGED_MARKER = "X-WaveDeckDJ-Managed=true";
 
 function quoteExecArgument(value) {
   const escaped = String(value)
@@ -13,22 +13,22 @@ function quoteExecArgument(value) {
 function getLauncherPaths(homeDir) {
   return {
     applicationsDir: path.join(homeDir, ".local", "share", "applications"),
-    launcherPath: path.join(homeDir, ".local", "share", "applications", "wavedeck-opus.desktop"),
+    launcherPath: path.join(homeDir, ".local", "share", "applications", "wavedeck-dj.desktop"),
     iconDir: path.join(homeDir, ".local", "share", "icons", "hicolor", "256x256", "apps"),
-    iconPath: path.join(homeDir, ".local", "share", "icons", "hicolor", "256x256", "apps", "wavedeck-opus.png")
+    iconPath: path.join(homeDir, ".local", "share", "icons", "hicolor", "256x256", "apps", "wavedeck-dj.png")
   };
 }
 
 function buildDesktopEntry({ appImagePath, version }) {
   return `[Desktop Entry]
 Type=Application
-Name=WaveDeck Opus
+Name=WaveDeck DJ
 Comment=Portable music and internet radio player
 Exec=${quoteExecArgument(appImagePath)}
-Icon=wavedeck-opus
+Icon=wavedeck-dj
 Terminal=false
 Categories=AudioVideo;Audio;Player;
-StartupWMClass=wavedeck-opus
+StartupWMClass=wavedeck-dj
 X-AppImage-Version=${String(version || "")}
 ${MANAGED_MARKER}
 `;
@@ -80,15 +80,15 @@ function copyFileAtomically(source, target, mode) {
 
 function installLauncher({ homeDir, appImagePath, iconSourcePath, version }) {
   if (!appImagePath || !fs.existsSync(appImagePath) || !fs.statSync(appImagePath).isFile()) {
-    throw new Error("The current WaveDeck Opus AppImage could not be found.");
+    throw new Error("The current WaveDeck DJ AppImage could not be found.");
   }
   if (!iconSourcePath || !fs.existsSync(iconSourcePath) || !fs.statSync(iconSourcePath).isFile()) {
-    throw new Error("The WaveDeck Opus icon could not be found.");
+    throw new Error("The WaveDeck DJ icon could not be found.");
   }
 
   const existing = getLauncherStatus({ homeDir, appImagePath });
   if (existing.installed && !existing.managed) {
-    throw new Error("A custom wavedeck-opus.desktop launcher already exists. WaveDeck Opus will not overwrite it.");
+    throw new Error("A custom wavedeck-dj.desktop launcher already exists. WaveDeck DJ will not overwrite it.");
   }
 
   const paths = getLauncherPaths(homeDir);
@@ -107,7 +107,7 @@ function removeLauncher({ homeDir, appImagePath = "" }) {
   const status = getLauncherStatus({ homeDir, appImagePath });
   if (!status.installed) return status;
   if (!status.managed) {
-    throw new Error("The existing wavedeck-opus.desktop file was not created by WaveDeck Opus and was left untouched.");
+    throw new Error("The existing wavedeck-dj.desktop file was not created by WaveDeck DJ and was left untouched.");
   }
 
   fs.unlinkSync(status.launcherPath);

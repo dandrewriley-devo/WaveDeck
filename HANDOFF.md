@@ -1,3 +1,17 @@
+# WaveDeck DJ Branch Handoff
+
+## WaveDeck DJ 0.1.0 — Stage One clip preparation
+
+- This separate `dj-portable` branch begins WaveDeck DJ from the stable WaveDeck Opus 1.1.5 source. Its Linux release artifact is `WaveDeckDJ.AppImage`, published as `dj-v0.1.0`. WaveDeck Opus and its `opus-portable` branch remain unchanged.
+- The old scheduled `Station IDs/Half Hour` and `Station IDs/Top of Hour` playout system is disabled in DJ. Stage Two will replace it with real DJ breaks; do not restore or extend the old scheduler here.
+- DJ clips live in a sibling portable `DJ Clips` folder beside `Data` and `Music`. It contains `clips.sqlite` and `tracks/`; it must never be treated as music for scans, conversion, indexing, Last.fm, or playback selection.
+- A portable song maps deterministically to `DJ Clips/tracks/<source parent>/<source stem>__intro-01.opus` through `intro-03`, and the matching `outro-01.opus` through `outro-03`. Stage Two should use this mapping/cache rather than metadata-title searches. Do not put mutable data such as rating, text, voice, or dates in filenames.
+- Clips are local `af_heart` Kokoro speech at mono 48 kbps Opus. The quantized model is bundled in the AppImage. Do not substitute a cloud voice, online service, separate user install, or live TTS at playout time.
+- Automatic generation uses only the stored matched Last.fm score already in `music.sqlite`: score 70 or higher. No fallback Last.fm lookup belongs to DJ Clips. New/updating Last.fm records that newly qualify queue quietly. The Settings button queues all qualifying portable tracks; the Music Manager music-note control always permits a persistent manual inclusion, even without a score.
+- The three hard-coded intros and three hard-coded outros are Andrew's approved lines. They are not user settings. The clip cache includes source path/stat identity, final spoken text, voice, role, slot, and bitrate. Missing/stale clips regenerate; never run cleanup or delete previously generated per-track clips.
+- Generation uses one persistent low-priority worker, an on-disk resumable queue, and never blocks playback, import, indexing, or Last.fm refresh. It only shows compact status; no popups. Station-ID text/controls are intentionally deferred until Andrew supplies the future list.
+- The moving BtbN FFmpeg archive was re-verified for this build: archive `a651976b11ebe8659b667cc7116debc246840eb6d460596cc4f9c650a8805ce7`; extracted `ffmpeg` `00afa954d2d3437e8e550afbe580bb57c404817fb9d895ee134a0f148ee1ae05`; `ffprobe` `30940d1b38ef8bb6ce1dd29870a36d1a59193223879b27e8831ea6b99c85596a`.
+
 # WaveDeck Opus Branch Handoff
 
 ## WaveDeck Opus 1.1.5 — Saved Local Radio profiles

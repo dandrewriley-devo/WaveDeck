@@ -25,7 +25,7 @@ let requestedAdvancedTab = '';
 const embeddedMethods = new Set([
   'getPortableMusicArtists', 'getPortableMusicArtistDetail', 'playMusic',
   'saveArtistRelationships', 'savePortableMusicReleaseHoliday', 'savePortableMusicTrack',
-  'clearMusicDebugHistory', 'getMusicDebugHistory', 'saveMusicDebugLog'
+  'clearMusicDebugHistory', 'getMusicDebugHistory', 'saveMusicDebugLog', 'queueDjClipsForTrack'
 ]);
 window.addEventListener('message', async event => {
   if (![musicManagerFrame.contentWindow, radioLogFrame.contentWindow].includes(event.source)) return;
@@ -124,6 +124,8 @@ const localMixReadyCount = document.getElementById('localMixReadyCount');
 const localMixReadyLabel = document.getElementById('localMixReadyLabel');
 const manageLocalMixesBtn = document.getElementById('manageLocalMixesBtn');
 const queueLastFmRefreshBtn = document.getElementById('queueLastFmRefreshBtn');
+const djClipStatus = document.getElementById('djClipStatus');
+const queueQualifyingDjClipsBtn = document.getElementById('queueQualifyingDjClipsBtn');
 const resetListeningBtn = document.getElementById("resetListeningBtn");
 const platform = window.wavedeck.platform;
 
@@ -272,7 +274,7 @@ function renderProMusicSettings(preferences) {
   portableImportSpeed.value = String([2, 6, 12].includes(Number(preferences?.portableImportWorkers)) ? preferences.portableImportWorkers : 2);
   if (proEnabled) {
     if (requestedAdvancedTab) { const requested = requestedAdvancedTab; requestedAdvancedTab = ''; showTab(requested); }
-    void loadLastFmStatus(); void loadLocalMixSummary(); void loadMusicLibraryStatus(); void loadRememberedMusicComputers(); void loadPortableStorage();
+    void loadLastFmStatus(); void loadDjClipStatus(); void loadLocalMixSummary(); void loadMusicLibraryStatus(); void loadRememberedMusicComputers(); void loadPortableStorage();
     if (localMixDetails.open) void loadLocalMixManager();
   }
 }
@@ -357,6 +359,18 @@ function renderLastFmStatus(status) {
 
 async function loadLastFmStatus() {
   try { renderLastFmStatus(await window.wavedeck.getLastFmStatus()); } catch {}
+}
+
+function renderDjClipStatus(status = {}) {
+  if (!djClipStatus || !queueQualifyingDjClipsBtn) return;
+  const queued = Number(status.queued || 0);
+  const busy = status.state === 'generating';
+  queueQualifyingDjClipsBtn.disabled = busy;
+  queueQualifyingDjClipsBtn.textContent = busy ? 'Generating DJ clips…' : 'Generate clips for all qualifying tracks';
+  djClipStatus.textContent = status.message || (queued ? `${queued.toLocaleString()} track${queued === 1 ? '' : 's'} queued quietly in the background.` : 'DJ clips are ready.');
+}
+async function loadDjClipStatus() {
+  try { renderDjClipStatus(await window.wavedeck.getDjClipStatus()); } catch (error) { if (djClipStatus) djClipStatus.textContent = error.message; }
 }
 
 function element(tag, className, text) {
@@ -1446,6 +1460,15 @@ queueLastFmRefreshBtn.addEventListener('click', async () => {
   }
 });
 
+queueQualifyingDjClipsBtn.addEventListener('click', async () => {
+  queueQualifyingDjClipsBtn.disabled = true;
+  try {
+    const status = await window.wavedeck.queueQualifyingDjClips();
+    renderDjClipStatus(status);
+  } catch (error) { setStatus(statusLocalMusic, error.message, false); }
+  finally { if (queueQualifyingDjClipsBtn.textContent !== 'Generating DJ clips…') queueQualifyingDjClipsBtn.disabled = false; }
+});
+
 connectLastFmBtn.addEventListener('click', async () => {
   connectLastFmBtn.disabled = true;
   try { renderLastFmStatus(await window.wavedeck.connectLastFm()); }
@@ -1501,6 +1524,7 @@ window.wavedeck.onUiPreferencesChanged((preferences) => {
   if (sidebarPlatform) launchInSidebarMode.checked = preferences?.launchInSidebarMode === true;
 });
 window.wavedeck.onLastFmChanged(renderLastFmStatus);
+window.wavedeck.onDjClipsChanged(renderDjClipStatus);
 window.wavedeck.onMusicDebugLog(decision => {
   if (radioLogFrame.getAttribute('src')) radioLogFrame.contentWindow?.postMessage({ type: 'embedded-event', name: 'debug-log', data: decision }, '*');
 });

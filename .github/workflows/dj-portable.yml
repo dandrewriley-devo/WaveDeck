@@ -1,0 +1,69 @@
+name: Build WaveDeck DJ
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [dj-portable]
+
+permissions:
+  contents: write
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: sudo DEBIAN_FRONTEND=noninteractive apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y icecast2
+      - run: npm install --package-lock=false --no-audit --no-fund
+      - run: npm test
+      - run: npm run dist:linux -- --publish never
+      - name: Inspect WaveDeck DJ AppImage
+        shell: bash
+        run: |
+          set -euo pipefail
+          appimage="dist/WaveDeckDJ.AppImage"
+          chmod 755 "$appimage"
+          test -f "$appimage"
+          test -x "$appimage"
+          size=$(stat --format=%s "$appimage")
+          if [ "$size" -lt 100000000 ]; then
+            echo "WaveDeckDJ.AppImage is unexpectedly small: $size bytes."
+            exit 1
+          fi
+          sha256sum "$appimage"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WaveDeckDJ-0.1.0-Linux
+          path: dist/WaveDeckDJ.AppImage
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+
+  publish:
+    needs: linux
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: WaveDeckDJ-0.1.0-Linux
+          path: release-assets
+      - name: Inspect release asset
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f release-assets/WaveDeckDJ.AppImage
+          sha256sum release-assets/WaveDeckDJ.AppImage
+      - name: Publish WaveDeck DJ 0.1.0
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: dj-v0.1.0
+          target_commitish: ${{ github.sha }}
+          name: WaveDeck DJ 0.1.0
+          body: "Linux x64 WaveDeck DJ. Stage One adds quiet, local af_heart DJ clip preparation for Portable Music using stored Last.fm scores of 70 or higher, plus a per-track manual queue in Music Manager. Clips are 48 kbps Opus files in the sibling DJ Clips folder. Keep WaveDeckDJ.AppImage in the same folder as Data, Music, and DJ Clips."
+          files: release-assets/WaveDeckDJ.AppImage
+          overwrite_files: true
+          fail_on_unmatched_files: true

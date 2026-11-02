@@ -72,6 +72,12 @@ function smallButton(label, title, action, className = '') {
 }
 function ratingControls(track) {
   const controls = document.createElement('div'); controls.className = 'rating-controls';
+  const djState = track.djClip?.state || 'missing';
+  controls.append(smallButton('♬', djState === 'ready' ? 'DJ clips are ready for this track' : (djState === 'queued' || djState === 'generating' ? 'DJ clips are queued' : 'Generate DJ clips for this track'), async () => {
+    const scrollTop = currentScroll(); track.djClip = { state: 'queued', manual: true }; render(scrollTop);
+    try { await wavedeck.queueDjClipsForTrack(track.id); }
+    catch (error) { track.djClip = { state: 'missing' }; summary.textContent = error.message; render(scrollTop); }
+  }, `dj-mic dj-${djState}`));
   controls.append(smallButton('⊘', 'Do Not Play', () => saveTrack(track, { doNotPlay: !track.doNotPlay }), track.doNotPlay ? 'on-ban' : ''));
   const stars = document.createElement('div'); stars.className = 'stars';
   for (let value = 1; value <= 10; value += 1) stars.append(smallButton('★', `Rate ${value} of 10`, () => saveTrack(track, { rating: Number(track.rating) === value ? 0 : value }), Number(track.rating) >= value ? 'on-star' : ''));

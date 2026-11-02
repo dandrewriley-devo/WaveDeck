@@ -144,15 +144,16 @@ function assertValidHeaderPng(filePath) {
 
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
-assert.strictEqual(packageJson.name, "wavedeck-opus");
-assert.strictEqual(packageJson.version, "1.1.5");
-assert.strictEqual(packageJson.wavedeckVersion, "1.1.5");
-assert.strictEqual(packageJson.desktopName, "wavedeck-opus.desktop");
-assert.strictEqual(packageJson.build.productName, "WaveDeck Opus");
-assert.strictEqual(packageJson.build.appId, "com.a17press.wavedeckopus");
+assert.strictEqual(packageJson.name, "wavedeck-dj");
+assert.strictEqual(packageJson.version, "0.1.0");
+assert.strictEqual(packageJson.wavedeckVersion, "0.1.0");
+assert.strictEqual(packageJson.desktopName, "wavedeck-dj.desktop");
+assert.strictEqual(packageJson.build.productName, "WaveDeck DJ");
+assert.strictEqual(packageJson.build.appId, "com.a17press.wavedeckdj");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
 assert.strictEqual(packageJson.dependencies["dbus-next"], "^0.10.2");
 assert.ok(packageJson.scripts["prepare:linux-recorder"].includes("prepare-linux-ffmpeg.js"));
+assert.ok(packageJson.scripts["prepare:dj-model"].includes("prepare-dj-model.js"));
 assert.ok(packageJson.scripts.start.includes("prepare:linux-recorder"));
 assert.ok(packageJson.scripts["dist:linux"].includes("prepare:linux-recorder"));
 assert.ok(!packageJson.build.asarUnpack);
@@ -169,10 +170,14 @@ assert.deepStrictEqual(packageJson.build.extraResources, [
   {
     from: ".cache/wavedeck-tools/linux/icecast",
     to: "streaming"
+  },
+  {
+    from: ".cache/wavedeck-tools/dj-models",
+    to: "dj-models"
   }
 ]);
 assert.strictEqual(packageJson.build.linux.syncDesktopName, true);
-assert.strictEqual(packageJson.build.linux.artifactName, "WaveDeckOpus.${ext}");
+assert.strictEqual(packageJson.build.linux.artifactName, "WaveDeckDJ.${ext}");
 assert.ok(packageJson.scripts["dist:windows"].includes("electron-builder.windows.json"));
 assert.strictEqual(stations.length, 360);
 assert.strictEqual(groups.length, 17);
@@ -786,8 +791,8 @@ try {
 
   const desktopEntry = buildDesktopEntry({ appImagePath: fakeAppImage, version: "0.1.14" });
   assert.ok(desktopEntry.includes(`Exec=${quoteExecArgument(fakeAppImage)}`));
-  assert.ok(desktopEntry.includes("Icon=wavedeck-opus"));
-  assert.ok(desktopEntry.includes("StartupWMClass=wavedeck-opus"));
+  assert.ok(desktopEntry.includes("Icon=wavedeck-dj"));
+  assert.ok(desktopEntry.includes("StartupWMClass=wavedeck-dj"));
   assert.ok(desktopEntry.includes(MANAGED_MARKER));
 
   // Desktop-entry installation is a Linux-only feature. Its file-mode behavior
@@ -1663,8 +1668,8 @@ assert.ok(mainSource.includes("setSidebarMode(false, { showWindow: false })"));
 assert.ok(mainSource.includes("async function setSidebarMode(enabled, { showWindow = true } = {})"));
 assert.ok(mainSource.includes("storage.setMiniPlayerWindowBounds"));
 assert.ok(mainSource.includes("function createTray()"));
-assert.ok(mainSource.includes("Show WaveDeck Opus"));
-assert.ok(mainSource.includes("Quit WaveDeck Opus"));
+assert.ok(mainSource.includes("Show WaveDeck DJ"));
+assert.ok(mainSource.includes("Quit WaveDeck DJ"));
 assert.ok(mainSource.includes("tray?.destroy()"));
 assert.ok(mainSource.includes("QUIET_MUSIC_MAINTENANCE_MS = 180000"));
 assert.ok(mainSource.includes("scheduleQuietMusicMaintenance"));
@@ -1672,7 +1677,7 @@ assert.ok(mainSource.includes("activeMusicLibraryProfile"));
 assert.ok(mainSource.includes("removeUnavailableLocalStations"));
 const desktopLauncherSource = fs.readFileSync(path.join(root, "src", "main", "desktop-launcher.js"), "utf8");
 assert.ok(desktopLauncherSource.includes('.local", "share", "applications"'));
-assert.ok(desktopLauncherSource.includes("X-WaveDeckOpus-Managed=true"));
+assert.ok(desktopLauncherSource.includes("X-WaveDeckDJ-Managed=true"));
 const rendererSource = fs.readFileSync(path.join(root, "src", "renderer", "renderer.js"), "utf8");
 assert.ok(rendererSource.includes("warmLocalMusicView"));
 assert.ok(indexHtml.includes('id="localRadioControlsBtn"'));
@@ -1841,13 +1846,19 @@ assert.ok(windowsWorkflow.includes("Publish WaveDeck 1.0.5 for Linux and Windows
 assert.ok(windowsWorkflow.includes("release-assets/linux/WaveDeck.AppImage"));
 assert.ok(windowsWorkflow.includes("release-assets/windows/WaveDeck.exe"));
 assert.ok(windowsWorkflow.includes('chmod 755 "$appimage"'));
-const opusWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "opus-portable.yml"), "utf8");
-assert.ok(opusWorkflow.includes("branches: [opus-portable]"));
-assert.ok(opusWorkflow.includes("npm run dist:linux -- --publish never"));
-assert.ok(opusWorkflow.includes("WaveDeckOpus-1.1.5-Linux"));
-assert.ok(opusWorkflow.includes("dist/WaveDeckOpus.AppImage"));
-assert.ok(opusWorkflow.includes("tag_name: opus-v1.1.5"));
-assert.ok(opusWorkflow.includes("Publish WaveDeck Opus 1.1.5"));
+const djWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "dj-portable.yml"), "utf8");
+assert.ok(djWorkflow.includes("branches: [dj-portable]"));
+assert.ok(djWorkflow.includes("npm run dist:linux -- --publish never"));
+assert.ok(djWorkflow.includes("WaveDeckDJ-0.1.0-Linux"));
+assert.ok(djWorkflow.includes("dist/WaveDeckDJ.AppImage"));
+assert.ok(djWorkflow.includes("tag_name: dj-v0.1.0"));
+assert.ok(djWorkflow.includes("Publish WaveDeck DJ 0.1.0"));
+const djClipsSource = fs.readFileSync(path.join(root, "src", "main", "dj-clips.js"), "utf8");
+assert.ok(djClipsSource.includes("DJ Clips"));
+assert.ok(djClipsSource.includes("__${kind}-"));
+assert.ok(djClipsSource.includes("LASTFM_MINIMUM = 70"));
+assert.ok(djClipsSource.includes("af_heart"));
+assert.ok(djClipsSource.includes("48k"));
 const musicLibraryHtml = fs.readFileSync(path.join(root, "src", "renderer", "music-library.html"), "utf8");
 const musicLibraryRenderer = fs.readFileSync(path.join(root, "src", "renderer", "music-library.js"), "utf8");
 assert.ok(musicLibraryHtml.includes('Search artists, albums, songs, or genres'));

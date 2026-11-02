@@ -85,6 +85,7 @@ class MediaController {
     getLocalStationProfile = () => null,
     onLocalStationStart = () => {},
     onStationIdPlayed = () => {},
+    stationIdsEnabled = true,
     now = () => Date.now(),
     random = Math.random
   }) {
@@ -100,9 +101,10 @@ class MediaController {
     this.getLocalStationProfile = getLocalStationProfile;
     this.onLocalStationStart = onLocalStationStart;
     this.onStationIdPlayed = onStationIdPlayed;
+    this.stationIdsEnabled = stationIdsEnabled === true;
     this.now = now;
     this.random = random;
-    this.stationIdsDir = dataDir ? path.join(path.dirname(dataDir), 'Station IDs') : '';
+    this.stationIdsDir = this.stationIdsEnabled && dataDir ? path.join(path.dirname(dataDir), 'Station IDs') : '';
     this.stationIdDirectories = this.stationIdsDir ? {
       half: path.join(this.stationIdsDir, 'Half Hour'),
       hour: path.join(this.stationIdsDir, 'Top of Hour')
@@ -386,7 +388,7 @@ class MediaController {
   }
 
   #dueStationId() {
-    if (!this.music || this.music.mode === 'song' || this.stationIdPlaying || !this.stationIdsDir) return null;
+    if (!this.stationIdsEnabled || !this.music || this.music.mode === 'song' || this.stationIdPlaying || !this.stationIdsDir) return null;
     if (this.music.mode === 'album' && !this.music.albumArtistSeed && !this.music.queue.length && !this.music.prepared) return null;
     if (this.stationIdQueued) return this.stationIdQueued;
     const slot = this.#currentStationIdSlot();
@@ -431,7 +433,7 @@ class MediaController {
 
   #scheduleStationIdClockCheck() {
     clearInterval(this.stationIdClockTimer); this.stationIdClockTimer = null;
-    if (!this.music || this.music.mode === 'song') return;
+    if (!this.stationIdsEnabled || !this.music || this.music.mode === 'song') return;
     this.#dueStationId();
     this.stationIdClockTimer = setInterval(() => this.#dueStationId(), 15_000);
     this.stationIdClockTimer.unref?.();

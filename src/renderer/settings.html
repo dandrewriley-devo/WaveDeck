@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <meta http-equiv="Content-Security-Policy"
         content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'">
-  <title>WaveDeck Opus Settings</title>
+  <title>WaveDeck DJ Settings</title>
   <link rel="stylesheet" href="./settings.css">
 </head>
 <body>
@@ -57,7 +57,7 @@
       <!-- INTERFACE -->
       <section id="tab-interface" class="panel hidden">
         <div class="general-meta">
-          <b>WaveDeck Opus version <span id="aboutVersion">1.0.0</span></b>
+          <b>WaveDeck DJ version <span id="aboutVersion">0.1.0</span></b>
         </div>
         <div class="general-sections">
         <section class="general-card">
@@ -286,6 +286,12 @@
           <div id="lastFmStatus" class="visually-hidden">Last.fm is ready when you are.</div>
           <div class="card-actions"><button id="connectLastFmBtn" class="subtle-link" type="button">Connect Last.fm</button><button id="disconnectLastFmBtn" class="subtle-link" type="button" hidden>Disconnect</button><button id="queueLastFmRefreshBtn" class="subtle-link" type="button">Refresh</button></div>
         </section>
+        <section class="local-music-card dashboard-square" aria-labelledby="djClipsTitle">
+          <div class="card-title" id="djClipsTitle">DJ Clips</div>
+          <div class="hint">WaveDeck quietly prepares 48 kbps Opus intros and outros for Portable Music with stored Last.fm scores of 70 or higher. Clips live beside Music in <b>DJ Clips</b>.</div>
+          <div id="djClipStatus" class="card-status" role="status">DJ clips are ready when you are.</div>
+          <div class="card-actions"><button id="queueQualifyingDjClipsBtn" class="subtle-link" type="button">Generate clips for all qualifying tracks</button></div>
+        </section>
         <section class="local-music-card dashboard-square import-music-section" aria-labelledby="portableImportTitle">
           <div class="card-title" id="portableImportTitle">Import to Portable Music <span class="info-tip" title="WaveDeck copies selected music into Portable Music as compact Opus files. Your original music is never changed." aria-label="Import copies music without changing the source">i</span></div>
           <div id="portableImportReady" class="library-track-count import-ready-count" hidden><span id="portableImportReadyCount">—</span><span>Ready to Import</span></div>
@@ -342,9 +348,9 @@
       <!-- ABOUT -->
       <section id="tab-about" class="panel hidden">
         <div class="about-intro">
-          <img class="about-logo" src="../../assets/logo.png" alt="WaveDeck Opus logo" />
+          <img class="about-logo" src="../../assets/logo.png" alt="WaveDeck DJ logo" />
           <div class="about-copy">
-            <h2>About WaveDeck Opus</h2>
+            <h2>About WaveDeck DJ</h2>
             <p class="muted">WaveDeck Opus is a portable home for Streaming Radio and Local Music. It keeps your stations, presets, listening history, Local Radio settings, and music data together in its own portable Data folder.</p>
           </div>
         </div>

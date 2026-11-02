@@ -1,19 +1,20 @@
 {
-  "name": "wavedeck-opus",
-  "version": "1.1.5",
-  "wavedeckVersion": "1.1.5",
-  "description": "WaveDeck Opus portable music player for Linux",
+  "name": "wavedeck-dj",
+  "version": "0.1.0",
+  "wavedeckVersion": "0.1.0",
+  "description": "WaveDeck DJ portable music player for Linux",
   "author": "Andrew Riley",
   "license": "MIT",
-  "desktopName": "wavedeck-opus.desktop",
+  "desktopName": "wavedeck-dj.desktop",
   "main": "src/main/main.js",
   "scripts": {
     "prestart": "node scripts/ensure-music-dependencies.js",
     "prepare:linux-recorder": "node scripts/prepare-linux-ffmpeg.js",
     "prepare:linux-icecast": "node scripts/prepare-linux-icecast.js",
+    "prepare:dj-model": "node scripts/prepare-dj-model.js",
     "start": "npm run prepare:linux-recorder && electron .",
     "test": "node scripts/validate.js && node scripts/test-music.js",
-    "dist:linux": "npm run prepare:linux-recorder && npm run prepare:linux-icecast && electron-builder --linux AppImage --x64",
+    "dist:linux": "npm run prepare:linux-recorder && npm run prepare:linux-icecast && npm run prepare:dj-model && electron-builder --linux AppImage --x64",
     "dist:windows": "electron-builder --win portable --x64 --config electron-builder.windows.json",
     "dist:macos": "electron-builder --mac dir --universal --config electron-builder.macos.json"
   },
@@ -22,8 +23,8 @@
     "electron-builder": "26.15.3"
   },
   "build": {
-    "appId": "com.a17press.wavedeckopus",
-    "productName": "WaveDeck Opus",
+    "appId": "com.a17press.wavedeckdj",
+    "productName": "WaveDeck DJ",
     "asar": true,
     "files": [
       "assets/**/*",
@@ -45,6 +46,10 @@
       {
         "from": ".cache/wavedeck-tools/linux/icecast",
         "to": "streaming"
+      },
+      {
+        "from": ".cache/wavedeck-tools/dj-models",
+        "to": "dj-models"
       }
     ],
     "directories": {
@@ -62,11 +67,12 @@
       "category": "AudioVideo",
       "icon": "build/icon.png",
       "syncDesktopName": true,
-      "artifactName": "WaveDeckOpus.${ext}"
+      "artifactName": "WaveDeckDJ.${ext}"
     }
   },
   "dependencies": {
     "dbus-next": "^0.10.2",
+    "kokoro-js": "1.2.1",
     "music-metadata": "11.9.0",
     "qrcode": "1.5.4",
     "sql.js": "1.13.0",

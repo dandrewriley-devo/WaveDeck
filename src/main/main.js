@@ -26,6 +26,7 @@ const { PortableManagerIndex, portableManagerArtistKey, portableManagerReleaseKe
 const { normalize } = require('./music-tags');
 const { mixBookSignature } = require('./local-mixes');
 const { LastFmEnricher } = require('./lastfm-enricher');
+const { DjClips } = require('./dj-clips');
 const { LastFmScrobbler } = require('./lastfm-scrobbler');
 const {
   getLauncherStatus,
@@ -74,8 +75,8 @@ if (process.platform === "linux") {
 
 const FIXED_WIDTH = SIDEBAR_WIDTH;
 const PROJECT_ROOT = path.resolve(__dirname, "..", "..");
-const FLOATING_NATIVE_TITLE = "WaveDeck Opus";
-const SIDEBAR_NATIVE_TITLE = "WaveDeck Opus Sidebar";
+const FLOATING_NATIVE_TITLE = "WaveDeck DJ";
+const SIDEBAR_NATIVE_TITLE = "WaveDeck DJ Sidebar";
 const SIDEBAR_REALIZE_DELAY_MS = 150;
 const MEDIA_KEY_RECLAIM_INTERVAL_MS = 15_000;
 const PLAYBACK_HEARTBEAT_MS = 10_000;
@@ -125,6 +126,7 @@ let musicRadio = null;
 let opusOptimizer = null;
 let latestMusicLibraryStatus = {};
 let lastFmEnricher = null;
+let djClips = null;
 let lastFmScrobbler = null;
 let recordingProbeExecutable = "";
 let portableFfmpegExecutable = "";
@@ -395,7 +397,7 @@ function refreshTrayMenu() {
   if (!tray) return;
   const miniPlayerActive = Boolean(miniPlayerWindow && !miniPlayerWindow.isDestroyed());
   tray.setContextMenu(Menu.buildFromTemplate([
-    { label: "Show WaveDeck Opus", click: showMainWindow },
+    { label: "Show WaveDeck DJ", click: showMainWindow },
     ...(supportsMiniPlayer() ? [{
       label: "Mini Player",
       type: "checkbox",
@@ -405,7 +407,7 @@ function refreshTrayMenu() {
     { label: "Play / Pause", click: () => { void mediaController?.togglePlayPause(); } },
     { label: "Stop", click: () => { void mediaController?.stop(); } },
     { type: "separator" },
-    { label: "Quit WaveDeck Opus", click: () => app.quit() }
+    { label: "Quit WaveDeck DJ", click: () => app.quit() }
   ]));
 }
 
@@ -430,7 +432,7 @@ function toggleMiniPlayerDisplayMode() {
 function createTray() {
   if (tray || !Tray) return;
   tray = new Tray(path.join(PROJECT_ROOT, "build", "icon.png"));
-  tray.setToolTip("WaveDeck Opus");
+  tray.setToolTip("WaveDeck DJ");
   refreshTrayMenu();
   tray.on("click", showMainWindow);
 }
@@ -808,7 +810,7 @@ function openSettingsWindow(stationId = "", requestedTab = '', focusTrack = null
     minWidth: Math.min(SETTINGS_MIN_WIDTH, geometry.width),
     minHeight: Math.min(SETTINGS_MIN_HEIGHT, geometry.height),
     resizable: true,
-    title: "WaveDeck Opus Settings"
+    title: "WaveDeck DJ Settings"
   });
 
   settingsWindow.on("close", () => {
@@ -1004,7 +1006,7 @@ async function openMiniPlayer() {
     maxHeight: geometry.height,
     resizable: false,
     skipTaskbar: true,
-    title: "WaveDeck Opus Mini Player"
+    title: "WaveDeck DJ Mini Player"
   });
   miniPlayerWindow = window;
   window.setAlwaysOnTop(true, "floating");
@@ -1507,6 +1509,30 @@ function installIpcHandlers() {
     await musicLibrary.enable();
     return lastFmEnricher.queueFullRefresh();
   });
+  ipcMain.handle('music:dj:get-status', async () => {
+    requireAdvancedFeatures();
+    await musicLibrary.enable();
+    if (!djClips) throw new Error('DJ Clips are available in the Linux WaveDeck DJ build.');
+    await djClips.start(); return djClips.getStatus();
+  });
+  ipcMain.handle('music:dj:queue-qualifying', async () => {
+    requireAdvancedFeatures();
+    await musicLibrary.enable();
+    if (!djClips) throw new Error('DJ Clips are available in the Linux WaveDeck DJ build.');
+    return djClips.queueQualifyingTracks();
+  });
+  ipcMain.handle('music:dj:queue-track', async (_event, id) => {
+    requireAdvancedFeatures();
+    await musicLibrary.enable();
+    if (!djClips) throw new Error('DJ Clips are available in the Linux WaveDeck DJ build.');
+    return djClips.queueTrack(String(id || ''), { manual: true });
+  });
+  ipcMain.handle('music:dj:track-state', async (_event, id) => {
+    requireAdvancedFeatures();
+    await musicLibrary.enable();
+    if (!djClips) return { state: 'unavailable' };
+    return djClips.trackState(String(id || ''));
+  });
   ipcMain.handle('music:local-radio:set-familiarity', (_event, familiarity) => {
     requireAdvancedFeatures();
     const value = String(familiarity || '');
@@ -1709,7 +1735,12 @@ function installIpcHandlers() {
   });
   ipcMain.handle('music:library:get', async () => { await requireMusic(); return musicLibrary.tracks.filter(track => track.library === 'portable').map(track => ({ ...track, manualRelatedArtists: relatedForArtist(track.artist) })); });
   ipcMain.handle('music:library:artists', async (_event, query = '') => { await requireMusic(); return portableManagerArtistSummaries(query); });
-  ipcMain.handle('music:library:artist-detail', async (_event, key, query = '') => { await requireMusic(); return portableManagerArtistDetail(key, query); });
+  ipcMain.handle('music:library:artist-detail', async (_event, key, query = '') => {
+    await requireMusic(); const detail = portableManagerArtistDetail(key, query);
+    if (!djClips) return detail;
+    for (const release of detail.releases || []) for (const track of release.tracks || []) track.djClip = await djClips.trackState(track.id);
+    return detail;
+  });
   ipcMain.handle('music:library:relationships:get', async (_event, artist) => ({ artist: String(artist || ''), related: relatedForArtist(artist) }));
   ipcMain.handle('music:library:relationships:save', async (_event, artist, related) => {
     const name = String(artist || '').trim(); const key = relationshipKey(name); if (!key) throw new Error('Choose an artist first.');
@@ -2031,6 +2062,7 @@ if (!hasSingleInstanceLock) {
       getCrossfadeEnabled: () => storage.getUiPreferences().localMusicCrossfadeEnabled === true,
       getFinishCurrentSongOnStationChange: () => storage.getUiPreferences().finishCurrentSongOnStationChange === true,
       getLocalStationProfile: savedLocalStationProfile,
+      stationIdsEnabled: false,
       onLocalStationStart: station => {
         activateLocalStationProfile(station?.stationProfile || null);
         beginRadioDiagnosticSession(station?.key || '');
@@ -2048,6 +2080,16 @@ if (!hasSingleInstanceLock) {
       },
       onLocalMixAvailability: availability => sendToAll('music:mixes-changed', availability)
     });
+    if (process.platform === 'linux' && portableFfmpegExecutable) {
+      const modelDir = app.isPackaged
+        ? path.join(process.resourcesPath, 'dj-models', 'Kokoro-82M-v1.0-ONNX')
+        : path.join(PROJECT_ROOT, '.cache', 'wavedeck-tools', 'dj-models', 'Kokoro-82M-v1.0-ONNX');
+      djClips = new DjClips({
+        dataDir: getDataDir(), getTracks: () => musicLibrary?.tracks || [],
+        ffmpegPath: () => portableFfmpegExecutable, getModelDir: () => modelDir,
+        onStatus: status => sendToAll('music:dj:changed', status)
+      });
+    }
     if (process.platform === 'linux' && portableFfmpegExecutable && portableFfprobeExecutable) {
       opusOptimizer = new OpusOptimizer({
         musicRoot: path.join(path.dirname(getDataDir()), 'Music'),
@@ -2091,7 +2133,8 @@ if (!hasSingleInstanceLock) {
       library: musicLibrary,
       getPreferences: () => storage.getUiPreferences(),
       fetchImpl: (...args) => net.fetch(...args),
-      onStatus: sendLastFmStatus
+      onStatus: sendLastFmStatus,
+      onTrackUpdated: track => { if (track) void djClips?.observeLastFm(track).catch(() => {}); }
     });
     mediaController.configureMusic(musicLibrary, musicRadio, track => { void lastFmEnricher.queueAlbum(track.id); lastFmScrobbler?.trackStarted(track); });
     lastFmEnricher.configure();
@@ -2215,6 +2258,7 @@ function finishShutdown() {
   try { globalShortcut.unregister(RADIO_IDENTITY_REBUILD_SHORTCUT); } catch {}
   try { globalShortcut.unregister(MINI_PLAYER_SHORTCUT); } catch {}
   lastFmEnricher?.stop();
+  void djClips?.close();
   lastFmScrobbler?.stop();
   listeningHistory?.close();
   platformMediaKeys?.close();

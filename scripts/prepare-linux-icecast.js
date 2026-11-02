@@ -21,4 +21,4 @@ for (const match of linked.matchAll(/=>\s+(\/[^\s]+)\s+\(/g)) {
   if (/\/lib(?:c|m|pthread|dl|rt|resolv|nss_[^/]*)\.so\./.test(source)) continue;
   fs.copyFileSync(source, path.join(output, 'lib', path.basename(source)));
 }
-console.log('Prepared Icecast for the WaveDeck Opus AppImage.');
+console.log('Prepared Icecast for the WaveDeck DJ AppImage.');
