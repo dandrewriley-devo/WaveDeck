@@ -1,7 +1,7 @@
 {
   "name": "wavedeck-dj",
-  "version": "0.1.0",
-  "wavedeckVersion": "0.1.0",
+  "version": "0.1.1",
+  "wavedeckVersion": "0.1.1",
   "description": "WaveDeck DJ portable music player for Linux",
   "author": "Andrew Riley",
   "license": "MIT",
@@ -26,6 +26,9 @@
     "appId": "com.a17press.wavedeckdj",
     "productName": "WaveDeck DJ",
     "asar": true,
+    "asarUnpack": [
+      "node_modules/@img/sharp-libvips-linux-x64/**"
+    ],
     "files": [
       "assets/**/*",
       "build/**/*",

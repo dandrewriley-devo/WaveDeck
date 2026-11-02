@@ -1,5 +1,9 @@
 # WaveDeck DJ Branch Handoff
 
+## WaveDeck DJ 0.1.1 — Packaged DJ voice fix
+
+- Fixes the DJ 0.1.0 AppImage startup failure where `sharp`'s required bundled `libvips` library remained inside `app.asar`, so the Kokoro worker exited before it could announce readiness. The required library is explicitly unpacked, worker-start errors reject immediately with their real cause, and the DJ workflow extracts its freshly built AppImage and generates a short af_heart voice sample before publication.
+
 ## WaveDeck DJ 0.1.0 — Stage One clip preparation
 
 - This separate `dj-portable` branch begins WaveDeck DJ from the stable WaveDeck Opus 1.1.5 source. Its Linux release artifact is `WaveDeckDJ.AppImage`, published as `dj-v0.1.0`. WaveDeck Opus and its `opus-portable` branch remain unchanged.

@@ -35,9 +35,22 @@ jobs:
             exit 1
           fi
           sha256sum "$appimage"
+      - name: Verify packaged DJ voice
+        shell: bash
+        run: |
+          set -euo pipefail
+          appimage="$GITHUB_WORKSPACE/dist/WaveDeckDJ.AppImage"
+          workdir=$(mktemp -d)
+          trap 'rm -rf "$workdir"' EXIT
+          (
+            cd "$workdir"
+            "$appimage" --appimage-extract >/dev/null
+          )
+          appdir="$workdir/squashfs-root"
+          NODE_PATH="$appdir/resources/app.asar/node_modules" ELECTRON_RUN_AS_NODE=1 "$appdir/wavedeck-dj" "$GITHUB_WORKSPACE/scripts/verify-dj-voice-runtime.js" "$appdir"
       - uses: actions/upload-artifact@v4
         with:
-          name: WaveDeckDJ-0.1.0-Linux
+          name: WaveDeckDJ-0.1.1-Linux
           path: dist/WaveDeckDJ.AppImage
           if-no-files-found: error
           compression-level: 0
@@ -49,7 +62,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: WaveDeckDJ-0.1.0-Linux
+          name: WaveDeckDJ-0.1.1-Linux
           path: release-assets
       - name: Inspect release asset
         shell: bash
@@ -57,13 +70,13 @@ jobs:
           set -euo pipefail
           test -f release-assets/WaveDeckDJ.AppImage
           sha256sum release-assets/WaveDeckDJ.AppImage
-      - name: Publish WaveDeck DJ 0.1.0
+      - name: Publish WaveDeck DJ 0.1.1
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: dj-v0.1.0
+          tag_name: dj-v0.1.1
           target_commitish: ${{ github.sha }}
-          name: WaveDeck DJ 0.1.0
-          body: "Linux x64 WaveDeck DJ. Stage One adds quiet, local af_heart DJ clip preparation for Portable Music using stored Last.fm scores of 70 or higher, plus a per-track manual queue in Music Manager. Clips are 48 kbps Opus files in the sibling DJ Clips folder. Keep WaveDeckDJ.AppImage in the same folder as Data, Music, and DJ Clips."
+          name: WaveDeck DJ 0.1.1
+          body: "Linux x64 WaveDeck DJ. Fixes the packaged af_heart DJ voice runtime so clip generation starts correctly. Stage One adds quiet, local DJ clip preparation for Portable Music using stored Last.fm scores of 70 or higher, plus a per-track manual queue in Music Manager. Clips are 48 kbps Opus files in the sibling DJ Clips folder. Keep WaveDeckDJ.AppImage in the same folder as Data, Music, and DJ Clips."
           files: release-assets/WaveDeckDJ.AppImage
           overwrite_files: true
           fail_on_unmatched_files: true

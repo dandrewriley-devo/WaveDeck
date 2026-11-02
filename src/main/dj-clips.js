@@ -164,13 +164,46 @@ class DjClips {
   }
   createWorker() {
     const modelDir = this.getModelDir();
-    this.worker = new Worker(path.join(__dirname, 'dj-renderer-worker.js'), { workerData: { modelDir } });
+    const worker = new Worker(path.join(__dirname, 'dj-renderer-worker.js'), { workerData: { modelDir }, stderr: true });
+    this.worker = worker;
+    let startupSettled = false;
+    let startupError = '';
+    let resolveStartup;
+    let rejectStartup;
+    const failStartup = error => {
+      if (startupSettled) return;
+      startupSettled = true;
+      clearTimeout(startupTimeout);
+      rejectStartup(new Error(startupError || error?.message || String(error) || 'Could not start the bundled DJ voice.'));
+    };
     this.workerReady = new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => reject(new Error('The bundled DJ voice did not start in time.')), 120000);
-      this.worker.once('message', message => { clearTimeout(timeout); if (message.ready) resolve(); else reject(new Error(message.error || 'Could not start the DJ voice.')); });
+      resolveStartup = resolve;
+      rejectStartup = reject;
     });
-    this.worker.on('message', message => { if (!message.id) return; const request = this.requests.get(message.id); if (!request) return; this.requests.delete(message.id); clearTimeout(request.timeout); message.ok ? request.resolve() : request.reject(new Error(message.error || 'DJ voice generation failed.')); });
-    this.worker.on('error', error => { for (const request of this.requests.values()) { clearTimeout(request.timeout); request.reject(error); } this.requests.clear(); this.worker = null; });
+    const startupTimeout = setTimeout(() => failStartup(new Error('The bundled DJ voice did not start in time.')), 120000);
+    startupTimeout.unref?.();
+    worker.stderr?.on('data', chunk => { startupError = `${startupError}${chunk}`.trim().slice(-4000); });
+    worker.on('message', message => {
+      if (message?.ready === true && !startupSettled) {
+        startupSettled = true;
+        clearTimeout(startupTimeout);
+        resolveStartup();
+        return;
+      }
+      if (message?.ready === false) { failStartup(new Error(message.error || 'Could not start the bundled DJ voice.')); return; }
+      if (!message?.id) return;
+      const request = this.requests.get(message.id); if (!request) return;
+      this.requests.delete(message.id); clearTimeout(request.timeout);
+      message.ok ? request.resolve() : request.reject(new Error(message.error || 'DJ voice generation failed.'));
+    });
+    const failWorker = error => {
+      failStartup(error);
+      for (const request of this.requests.values()) { clearTimeout(request.timeout); request.reject(error); }
+      this.requests.clear();
+      if (this.worker === worker) this.worker = null;
+    };
+    worker.on('error', failWorker);
+    worker.on('exit', code => { if (code !== 0) failWorker(new Error(`The bundled DJ voice stopped during startup (exit ${code}).`)); });
   }
   stopAfterCurrentClip() { this.cancelAfterClip = true; }
   async close() { clearTimeout(this.timer); await this.worker?.terminate(); this.worker = null; await this.save(); this.db?.close(); this.db = null; }
