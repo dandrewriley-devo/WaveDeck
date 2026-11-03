@@ -126,6 +126,11 @@ const manageLocalMixesBtn = document.getElementById('manageLocalMixesBtn');
 const queueLastFmRefreshBtn = document.getElementById('queueLastFmRefreshBtn');
 const djClipStatus = document.getElementById('djClipStatus');
 const queueQualifyingDjClipsBtn = document.getElementById('queueQualifyingDjClipsBtn');
+const autoDjEnabled = document.getElementById('autoDjEnabled');
+const autoDjStationName = document.getElementById('autoDjStationName');
+const autoDjName = document.getElementById('autoDjName');
+const autoDjVoice = document.getElementById('autoDjVoice');
+const editAutoDjIdsBtn = document.getElementById('editAutoDjIdsBtn');
 const resetListeningBtn = document.getElementById("resetListeningBtn");
 const platform = window.wavedeck.platform;
 
@@ -271,6 +276,10 @@ function renderProMusicSettings(preferences) {
   clearAdditionalMusicFolderBtn.disabled = !folder;
   additionalMusicFolderChoice.hidden = preferences?.additionalMusicFolderNeedsDecision !== true;
   lastFmEnabled.checked = preferences?.lastFmEnabled !== false;
+  autoDjEnabled.checked = preferences?.autoDjEnabled === true;
+  autoDjStationName.value = preferences?.autoDjStationName || '';
+  autoDjName.value = preferences?.autoDjName || '';
+  autoDjVoice.value = preferences?.autoDjVoice === 'male' ? 'male' : 'female';
   portableImportSpeed.value = String([2, 6, 12].includes(Number(preferences?.portableImportWorkers)) ? preferences.portableImportWorkers : 2);
   if (proEnabled) {
     if (requestedAdvancedTab) { const requested = requestedAdvancedTab; requestedAdvancedTab = ''; showTab(requested); }
@@ -365,9 +374,11 @@ function renderDjClipStatus(status = {}) {
   if (!djClipStatus || !queueQualifyingDjClipsBtn) return;
   const queued = Number(status.queued || 0);
   const busy = status.state === 'generating';
-  queueQualifyingDjClipsBtn.disabled = busy;
+  const enabled = status.enabled === true;
+  queueQualifyingDjClipsBtn.disabled = busy || !enabled;
+  editAutoDjIdsBtn.disabled = false;
   queueQualifyingDjClipsBtn.textContent = busy ? 'Generating DJ clips…' : 'Generate clips for all qualifying tracks';
-  djClipStatus.textContent = status.message || (queued ? `${queued.toLocaleString()} track${queued === 1 ? '' : 's'} queued quietly in the background.` : 'DJ clips are ready.');
+  djClipStatus.textContent = status.message || (enabled ? (queued ? `${queued.toLocaleString()} track${queued === 1 ? '' : 's'} queued quietly in the background.` : 'Auto DJ is ready.') : 'Auto DJ is off.');
 }
 async function loadDjClipStatus() {
   try { renderDjClipStatus(await window.wavedeck.getDjClipStatus()); } catch (error) { if (djClipStatus) djClipStatus.textContent = error.message; }
@@ -1468,6 +1479,18 @@ queueQualifyingDjClipsBtn.addEventListener('click', async () => {
   } catch (error) { setStatus(statusLocalMusic, error.message, false); }
   finally { if (queueQualifyingDjClipsBtn.textContent !== 'Generating DJ clips…') queueQualifyingDjClipsBtn.disabled = false; }
 });
+async function saveAutoDjSettings() {
+  try {
+    const preferences = await window.wavedeck.setAutoDjSettings({ enabled: autoDjEnabled.checked, stationName: autoDjStationName.value, djName: autoDjName.value, voice: autoDjVoice.value });
+    renderProMusicSettings(preferences);
+    await loadDjClipStatus();
+  } catch (error) { setStatus(statusLocalMusic, `Could not save Auto DJ settings: ${error.message}`, false); }
+}
+autoDjEnabled.addEventListener('change', saveAutoDjSettings);
+autoDjStationName.addEventListener('change', saveAutoDjSettings);
+autoDjName.addEventListener('change', saveAutoDjSettings);
+autoDjVoice.addEventListener('change', saveAutoDjSettings);
+editAutoDjIdsBtn.addEventListener('click', () => { void window.wavedeck.openAutoDjStationIds(); });
 
 connectLastFmBtn.addEventListener('click', async () => {
   connectLastFmBtn.disabled = true;

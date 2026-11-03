@@ -80,6 +80,8 @@ h1{
 [hidden]{ display:none !important; }
 
 .external-track-count{ margin-top:9px; }
+.auto-dj-fields{ display:grid; gap:7px; margin:9px 0; }
+.auto-dj-name{ display:grid; grid-template-columns:105px 1fr; gap:7px; }
 .embedded-panel{ padding:0; min-height:calc(100vh - 92px); }
 .embedded-panel iframe{ display:block; width:100%; height:calc(100vh - 92px); min-height:530px; border:0; background:#171717; }
 .tabs{ flex-wrap:wrap; justify-content:flex-end; }

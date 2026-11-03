@@ -47,6 +47,8 @@ contextBridge.exposeInMainWorld("wavedeck", {
   testLastFm: () => ipcRenderer.invoke('music:lastfm:test'),
   queueFullLastFmRefresh: () => ipcRenderer.invoke('music:lastfm:queue-full'),
   getDjClipStatus: () => ipcRenderer.invoke('music:dj:get-status'),
+  setAutoDjSettings: settings => ipcRenderer.invoke('music:dj:set-settings', settings),
+  openAutoDjStationIds: () => ipcRenderer.invoke('music:dj:open-station-ids'),
   queueQualifyingDjClips: () => ipcRenderer.invoke('music:dj:queue-qualifying'),
   queueDjClipsForTrack: id => ipcRenderer.invoke('music:dj:queue-track', id),
   getDjClipTrackState: id => ipcRenderer.invoke('music:dj:track-state', id),

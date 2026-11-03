@@ -100,6 +100,7 @@ const DISPLAY_VERSION = require("../../package.json").wavedeckVersion || app.get
 let mainWindow = null;
 let tray = null;
 let settingsWindow = null;
+let autoDjIdsWindow = null;
 let localRadioControlsWindow = null;
 let miniPlayerWindow = null;
 let miniPlayerReturnToSidebar = false;
@@ -632,7 +633,7 @@ function delay(milliseconds) {
 }
 
 function closeAuxiliaryWindows() {
-  for (const auxiliary of [settingsWindow, localRadioControlsWindow, miniPlayerWindow]) {
+  for (const auxiliary of [settingsWindow, autoDjIdsWindow, localRadioControlsWindow, miniPlayerWindow]) {
     if (auxiliary && !auxiliary.isDestroyed()) auxiliary.close();
   }
 }
@@ -843,6 +844,13 @@ function openSettingsWindow(stationId = "", requestedTab = '', focusTrack = null
 
 function openRadioLogWindow() {
   openSettingsWindow('', 'radiolog');
+}
+
+function openAutoDjIdsWindow() {
+  if (autoDjIdsWindow && !autoDjIdsWindow.isDestroyed()) { autoDjIdsWindow.show(); autoDjIdsWindow.focus(); return; }
+  autoDjIdsWindow = createSecureWindow({ width: 760, height: 760, minWidth: 600, minHeight: 500, resizable: true, title: 'WaveDeck DJ — Station IDs' });
+  autoDjIdsWindow.on('closed', () => { autoDjIdsWindow = null; });
+  autoDjIdsWindow.loadFile(path.join(__dirname, '..', 'renderer', 'auto-dj-ids.html'));
 }
 
 function openLocalRadioControlsWindow() {
@@ -1515,6 +1523,14 @@ function installIpcHandlers() {
     if (!djClips) throw new Error('DJ Clips are available in the Linux WaveDeck DJ build.');
     await djClips.start(); return djClips.getStatus();
   });
+  ipcMain.handle('music:dj:set-settings', async (_event, settings) => {
+    requireAdvancedFeatures();
+    const preferences = storage.setAutoDjSettings(settings || {});
+    djClips?.settingsChanged();
+    sendToAll('ui:preferences-changed', preferences);
+    return preferences;
+  });
+  ipcMain.handle('music:dj:open-station-ids', () => { requireAdvancedFeatures(); openAutoDjIdsWindow(); return true; });
   ipcMain.handle('music:dj:queue-qualifying', async () => {
     requireAdvancedFeatures();
     await musicLibrary.enable();
@@ -2087,6 +2103,7 @@ if (!hasSingleInstanceLock) {
       djClips = new DjClips({
         dataDir: getDataDir(), getTracks: () => musicLibrary?.tracks || [],
         ffmpegPath: () => portableFfmpegExecutable, getModelDir: () => modelDir,
+        getSettings: () => storage.getUiPreferences(),
         onStatus: status => sendToAll('music:dj:changed', status)
       });
     }

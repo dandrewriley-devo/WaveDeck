@@ -1,0 +1,5 @@
+const rows = document.getElementById('rows'); const status = document.getElementById('status'); const save = document.getElementById('save');
+let inputs = [];
+async function load() { const preferences = await window.wavedeck.getUiPreferences(); inputs = Array.from({ length: 50 }, (_unused, index) => { const row = document.createElement('div'); row.className = 'row'; const label = document.createElement('label'); label.textContent = String(index + 1); const input = document.createElement('input'); input.maxLength = 300; input.placeholder = 'You’re listening to [station]. I’m [dj].'; input.value = preferences.autoDjStationIds?.[index] || ''; row.append(label, input); rows.append(row); return input; }); }
+save.addEventListener('click', async () => { save.disabled = true; status.textContent = 'Saving…'; try { await window.wavedeck.setAutoDjSettings({ stationIds: inputs.map(input => input.value) }); status.textContent = 'Saved. Changed IDs will generate quietly.'; } catch (error) { status.textContent = error.message; } finally { save.disabled = false; } });
+void load().catch(error => { status.textContent = error.message; });

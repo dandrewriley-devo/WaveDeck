@@ -1,5 +1,11 @@
 # WaveDeck DJ Branch Handoff
 
+## WaveDeck DJ 0.1.2 — Auto DJ controls and Station IDs
+
+- Phase 1.5 renames the Stage One card to **Auto DJ**. Its enabled toggle is the master future Auto DJ switch: off pauses all generation and prevents future DJ playout without deleting queued or generated clips. It defaults off.
+- Portable settings include Station Name, DJ Name, and Female (`af_heart`, default) or Male (`am_echo`) voice selection. The selected voice applies to intros, outros, and IDs; changing it makes affected clips eligible for quiet regeneration when Auto DJ is enabled.
+- **Edit Station IDs…** opens a 50-line editor. It supports `[station]` and `[dj]`; blank lines are ignored. Changed active lines quietly render into `DJ Clips/ids/id-01.opus` through `id-50.opus`. Existing clips are never removed, including when a line is blanked or Auto DJ is turned off. Stage Two must select only nonblank, active ID settings/files.
+
 ## WaveDeck DJ 0.1.1 — Packaged DJ voice fix
 
 - Fixes the DJ 0.1.0 AppImage startup failure where `sharp`'s required bundled `libvips` library remained inside `app.asar`, so the Kokoro worker exited before it could announce readiness. The required library is explicitly unpacked, worker-start errors reject immediately with their real cause, and the DJ workflow extracts its freshly built AppImage and generates a short af_heart voice sample before publication.

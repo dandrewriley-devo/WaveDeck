@@ -339,6 +339,10 @@ function validatePreferences(value) {
   const miniPlayerColorScheme = ['default', 'inverted', 'chiefs', 'army', 'cherry', 'gray', 'denim', 'rosewood', 'sapphire', 'bamboo', 'aloe'].includes(value?.miniPlayerColorScheme)
     ? value.miniPlayerColorScheme
     : 'default';
+  const autoDjStationIds = Array.from({ length: 50 }, (_unused, index) => typeof value?.autoDjStationIds?.[index] === 'string' ? value.autoDjStationIds[index].trim().slice(0, 300) : '');
+  const autoDjStationName = typeof value?.autoDjStationName === 'string' ? value.autoDjStationName.trim().slice(0, 100) : '';
+  const autoDjName = typeof value?.autoDjName === 'string' ? value.autoDjName.trim().slice(0, 100) : '';
+  const autoDjVoice = value?.autoDjVoice === 'male' ? 'male' : 'female';
   const localMixEnabled = {};
   const rawLocalMixEnabled = value?.localMixEnabled;
   if (rawLocalMixEnabled && typeof rawLocalMixEnabled === 'object' && !Array.isArray(rawLocalMixEnabled)) {
@@ -435,6 +439,11 @@ function validatePreferences(value) {
     portableImportWorkers,
     miniPlayerDisplayMode,
     miniPlayerColorScheme,
+    autoDjEnabled: value?.autoDjEnabled === true,
+    autoDjStationName,
+    autoDjName,
+    autoDjVoice,
+    autoDjStationIds,
     localMixEnabled,
     localMixFavorites,
     streamingUi: {
@@ -630,6 +639,11 @@ class PortableStorage {
       portableImportWorkers: preferences.portableImportWorkers,
       miniPlayerDisplayMode: preferences.miniPlayerDisplayMode,
       miniPlayerColorScheme: preferences.miniPlayerColorScheme,
+      autoDjEnabled: preferences.autoDjEnabled,
+      autoDjStationName: preferences.autoDjStationName,
+      autoDjName: preferences.autoDjName,
+      autoDjVoice: preferences.autoDjVoice,
+      autoDjStationIds: [...preferences.autoDjStationIds],
       localMixEnabled: { ...preferences.localMixEnabled },
       localMixFavorites: { ...preferences.localMixFavorites },
       launchInSidebarMode: preferences.launchInSidebarMode,
@@ -736,6 +750,16 @@ class PortableStorage {
   setLastFmSettings({ enabled }) {
     const preferences = this.readPreferences();
     preferences.lastFmEnabled = Boolean(enabled);
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences();
+  }
+  setAutoDjSettings(settings = {}) {
+    const preferences = this.readPreferences();
+    if (typeof settings.enabled === 'boolean') preferences.autoDjEnabled = settings.enabled;
+    if (typeof settings.stationName === 'string') preferences.autoDjStationName = settings.stationName.trim().slice(0, 100);
+    if (typeof settings.djName === 'string') preferences.autoDjName = settings.djName.trim().slice(0, 100);
+    if (settings.voice === 'male' || settings.voice === 'female') preferences.autoDjVoice = settings.voice;
+    if (Array.isArray(settings.stationIds)) preferences.autoDjStationIds = Array.from({ length: 50 }, (_unused, index) => typeof settings.stationIds[index] === 'string' ? settings.stationIds[index].trim().slice(0, 300) : '');
     this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
     return this.getUiPreferences();
   }
