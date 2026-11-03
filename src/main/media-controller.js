@@ -85,6 +85,10 @@ class MediaController {
     getLocalStationProfile = () => null,
     onLocalStationStart = () => {},
     onStationIdPlayed = () => {},
+    canBuildAutoDjBreak = () => false,
+    takeAutoDjBreak = () => null,
+    isAutoDjEnabled = () => true,
+    onAutoDjBreak = () => {},
     stationIdsEnabled = true,
     now = () => Date.now(),
     random = Math.random
@@ -101,6 +105,10 @@ class MediaController {
     this.getLocalStationProfile = getLocalStationProfile;
     this.onLocalStationStart = onLocalStationStart;
     this.onStationIdPlayed = onStationIdPlayed;
+    this.canBuildAutoDjBreak = canBuildAutoDjBreak;
+    this.takeAutoDjBreak = takeAutoDjBreak;
+    this.isAutoDjEnabled = isAutoDjEnabled;
+    this.onAutoDjBreak = onAutoDjBreak;
     this.stationIdsEnabled = stationIdsEnabled === true;
     this.now = now;
     this.random = random;
@@ -116,6 +124,9 @@ class MediaController {
       } catch {}
     }
     this.stationIdPlaying = null;
+    this.autoDjBreak = null;
+    this.autoDjElapsedMs = 0;
+    this.autoDjPlaybackStartedAt = null;
     this.stationIdQueued = null;
     this.lastStationIdPaths = { half: '', hour: '' };
     this.lastStationIdSlot = '';
@@ -149,7 +160,7 @@ class MediaController {
       currentRecording: publicRecording(this.currentRecording),
       queuedStation: this.pendingStation ? (this.pendingStation.target.profile?.name || musicContextLabel({ mode: this.pendingStation.target.mode, seed: this.pendingStation.target.track })) : '',
       currentMusic: this.music ? {
-        track: this.stationIdPlaying || this.music.current,
+        track: this.autoDjBreak?.clip || this.stationIdPlaying || this.music.current,
         seed: (() => { const seed = { ...this.music.seed }; delete seed.path; return seed; })(),
         mode: this.music.mode,
         mixId: this.music.mixId || '',
@@ -257,6 +268,7 @@ class MediaController {
     if (this.mediaState !== "playing") return false;
     if (this.music) {
       clearTimeout(this.musicRetry);
+      this.#pauseAutoDjClock();
       await this.player.setPaused(true);
       this.mediaState = 'paused'; this.onStateChanged(this.getStatus()); return true;
     }
@@ -296,6 +308,7 @@ class MediaController {
     if (this.music) {
       this.mediaState = 'playing';
       if (this.music.waiting) await this.advanceMusic(); else await this.player.setPaused(false);
+      this.#resumeAutoDjClock();
       this.onStateChanged(this.getStatus()); return true;
     }
     if (this.mediaState === "playing" && this.player.getStatus().playing) return true;
@@ -321,6 +334,7 @@ class MediaController {
 
   async nextPreset() {
     if (this.music) {
+      if (this.autoDjBreak) return this.#skipAutoDjBreak();
       if (this.stationIdPlaying) { this.stationIdPlaying = null; return this.advanceMusic('next'); }
       if (['radio', 'artist', 'explore', 'mix'].includes(this.music.mode) && this.music.current) {
         void Promise.resolve(this.musicRadio?.recordFeedback(this.music.radioKey, this.music.current, 'skip')).catch(() => {});
@@ -333,6 +347,7 @@ class MediaController {
 
   async previousPreset() {
     if (this.music) {
+      if (this.autoDjBreak) return this.#skipAutoDjBreak();
       if (this.stationIdPlaying) { this.stationIdPlaying = null; return this.advanceMusic('next'); }
       if (this.pendingStation) { this.pendingStation = null; clearInterval(this.pendingStationTimer); this.pendingStationTimer = null; this.musicRadio?.cancelPending?.(); this.onStateChanged(this.getStatus()); }
       if (this.musicBusy) return false;
@@ -369,13 +384,163 @@ class MediaController {
     this.onMusicTrack = typeof onMusicTrack === 'function' ? onMusicTrack : () => {};
   }
 
+  autoDjSettingsChanged() {
+    if (!this.isAutoDjEnabled()) {
+      this.#pauseAutoDjClock();
+      this.autoDjElapsedMs = 0;
+      return;
+    }
+    this.#resumeAutoDjClock();
+  }
+
   clearMusic() {
     this.stationIdPlaying = null;
+    this.autoDjBreak = null;
+    this.autoDjElapsedMs = 0;
+    this.autoDjPlaybackStartedAt = null;
     this.stationIdQueued = null;
     clearInterval(this.stationIdClockTimer); this.stationIdClockTimer = null;
     this.pendingStation = null; clearInterval(this.pendingStationTimer); this.pendingStationTimer = null;
     this.musicGeneration++; clearTimeout(this.musicRetry); clearInterval(this.musicCrossfadeTimer); clearTimeout(this.musicPreparationTimer); this.musicCrossfadeTimer = null; this.musicPreparationTimer = null; this.music = null;
     this.musicRadio?.cancelPending?.();
+  }
+
+  #autoDjCanRun() {
+    return this.isAutoDjEnabled() === true && Boolean(this.music?.current) && !this.autoDjBreak &&
+      ['radio', 'artist', 'explore', 'mix'].includes(this.music.mode);
+  }
+
+  #pauseAutoDjClock() {
+    if (this.autoDjPlaybackStartedAt === null) return;
+    this.autoDjElapsedMs += Math.max(0, this.now() - this.autoDjPlaybackStartedAt);
+    this.autoDjPlaybackStartedAt = null;
+  }
+
+  #resumeAutoDjClock() {
+    if (this.mediaState === 'playing' && this.#autoDjCanRun() && this.autoDjPlaybackStartedAt === null) {
+      this.autoDjPlaybackStartedAt = this.now();
+    }
+  }
+
+  #resetAutoDjClock() {
+    this.autoDjElapsedMs = 0;
+    this.autoDjPlaybackStartedAt = null;
+    this.#resumeAutoDjClock();
+  }
+
+  #autoDjElapsed() {
+    return this.autoDjElapsedMs + (this.autoDjPlaybackStartedAt !== null ? Math.max(0, this.now() - this.autoDjPlaybackStartedAt) : 0);
+  }
+
+  #autoDjDue() {
+    return this.#autoDjCanRun() && this.#autoDjElapsed() >= 15 * 60 * 1000;
+  }
+
+  #samePrimaryArtist(first, second) {
+    const firstArtist = normalize(first?.artist || radioArtist(first) || first?.albumArtist || '');
+    const secondArtist = normalize(second?.artist || radioArtist(second) || second?.albumArtist || '');
+    return Boolean(firstArtist && secondArtist && firstArtist === secondArtist);
+  }
+
+  #canAutoDjBreakAtBoundary(endingTrack, incomingTrack) {
+    if (!this.#autoDjDue() || !endingTrack || !incomingTrack || this.#samePrimaryArtist(endingTrack, incomingTrack)) return false;
+    try { return this.canBuildAutoDjBreak(endingTrack, incomingTrack) === true; } catch { return false; }
+  }
+
+  #autoDjClip(phase, file) {
+    const labels = { outro: 'Auto DJ Outro', id: 'Station ID', intro: 'Auto DJ Intro' };
+    return {
+      id: `auto_dj_${phase}`,
+      title: labels[phase] || 'Auto DJ',
+      artist: 'WaveDeck DJ',
+      album: '',
+      autoDj: true,
+      fileName: path.basename(file || '')
+    };
+  }
+
+  async #beginAutoDjBreak() {
+    if (!this.#autoDjDue() || !this.music?.current || this.musicBusy) return false;
+    const generation = this.musicGeneration;
+    let id = '';
+    try {
+      id = await this.#nextMusicId('auto-dj');
+      if (!id || !this.music || generation !== this.musicGeneration) return false;
+      const preparedTrack = this.music?.pendingPreparedDecision?.id === id
+        ? this.music.pendingPreparedDecision.track
+        : null;
+      const incomingTrack = preparedTrack || await this.musicLibrary.resolve(id);
+      if (incomingTrack.doNotPlay) throw new Error('This song is marked Do Not Play.');
+      if (!this.music || generation !== this.musicGeneration) return false;
+
+      if (!this.#canAutoDjBreakAtBoundary(this.music.current, incomingTrack)) {
+        await this.loadMusic(id, 0, incomingTrack);
+        return true;
+      }
+      const packet = this.takeAutoDjBreak(this.music.current, incomingTrack);
+      if (!packet?.outro?.file || !packet?.stationId?.file || !packet?.intro?.file) {
+        await this.loadMusic(id, 0, incomingTrack);
+        return true;
+      }
+      this.#pauseAutoDjClock();
+      this.autoDjBreak = {
+        packet, nextId: id, nextTrack: incomingTrack, phase: 'outro',
+        clip: this.#autoDjClip('outro', packet.outro.file),
+        endingTrack: this.music.current
+      };
+      await this.player.play(packet.outro.file);
+      if (!this.autoDjBreak || generation !== this.musicGeneration) return false;
+      try {
+        this.onAutoDjBreak({
+          type: 'auto-dj-break', at: new Date(this.now()).toISOString(),
+          stationKey: this.music.radioKey || '', mode: this.music.mode || '',
+          ending: { title: this.autoDjBreak.endingTrack?.title || '', artist: this.autoDjBreak.endingTrack?.artist || '' },
+          incoming: { title: incomingTrack.title || '', artist: incomingTrack.artist || '' },
+          stationIdSlot: packet.stationId.slot || 0,
+          stationId: packet.stationId.text || ''
+        });
+      } catch {}
+      this.onStateChanged(this.getStatus());
+      return true;
+    } catch (error) {
+      this.#discardPreparedDecision(id);
+      if (this.music && generation === this.musicGeneration && id) this.music.failed.add(id);
+      return false;
+    }
+  }
+
+  async #advanceAutoDjBreak() {
+    const active = this.autoDjBreak;
+    if (!active || !this.music) return false;
+    // The master setting never deletes clips, but turning it off should make
+    // the rest of an in-flight packet yield back to music at its next edge.
+    if (!this.isAutoDjEnabled()) return this.#skipAutoDjBreak();
+    if (active.phase === 'outro') {
+      active.phase = 'id'; active.clip = this.#autoDjClip('id', active.packet.stationId.file);
+      await this.player.play(active.packet.stationId.file);
+      this.onStateChanged(this.getStatus());
+      return true;
+    }
+    if (active.phase === 'id') {
+      active.phase = 'intro'; active.clip = this.#autoDjClip('intro', active.packet.intro.file);
+      await this.player.play(active.packet.intro.file);
+      this.onStateChanged(this.getStatus());
+      return true;
+    }
+    if (active.phase === 'intro') {
+      this.autoDjBreak = null;
+      this.#resetAutoDjClock();
+      return this.loadMusic(active.nextId, 0, active.nextTrack);
+    }
+    return false;
+  }
+
+  async #skipAutoDjBreak() {
+    const active = this.autoDjBreak;
+    if (!active) return false;
+    this.autoDjBreak = null;
+    this.#resetAutoDjClock();
+    return this.loadMusic(active.nextId, 0, active.nextTrack);
   }
 
   #currentStationIdSlot() {
@@ -440,7 +605,7 @@ class MediaController {
   }
 
   #queueStationChange(target) {
-    if (!this.getFinishCurrentSongOnStationChange() || !this.music?.current || this.stationIdPlaying || this.mediaState !== 'playing') return false;
+    if (!this.getFinishCurrentSongOnStationChange() || !this.music?.current || this.stationIdPlaying || this.autoDjBreak || this.mediaState !== 'playing') return false;
     const status = this.player.getStatus();
     if (!(Number(status.duration) > 1) || !(Number(status.position) >= 0)) return false;
     clearInterval(this.musicCrossfadeTimer); this.musicCrossfadeTimer = null;
@@ -617,6 +782,7 @@ class MediaController {
     this.stationIdPlaying = null;
     this.music.waiting = false;
     this.mediaState = 'playing';
+    this.#resumeAutoDjClock();
     this.music.back.push(id); this.music.back = this.music.back.slice(-100);
     await this.musicRadio.record(track);
     if (this.music !== active || generation !== this.musicGeneration) return false;
@@ -746,6 +912,9 @@ class MediaController {
       const fadeSeconds = Math.min(8, Math.max(1, duration - 0.5));
       if (duration > 1 && position >= duration - fadeSeconds) {
         clearInterval(this.musicCrossfadeTimer); this.musicCrossfadeTimer = null;
+        // A due, fully prepared DJ break must wait for the hard song boundary.
+        // Otherwise the normal equal-power music handoff remains intact.
+        if (this.#canAutoDjBreakAtBoundary(track, this.music.prepared?.track)) return;
         if (this.#dueStationId()) return;
         void this.#beginMusicCrossfade(fadeSeconds * 1000, generation).catch(error => this.musicError(error));
       }
@@ -831,6 +1000,7 @@ class MediaController {
   async handleEnded(event) {
     if (!this.music || this.mediaState !== 'playing') return;
     try {
+      if (this.autoDjBreak) return await this.#advanceAutoDjBreak();
       if (this.stationIdPlaying) {
         this.stationIdPlaying = null;
         return await this.advanceMusic('next');
@@ -846,6 +1016,8 @@ class MediaController {
       if (event?.reason === 'eof' && ['radio', 'artist', 'explore', 'mix'].includes(this.music.mode) && this.music.current) {
         void Promise.resolve(this.musicRadio?.recordFeedback(this.music.radioKey, this.music.current, 'complete')).catch(() => {});
       }
+      if (event?.reason === 'eof') this.#pauseAutoDjClock();
+      if (event?.reason === 'eof' && await this.#beginAutoDjBreak()) return;
       if (event?.reason === 'eof' && await this.#playStationId()) return;
       await this.advanceMusic(event.reason);
     } catch (error) { this.musicError(error); }
@@ -867,7 +1039,7 @@ class MediaController {
 function serializeTransport(controller) {
   let pending = Promise.resolve();
   const mutations = new Set(['playStationById', 'playStation', 'playUrl', 'playRecording', 'playMusic', 'playLocalMix',
-    'pause', 'stop', 'play', 'togglePlayPause', 'nextPreset', 'previousPreset', 'handleEnded', 'rateMusic']);
+    'pause', 'stop', 'play', 'togglePlayPause', 'nextPreset', 'previousPreset', 'handleEnded', 'rateMusic', 'autoDjSettingsChanged']);
   return new Proxy(controller, { get(target, key) {
     const value = target[key];
     if (typeof value !== 'function') return value;

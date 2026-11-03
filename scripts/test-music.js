@@ -735,6 +735,45 @@ async function run() {
     assert.equal(stationIdPlays.at(-1), path.join(topOfHourIds, 'top.mp3'), 'the Top of Hour has its own Station ID pool');
     assert.equal(stationIdLogs.at(-1).pool, 'Top of Hour');
     await stationIdController.stop();
+    let autoDjNow = 0; const autoDjPlays = []; const autoDjBreaks = []; let autoDjCanChecks = 0;
+    const autoDjPlayer = {
+      isCrossfading: false,
+      getStatus: () => ({ playing: true, position: 0, duration: 180 }),
+      setStationGain: async () => {}, stop: async () => {}, setPaused: async () => {}, seek: async () => {},
+      play: async file => { autoDjPlays.push(file); }, crossfadeTo: async file => { autoDjPlays.push(file); }
+    };
+    const autoDjTracks = [
+      track('auto-dj-a', { title: 'Before the Break', artist: 'First Artist', albumArtist: 'First Artist' }),
+      track('auto-dj-b', { title: 'After the Break', artist: 'Second Artist', albumArtist: 'Second Artist' })
+    ];
+    const autoDjRadio = {
+      record: async () => {}, setTracks: async () => {}, choose: async () => ({ id: 'auto-dj-b' }),
+      getLastDecision: () => null, recordFeedback: async () => {}
+    };
+    const autoDjController = serializeTransport(new MediaController({
+      player: autoDjPlayer, getStations: () => [], now: () => autoDjNow,
+      canBuildAutoDjBreak: () => { autoDjCanChecks += 1; return true; },
+      takeAutoDjBreak: () => ({
+        outro: { file: '/dj/outro.opus', slot: 1 }, stationId: { file: '/dj/id-07.opus', slot: 7, text: 'This is [station].' },
+        intro: { file: '/dj/intro.opus', slot: 2 }
+      }),
+      onAutoDjBreak: entry => autoDjBreaks.push(entry)
+    }));
+    autoDjController.configureMusic({ tracks: autoDjTracks, revision: 1, resolve: async id => ({ ...autoDjTracks.find(item => item.id === id), path: `/${id}` }) }, autoDjRadio);
+    await autoDjController.playMusic('auto-dj-a', 'radio');
+    autoDjNow = 15 * 60 * 1000;
+    await autoDjController.handleEnded({ reason: 'eof' });
+    assert.equal(autoDjCanChecks, 1, 'the due song boundary checks the Auto DJ clip cache');
+    assert.equal(autoDjPlays.at(-1), '/dj/outro.opus', 'a due Auto DJ break begins with the outgoing song outro');
+    assert.equal(autoDjController.getStatus().currentMusic.track.autoDj, true, 'the player exposes a DJ clip while a break is running');
+    await autoDjController.handleEnded({ reason: 'eof' });
+    assert.equal(autoDjPlays.at(-1), '/dj/id-07.opus', 'the Station ID follows the outro without a music crossfade');
+    await autoDjController.handleEnded({ reason: 'eof' });
+    assert.equal(autoDjPlays.at(-1), '/dj/intro.opus', 'the incoming song intro follows the Station ID');
+    await autoDjController.handleEnded({ reason: 'eof' });
+    assert.equal(autoDjPlays.at(-1), '/auto-dj-b', 'the queued song starts only after the full DJ break');
+    assert.equal(autoDjBreaks.at(-1).stationIdSlot, 7, 'each Auto DJ break writes a compact Radio Log entry');
+    await autoDjController.stop();
     let stationPosition = 0;
     const stationPlays = [], stationFades = [], stationDecisions = [];
     const stationPlayer = {

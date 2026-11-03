@@ -82,6 +82,7 @@ const {
 } = require("../src/renderer/search");
 const {
   PortableStorage,
+  DEFAULT_AUTO_DJ_STATION_IDS,
   STARTER_PRESET_NAMES,
   cleanStationGainDb,
   validateGroups,
@@ -145,8 +146,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck-dj");
-assert.strictEqual(packageJson.version, "0.1.2");
-assert.strictEqual(packageJson.wavedeckVersion, "0.1.2");
+assert.strictEqual(packageJson.version, "0.1.3");
+assert.strictEqual(packageJson.wavedeckVersion, "0.1.3");
 assert.strictEqual(packageJson.desktopName, "wavedeck-dj.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck DJ");
 assert.strictEqual(packageJson.build.appId, "com.a17press.wavedeckdj");
@@ -370,7 +371,8 @@ try {
     autoDjStationName: "",
     autoDjName: "",
     autoDjVoice: "female",
-    autoDjStationIds: Array(50).fill(""),
+    autoDjStationIds: [...DEFAULT_AUTO_DJ_STATION_IDS],
+    autoDjStationIdDefaultsVersion: 1,
     localMixEnabled: {},
     localMixFavorites: {},
     streamingUi: {
@@ -415,7 +417,7 @@ try {
     autoDjStationName: "",
     autoDjName: "",
     autoDjVoice: "female",
-    autoDjStationIds: Array(50).fill(""),
+    autoDjStationIds: [...DEFAULT_AUTO_DJ_STATION_IDS],
     localMixEnabled: {},
     localMixFavorites: {},
     launchInSidebarMode: false,
@@ -525,7 +527,7 @@ try {
     autoDjStationName: "",
     autoDjName: "",
     autoDjVoice: "female",
-    autoDjStationIds: Array(50).fill(""),
+    autoDjStationIds: [...DEFAULT_AUTO_DJ_STATION_IDS],
     localMixEnabled: { "classic-rock": false },
     localMixFavorites: { "classic-rock": true },
     launchInSidebarMode: true,
@@ -1864,11 +1866,11 @@ assert.ok(windowsWorkflow.includes('chmod 755 "$appimage"'));
 const djWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "dj-portable.yml"), "utf8");
 assert.ok(djWorkflow.includes("branches: [dj-portable]"));
 assert.ok(djWorkflow.includes("npm run dist:linux -- --publish never"));
-assert.ok(djWorkflow.includes("WaveDeckDJ-0.1.2-Linux"));
+assert.ok(djWorkflow.includes("WaveDeckDJ-0.1.3-Linux"));
 assert.ok(djWorkflow.includes("dist/WaveDeckDJ.AppImage"));
 assert.ok(djWorkflow.includes("Verify packaged DJ voice"));
-assert.ok(djWorkflow.includes("tag_name: dj-v0.1.2"));
-assert.ok(djWorkflow.includes("Publish WaveDeck DJ 0.1.2"));
+assert.ok(djWorkflow.includes("tag_name: dj-v0.1.3"));
+assert.ok(djWorkflow.includes("Publish WaveDeck DJ 0.1.3"));
 const djClipsSource = fs.readFileSync(path.join(root, "src", "main", "dj-clips.js"), "utf8");
 assert.ok(djClipsSource.includes("DJ Clips"));
 assert.ok(djClipsSource.includes("__${kind}-"));
@@ -1879,7 +1881,9 @@ assert.ok(djClipsSource.includes("am_echo"));
 assert.ok(djClipsSource.includes("station_ids"));
 assert.ok(djClipsSource.includes("id-${String(id.slot).padStart(2, '0')}.opus"));
 assert.ok(settingsHtml.includes('Enable Auto DJ'));
-assert.ok(settingsHtml.includes('Edit Station IDs…'));
+assert.ok(settingsHtml.includes('>Station IDs<'));
+assert.ok(settingsHtml.includes('>Generate clips<'));
+assert.ok(settingsHtml.includes('Enables an AI powered DJ to host your local stations.'));
 const musicLibraryHtml = fs.readFileSync(path.join(root, "src", "renderer", "music-library.html"), "utf8");
 const musicLibraryRenderer = fs.readFileSync(path.join(root, "src", "renderer", "music-library.js"), "utf8");
 assert.ok(musicLibraryHtml.includes('Search artists, albums, songs, or genres'));

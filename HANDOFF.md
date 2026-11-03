@@ -1,5 +1,12 @@
 # WaveDeck DJ Branch Handoff
 
+## WaveDeck DJ 0.1.3 — Auto DJ breaks
+
+- Phase Two uses the Stage One clips in actual Local Radio, Artist Radio, Explore Radio, and Local Mix playback. After 15 minutes of actual music playback (paused time does not count), WaveDeck looks at each song boundary until it finds an eligible break: an existing outgoing outro, an existing incoming intro, an active rendered Station ID, and two different primary artists.
+- An eligible break plays **outro → Station ID → intro** as a packet with no crossfade or music underneath, then starts the already selected incoming song. Individual-song playback and album playback never receive a break; same-artist transitions, including the middle of Artist Sets, stay intact. If an eligible clip vanishes, normal music resumes and the break remains due for a later boundary.
+- Station IDs have 50 editable built-in defaults. Active rendered IDs rotate through a shuffled deck before reshuffling, avoid an immediate repeat across decks, and continue to live at `DJ Clips/ids/id-01.opus` through `id-50.opus`. The deck migrates the prior all-blank placeholder only once, so a listener can still intentionally clear every line.
+- Auto DJ remains its master switch: off means no new clip generation and no future break playback (an in-progress packet yields to music at its next clip boundary). The Live Radio Log records compact Auto DJ Break entries with the outgoing and incoming songs plus the selected ID slot. The card’s concise labels are now **Station IDs** and **Generate clips**.
+
 ## WaveDeck DJ 0.1.2 — Auto DJ controls and Station IDs
 
 - Phase 1.5 renames the Stage One card to **Auto DJ**. Its enabled toggle is the master future Auto DJ switch: off pauses all generation and prevents future DJ playout without deleting queued or generated clips. It defaults off.

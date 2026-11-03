@@ -53,6 +53,7 @@ class DjClips {
     this.onStatus = onStatus;
     this.db = null; this.SQL = null; this.worker = null; this.workerReady = null; this.requests = new Map();
     this.running = false; this.timer = null; this.cancelAfterClip = false;
+    this.stationIdDeck = []; this.stationIdDeckSignature = ''; this.lastPlayedStationIdSlot = 0;
     this.status = { ready: false, state: 'idle', queued: 0, completed: 0, total: 0, created: 0, reused: 0, message: 'Auto DJ is off.' };
   }
   async start() {
@@ -163,6 +164,56 @@ class DjClips {
     this.status = { ...this.status, state: 'idle', message: `DJ clips ready for ${track.artist} — ${track.title}` }; this.emit(); return { cancelled: false };
   }
   nextStationId() { const settings = this.settings(); if (!settings.stationName || !settings.djName) return null; for (let slot = 1; slot <= 50; slot += 1) { const text = stationIdText(settings.stationIds[slot - 1], settings); if (!text) continue; const signature = contentHash({ slot, text, voice: voiceFor(settings), bitrate: CLIP_BITRATE }); const existing = this.rows('SELECT signature FROM station_ids WHERE slot = ?', [slot])[0]; const output = path.join(this.root, 'ids', `id-${String(slot).padStart(2, '0')}.opus`); if (existing?.signature !== signature || !fs.existsSync(output)) return { slot, text, signature }; } return null; }
+  activeStationIds() {
+    const settings = this.settings();
+    if (!settings.enabled) return [];
+    const ids = [];
+    for (let slot = 1; slot <= 50; slot += 1) {
+      const text = stationIdText(settings.stationIds[slot - 1], settings);
+      const file = path.join(this.root, 'ids', `id-${String(slot).padStart(2, '0')}.opus`);
+      const signature = contentHash({ slot, text, voice: voiceFor(settings), bitrate: CLIP_BITRATE });
+      const rendered = this.db ? this.rows('SELECT signature FROM station_ids WHERE slot = ?', [slot])[0] : null;
+      if (text && rendered?.signature === signature && fs.existsSync(file)) ids.push({ slot, text, file });
+    }
+    return ids;
+  }
+  clipsFor(track, kind) {
+    if (!this.enabled() || !track) return [];
+    const relative = sourceRelative(track);
+    return [1, 2, 3].map(slot => ({ slot, file: path.join(this.root, clipRelativePath(track, kind, slot)) }))
+      .filter(clip => fs.existsSync(clip.file));
+  }
+  canBuildBreak(endingTrack, incomingTrack) {
+    return this.clipsFor(endingTrack, 'outro').length > 0 &&
+      this.clipsFor(incomingTrack, 'intro').length > 0 && this.activeStationIds().length > 0;
+  }
+  shuffledStationId() {
+    const active = this.activeStationIds();
+    if (!active.length) return null;
+    const signature = active.map(id => id.slot).join(',');
+    if (signature !== this.stationIdDeckSignature) {
+      this.stationIdDeckSignature = signature;
+      this.stationIdDeck = [];
+    }
+    if (!this.stationIdDeck.length) {
+      this.stationIdDeck = [...active].sort(() => Math.random() - 0.5);
+      if (this.stationIdDeck.length > 1 && this.stationIdDeck[0].slot === this.lastPlayedStationIdSlot) {
+        [this.stationIdDeck[0], this.stationIdDeck[1]] = [this.stationIdDeck[1], this.stationIdDeck[0]];
+      }
+    }
+    const id = this.stationIdDeck.shift();
+    this.lastPlayedStationIdSlot = id.slot;
+    return id;
+  }
+  takeBreak(endingTrack, incomingTrack) {
+    if (!this.canBuildBreak(endingTrack, incomingTrack)) return null;
+    const outros = this.clipsFor(endingTrack, 'outro');
+    const intros = this.clipsFor(incomingTrack, 'intro');
+    const pick = clips => clips[Math.floor(Math.random() * clips.length)];
+    const stationId = this.shuffledStationId();
+    if (!stationId) return null;
+    return { outro: pick(outros), stationId, intro: pick(intros) };
+  }
   async renderStationId(id) { const output = path.join(this.root, 'ids', `id-${String(id.slot).padStart(2, '0')}.opus`); this.status = { ...this.status, state: 'generating', completed: 0, total: 1, created: 0, reused: 0, message: `Generating station ID ${id.slot} of 50` }; this.emit(); await this.render(id.text, output); this.db.run('INSERT OR REPLACE INTO station_ids(slot, signature, created) VALUES (?, ?, ?)', [id.slot, id.signature, Date.now()]); await this.save(); this.status = { ...this.status, state: 'idle', completed: 1, created: 1, message: this.enabledMessage() }; this.emit(); }
   async render(text, output) {
     await fsp.mkdir(path.dirname(output), { recursive: true }); const wav = `${output}.${process.pid}.wav`; const part = `${output}.part`;

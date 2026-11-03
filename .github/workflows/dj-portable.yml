@@ -50,7 +50,7 @@ jobs:
           NODE_PATH="$appdir/resources/app.asar/node_modules" ELECTRON_RUN_AS_NODE=1 "$appdir/wavedeck-dj" "$GITHUB_WORKSPACE/scripts/verify-dj-voice-runtime.js" "$appdir"
       - uses: actions/upload-artifact@v4
         with:
-          name: WaveDeckDJ-0.1.2-Linux
+          name: WaveDeckDJ-0.1.3-Linux
           path: dist/WaveDeckDJ.AppImage
           if-no-files-found: error
           compression-level: 0
@@ -62,7 +62,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: WaveDeckDJ-0.1.2-Linux
+          name: WaveDeckDJ-0.1.3-Linux
           path: release-assets
       - name: Inspect release asset
         shell: bash
@@ -70,13 +70,13 @@ jobs:
           set -euo pipefail
           test -f release-assets/WaveDeckDJ.AppImage
           sha256sum release-assets/WaveDeckDJ.AppImage
-      - name: Publish WaveDeck DJ 0.1.2
+      - name: Publish WaveDeck DJ 0.1.3
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: dj-v0.1.2
+          tag_name: dj-v0.1.3
           target_commitish: ${{ github.sha }}
-          name: WaveDeck DJ 0.1.2
-          body: "Linux x64 WaveDeck DJ. Phase 1.5 adds Auto DJ controls, female af_heart or male am_echo voices, and an editor for up to 50 generated Station IDs. Auto DJ is a master off switch: it pauses generation and future playout without deleting clips. Station IDs live in DJ Clips/ids."
+          name: WaveDeck DJ 0.1.3
+          body: "Linux x64 WaveDeck DJ. Phase 2 makes qualifying Local Radio and Local Mixes sound like stations: after about 15 minutes of actual playback, WaveDeck inserts a clean outro, shuffled Station ID, and incoming intro at an eligible song boundary. Artist sets stay together, clips never crossfade, and the Auto DJ switch remains the master off control."
           files: release-assets/WaveDeckDJ.AppImage
           overwrite_files: true
           fail_on_unmatched_files: true

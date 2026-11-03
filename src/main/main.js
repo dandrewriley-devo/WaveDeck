@@ -1527,6 +1527,7 @@ function installIpcHandlers() {
     requireAdvancedFeatures();
     const preferences = storage.setAutoDjSettings(settings || {});
     djClips?.settingsChanged();
+    await mediaController?.autoDjSettingsChanged?.();
     sendToAll('ui:preferences-changed', preferences);
     return preferences;
   });
@@ -2079,11 +2080,15 @@ if (!hasSingleInstanceLock) {
       getFinishCurrentSongOnStationChange: () => storage.getUiPreferences().finishCurrentSongOnStationChange === true,
       getLocalStationProfile: savedLocalStationProfile,
       stationIdsEnabled: false,
+      isAutoDjEnabled: () => djClips?.enabled() === true,
+      canBuildAutoDjBreak: (ending, incoming) => djClips?.canBuildBreak(ending, incoming) === true,
+      takeAutoDjBreak: (ending, incoming) => djClips?.takeBreak(ending, incoming) || null,
       onLocalStationStart: station => {
         activateLocalStationProfile(station?.stationProfile || null);
         beginRadioDiagnosticSession(station?.key || '');
       },
-      onStationIdPlayed: entry => sendToRadioLog(entry)
+      onStationIdPlayed: entry => sendToRadioLog(entry),
+      onAutoDjBreak: entry => sendToRadioLog(entry)
     }));
 
     musicLibrary = new MusicLibrary({
@@ -2106,6 +2111,7 @@ if (!hasSingleInstanceLock) {
         getSettings: () => storage.getUiPreferences(),
         onStatus: status => sendToAll('music:dj:changed', status)
       });
+      void djClips.start().catch(error => console.warn(`Auto DJ clips are unavailable: ${error.message}`));
     }
     if (process.platform === 'linux' && portableFfmpegExecutable && portableFfprobeExecutable) {
       opusOptimizer = new OpusOptimizer({

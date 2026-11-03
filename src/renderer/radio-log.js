@@ -185,6 +185,23 @@ function renderStationId(decision, { prepend = true } = {}) {
   while (entries.children.length > MAX_ENTRIES) entries.lastElementChild.remove();
 }
 
+function renderAutoDjBreak(decision, { prepend = true } = {}) {
+  const entry = element('article', '', 'entry');
+  const head = element('div', '', 'entry-head');
+  head.append(element('b', 'Auto DJ Break'));
+  head.append(element('span', new Date(decision.at).toLocaleString(), 'time'));
+  entry.append(head);
+  const body = element('div', '', 'entry-body');
+  const track = element('div', '', 'track');
+  track.append(element('b', `${decision.ending?.title || 'Previous song'} → ${decision.incoming?.title || 'Next song'}`));
+  track.append(element('span', ` — ${decision.ending?.artist || 'Unknown artist'} → ${decision.incoming?.artist || 'Unknown artist'}`));
+  body.append(track);
+  body.append(element('div', `Played Station ID ${decision.stationIdSlot || '—'} between the outro and intro clips.`, 'reason'));
+  entry.append(body);
+  if (prepend) entries.prepend(entry); else entries.append(entry);
+  while (entries.children.length > MAX_ENTRIES) entries.lastElementChild.remove();
+}
+
 function genreLine(selected) {
   if (!Array.isArray(selected?.genres)) return 'Genres: not recorded by this older log entry';
   return `Genres: ${naturalList(selected.genres) || 'No genre tags stored'}`;
@@ -193,6 +210,7 @@ function genreLine(selected) {
 function renderDecision(decision, { prepend = true } = {}) {
   if (!decision) return;
   if (decision.type === 'station-id') return renderStationId(decision, { prepend });
+  if (decision.type === 'auto-dj-break') return renderAutoDjBreak(decision, { prepend });
   const waiting = !decision.selected;
   const selected = decision.selected || { title: 'No song selected', artist: '', album: '', popularity: null, eligibilityReasons: [], additions: [], multipliers: [], score: null };
   const manualStart = decision.selectionTrigger === 'start' && decision.policy === 'manual-local-radio-start-v1';

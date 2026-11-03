@@ -14,6 +14,58 @@ const STARTER_PRESET_NAMES = Object.freeze([
   "Adroit Jazz Underground",
   "Groove Salad"
 ]);
+const DEFAULT_AUTO_DJ_STATION_IDS = Object.freeze([
+  "I'm [dj], and you're listening to [station].",
+  "You're tuned in to [station]. My name is [dj] and I'm your musical guide.",
+  'This is [station].',
+  "Thanks for locking it in to [station], I'm [dj].",
+  "You've got it on [station], with [dj] right here in the studio.",
+  "Hey there, [dj] here, hanging out with you on [station].",
+  "Keeping you company with great music, I'm [dj] on [station].",
+  "You're listening to [station]—I'm [dj] and we've got plenty more music coming up.",
+  'This is [dj], here with you on [station].',
+  "Welcome back to [station]. I'm [dj] and I'm glad you're here.",
+  "Stepping up to the mic, I'm [dj] on [station].",
+  "Your non-stop music choice is [station], with [dj].",
+  'I’m [dj], right here on [station].',
+  "It's [dj] bringing you the best sound on [station].",
+  "Turning up the vibe for you, I'm [dj] on [station].",
+  "From our studio to your speakers, this is [dj] on [station].",
+  "You're locked on [station] with me, [dj].",
+  "Kick back, relax, and turn up [station]. I'm [dj].",
+  "Sounding good wherever you are, this is [station] with [dj].",
+  "I'm [dj] and you've found [station].",
+  "Playing the tracks you love, I'm [dj] on [station].",
+  "Another great set of music starts now—I'm [dj] on [station].",
+  "Thanks for making us part of your listening. This is [dj] on [station].",
+  "Right here, right now, you're tuned to [station] with [dj].",
+  "Hey, it's [dj]. Stick around for more music right here on [station].",
+  'More great music is on the way. I’m [dj] on [station].',
+  "Good to have you along for the ride. I'm [dj] on [station].",
+  "You're in the right place—this is [station] and I'm [dj].",
+  "Playing the best tunes around, I'm [dj] on [station].",
+  "Turn it up and roll down the windows. This is [station] with [dj].",
+  "Taking care of your soundtrack, I'm [dj] on [station].",
+  "I'm [dj], keeping the music flowing on [station].",
+  'You’re right where you need to be—[station], with [dj].',
+  "Your home for great music is [station], and I'm [dj].",
+  "Settling into the groove on [station], I'm [dj].",
+  "Spinning your favorite hits, this is [dj] on [station].",
+  "Wherever you're headed, take [station] along. I'm [dj].",
+  'For great music, stay with [station]. I’m [dj].',
+  "Up next, more of what you love on [station] with me, [dj].",
+  "I'm [dj], steering the ship on [station].",
+  "Dialed in and locked on [station], I'm [dj].",
+  "Keeping the energy up, this is [dj] on [station].",
+  "You're listening to [station]—I'm [dj] and the music never stops.",
+  "Thanks for tuning in to [station]. I'm [dj].",
+  "Crank up [station], I'm [dj] and I'm right here with you.",
+  "Bringing you the music that moves you, I'm [dj] on [station].",
+  "Stay right where you are—this is [dj] on [station].",
+  "Around the clock, you're on [station] with [dj].",
+  "I'm [dj], sharing the best tunes around right here on [station].",
+  "Settling in for another music set, this is [dj] on [station]."
+]);
 
 function validateListeningHistory(value) {
   const source = value && typeof value === "object" && !Array.isArray(value) ? value.stations : null;
@@ -339,7 +391,15 @@ function validatePreferences(value) {
   const miniPlayerColorScheme = ['default', 'inverted', 'chiefs', 'army', 'cherry', 'gray', 'denim', 'rosewood', 'sapphire', 'bamboo', 'aloe'].includes(value?.miniPlayerColorScheme)
     ? value.miniPlayerColorScheme
     : 'default';
-  const autoDjStationIds = Array.from({ length: 50 }, (_unused, index) => typeof value?.autoDjStationIds?.[index] === 'string' ? value.autoDjStationIds[index].trim().slice(0, 300) : '');
+  const suppliedAutoDjIds = Array.isArray(value?.autoDjStationIds) ? value.autoDjStationIds : null;
+  const savedAutoDjIds = Array.from({ length: 50 }, (_unused, index) => typeof suppliedAutoDjIds?.[index] === 'string' ? suppliedAutoDjIds[index].trim().slice(0, 300) : '');
+  // Populate the first real Station ID deck on new installs, and migrate the
+  // all-blank placeholder deck from DJ 0.1.2 once. The marker means a
+  // listener can still intentionally clear every editable line later.
+  const autoDjStationIdDefaultsVersion = Number(value?.autoDjStationIdDefaultsVersion) === 1 ? 1 : 0;
+  const autoDjStationIds = !savedAutoDjIds.some(Boolean) && autoDjStationIdDefaultsVersion !== 1
+    ? [...DEFAULT_AUTO_DJ_STATION_IDS]
+    : savedAutoDjIds;
   const autoDjStationName = typeof value?.autoDjStationName === 'string' ? value.autoDjStationName.trim().slice(0, 100) : '';
   const autoDjName = typeof value?.autoDjName === 'string' ? value.autoDjName.trim().slice(0, 100) : '';
   const autoDjVoice = value?.autoDjVoice === 'male' ? 'male' : 'female';
@@ -444,6 +504,7 @@ function validatePreferences(value) {
     autoDjName,
     autoDjVoice,
     autoDjStationIds,
+    autoDjStationIdDefaultsVersion: 1,
     localMixEnabled,
     localMixFavorites,
     streamingUi: {
@@ -1253,6 +1314,7 @@ class PortableStorage {
 }
 
 module.exports = {
+  DEFAULT_AUTO_DJ_STATION_IDS,
   STARTER_PRESET_NAMES,
   PortableStorage,
   cleanStationGainDb,
