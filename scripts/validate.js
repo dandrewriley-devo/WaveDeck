@@ -1915,7 +1915,7 @@ assert.ok(embeddedBridgeSource.includes('embedded-request'));
 assert.ok(embeddedBridgeSource.includes('getPortableMusicArtistDetail'));
 const linuxFfmpegScript = fs.readFileSync(path.join(root, "scripts", "prepare-linux-ffmpeg.js"), "utf8");
 assert.ok(linuxFfmpegScript.includes('PROBE_SHA256'));
-assert.ok(linuxFfmpegScript.includes('a651976b11ebe8659b667cc7116debc246840eb6d460596cc4f9c650a8805ce7'));
+assert.ok(linuxFfmpegScript.includes('1a7e2fd727ce8d58492a973d3562c9b8cb0c8802c30d6c9f9f5da8d4f884840c'));
 const lastFmScrobblerSource = fs.readFileSync(path.join(root, "src", "main", "lastfm-scrobbler.js"), "utf8");
 assert.ok(lastFmScrobblerSource.includes("track.scrobble"));
 assert.ok(lastFmScrobblerSource.includes("track.updateNowPlaying"));

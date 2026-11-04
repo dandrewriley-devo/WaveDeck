@@ -4,6 +4,7 @@
 
 - The Auto DJ card sets 1–60 minutes between DJ break attempts, default 15. A due break still waits for an eligible different-artist song boundary with existing outro, Station ID, and intro; the timer restarts after a played break.
 - When the next radio song is still being prepared at the crossfade decision point, a due DJ break waits for the hard boundary rather than crossfading before the eligibility check. The November 4 diagnostic export showed zero Auto DJ breaks and 557 crossfades across 589 entries, consistent with missed break opportunities. No previous clips or portable data are removed.
+- The release build refreshes the verified BtbN moving FFmpeg archive pin: archive `1a7e2fd727ce8d58492a973d3562c9b8cb0c8802c30d6c9f9f5da8d4f884840c`, FFmpeg `d7ce480a2e2a2aceaaf0f389d9d809a18b5253af8b4676840a09c78a40f2aa90`, FFprobe `7d1d29ca038f2b9964ceed1980389e26a60766c9ba96bbc1552b48b26f0bd28e`.
 
 ## WaveDeck DJ 0.1.3 — Auto DJ breaks
 
