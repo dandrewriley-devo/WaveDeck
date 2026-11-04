@@ -3,6 +3,7 @@
 ## WaveDeck DJ 0.1.5 — DJ break diagnostics
 
 - Live Radio Log Song Familiarity shows actual intro/outro clip availability at selection time; low/unscored songs without clips show n/a. Due break boundaries record compact skipped reasons, while played breaks name their outro, ID, and intro files. Prior entries remain readable.
+- Refreshes the verified moving FFmpeg archive pin for the AppImage: archive `44b7c1af4a5fb91ebd9de465129171073627a4eb21d2c29fec0305eac3290108`, FFmpeg `bb70eefd7adfb06b06171bc749c98b82c0194905e8e14418abffba2c08d585c2`, FFprobe `442d867515959cfb265266486a1118edff83ce66d05e3e56d1bb05851fcd6717`.
 
 ## WaveDeck DJ 0.1.4 — DJ break interval and late preparation
 
