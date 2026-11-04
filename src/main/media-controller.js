@@ -86,6 +86,7 @@ class MediaController {
     onLocalStationStart = () => {},
     onStationIdPlayed = () => {},
     canBuildAutoDjBreak = () => false,
+    getAutoDjClipStatus = () => ({}),
     takeAutoDjBreak = () => null,
     isAutoDjEnabled = () => true,
     getAutoDjIntervalMinutes = () => 15,
@@ -107,6 +108,7 @@ class MediaController {
     this.onLocalStationStart = onLocalStationStart;
     this.onStationIdPlayed = onStationIdPlayed;
     this.canBuildAutoDjBreak = canBuildAutoDjBreak;
+    this.getAutoDjClipStatus = getAutoDjClipStatus;
     this.takeAutoDjBreak = takeAutoDjBreak;
     this.isAutoDjEnabled = isAutoDjEnabled;
     this.getAutoDjIntervalMinutes = getAutoDjIntervalMinutes;
@@ -450,6 +452,24 @@ class MediaController {
     try { return this.canBuildAutoDjBreak(endingTrack, incomingTrack) === true; } catch { return false; }
   }
 
+  #logSkippedAutoDjBreak(endingTrack, incomingTrack, reason) {
+    try { this.onAutoDjBreak({ type: 'auto-dj-break', at: new Date(this.now()).toISOString(), skipped: true,
+      stationKey: this.music?.radioKey || '', mode: this.music?.mode || '', reason,
+      ending: { title: endingTrack?.title || '', artist: endingTrack?.artist || '' },
+      incoming: { title: incomingTrack?.title || '', artist: incomingTrack?.artist || '' } }); } catch {}
+  }
+
+  #autoDjSkipReason(endingTrack, incomingTrack) {
+    if (!incomingTrack) return 'Next song unavailable';
+    if (this.#samePrimaryArtist(endingTrack, incomingTrack)) return 'Same artist';
+    const ending = this.getAutoDjClipStatus(endingTrack) || {};
+    const incoming = this.getAutoDjClipStatus(incomingTrack) || {};
+    if (!ending.outro) return 'Previous song has no outro';
+    if (!incoming.intro) return 'Next song has no intro';
+    if (!ending.ids) return 'No ready Station ID';
+    return 'Playback did not start a ready break';
+  }
+
   #autoDjClip(phase, file) {
     const labels = { outro: 'Auto DJ Outro', id: 'Station ID', intro: 'Auto DJ Intro' };
     return {
@@ -477,11 +497,13 @@ class MediaController {
       if (!this.music || generation !== this.musicGeneration) return false;
 
       if (!this.#canAutoDjBreakAtBoundary(this.music.current, incomingTrack)) {
+        this.#logSkippedAutoDjBreak(this.music.current, incomingTrack, this.#autoDjSkipReason(this.music.current, incomingTrack));
         await this.loadMusic(id, 0, incomingTrack);
         return true;
       }
       const packet = this.takeAutoDjBreak(this.music.current, incomingTrack);
       if (!packet?.outro?.file || !packet?.stationId?.file || !packet?.intro?.file) {
+        this.#logSkippedAutoDjBreak(this.music.current, incomingTrack, 'Ready clips could not form a packet');
         await this.loadMusic(id, 0, incomingTrack);
         return true;
       }
@@ -500,12 +522,14 @@ class MediaController {
           ending: { title: this.autoDjBreak.endingTrack?.title || '', artist: this.autoDjBreak.endingTrack?.artist || '' },
           incoming: { title: incomingTrack.title || '', artist: incomingTrack.artist || '' },
           stationIdSlot: packet.stationId.slot || 0,
-          stationId: packet.stationId.text || ''
+          stationId: packet.stationId.text || '',
+          outroClip: path.basename(packet.outro.file), idClip: path.basename(packet.stationId.file), introClip: path.basename(packet.intro.file)
         });
       } catch {}
       this.onStateChanged(this.getStatus());
       return true;
     } catch (error) {
+      if (id && this.music && generation === this.musicGeneration) this.#logSkippedAutoDjBreak(this.music.current, null, `Break preparation failed: ${error.message}`);
       this.#discardPreparedDecision(id);
       if (this.music && generation === this.musicGeneration && id) this.music.failed.add(id);
       return false;
@@ -922,6 +946,7 @@ class MediaController {
         // EOF will await the selection and make the final break decision.
         if (this.#autoDjDue() && (this.music.preparing || !this.music.prepared)) return;
         if (this.#canAutoDjBreakAtBoundary(track, this.music.prepared?.track)) return;
+        if (this.#autoDjDue() && this.music.prepared?.track) this.#logSkippedAutoDjBreak(track, this.music.prepared.track, this.#autoDjSkipReason(track, this.music.prepared.track));
         if (this.#dueStationId()) return;
         void this.#beginMusicCrossfade(fadeSeconds * 1000, generation).catch(error => this.musicError(error));
       }

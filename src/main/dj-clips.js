@@ -179,6 +179,10 @@ class DjClips {
   }
   clipsFor(track, kind) {
     if (!this.enabled() || !track) return [];
+    return this.availableClips(track, kind);
+  }
+  availableClips(track, kind) {
+    if (!track) return [];
     const relative = sourceRelative(track);
     return [1, 2, 3].map(slot => ({ slot, file: path.join(this.root, clipRelativePath(track, kind, slot)) }))
       .filter(clip => fs.existsSync(clip.file));

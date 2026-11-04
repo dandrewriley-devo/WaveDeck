@@ -354,8 +354,8 @@ function cleanFeedback(value) {
 }
 
 class MusicRadio {
-  constructor({ dataDir, random = Math.random, now = Date.now, onDecision = () => {}, getFamiliarity = () => 'balanced', getTuning = () => ({}), shouldCancel = () => false }) {
-    this.file = path.join(dataDir, 'music-history.json'); this.random = random; this.now = now; this.onDecision = onDecision; this.getFamiliarity = getFamiliarity; this.getTuning = getTuning; this.shouldCancel = shouldCancel;
+  constructor({ dataDir, random = Math.random, now = Date.now, onDecision = () => {}, getDjClipStatus = () => null, getFamiliarity = () => 'balanced', getTuning = () => ({}), shouldCancel = () => false }) {
+    this.file = path.join(dataDir, 'music-history.json'); this.random = random; this.now = now; this.onDecision = onDecision; this.getDjClipStatus = getDjClipStatus; this.getFamiliarity = getFamiliarity; this.getTuning = getTuning; this.shouldCancel = shouldCancel;
     this.history = []; this.error = ''; this.lastDecision = null; this.artistSet = null; this.artistSetNote = null; this.artistStation = null; this.exploreStation = null; this.stationArtistLast = new Map(); this.recoveryAwayFromSeed = false; this.emergencySongRepeats = new Set();
     this.historySaveTimer = null; this.historyWriting = null; this.historyDirty = false;
     this.feedbackFile = path.join(dataDir, 'local-radio-feedback.json'); this.feedback = { version: 1, stations: {} };
@@ -486,7 +486,7 @@ class MusicRadio {
       artistRadio: mode === 'artist' ? { seedTargetPercent: 90, seedSelectionsSinceRelated: this.artistStation?.seedSelections || 1 } : null,
       howPicked: { manualStart: true, seed: { title: track.title || track.name || '', artist: track.artist || '' }, artistSet: initialArtistSet ? { ...initialArtistSet, position: 1, skipped: [] } : null, explore: mode === 'explore' ? { distance: settings.localRadioExploreDistance, limit: { close: 1, detour: 3, explore: 6 }[settings.localRadioExploreDistance] || 3, hops: 0, awayFromSeed: false } : null },
       counts: { totalTracks: 0, skippedByPlaybackError: 0, skippedForCooldown: 0, skippedForArtistCooldown: 0, skippedForDoNotPlay: 0, skippedForNonMusicGenre: 0, credible: 0, personal: 0, personalMinimum: FAMILIARITY_RATINGS[familiarity].minimum, lastFmFamiliar: 0, finalPool: 0 },
-      selected: { diagnosticId: stableId(track), title: track.title || '', artist: track.artist || '', album: track.album || '', genres: storedGenres(track), eligibilityReasons: ['Manually selected seed track'], score: null, additions: [], multipliers: [], favorite: track.favorite === true, rating: ratingOutOfTen(track), popularity: Number.isFinite(Number(track.popularity)) ? Number(track.popularity) : null, tags: [] },
+      selected: { diagnosticId: stableId(track), title: track.title || '', artist: track.artist || '', album: track.album || '', genres: storedGenres(track), eligibilityReasons: ['Manually selected seed track'], score: null, additions: [], multipliers: [], favorite: track.favorite === true, rating: ratingOutOfTen(track), popularity: Number.isFinite(Number(track.popularity)) ? Number(track.popularity) : null, djClips: this.getDjClipStatus(track), tags: [] },
       diagnostics: { topFinalCandidates: [], recentHistory: this.history.slice(0, 12).map(item => ({ diagnosticId: stableId({ songKey: item.key }), artist: item.artist, album: item.album, at: new Date(item.at).toISOString() })) },
       reason: initialArtistSet
         ? `Started from the selected seed track as the first song in a ${initialArtistSet.size}-song Artist Set.`
@@ -734,7 +734,7 @@ class MusicRadio {
           : this.exploreStation.hops + (artistKey(selected) !== oldArtist ? 1 : 0));
     }
     this.recoveryAwayFromSeed = Boolean(selected && !exploring && recovery?.kind === 'related-route' && recovery.hops > 0);
-    const diagnostic = item => ({ diagnosticId: stableId(item.track), title: item.track.title, artist: item.track.artist, album: item.track.album, genres: storedGenres(item.track), eligibilityReasons: item.relationship.reasons, score: item.score, additions: item.additions, multipliers: item.multipliers, favorite: item.track.favorite === true, rating: ratingOutOfTen(item.track), popularity: item.popularity, tags: item.relationship.tags });
+    const diagnostic = item => ({ diagnosticId: stableId(item.track), title: item.track.title, artist: item.track.artist, album: item.track.album, genres: storedGenres(item.track), eligibilityReasons: item.relationship.reasons, score: item.score, additions: item.additions, multipliers: item.multipliers, favorite: item.track.favorite === true, rating: ratingOutOfTen(item.track), popularity: item.popularity, djClips: this.getDjClipStatus(item.track), tags: item.relationship.tags });
     const ranked = [...candidates].sort((a, b) => b.score - a.score).slice(0, 8);
     const threshold = FAMILIARITY_RATINGS[familiarity].minimum;
     const poolLabel = recovery?.kind === 'related-route' ? 'related-artist rescue route' : (artistRadio ? artistLane : (lastFmOnlyMix ? 'Last.fm popularity' : (personalCandidates.length ? `personal ${threshold}–10/Favorite` : (lastFmCandidates.length ? 'Last.fm familiar' : 'credible'))));

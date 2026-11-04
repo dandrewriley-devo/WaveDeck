@@ -110,17 +110,19 @@ function artistSetLabel(size) {
 }
 
 function songFamiliarityLines(decision, selected) {
+  const clips = selected.djClips;
+  const readiness = clips ? `Intros: ${clips.intro ? 'yes' : clips.eligible ? 'no' : 'n/a'} · Outros: ${clips.outro ? 'yes' : clips.eligible ? 'no' : 'n/a'}` : 'DJ clips: not recorded';
   const popularity = Number(selected.popularity);
   const multiplier = (selected.multipliers || []).find(item => item.label === 'Song familiarity');
   if (!Number.isFinite(popularity) || !multiplier) {
-    return ['No Last.fm popularity available', 'Song Familiarity left this choice neutral.'];
+    return ['No Last.fm popularity available', readiness, 'Song Familiarity left this choice neutral.'];
   }
   const delta = Math.round(Math.abs((Number(multiplier.value) - 1) * 100));
   const label = familiarityLabel(decision.familiarity);
   const detail = Number(multiplier.value) >= 1
     ? `${label} gave this song a ${delta}% boost.`
     : `${label} reduced this song’s chance by ${delta}%.`;
-  return [`Last.fm popularity: ${Math.round(popularity)}/100`, detail];
+  return [`Last.fm popularity: ${Math.round(popularity)}/100`, readiness, detail];
 }
 
 function radioControlLines(decision) {
@@ -188,7 +190,7 @@ function renderStationId(decision, { prepend = true } = {}) {
 function renderAutoDjBreak(decision, { prepend = true } = {}) {
   const entry = element('article', '', 'entry');
   const head = element('div', '', 'entry-head');
-  head.append(element('b', 'Auto DJ Break'));
+  head.append(element('b', decision.skipped ? 'Auto DJ — Break skipped' : 'Auto DJ Break'));
   head.append(element('span', new Date(decision.at).toLocaleString(), 'time'));
   entry.append(head);
   const body = element('div', '', 'entry-body');
@@ -196,7 +198,11 @@ function renderAutoDjBreak(decision, { prepend = true } = {}) {
   track.append(element('b', `${decision.ending?.title || 'Previous song'} → ${decision.incoming?.title || 'Next song'}`));
   track.append(element('span', ` — ${decision.ending?.artist || 'Unknown artist'} → ${decision.incoming?.artist || 'Unknown artist'}`));
   body.append(track);
-  body.append(element('div', `Played Station ID ${decision.stationIdSlot || '—'} between the outro and intro clips.`, 'reason'));
+  if (decision.skipped) body.append(element('div', `Reason: ${decision.reason || 'Unknown'}`, 'reason'));
+  else {
+    body.append(element('div', `Outro: ${decision.outroClip || '—'} · ID ${decision.stationIdSlot || '—'}: ${decision.idClip || '—'}`, 'reason'));
+    body.append(element('div', `Intro: ${decision.introClip || '—'}`, 'reason'));
+  }
   entry.append(body);
   if (prepend) entries.prepend(entry); else entries.append(entry);
   while (entries.children.length > MAX_ENTRIES) entries.lastElementChild.remove();

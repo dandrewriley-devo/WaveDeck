@@ -50,7 +50,7 @@ jobs:
           NODE_PATH="$appdir/resources/app.asar/node_modules" ELECTRON_RUN_AS_NODE=1 "$appdir/wavedeck-dj" "$GITHUB_WORKSPACE/scripts/verify-dj-voice-runtime.js" "$appdir"
       - uses: actions/upload-artifact@v4
         with:
-          name: WaveDeckDJ-0.1.4-Linux
+          name: WaveDeckDJ-0.1.5-Linux
           path: dist/WaveDeckDJ.AppImage
           if-no-files-found: error
           compression-level: 0
@@ -62,7 +62,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: WaveDeckDJ-0.1.4-Linux
+          name: WaveDeckDJ-0.1.5-Linux
           path: release-assets
       - name: Inspect release asset
         shell: bash
@@ -70,12 +70,12 @@ jobs:
           set -euo pipefail
           test -f release-assets/WaveDeckDJ.AppImage
           sha256sum release-assets/WaveDeckDJ.AppImage
-      - name: Publish WaveDeck DJ 0.1.4
+      - name: Publish WaveDeck DJ 0.1.5
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: dj-v0.1.4
+          tag_name: dj-v0.1.5
           target_commitish: ${{ github.sha }}
-          name: WaveDeck DJ 0.1.4
+          name: WaveDeck DJ 0.1.5
           body: "Linux x64 WaveDeck DJ. Adds an adjustable 1–60 minute Auto DJ break interval (15 by default) and prevents an in-progress next-song preparation from crossfading past an eligible break. Existing DJ clips and portable data stay intact."
           files: release-assets/WaveDeckDJ.AppImage
           overwrite_files: true

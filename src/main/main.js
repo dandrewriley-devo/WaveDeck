@@ -2083,6 +2083,7 @@ if (!hasSingleInstanceLock) {
       isAutoDjEnabled: () => djClips?.enabled() === true,
       getAutoDjIntervalMinutes: () => storage.getUiPreferences().autoDjBreakIntervalMinutes,
       canBuildAutoDjBreak: (ending, incoming) => djClips?.canBuildBreak(ending, incoming) === true,
+      getAutoDjClipStatus: track => ({ intro: djClips?.clipsFor(track, 'intro').length || 0, outro: djClips?.clipsFor(track, 'outro').length || 0, ids: djClips?.activeStationIds().length || 0 }),
       takeAutoDjBreak: (ending, incoming) => djClips?.takeBreak(ending, incoming) || null,
       onLocalStationStart: station => {
         activateLocalStationProfile(station?.stationProfile || null);
@@ -2145,6 +2146,7 @@ if (!hasSingleInstanceLock) {
       });
     }
     musicRadio = new RadioSelection({ dataDir: getDataDir(), onDecision: sendToRadioLog,
+      getDjClipStatus: track => track?.library === 'portable' ? { intro: djClips?.availableClips(track, 'intro').length || 0, outro: djClips?.availableClips(track, 'outro').length || 0, eligible: Number(track?.lastFm?.popularity ?? track?.popularity) >= 70 } : null,
       getFamiliarity: () => storage.getUiPreferences().localRadioFamiliarity,
       getTuning: () => storage.getUiPreferences() });
     lastFmScrobbler = new LastFmScrobbler({

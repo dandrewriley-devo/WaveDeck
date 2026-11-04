@@ -1,5 +1,9 @@
 # WaveDeck DJ Branch Handoff
 
+## WaveDeck DJ 0.1.5 — DJ break diagnostics
+
+- Live Radio Log Song Familiarity shows actual intro/outro clip availability at selection time; low/unscored songs without clips show n/a. Due break boundaries record compact skipped reasons, while played breaks name their outro, ID, and intro files. Prior entries remain readable.
+
 ## WaveDeck DJ 0.1.4 — DJ break interval and late preparation
 
 - The Auto DJ card sets 1–60 minutes between DJ break attempts, default 15. A due break still waits for an eligible different-artist song boundary with existing outro, Station ID, and intro; the timer restarts after a played break.
