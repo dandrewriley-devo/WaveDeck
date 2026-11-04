@@ -52,9 +52,9 @@ class DjClips {
     this.getSettings = getSettings;
     this.onStatus = onStatus;
     this.db = null; this.SQL = null; this.worker = null; this.workerReady = null; this.requests = new Map();
-    this.running = false; this.timer = null; this.cancelAfterClip = false;
+    this.running = false; this.timer = null; this.cancelAfterClip = false; this.progressUpdatedAt = 0;
     this.stationIdDeck = []; this.stationIdDeckSignature = ''; this.lastPlayedStationIdSlot = 0;
-    this.status = { ready: false, state: 'idle', queued: 0, completed: 0, total: 0, created: 0, reused: 0, message: 'Auto DJ is off.' };
+    this.status = { ready: false, state: 'idle', queued: 0, completed: 0, total: 0, created: 0, reused: 0, progress: { ready: 0, total: 0 }, message: 'Auto DJ is off.' };
   }
   async start() {
     if (this.db) return;
@@ -68,6 +68,7 @@ class DjClips {
     this.db.run('CREATE TABLE IF NOT EXISTS jobs (track_id TEXT PRIMARY KEY, manual INTEGER NOT NULL DEFAULT 0, requested INTEGER NOT NULL)');
     this.db.run('CREATE TABLE IF NOT EXISTS station_ids (slot INTEGER PRIMARY KEY, signature TEXT NOT NULL, created INTEGER NOT NULL)');
     await this.save();
+    this.refreshLibraryProgress();
     this.status = { ...this.status, ready: true, message: this.enabled() ? this.enabledMessage() : 'Auto DJ is off.' }; this.emit();
     if (this.enabled()) void this.resume();
   }
@@ -107,7 +108,23 @@ class DjClips {
   async refreshQueueStatus() {
     if (!this.db) return;
     const queued = Number(this.rows('SELECT COUNT(*) AS count FROM jobs')[0]?.count) || 0;
+    this.refreshLibraryProgress();
     this.status = { ...this.status, queued }; this.emit();
+  }
+  refreshLibraryProgress(force = false) {
+    if (!this.db || (!force && Date.now() - this.progressUpdatedAt < 15_000)) return;
+    const tracks = this.getTracks().filter(track => track.library === 'portable');
+    const readyPaths = new Set(this.rows('SELECT source_path FROM clips GROUP BY source_path HAVING COUNT(*) >= 6').map(row => row.source_path));
+    const queuedIds = new Set(this.rows('SELECT track_id FROM jobs').map(row => String(row.track_id)));
+    let total = 0, ready = 0;
+    for (const track of tracks) {
+      const done = readyPaths.has(sourceRelative(track));
+      if (!this.qualifying(track) && !done && !queuedIds.has(String(track.id))) continue;
+      total += 1;
+      if (done) ready += 1;
+    }
+    this.status.progress = { ready, total };
+    this.progressUpdatedAt = Date.now();
   }
   async resume() {
     if (this.running) return;
@@ -128,7 +145,7 @@ class DjClips {
       this.schedule(30_000);
     } finally { this.running = false; await this.refreshQueueStatus(); if (!this.cancelAfterClip) this.schedule(1500); }
   }
-  getStatus() { const settings = this.settings(); return { ...this.status, enabled: settings.enabled, settings, templates: { intros: 3, outros: 3 }, root: this.root, bitrate: CLIP_BITRATE, voice: voiceFor(settings), threshold: LASTFM_MINIMUM }; }
+  getStatus() { this.refreshLibraryProgress(true); const settings = this.settings(); return { ...this.status, enabled: settings.enabled, settings, templates: { intros: 3, outros: 3 }, root: this.root, bitrate: CLIP_BITRATE, voice: voiceFor(settings), threshold: LASTFM_MINIMUM }; }
   async trackState(id) {
     await this.start(); const track = this.portableTrack(id); if (!track) return { state: 'missing' };
     const queued = this.rows('SELECT manual FROM jobs WHERE track_id = ?', [track.id])[0];

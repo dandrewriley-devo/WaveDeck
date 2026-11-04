@@ -125,6 +125,9 @@ const localMixReadyLabel = document.getElementById('localMixReadyLabel');
 const manageLocalMixesBtn = document.getElementById('manageLocalMixesBtn');
 const queueLastFmRefreshBtn = document.getElementById('queueLastFmRefreshBtn');
 const djClipStatus = document.getElementById('djClipStatus');
+const djClipProgressWrap = document.getElementById('djClipProgressWrap');
+const djClipProgress = document.getElementById('djClipProgress');
+const djClipProgressLabel = document.getElementById('djClipProgressLabel');
 const queueQualifyingDjClipsBtn = document.getElementById('queueQualifyingDjClipsBtn');
 const autoDjEnabled = document.getElementById('autoDjEnabled');
 const autoDjStationName = document.getElementById('autoDjStationName');
@@ -374,6 +377,12 @@ async function loadLastFmStatus() {
 
 function renderDjClipStatus(status = {}) {
   if (!djClipStatus || !queueQualifyingDjClipsBtn) return;
+  const ready = Number(status.progress?.ready || 0);
+  const total = Number(status.progress?.total || 0);
+  djClipProgressWrap.hidden = !status.ready || !total;
+  djClipProgress.max = Math.max(1, total);
+  djClipProgress.value = Math.min(ready, total);
+  djClipProgressLabel.textContent = `${ready.toLocaleString()} of ${total.toLocaleString()} tracks ready`;
   const queued = Number(status.queued || 0);
   const busy = status.state === 'generating';
   const enabled = status.enabled === true;

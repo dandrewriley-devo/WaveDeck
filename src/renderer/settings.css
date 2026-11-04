@@ -205,6 +205,7 @@ main{
 .local-mixes-card .card-actions{ margin-top:auto; }
 .local-mix-summary{ margin-top:auto; }
 .portable-music-progress-wrap{ align-items:center; display:grid; gap:6px 10px; grid-template-columns:1fr auto; }
+.portable-music-progress-wrap[hidden]{display:none}
 .portable-music-progress{ accent-color:var(--green); height:12px; min-width:100px; width:100%; }
 .portable-music-progress-label{ color:var(--muted); font-size:12px; font-variant-numeric:tabular-nums; min-width:64px; text-align:right; }
 .portable-import-status{ color:var(--muted); font-size:12px; min-height:16px; }

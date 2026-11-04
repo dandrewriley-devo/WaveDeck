@@ -1,5 +1,10 @@
 # WaveDeck DJ Branch Handoff
 
+## WaveDeck DJ 0.1.6 — library clip progress
+
+- Auto DJ displays a whole-library track progress bar counting completed six-clip track records against qualifying portable tracks and manually queued/generated tracks. It refreshes at most every 15 seconds during ongoing generation to minimize USB work; newly qualifying Last.fm songs can raise the total. The existing current-song status remains.
+- Settings' manager tab is **Manage Library**. Track rows use a vocal microphone icon, subdued without six generated clips and green when ready. Portable files and existing clips are untouched.
+
 ## WaveDeck DJ 0.1.5 — DJ break diagnostics
 
 - Live Radio Log Song Familiarity shows actual intro/outro clip availability at selection time; low/unscored songs without clips show n/a. Due break boundaries record compact skipped reasons, while played breaks name their outro, ID, and intro files. Prior entries remain readable.

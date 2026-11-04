@@ -70,14 +70,18 @@ function smallButton(label, title, action, className = '') {
   const button = document.createElement('button'); button.className = `icon-button ${className}`; button.textContent = label; button.title = title;
   button.onclick = event => { event.stopPropagation(); void action(); }; return button;
 }
+const vocalMic = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-4 3-3-3 3-4"/><path d="m11 12 3 3"/><path d="M13 12.5a5 5 0 1 0-1.5-1.5L4 18.5 5.5 20z"/><path d="M16 5c1.5.2 2.8 1.5 3 3"/></svg>';
 function ratingControls(track) {
   const controls = document.createElement('div'); controls.className = 'rating-controls';
   const djState = track.djClip?.state || 'missing';
-  controls.append(smallButton('♬', djState === 'ready' ? 'DJ clips are ready for this track' : (djState === 'queued' || djState === 'generating' ? 'DJ clips are queued' : 'Generate DJ clips for this track'), async () => {
+  const djButton = smallButton('', djState === 'ready' ? 'DJ clips are ready for this track' : (djState === 'queued' || djState === 'generating' ? 'DJ clips are queued' : 'Generate DJ clips for this track'), async () => {
     const scrollTop = currentScroll(); track.djClip = { state: 'queued', manual: true }; render(scrollTop);
     try { await wavedeck.queueDjClipsForTrack(track.id); }
     catch (error) { track.djClip = { state: 'missing' }; summary.textContent = error.message; render(scrollTop); }
-  }, `dj-mic dj-${djState}`));
+  }, `dj-mic dj-${djState}`);
+  djButton.innerHTML = vocalMic;
+  djButton.setAttribute('aria-label', djButton.title);
+  controls.append(djButton);
   controls.append(smallButton('⊘', 'Do Not Play', () => saveTrack(track, { doNotPlay: !track.doNotPlay }), track.doNotPlay ? 'on-ban' : ''));
   const stars = document.createElement('div'); stars.className = 'stars';
   for (let value = 1; value <= 10; value += 1) stars.append(smallButton('★', `Rate ${value} of 10`, () => saveTrack(track, { rating: Number(track.rating) === value ? 0 : value }), Number(track.rating) >= value ? 'on-star' : ''));

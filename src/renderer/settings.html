@@ -18,7 +18,7 @@
         <button class="tab" data-tab="groups">Groups</button>
         <button class="tab" data-tab="localmusic" hidden>Local Music</button>
         <button class="tab linux-stream-only" data-tab="personalstream">Stream</button>
-        <button class="tab" data-tab="musicmanager" hidden>Manage Portable Music</button>
+        <button class="tab" data-tab="musicmanager" hidden>Manage Library</button>
         <button class="tab" data-tab="radiolog" hidden>Live Radio Log</button>
         <button class="tab" data-tab="about">About</button>
       </div>
@@ -293,6 +293,7 @@
           <label class="import-speed-label" for="autoDjBreakInterval">Minutes between DJ break attempts <input id="autoDjBreakInterval" class="input" type="number" min="1" max="60" step="1" value="15" /></label>
           <div class="hint">Enables an AI powered DJ to host your local stations.</div>
           <div id="djClipStatus" class="card-status" role="status">Auto DJ is off.</div>
+          <div id="djClipProgressWrap" class="portable-music-progress-wrap" hidden><progress id="djClipProgress" class="portable-music-progress" max="1" value="0" aria-label="Auto DJ clip generation progress"></progress><span id="djClipProgressLabel" class="portable-music-progress-label">0 of 0</span></div>
           <div class="card-actions"><button id="editAutoDjIdsBtn" class="subtle-link" type="button">Station IDs</button><button id="queueQualifyingDjClipsBtn" class="subtle-link" type="button">Generate clips</button></div>
         </section>
         <section class="local-music-card dashboard-square import-music-section" aria-labelledby="portableImportTitle">
@@ -342,7 +343,7 @@
       </section>
 
       <section id="tab-musicmanager" class="panel embedded-panel hidden" hidden>
-        <iframe id="musicManagerFrame" title="Manage Portable Music" data-src="./music-library.html"></iframe>
+        <iframe id="musicManagerFrame" title="Manage Library" data-src="./music-library.html"></iframe>
       </section>
       <section id="tab-radiolog" class="panel embedded-panel hidden" hidden>
         <iframe id="radioLogFrame" title="Live Radio Log" data-src="./radio-log.html"></iframe>
@@ -378,7 +379,7 @@
             <p>Turn on <b>Enable Advanced Features</b> in Settings → General to make Local Music available. WaveDeck Opus creates and scans the portable <code>Music</code> folder beside the app, and you can add one optional External Music Folder in Settings → Local Music. Drop MP3s into the portable Music folder and they are available immediately while WaveDeck Opus converts them in the background.</p>
             <p>Portable Music becomes lean 96 kbps Opus audio. During conversion, WaveDeck Opus preserves title, artist, album, Album Artist, track number, disc number, year, genre, rating, Favorite, Do Not Play, and its stable music ID. It removes embedded artwork, loose cover images, lyric sidecars, and unneeded metadata. The External Music Folder stays read-only.</p>
             <p>A track marked <code>DO_NOT_PLAY=1</code> is never selected by Local Radio or a Local Mix. A Favorite tag gives that song a stronger chance when it fits the station.</p>
-            <p>With Advanced Features on, Settings also has <b>Manage Portable Music</b> and <b>Live Radio Log</b> tabs. Click a playing portable song’s title to find it in the manager, or use View Log to see why Local Radio chose a song.</p>
+            <p>With Advanced Features on, Settings also has <b>Manage Library</b> and <b>Live Radio Log</b> tabs. Click a playing portable song’s title to find it in the manager, or use View Log to see why Local Radio chose a song.</p>
           </details>
           <details><summary>Playing Local Music</summary>
             <p>Search your Local Music library by song, artist, album, or year. Each matching song can start <b>Song Radio</b>, <b>Explore Radio</b>, <b>Artist Radio</b>, or <b>Play Album</b>.</p>
