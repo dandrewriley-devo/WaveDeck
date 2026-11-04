@@ -403,6 +403,7 @@ function validatePreferences(value) {
   const autoDjStationName = typeof value?.autoDjStationName === 'string' ? value.autoDjStationName.trim().slice(0, 100) : '';
   const autoDjName = typeof value?.autoDjName === 'string' ? value.autoDjName.trim().slice(0, 100) : '';
   const autoDjVoice = value?.autoDjVoice === 'male' ? 'male' : 'female';
+  const autoDjBreakIntervalMinutes = Number.isInteger(Number(value?.autoDjBreakIntervalMinutes)) && Number(value.autoDjBreakIntervalMinutes) >= 1 && Number(value.autoDjBreakIntervalMinutes) <= 60 ? Number(value.autoDjBreakIntervalMinutes) : 15;
   const localMixEnabled = {};
   const rawLocalMixEnabled = value?.localMixEnabled;
   if (rawLocalMixEnabled && typeof rawLocalMixEnabled === 'object' && !Array.isArray(rawLocalMixEnabled)) {
@@ -503,6 +504,7 @@ function validatePreferences(value) {
     autoDjStationName,
     autoDjName,
     autoDjVoice,
+    autoDjBreakIntervalMinutes,
     autoDjStationIds,
     autoDjStationIdDefaultsVersion: 1,
     localMixEnabled,
@@ -704,6 +706,7 @@ class PortableStorage {
       autoDjStationName: preferences.autoDjStationName,
       autoDjName: preferences.autoDjName,
       autoDjVoice: preferences.autoDjVoice,
+      autoDjBreakIntervalMinutes: preferences.autoDjBreakIntervalMinutes,
       autoDjStationIds: [...preferences.autoDjStationIds],
       localMixEnabled: { ...preferences.localMixEnabled },
       localMixFavorites: { ...preferences.localMixFavorites },
@@ -820,6 +823,7 @@ class PortableStorage {
     if (typeof settings.stationName === 'string') preferences.autoDjStationName = settings.stationName.trim().slice(0, 100);
     if (typeof settings.djName === 'string') preferences.autoDjName = settings.djName.trim().slice(0, 100);
     if (settings.voice === 'male' || settings.voice === 'female') preferences.autoDjVoice = settings.voice;
+    if (Number.isInteger(Number(settings.breakIntervalMinutes)) && Number(settings.breakIntervalMinutes) >= 1 && Number(settings.breakIntervalMinutes) <= 60) preferences.autoDjBreakIntervalMinutes = Number(settings.breakIntervalMinutes);
     if (Array.isArray(settings.stationIds)) preferences.autoDjStationIds = Array.from({ length: 50 }, (_unused, index) => typeof settings.stationIds[index] === 'string' ? settings.stationIds[index].trim().slice(0, 300) : '');
     this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
     return this.getUiPreferences();

@@ -130,6 +130,7 @@ const autoDjEnabled = document.getElementById('autoDjEnabled');
 const autoDjStationName = document.getElementById('autoDjStationName');
 const autoDjName = document.getElementById('autoDjName');
 const autoDjVoice = document.getElementById('autoDjVoice');
+const autoDjBreakInterval = document.getElementById('autoDjBreakInterval');
 const editAutoDjIdsBtn = document.getElementById('editAutoDjIdsBtn');
 const resetListeningBtn = document.getElementById("resetListeningBtn");
 const platform = window.wavedeck.platform;
@@ -280,6 +281,7 @@ function renderProMusicSettings(preferences) {
   autoDjStationName.value = preferences?.autoDjStationName || '';
   autoDjName.value = preferences?.autoDjName || '';
   autoDjVoice.value = preferences?.autoDjVoice === 'male' ? 'male' : 'female';
+  autoDjBreakInterval.value = String(preferences?.autoDjBreakIntervalMinutes ?? 15);
   portableImportSpeed.value = String([2, 6, 12].includes(Number(preferences?.portableImportWorkers)) ? preferences.portableImportWorkers : 2);
   if (proEnabled) {
     if (requestedAdvancedTab) { const requested = requestedAdvancedTab; requestedAdvancedTab = ''; showTab(requested); }
@@ -1481,7 +1483,9 @@ queueQualifyingDjClipsBtn.addEventListener('click', async () => {
 });
 async function saveAutoDjSettings() {
   try {
-    const preferences = await window.wavedeck.setAutoDjSettings({ enabled: autoDjEnabled.checked, stationName: autoDjStationName.value, djName: autoDjName.value, voice: autoDjVoice.value });
+    const minutes = Number(autoDjBreakInterval.value);
+    if (!Number.isInteger(minutes) || minutes < 1 || minutes > 60) throw new Error('Choose 1 to 60 minutes between DJ break attempts.');
+    const preferences = await window.wavedeck.setAutoDjSettings({ enabled: autoDjEnabled.checked, stationName: autoDjStationName.value, djName: autoDjName.value, voice: autoDjVoice.value, breakIntervalMinutes: minutes });
     renderProMusicSettings(preferences);
     await loadDjClipStatus();
   } catch (error) { setStatus(statusLocalMusic, `Could not save Auto DJ settings: ${error.message}`, false); }
@@ -1490,6 +1494,7 @@ autoDjEnabled.addEventListener('change', saveAutoDjSettings);
 autoDjStationName.addEventListener('change', saveAutoDjSettings);
 autoDjName.addEventListener('change', saveAutoDjSettings);
 autoDjVoice.addEventListener('change', saveAutoDjSettings);
+autoDjBreakInterval.addEventListener('change', saveAutoDjSettings);
 editAutoDjIdsBtn.addEventListener('click', () => { void window.wavedeck.openAutoDjStationIds(); });
 
 connectLastFmBtn.addEventListener('click', async () => {

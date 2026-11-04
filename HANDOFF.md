@@ -1,5 +1,10 @@
 # WaveDeck DJ Branch Handoff
 
+## WaveDeck DJ 0.1.4 — DJ break interval and late preparation
+
+- The Auto DJ card sets 1–60 minutes between DJ break attempts, default 15. A due break still waits for an eligible different-artist song boundary with existing outro, Station ID, and intro; the timer restarts after a played break.
+- When the next radio song is still being prepared at the crossfade decision point, a due DJ break waits for the hard boundary rather than crossfading before the eligibility check. The November 4 diagnostic export showed zero Auto DJ breaks and 557 crossfades across 589 entries, consistent with missed break opportunities. No previous clips or portable data are removed.
+
 ## WaveDeck DJ 0.1.3 — Auto DJ breaks
 
 - Phase Two uses the Stage One clips in actual Local Radio, Artist Radio, Explore Radio, and Local Mix playback. After 15 minutes of actual music playback (paused time does not count), WaveDeck looks at each song boundary until it finds an eligible break: an existing outgoing outro, an existing incoming intro, an active rendered Station ID, and two different primary artists.

@@ -88,6 +88,7 @@ class MediaController {
     canBuildAutoDjBreak = () => false,
     takeAutoDjBreak = () => null,
     isAutoDjEnabled = () => true,
+    getAutoDjIntervalMinutes = () => 15,
     onAutoDjBreak = () => {},
     stationIdsEnabled = true,
     now = () => Date.now(),
@@ -108,6 +109,7 @@ class MediaController {
     this.canBuildAutoDjBreak = canBuildAutoDjBreak;
     this.takeAutoDjBreak = takeAutoDjBreak;
     this.isAutoDjEnabled = isAutoDjEnabled;
+    this.getAutoDjIntervalMinutes = getAutoDjIntervalMinutes;
     this.onAutoDjBreak = onAutoDjBreak;
     this.stationIdsEnabled = stationIdsEnabled === true;
     this.now = now;
@@ -433,7 +435,8 @@ class MediaController {
   }
 
   #autoDjDue() {
-    return this.#autoDjCanRun() && this.#autoDjElapsed() >= 15 * 60 * 1000;
+    const minutes = Number(this.getAutoDjIntervalMinutes());
+    return this.#autoDjCanRun() && this.#autoDjElapsed() >= (Number.isInteger(minutes) && minutes >= 1 && minutes <= 60 ? minutes : 15) * 60 * 1000;
   }
 
   #samePrimaryArtist(first, second) {
@@ -914,6 +917,10 @@ class MediaController {
         clearInterval(this.musicCrossfadeTimer); this.musicCrossfadeTimer = null;
         // A due, fully prepared DJ break must wait for the hard song boundary.
         // Otherwise the normal equal-power music handoff remains intact.
+        // When a break is due but the next song is still being prepared, do
+        // not commit to a crossfade before we know whether it has an intro.
+        // EOF will await the selection and make the final break decision.
+        if (this.#autoDjDue() && (this.music.preparing || !this.music.prepared)) return;
         if (this.#canAutoDjBreakAtBoundary(track, this.music.prepared?.track)) return;
         if (this.#dueStationId()) return;
         void this.#beginMusicCrossfade(fadeSeconds * 1000, generation).catch(error => this.musicError(error));

@@ -290,6 +290,7 @@
           <div class="card-title" id="djClipsTitle">Auto DJ</div>
           <label class="preference-toggle"><input id="autoDjEnabled" type="checkbox" /><span class="toggle-switch" aria-hidden="true"></span><span>Enable Auto DJ</span></label>
           <div class="auto-dj-fields"><input id="autoDjStationName" class="input" maxlength="100" placeholder="Station Name — WaveDeck Radio" /><div class="auto-dj-name"><select id="autoDjVoice" class="input"><option value="female">Female</option><option value="male">Male</option></select><input id="autoDjName" class="input" maxlength="100" placeholder="DJ Name — Amy Nova" /></div></div>
+          <label class="import-speed-label" for="autoDjBreakInterval">Minutes between DJ break attempts <input id="autoDjBreakInterval" class="input" type="number" min="1" max="60" step="1" value="15" /></label>
           <div class="hint">Enables an AI powered DJ to host your local stations.</div>
           <div id="djClipStatus" class="card-status" role="status">Auto DJ is off.</div>
           <div class="card-actions"><button id="editAutoDjIdsBtn" class="subtle-link" type="button">Station IDs</button><button id="queueQualifyingDjClipsBtn" class="subtle-link" type="button">Generate clips</button></div>

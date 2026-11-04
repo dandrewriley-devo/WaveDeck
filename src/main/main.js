@@ -2081,6 +2081,7 @@ if (!hasSingleInstanceLock) {
       getLocalStationProfile: savedLocalStationProfile,
       stationIdsEnabled: false,
       isAutoDjEnabled: () => djClips?.enabled() === true,
+      getAutoDjIntervalMinutes: () => storage.getUiPreferences().autoDjBreakIntervalMinutes,
       canBuildAutoDjBreak: (ending, incoming) => djClips?.canBuildBreak(ending, incoming) === true,
       takeAutoDjBreak: (ending, incoming) => djClips?.takeBreak(ending, incoming) || null,
       onLocalStationStart: station => {
