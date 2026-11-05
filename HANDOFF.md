@@ -4,6 +4,7 @@
 
 - Song Familiarity has four stops: Allow Deep Cuts, Balanced Mix, Favor the Hits, Hits Only. User-rating thresholds are 3/5/7/8; when Favor Last.fm Data for Local Mixes is enabled, Local Mix selections use popularity cutoffs 50/60/70/80 instead. Saved preferences and station profiles accept the new Hits Only value.
 - Auto DJ clip-generation status remains artist-only after a track finishes; it no longer flashes the song title.
+- Refreshes the moving BtbN FFmpeg archive pin after upstream replaced it: archive `e7aad93f155216d82cdb353e1ddb283a5bcde7ed739dbe1da1ef3c11dff72bec`, FFmpeg `55e97eb579487a04b351802aac38e347e40d9cbc4760cb050a5a998221156253`, FFprobe `74f97b04c744b62f92c748d72e5045e3e89f4aeb24414d39730cea0d361e21bc`.
 
 ## WaveDeck DJ 0.1.7 — Library and Log polish
 
