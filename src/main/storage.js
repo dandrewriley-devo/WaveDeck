@@ -139,7 +139,7 @@ function validateListeningHistory(value) {
       const key = String(rawKey || '').trim().slice(0, 600);
       if (!/^.+:(artist|radio|explore):.+$/.test(key) || !rawProfile || typeof rawProfile !== 'object' || Array.isArray(rawProfile)) continue;
       localStationProfiles[key] = {
-        localRadioFamiliarity: ['hits', 'balanced', 'deep-cuts'].includes(rawProfile.localRadioFamiliarity) ? rawProfile.localRadioFamiliarity : 'balanced',
+        localRadioFamiliarity: ['hits-only', 'hits', 'balanced', 'deep-cuts'].includes(rawProfile.localRadioFamiliarity) ? rawProfile.localRadioFamiliarity : 'balanced',
         localRadioSongRepeatHours: Number.isInteger(Number(rawProfile.localRadioSongRepeatHours)) && Number(rawProfile.localRadioSongRepeatHours) >= 1 && Number(rawProfile.localRadioSongRepeatHours) <= 24 ? Number(rawProfile.localRadioSongRepeatHours) : 4,
         localRadioArtistRepeatMinutes: [30, 60, 90, 120, 180].includes(Number(rawProfile.localRadioArtistRepeatMinutes)) ? Number(rawProfile.localRadioArtistRepeatMinutes) : 90,
         localRadioArtistSetSize: [1, 2, 3, 4].includes(Number(rawProfile.localRadioArtistSetSize)) ? Number(rawProfile.localRadioArtistSetSize) : 1,
@@ -374,7 +374,7 @@ function validatePreferences(value) {
     ? value.additionalMusicFolder.trim()
     : "";
   const lastFmApiKey = typeof value?.lastFmApiKey === 'string' ? value.lastFmApiKey.trim().slice(0, 160) : '';
-  const localRadioFamiliarity = ['hits', 'balanced', 'deep-cuts'].includes(value?.localRadioFamiliarity)
+  const localRadioFamiliarity = ['hits-only', 'hits', 'balanced', 'deep-cuts'].includes(value?.localRadioFamiliarity)
     ? value.localRadioFamiliarity
     : 'balanced';
   const localRadioSongRepeatHours = Number.isInteger(Number(value?.localRadioSongRepeatHours)) && Number(value.localRadioSongRepeatHours) >= 1 && Number(value.localRadioSongRepeatHours) <= 24 ? Number(value.localRadioSongRepeatHours) : 4;
@@ -831,7 +831,7 @@ class PortableStorage {
 
   setLocalRadioFamiliarity(value) {
     const preferences = this.readPreferences();
-    preferences.localRadioFamiliarity = ['hits', 'balanced', 'deep-cuts'].includes(value) ? value : 'balanced';
+    preferences.localRadioFamiliarity = ['hits-only', 'hits', 'balanced', 'deep-cuts'].includes(value) ? value : 'balanced';
     this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
     return this.getUiPreferences();
   }

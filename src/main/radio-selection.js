@@ -94,7 +94,7 @@ class RadioSelection {
   profileOptions(profile = null) {
     const source = profile && typeof profile === 'object' ? profile : {};
     return {
-      familiarity: ['hits', 'balanced', 'deep-cuts'].includes(source.localRadioFamiliarity) ? source.localRadioFamiliarity : this.getFamiliarity(),
+      familiarity: ['hits-only', 'hits', 'balanced', 'deep-cuts'].includes(source.localRadioFamiliarity) ? source.localRadioFamiliarity : this.getFamiliarity(),
       tuning: { ...this.getTuning(), ...source }
     };
   }

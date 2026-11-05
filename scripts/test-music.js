@@ -385,6 +385,10 @@ async function run() {
     assert(['rated-seven', 'rated-ten'].includes(personalPoolPick.id), 'Favor the Hits excludes unrated and 6/10 songs when 7–10 songs are available');
     assert.equal(personalPoolRadio.getLastDecision().counts.personal, 2, 'diagnostics identify the personal pool');
     assert.equal(personalPoolRadio.getLastDecision().counts.lastFmFamiliar, 0, 'Last.fm does not dilute an available personal pool');
+    const hitsOnlyPoolRadio = new MusicRadio({ dataDir: path.join(temp, 'hits-only-pool'), now: () => now, random: () => 0.99, getFamiliarity: () => 'hits-only' });
+    const ratedEight = track('rated-eight', { artist: 'Pink Floyd', artists: ['Pink Floyd'], rating: 8, popularity: 0 });
+    assert.equal(hitsOnlyPoolRadio.choose([ratedSeven, ratedEight], seed, 'radio').id, ratedEight.id, 'Hits Only uses the 8/10 personal-rating threshold');
+    assert.equal(hitsOnlyPoolRadio.getLastDecision().familiarity, 'hits-only');
     const balancedPoolRadio = new MusicRadio({ dataDir: path.join(temp, 'balanced-pool'), now: () => now, random: () => 0, getFamiliarity: () => 'balanced' });
     assert(['rated-six', 'rated-seven', 'rated-ten'].includes(balancedPoolRadio.choose([unratedPopular, ratedSix, ratedSeven, ratedTen], seed, 'radio').id), 'Balanced Mix uses its 5–10 personal pool');
     const deepPoolRadio = new MusicRadio({ dataDir: path.join(temp, 'deep-pool'), now: () => now, random: () => 0, getFamiliarity: () => 'deep-cuts' });
@@ -507,6 +511,10 @@ async function run() {
     const missingPopularity = track('missing-popularity', { artist: 'David Bowie', artists: ['David Bowie'], favorite: true, rating: 10 });
     assert.equal(lastFmOnlyMixRadio.choose([favoriteLowPopularity, highPopularity, missingPopularity], bestMix, 'mix').id, highPopularity.id, 'Favor Last.fm Data for Local Mixes ignores ratings and Favorites, excludes missing Last.fm data, and selects by popularity');
     assert.equal(lastFmOnlyMixRadio.getLastDecision().reason.includes('Last.fm popularity'), true, 'Local Mix diagnostics identify strict Last.fm popularity mode');
+    const lastFmBalancedMixRadio = new MusicRadio({ dataDir: path.join(temp, 'lastfm-balanced-mix'), now: () => now, random: () => 0.99, getFamiliarity: () => 'balanced', getTuning: () => ({ localMixFavorLastFm: true }) });
+    const popularity55 = track('popularity-55', { artist: 'Miles Davis', artists: ['Miles Davis'], popularity: 55 });
+    const popularity60 = track('popularity-60', { artist: 'David Bowie', artists: ['David Bowie'], popularity: 60 });
+    assert.equal(lastFmBalancedMixRadio.choose([popularity55, popularity60], bestMix, 'mix').id, popularity60.id, 'Balanced Mix applies the 60+ Last.fm threshold when the Local Mix toggle is on');
     const classicRadio = new MusicRadio({ dataDir: path.join(temp, 'classic-format'), now: () => now, random: () => 0 });
     const modernColdplay = track('coldplay', { artist: 'Coldplay', artists: ['Coldplay'], title: 'Charlie Brown', year: 2011, rating: 10, similarArtists: ['U2'] });
     assert.equal(classicRadio.choose([...classicSeedTracks, modernColdplay], classicMix, 'mix').artist, 'Boston', 'Last.fm similarity cannot admit a non-format Classic Rock artist');

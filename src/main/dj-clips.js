@@ -63,7 +63,10 @@ class DjClips {
     const file = path.join(this.root, 'clips.sqlite');
     let bytes = null; try { bytes = await fsp.readFile(file); } catch {}
     this.db = bytes ? new this.SQL.Database(bytes) : new this.SQL.Database();
-    this.db.run('PRAGMA journal_mode=WAL');
+    // This sql.js database is memory-backed and persisted as a complete export.
+    // WAL sidecars are unsupported here and can leave the in-memory connection
+    // in a disk-I/O error state during otherwise read-only clip lookups.
+    this.db.run('PRAGMA journal_mode=DELETE');
     this.db.run('CREATE TABLE IF NOT EXISTS clips (source_path TEXT NOT NULL, kind TEXT NOT NULL, slot INTEGER NOT NULL, output_path TEXT NOT NULL, signature TEXT NOT NULL, created INTEGER NOT NULL, PRIMARY KEY(source_path, kind, slot))');
     this.db.run('CREATE TABLE IF NOT EXISTS jobs (track_id TEXT PRIMARY KEY, manual INTEGER NOT NULL DEFAULT 0, requested INTEGER NOT NULL)');
     this.db.run('CREATE TABLE IF NOT EXISTS station_ids (slot INTEGER PRIMARY KEY, signature TEXT NOT NULL, created INTEGER NOT NULL)');
@@ -178,7 +181,7 @@ class DjClips {
       if (this.cancelAfterClip) return { cancelled: true };
       await sleep(200);
     }
-    this.status = { ...this.status, state: 'idle', message: `DJ clips ready for ${track.artist} — ${track.title}` }; this.emit(); return { cancelled: false };
+    this.status = { ...this.status, state: 'idle', message: `Generating clips for ${track.artist || 'Unknown artist'}` }; this.emit(); return { cancelled: false };
   }
   nextStationId() { const settings = this.settings(); if (!settings.stationName || !settings.djName) return null; for (let slot = 1; slot <= 50; slot += 1) { const text = stationIdText(settings.stationIds[slot - 1], settings); if (!text) continue; const signature = contentHash({ slot, text, voice: voiceFor(settings), bitrate: CLIP_BITRATE }); const existing = this.rows('SELECT signature FROM station_ids WHERE slot = ?', [slot])[0]; const output = path.join(this.root, 'ids', `id-${String(slot).padStart(2, '0')}.opus`); if (existing?.signature !== signature || !fs.existsSync(output)) return { slot, text, signature }; } return null; }
   activeStationIds() {

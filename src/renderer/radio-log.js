@@ -110,7 +110,7 @@ function howPickedLines(decision, selected, manualStart) {
 }
 
 function familiarityLabel(value) {
-  return ({ hits: 'Favor the Hits', balanced: 'Balanced Mix', 'deep-cuts': 'Play Deep Cuts Too' })[value] || 'Balanced Mix';
+  return ({ 'hits-only': 'Hits Only', hits: 'Favor the Hits', balanced: 'Balanced Mix', 'deep-cuts': 'Allow Deep Cuts' })[value] || 'Balanced Mix';
 }
 
 function artistSetLabel(size) {

@@ -1,5 +1,10 @@
 # WaveDeck DJ Branch Handoff
 
+## WaveDeck DJ 0.1.8 — Song Familiarity controls
+
+- Song Familiarity has four stops: Allow Deep Cuts, Balanced Mix, Favor the Hits, Hits Only. User-rating thresholds are 3/5/7/8; when Favor Last.fm Data for Local Mixes is enabled, Local Mix selections use popularity cutoffs 50/60/70/80 instead. Saved preferences and station profiles accept the new Hits Only value.
+- Auto DJ clip-generation status remains artist-only after a track finishes; it no longer flashes the song title.
+
 ## WaveDeck DJ 0.1.7 — Library and Log polish
 
 - The main-process RadioSelection wrapper enriches worker decisions with actual on-disk intro/outro readiness by stable diagnostic track identity, correcting missing DJ status on new Live Radio Log entries. Log song titles open their portable track in the Library without storing file paths in diagnostics.

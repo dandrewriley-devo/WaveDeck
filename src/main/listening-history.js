@@ -4,7 +4,7 @@ const FLUSH_INTERVAL_MS = 30_000;
 function cleanLocalRadioProfile(value = {}) {
   const source = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
   return {
-    localRadioFamiliarity: ['hits', 'balanced', 'deep-cuts'].includes(source.localRadioFamiliarity) ? source.localRadioFamiliarity : 'balanced',
+    localRadioFamiliarity: ['hits-only', 'hits', 'balanced', 'deep-cuts'].includes(source.localRadioFamiliarity) ? source.localRadioFamiliarity : 'balanced',
     localRadioSongRepeatHours: Number.isInteger(Number(source.localRadioSongRepeatHours)) && Number(source.localRadioSongRepeatHours) >= 1 && Number(source.localRadioSongRepeatHours) <= 24 ? Number(source.localRadioSongRepeatHours) : 4,
     localRadioArtistRepeatMinutes: [30, 60, 90, 120, 180].includes(Number(source.localRadioArtistRepeatMinutes)) ? Number(source.localRadioArtistRepeatMinutes) : 90,
     localRadioArtistSetSize: [1, 2, 3, 4].includes(Number(source.localRadioArtistSetSize)) ? Number(source.localRadioArtistSetSize) : 1,

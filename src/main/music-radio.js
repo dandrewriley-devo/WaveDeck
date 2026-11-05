@@ -116,9 +116,10 @@ function recentPenalty(track, seedArtist, history) {
   return { multiplier, notes };
 }
 const FAMILIARITY_RATINGS = {
+  'hits-only': { minimum: 8, label: 'Hits Only', values: [0, 0.2, 0.3, 0.4, 0.5, 0.6, 0.75, 1, 1.35, 1.8, 2.35] },
   hits: { minimum: 7, label: 'Favor the Hits', values: [0, 0.2, 0.3, 0.4, 0.5, 0.6, 0.75, 1, 1.35, 1.8, 2.35] },
   balanced: { minimum: 5, label: 'Balanced Mix', values: [0, 0.45, 0.55, 0.65, 0.8, 1, 1.13, 1.28, 1.45, 1.65, 1.85] },
-  'deep-cuts': { minimum: 3, label: 'Play Deep Cuts Too', values: [0, 0.6, 0.7, 1, 1.04, 1.08, 1.12, 1.16, 1.2, 1.22, 1.24] }
+  'deep-cuts': { minimum: 3, label: 'Allow Deep Cuts', values: [0, 0.6, 0.7, 1, 1.04, 1.08, 1.12, 1.16, 1.2, 1.22, 1.24] }
 };
 function ratingOutOfTen(track) {
   const raw = track?.rating ?? (Number.isFinite(Number(track?.ratingStars)) ? Number(track.ratingStars) * 2 : NaN);
@@ -151,17 +152,18 @@ function hasPersonalSignal(track, familiarity) {
   const policy = FAMILIARITY_RATINGS[familiarity] || FAMILIARITY_RATINGS.balanced;
   return track?.favorite === true || (ratingOutOfTen(track) || 0) >= policy.minimum;
 }
-function hasLastFmFamiliarity(track) {
+function hasLastFmFamiliarity(track, familiarity = 'balanced') {
   const popularity = Number(track?.popularity);
-  return Number.isFinite(popularity) && popularity >= 60;
+  const minimum = { 'deep-cuts': 50, balanced: 60, hits: 70, 'hits-only': 80 }[familiarity] ?? 60;
+  return Number.isFinite(popularity) && popularity >= minimum;
 }
 function preferredPool(items, { lastFmOnlyMix = false, artistRadio = false, personalLibraryMix = false, familiarity = 'balanced' } = {}) {
   const credible = items.filter(item => item.score > 0);
   const personal = lastFmOnlyMix ? [] : credible.filter(item => hasPersonalSignal(item.track, familiarity));
   const lastFm = lastFmOnlyMix
     ? credible
-    : (!artistRadio && !personal.length && (personalLibraryMix || familiarity === 'hits')
-      ? credible.filter(item => hasLastFmFamiliarity(item.track)) : []);
+    : (!artistRadio && !personal.length && (personalLibraryMix || familiarity === 'hits' || familiarity === 'hits-only')
+      ? credible.filter(item => hasLastFmFamiliarity(item.track, familiarity)) : []);
   return { credible, personal, lastFm, candidates: personal.length ? personal : (lastFm.length ? lastFm : credible) };
 }
 function familiarityMultiplier(popularity, familiarity) {
@@ -428,7 +430,7 @@ class MusicRadio {
     // now, using the normal familiarity and repeat rules, so it truly begins
     // the requested Artist Set instead of being outside one.
     const now = this.now();
-    const familiarity = ['hits', 'balanced', 'deep-cuts'].includes(this.getFamiliarity()) ? this.getFamiliarity() : 'balanced';
+    const familiarity = ['hits-only', 'hits', 'balanced', 'deep-cuts'].includes(this.getFamiliarity()) ? this.getFamiliarity() : 'balanced';
     const history = historyIndexes(this.history);
     const context = {
       ...history, historyByArtist: history.byArtist, artistLast: new Map(this.stationArtistLast),
@@ -477,7 +479,7 @@ class MusicRadio {
     const settings = localRadioTuning(this.getTuning());
     const familiarity = mode === 'artist'
       ? 'balanced'
-      : (['hits', 'balanced', 'deep-cuts'].includes(this.getFamiliarity()) ? this.getFamiliarity() : 'balanced');
+      : (['hits-only', 'hits', 'balanced', 'deep-cuts'].includes(this.getFamiliarity()) ? this.getFamiliarity() : 'balanced');
     this.lastDecision = {
       at: new Date(now).toISOString(), mode, stationKey, selectionTrigger: 'start',
       seed: { diagnosticId: stableId(track), title: track.title || track.name || '', artist: track.artist || '', album: track.album || '', genres: storedGenres(track) },
@@ -524,7 +526,7 @@ class MusicRadio {
     const context = { ...history, historyByArtist: history.byArtist, artistLast: new Map(), songCooldown: settings.songRepeatHours * 60 * 60 * 1000, artistCooldown: settings.artistRepeatMinutes * 60 * 1000, setArtist: this.artistSet?.artist || '', feedback: this.feedbackFor(stationKey), secondarySeeds: mode === 'radio' ? this.secondarySeeds(stationKey, tracks) : [], shouldCancel: this.shouldCancel };
     // Artist Radio has a fixed, balanced taste profile. Song Radio and Local
     // Mixes continue to use the listener's Song Familiarity setting.
-    const familiarity = artistRadio ? 'balanced' : (['hits', 'balanced', 'deep-cuts'].includes(this.getFamiliarity()) ? this.getFamiliarity() : 'balanced');
+    const familiarity = artistRadio ? 'balanced' : (['hits-only', 'hits', 'balanced', 'deep-cuts'].includes(this.getFamiliarity()) ? this.getFamiliarity() : 'balanced');
     const lastFmOnlyMix = mode === 'mix' && settings.localMixFavorLastFm;
     context.artistLast = new Map(this.stationArtistLast);
     const forcedArtist = this.artistSet?.remaining?.length ? this.artistSet.artist : '';
@@ -538,6 +540,7 @@ class MusicRadio {
         if (!lastFmOnlyMix || item.excluded) { items.push(item); continue; }
         const popularity = Number(track?.popularity);
         if (!Number.isFinite(popularity)) { items.push({ ...item, score: 0, excluded: 'missing Last.fm popularity', multipliers: [] }); continue; }
+        if (!hasLastFmFamiliarity(track, familiarity)) { items.push({ ...item, score: 0, excluded: `Last.fm popularity below ${{ 'deep-cuts': 50, balanced: 60, hits: 70, 'hits-only': 80 }[familiarity] ?? 60}`, multipliers: [] }); continue; }
         items.push({
           ...item,
           // Format books still gate eligibility; only popularity weighs the pick.

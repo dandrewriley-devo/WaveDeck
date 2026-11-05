@@ -10,7 +10,7 @@ const artistSet = document.getElementById('localRadioArtistSet');
 const stationProfile = document.getElementById('localRadioStationProfile');
 const status = document.getElementById('status');
 
-const FAMILIARITY = ['deep-cuts', 'balanced', 'hits'];
+const FAMILIARITY = ['deep-cuts', 'balanced', 'hits', 'hits-only'];
 const EXPLORE_DISTANCES = ['close', 'detour', 'explore'];
 const ARTIST_WAITS = [30, 60, 90, 120, 180];
 const ARTIST_SETS = [1, 2, 3, 4];

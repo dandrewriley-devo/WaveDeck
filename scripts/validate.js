@@ -146,8 +146,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck-dj");
-assert.strictEqual(packageJson.version, "0.1.7");
-assert.strictEqual(packageJson.wavedeckVersion, "0.1.7");
+assert.strictEqual(packageJson.version, "0.1.8");
+assert.strictEqual(packageJson.wavedeckVersion, "0.1.8");
 assert.strictEqual(packageJson.desktopName, "wavedeck-dj.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck DJ");
 assert.strictEqual(packageJson.build.appId, "com.a17press.wavedeckdj");
@@ -1468,7 +1468,8 @@ assert.ok(!localRadioControlsHtml.includes('Use these sliders to shape your Song
 assert.ok(localRadioControlsHtml.includes('id="localRadioFamiliarity"'));
 assert.ok(localRadioControlsHtml.includes('Favor the Hits'));
 assert.ok(localRadioControlsHtml.includes('Balanced Mix'));
-assert.ok(localRadioControlsHtml.includes('Play Deep Cuts Too'));
+assert.ok(localRadioControlsHtml.includes('Allow Deep Cuts'));
+assert.ok(localRadioControlsHtml.includes('Hits Only'));
 assert.ok(localRadioControlsHtml.includes("Don't play the same song for how long?"));
 assert.ok(localRadioControlsHtml.includes("Don't play the same artist for how long?"));
 assert.ok(!localRadioControlsHtml.includes('1 hour'));
@@ -1869,11 +1870,11 @@ assert.ok(windowsWorkflow.includes('chmod 755 "$appimage"'));
 const djWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "dj-portable.yml"), "utf8");
 assert.ok(djWorkflow.includes("branches: [dj-portable]"));
 assert.ok(djWorkflow.includes("npm run dist:linux -- --publish never"));
-assert.ok(djWorkflow.includes("WaveDeckDJ-0.1.7-Linux"));
+assert.ok(djWorkflow.includes("WaveDeckDJ-0.1.8-Linux"));
 assert.ok(djWorkflow.includes("dist/WaveDeckDJ.AppImage"));
 assert.ok(djWorkflow.includes("Verify packaged DJ voice"));
-assert.ok(djWorkflow.includes("tag_name: dj-v0.1.7"));
-assert.ok(djWorkflow.includes("Publish WaveDeck DJ 0.1.7"));
+assert.ok(djWorkflow.includes("tag_name: dj-v0.1.8"));
+assert.ok(djWorkflow.includes("Publish WaveDeck DJ 0.1.8"));
 const djClipsSource = fs.readFileSync(path.join(root, "src", "main", "dj-clips.js"), "utf8");
 assert.ok(djClipsSource.includes("DJ Clips"));
 assert.ok(djClipsSource.includes("__${kind}-"));
