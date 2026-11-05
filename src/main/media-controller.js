@@ -1,4 +1,5 @@
 const fs = require('fs');
+const crypto = require('crypto');
 const path = require('path');
 const { normalize, compilation, radioArtist } = require('./music-tags');
 const { resolveLocalMix } = require('./local-mixes');
@@ -455,8 +456,12 @@ class MediaController {
   #logSkippedAutoDjBreak(endingTrack, incomingTrack, reason) {
     try { this.onAutoDjBreak({ type: 'auto-dj-break', at: new Date(this.now()).toISOString(), skipped: true,
       stationKey: this.music?.radioKey || '', mode: this.music?.mode || '', reason,
-      ending: { title: endingTrack?.title || '', artist: endingTrack?.artist || '' },
-      incoming: { title: incomingTrack?.title || '', artist: incomingTrack?.artist || '' } }); } catch {}
+      ending: { title: endingTrack?.title || '', artist: endingTrack?.artist || '', diagnosticId: this.#diagnosticTrackId(endingTrack) },
+      incoming: { title: incomingTrack?.title || '', artist: incomingTrack?.artist || '', diagnosticId: this.#diagnosticTrackId(incomingTrack) } }); } catch {}
+  }
+
+  #diagnosticTrackId(track) {
+    return track?.id ? crypto.createHash('sha256').update(String(track.id)).digest('hex').slice(0, 16) : '';
   }
 
   #autoDjSkipReason(endingTrack, incomingTrack) {
@@ -519,8 +524,8 @@ class MediaController {
         this.onAutoDjBreak({
           type: 'auto-dj-break', at: new Date(this.now()).toISOString(),
           stationKey: this.music.radioKey || '', mode: this.music.mode || '',
-          ending: { title: this.autoDjBreak.endingTrack?.title || '', artist: this.autoDjBreak.endingTrack?.artist || '' },
-          incoming: { title: incomingTrack.title || '', artist: incomingTrack.artist || '' },
+          ending: { title: this.autoDjBreak.endingTrack?.title || '', artist: this.autoDjBreak.endingTrack?.artist || '', diagnosticId: this.#diagnosticTrackId(this.autoDjBreak.endingTrack) },
+          incoming: { title: incomingTrack.title || '', artist: incomingTrack.artist || '', diagnosticId: this.#diagnosticTrackId(incomingTrack) },
           stationIdSlot: packet.stationId.slot || 0,
           stationId: packet.stationId.text || '',
           outroClip: path.basename(packet.outro.file), idClip: path.basename(packet.stationId.file), introClip: path.basename(packet.intro.file)

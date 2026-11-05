@@ -2,3 +2,9 @@
 :is(.dj-mic).icon-button{color:#656565;display:inline-flex;align-items:center;justify-content:center;vertical-align:middle}
 .dj-mic.dj-ready{color:var(--green)}
 .dj-mic:hover,.dj-mic:focus-visible{color:#a6d795}
+.search-wrap{position:relative;width:min(440px,48vw)}
+.search-wrap input{width:100%;padding-right:38px}
+.clear-search{position:absolute;right:5px;top:50%;transform:translateY(-50%);background:none;border:0;color:#bbb;font-size:20px;padding:3px 8px}
+.clear-search:hover{color:#fff;background:none}
+.clear-search[hidden]{display:none}
+@media(max-width:760px){header .search-wrap{width:100%}}

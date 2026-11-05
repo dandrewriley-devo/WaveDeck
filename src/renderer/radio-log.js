@@ -11,6 +11,14 @@ function element(tag, text = '', className = '') {
   node.textContent = text;
   return node;
 }
+function songTitle(title, diagnosticId) {
+  if (!diagnosticId) return element('b', title);
+  const button = element('button', title, 'song-link');
+  button.type = 'button';
+  button.title = `Find ${title} in Library`;
+  button.onclick = () => void wavedeck.openMusicDebugTrack(diagnosticId).catch(() => {});
+  return button;
+}
 
 function number(value, digits = 2) {
   const parsed = Number(value);
@@ -195,7 +203,9 @@ function renderAutoDjBreak(decision, { prepend = true } = {}) {
   entry.append(head);
   const body = element('div', '', 'entry-body');
   const track = element('div', '', 'track');
-  track.append(element('b', `${decision.ending?.title || 'Previous song'} → ${decision.incoming?.title || 'Next song'}`));
+  track.append(songTitle(decision.ending?.title || 'Previous song', decision.ending?.diagnosticId));
+  track.append(element('span', ' → '));
+  track.append(songTitle(decision.incoming?.title || 'Next song', decision.incoming?.diagnosticId));
   track.append(element('span', ` — ${decision.ending?.artist || 'Unknown artist'} → ${decision.incoming?.artist || 'Unknown artist'}`));
   body.append(track);
   if (decision.skipped) body.append(element('div', `Reason: ${decision.reason || 'Unknown'}`, 'reason'));
@@ -228,7 +238,7 @@ function renderDecision(decision, { prepend = true } = {}) {
   entry.append(head);
   const body = element('div', '', 'entry-body');
   const track = element('div', '', 'track');
-  track.append(element('b', selected.title || 'Untitled track'));
+  track.append(songTitle(selected.title || 'Untitled track', selected.clipDiagnosticId || selected.diagnosticId));
   track.append(element('span', ` — ${selected.artist || 'Unknown artist'}${selected.album ? ` · ${selected.album}` : ''}`));
   body.append(track);
   body.append(element('div', genreLine(selected), 'muted'));

@@ -1,10 +1,13 @@
 const path = require('path');
+const crypto = require('crypto');
 const { Worker } = require('worker_threads');
 
 class RadioSelection {
-  constructor({ dataDir, onDecision = () => {}, getFamiliarity = () => 'balanced', getTuning = () => ({}) }) {
+  constructor({ dataDir, onDecision = () => {}, getDjClipStatus = () => null, getFamiliarity = () => 'balanced', getTuning = () => ({}) }) {
     this.dataDir = dataDir;
     this.onDecision = onDecision;
+    this.getDjClipStatus = getDjClipStatus;
+    this.diagnosticTracks = new Map();
     this.getFamiliarity = getFamiliarity;
     this.getTuning = getTuning;
     this.worker = null;
@@ -27,6 +30,11 @@ class RadioSelection {
     this.worker = worker;
     worker.on('message', message => {
       if (message.event === 'decision') {
+        const selected = message.value?.selected;
+        if (selected?.diagnosticId) {
+          const track = this.diagnosticTracks.get(selected.clipDiagnosticId || selected.diagnosticId);
+          if (track) { try { selected.djClips = this.getDjClipStatus(track); } catch {} }
+        }
         this.lastDecision = message.value;
         try { this.onDecision(message.value); } catch {}
         return;
@@ -67,11 +75,18 @@ class RadioSelection {
   setTracks(tracks, revision = 0) {
     if (this.tracks === tracks && this.revision === revision && this.worker) return Promise.resolve();
     this.tracks = tracks;
+    const key = value => crypto.createHash('sha256').update(String(value || '')).digest('hex').slice(0, 16);
+    this.diagnosticTracks = new Map();
+    for (const track of tracks) {
+      this.diagnosticTracks.set(key(track?.songKey || track?.id), track);
+      this.diagnosticTracks.set(key(track?.id), track);
+    }
     this.revision = revision;
     // Only send a library snapshot when it actually changes, never with each
     // radio pick. The worker owns it while songs are playing.
     return this.call('setTracks', tracks);
   }
+  trackForDiagnosticId(id) { return this.diagnosticTracks.get(String(id || '')) || null; }
   cancelPending() { Atomics.add(this.cancellation, 0, 1); this.awayFromSeed = false; }
   beginSession() { return this.call('beginSession'); }
   beginArtistSession(seed) { return this.call('beginArtistSession', seed); }

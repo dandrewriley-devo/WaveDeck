@@ -160,7 +160,7 @@ class DjClips {
     ];
     const sourceFile = path.join(path.dirname(this.dataDir), 'Music', ...relative.split('/'));
     const sourceStat = await fsp.stat(sourceFile);
-    this.status = { ...this.status, state: 'generating', completed: 0, total: clips.length, created: 0, reused: 0, message: `Preparing DJ clips for ${track.artist} — ${track.title}` }; this.emit();
+    this.status = { ...this.status, state: 'generating', completed: 0, total: clips.length, created: 0, reused: 0, message: `Generating clips for ${track.artist || 'Unknown artist'}` }; this.emit();
     for (const clip of clips) {
       const outputRelative = clipRelativePath(track, clip.kind, clip.slot); const output = path.join(this.root, outputRelative);
       const signature = contentHash({ source: relative, bytes: sourceStat.size, modified: sourceStat.mtimeMs, kind: clip.kind, slot: clip.slot, text: clip.text, voice: voiceFor(this.settings()), bitrate: CLIP_BITRATE });
@@ -169,7 +169,7 @@ class DjClips {
       if (reused) { try { reused = (await fsp.stat(output)).isFile(); } catch { reused = false; } }
       if (reused) this.status.reused += 1;
       else {
-        this.status.message = `Generating ${clip.kind} ${clip.slot} for ${track.artist} — ${track.title}`; this.emit();
+        this.status.message = `Generating clips for ${track.artist || 'Unknown artist'}`; this.emit();
         await this.render(clip.text, output);
         this.db.run('INSERT OR REPLACE INTO clips(source_path, kind, slot, output_path, signature, created) VALUES (?, ?, ?, ?, ?, ?)', [relative, clip.kind, clip.slot, outputRelative, signature, Date.now()]);
         await this.save(); this.status.created += 1;

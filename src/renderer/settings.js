@@ -25,7 +25,7 @@ let requestedAdvancedTab = '';
 const embeddedMethods = new Set([
   'getPortableMusicArtists', 'getPortableMusicArtistDetail', 'playMusic',
   'saveArtistRelationships', 'savePortableMusicReleaseHoliday', 'savePortableMusicTrack',
-  'clearMusicDebugHistory', 'getMusicDebugHistory', 'saveMusicDebugLog', 'queueDjClipsForTrack'
+  'clearMusicDebugHistory', 'getMusicDebugHistory', 'saveMusicDebugLog', 'openMusicDebugTrack', 'queueDjClipsForTrack'
 ]);
 window.addEventListener('message', async event => {
   if (![musicManagerFrame.contentWindow, radioLogFrame.contentWindow].includes(event.source)) return;
@@ -382,13 +382,13 @@ function renderDjClipStatus(status = {}) {
   djClipProgressWrap.hidden = !status.ready || !total;
   djClipProgress.max = Math.max(1, total);
   djClipProgress.value = Math.min(ready, total);
-  djClipProgressLabel.textContent = `${ready.toLocaleString()} of ${total.toLocaleString()} tracks ready`;
+  djClipProgressLabel.textContent = `${ready.toLocaleString()} of ${total.toLocaleString()}`;
   const queued = Number(status.queued || 0);
   const busy = status.state === 'generating';
   const enabled = status.enabled === true;
   queueQualifyingDjClipsBtn.disabled = busy || !enabled;
   editAutoDjIdsBtn.disabled = false;
-  queueQualifyingDjClipsBtn.textContent = busy ? 'Generating DJ clips…' : 'Generate clips for all qualifying tracks';
+  queueQualifyingDjClipsBtn.textContent = busy ? 'Generating clips' : 'Generate clips';
   djClipStatus.textContent = status.message || (enabled ? (queued ? `${queued.toLocaleString()} track${queued === 1 ? '' : 's'} queued quietly in the background.` : 'Auto DJ is ready.') : 'Auto DJ is off.');
 }
 async function loadDjClipStatus() {
@@ -1488,7 +1488,7 @@ queueQualifyingDjClipsBtn.addEventListener('click', async () => {
     const status = await window.wavedeck.queueQualifyingDjClips();
     renderDjClipStatus(status);
   } catch (error) { setStatus(statusLocalMusic, error.message, false); }
-  finally { if (queueQualifyingDjClipsBtn.textContent !== 'Generating DJ clips…') queueQualifyingDjClipsBtn.disabled = false; }
+  finally { if (queueQualifyingDjClipsBtn.textContent !== 'Generating clips') queueQualifyingDjClipsBtn.disabled = false; }
 });
 async function saveAutoDjSettings() {
   try {

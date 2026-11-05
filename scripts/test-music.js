@@ -537,7 +537,7 @@ async function run() {
       track('worker-blocked', { artist: 'Worker Artist', artists: ['Worker Artist'], albumArtist: 'Worker Artist', doNotPlay: true })
     ];
     const workerDecisions = [];
-    const selection = new RadioSelection({ dataDir: path.join(temp, 'radio-worker'), onDecision: value => workerDecisions.push(value) });
+    const selection = new RadioSelection({ dataDir: path.join(temp, 'radio-worker'), onDecision: value => workerDecisions.push(value), getDjClipStatus: selected => ({ intro: selected.id === 'worker-seed' ? 3 : 0, outro: selected.id === 'worker-seed' ? 3 : 0, eligible: true }) });
     try {
       await selection.setTracks(workerTracks, 1);
       await selection.beginSession();
@@ -545,6 +545,8 @@ async function run() {
       await selection.record(workerTracks[0]);
       await selection.recordManualStart(workerTracks[0], 'artist', 'artist:worker-seed');
       assert.equal(workerDecisions.length, 1, 'the opening station decision still reaches the Live Radio Log');
+      assert.deepEqual(workerDecisions[0].selected.djClips, { intro: 3, outro: 3, eligible: true }, 'worker decisions report real DJ clips from the main process');
+      assert.equal(selection.trackForDiagnosticId(workerDecisions[0].selected.clipDiagnosticId), workerTracks[0], 'log links resolve to the exact library track');
       const workerChoice = await selection.choose(workerTracks, workerTracks[0], 'artist', new Set(), 'prepared', 'artist:worker-seed', true);
       assert.equal(workerChoice.id, 'worker-next', 'the worker keeps Local Radio eligibility and repeat protection');
       assert.equal(workerDecisions.length, 1, 'a prepared decision remains hidden until its song starts');

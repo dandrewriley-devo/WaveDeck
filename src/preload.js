@@ -37,6 +37,7 @@ contextBridge.exposeInMainWorld("wavedeck", {
   seekMusic: seconds => ipcRenderer.invoke('music:seek', seconds),
   getMusicDebugLog: () => ipcRenderer.invoke('music:debug:get-last-decision'),
   getMusicDebugHistory: () => ipcRenderer.invoke('music:debug:get-log'),
+  openMusicDebugTrack: id => ipcRenderer.invoke('music:debug:open-track', id),
   clearMusicDebugHistory: () => ipcRenderer.invoke('music:debug:clear-log'),
   openMusicDebugLog: () => ipcRenderer.invoke('music:debug:open-log'),
   saveMusicDebugLog: () => ipcRenderer.invoke('music:debug:save-log'),

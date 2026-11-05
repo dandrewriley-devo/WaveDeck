@@ -1,5 +1,10 @@
 # WaveDeck DJ Branch Handoff
 
+## WaveDeck DJ 0.1.7 — Library and Log polish
+
+- The main-process RadioSelection wrapper enriches worker decisions with actual on-disk intro/outro readiness by stable diagnostic track identity, correcting missing DJ status on new Live Radio Log entries. Log song titles open their portable track in the Library without storing file paths in diagnostics.
+- Settings tabs are Library, Stream, Log in that order; Library search gains a clear X. Local Music dashboard cards occupy one grid column (the Manage Local Mixes details stay full-width). Auto DJ copy and links are compact and stable, with a short artist-only generation status, Virtual DJ tooltip, and unlabeled numeric progress.
+
 ## WaveDeck DJ 0.1.6 — library clip progress
 
 - Auto DJ displays a whole-library track progress bar counting completed six-clip track records against qualifying portable tracks and manually queued/generated tracks. It refreshes at most every 15 seconds during ongoing generation to minimize USB work; newly qualifying Last.fm songs can raise the total. The existing current-song status remains.

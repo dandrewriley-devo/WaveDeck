@@ -2,6 +2,17 @@ const wavedeck = embeddedWavedeck;
 const $ = id => document.getElementById(id);
 const content = $('content');
 const search = $('search');
+const searchWrap = document.createElement('div');
+searchWrap.className = 'search-wrap';
+search.parentNode.insertBefore(searchWrap, search);
+searchWrap.append(search);
+const clearSearch = document.createElement('button');
+clearSearch.type = 'button';
+clearSearch.className = 'clear-search';
+clearSearch.textContent = '×';
+clearSearch.title = 'Clear search';
+clearSearch.setAttribute('aria-label', 'Clear search');
+searchWrap.append(clearSearch);
 const summary = $('summary');
 const ROW_HEIGHT = 49;
 const LOADING_DETAIL_HEIGHT = 62;
@@ -148,12 +159,14 @@ function render(scrollTop = currentScroll()) {
   };
   nextViewport.onscroll = draw; nextViewport.scrollTop = Math.min(scrollTop, Math.max(0, Number.parseInt(stage.style.height, 10) - nextViewport.clientHeight)); draw();
 }
-search.oninput = () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { query = search.value.trim(); void loadArtists(); }, 120); };
+search.oninput = () => { clearSearch.hidden = !search.value; clearTimeout(searchTimer); searchTimer = setTimeout(() => { query = search.value.trim(); void loadArtists(); }, 120); };
+clearSearch.hidden = !search.value;
+clearSearch.onclick = () => { search.value = ''; search.oninput(); search.focus(); };
 async function focusPortableTrack(target = {}) {
   if (!target.artistKey || !target.releaseKey || !target.trackId) return;
   const request = ++focusRequest;
   const hadFilter = Boolean(query);
-  query = ''; search.value = '';
+  query = ''; search.value = ''; clearSearch.hidden = true;
   // The window is already loading the complete artist list on first open.
   // Reuse that request, and fetch only this artist's releases in parallel.
   const list = hadFilter || artistsLoadQuery ? loadArtists() : (artistsLoad || loadArtists());

@@ -201,7 +201,11 @@ main{
 .import-speed-label .input{ flex:1; min-width:0; }
 .import-action{ width:100%; }
 .info-tip{ align-items:center; border:1px solid #6d6d6d; border-radius:50%; color:#cfcfcf; cursor:help; display:inline-flex; font-family:serif; font-size:11px; font-style:italic; font-weight:700; height:15px; justify-content:center; margin-left:3px; width:15px; }
-.additional-folder-card,.remembered-computers-card{ grid-column:span 2; }
+.additional-folder-card,.remembered-computers-card{ grid-column:auto; }
+.additional-folder-card .pro-music-settings-row{flex-wrap:wrap}
+.additional-folder-card .pro-music-settings-row .input{flex-basis:100%}
+.auto-dj-toggle-row{align-items:center;display:flex;gap:5px}
+.auto-dj-actions{gap:12px;flex-wrap:nowrap;white-space:nowrap}
 .local-mixes-card .card-actions{ margin-top:auto; }
 .local-mix-summary{ margin-top:auto; }
 .portable-music-progress-wrap{ align-items:center; display:grid; gap:6px 10px; grid-template-columns:1fr auto; }

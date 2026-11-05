@@ -1621,6 +1621,13 @@ function installIpcHandlers() {
   };
   ipcMain.handle('music:debug:get-last-decision', () => musicRadio?.getLastDecision() || null);
   ipcMain.handle('music:debug:get-log', () => radioDiagnosticSession.map(item => JSON.parse(JSON.stringify(item))));
+  ipcMain.handle('music:debug:open-track', async (_event, diagnosticId) => {
+    await requireMusic();
+    const track = musicRadio?.trackForDiagnosticId(diagnosticId);
+    if (!track || track.library !== 'portable') return false;
+    openPortableMusicLibraryWindow({ artistKey: portableManagerArtistKey(track.artist), releaseKey: portableManagerReleaseKey(track), trackId: track.id });
+    return true;
+  });
   ipcMain.handle('music:debug:clear-log', () => { clearRadioDiagnostics(); return true; });
   ipcMain.handle('music:debug:open-log', () => { openRadioLogWindow(); return true; });
   ipcMain.handle('music:debug:save-log', async () => {
