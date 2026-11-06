@@ -1,5 +1,11 @@
 # WaveDeck DJ Branch Handoff
 
+## WaveDeck DJ 0.1.10 — Personal Stream compatibility
+
+- The 0.1.9 AppImage bundled Icecast dependencies built against GLIBC 2.43. On Andrew's Linux Mint computer, Icecast exited before opening TCP 18037, with a loader error before its own log could record anything. This was a packaging regression, not DNS or port forwarding.
+- The Linux build now targets the supported `ubuntu-22.04` runner so Icecast and its bundled dependencies target an older glibc. A new post-build check extracts the actual AppImage's streaming binaries, rejects any GLIBC requirement above 2.35, starts bundled Icecast, and confirms it opens a listening port before publishing. Maintain this compatibility check when changing runners or packaging.
+- The visible About changelog and `package-lock.json` remain unchanged.
+
 ## WaveDeck DJ 0.1.9 — Voice controls and extra lines
 
 - Music playback requests defer background DJ generation for ten seconds and stop after the current clip. DJ startup is deferred after player initialization; routine status reads no longer force a whole-library progress scan.
