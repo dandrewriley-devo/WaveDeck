@@ -9,10 +9,11 @@ const { spawnSync } = require("child_process");
 // This exact static x86_64 build is the recorder that works on Linux Mint.
 // Keep the release URL and both hashes pinned so every AppImage contains the
 // same verified binary instead of ffmpeg-static, which previously crashed.
-const ARCHIVE_URL = "https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-09-19-13-11/ffmpeg-n8.1.2-54-gc573a95381-linux64-gpl-8.1.tar.xz";
-const ARCHIVE_SHA256 = "5c7ffcf37fd5e0ab99ee2a4a6a5e70219379ec5a4dee2ed39f891c3790a2cbb5";
-const BINARY_SHA256 = "08e0ec21fe0d6c9118878bb9746362c2f47f377b5c8a182cb1878e7bf5706e27";
-const ARCHIVE_ROOT = "ffmpeg-n8.1.2-54-gc573a95381-linux64-gpl-8.1/bin";
+const ARCHIVE_URL = "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n8.1-latest-linux64-gpl-8.1.tar.xz";
+const ARCHIVE_SHA256 = "e7aad93f155216d82cdb353e1ddb283a5bcde7ed739dbe1da1ef3c11dff72bec";
+const BINARY_SHA256 = "55e97eb579487a04b351802aac38e347e40d9cbc4760cb050a5a998221156253";
+const PROBE_SHA256 = "74f97b04c744b62f92c748d72e5045e3e89f4aeb24414d39730cea0d361e21bc";
+const ARCHIVE_ROOT = "ffmpeg-n8.1-latest-linux64-gpl-8.1/bin";
 const ARCHIVE_MEMBERS = ["ffmpeg", "ffprobe"];
 const projectRoot = path.resolve(__dirname, "..");
 const destinationDir = path.join(projectRoot, ".cache", "wavedeck-tools", "linux");
@@ -34,7 +35,7 @@ async function main() {
   }
 
   try {
-    if (fs.existsSync(destination) && fs.existsSync(probeDestination) && sha256(destination) === BINARY_SHA256) {
+    if (fs.existsSync(destination) && fs.existsSync(probeDestination) && sha256(destination) === BINARY_SHA256 && sha256(probeDestination) === PROBE_SHA256) {
       fs.chmodSync(destination, 0o755);
       fs.chmodSync(probeDestination, 0o755);
       console.log("WaveDeck's portable FFmpeg is ready.");
@@ -76,6 +77,9 @@ async function main() {
     const extractedProbe = path.join(extractionDir, ARCHIVE_ROOT, "ffprobe");
     if (sha256(extractedBinary) !== BINARY_SHA256) {
       throw new Error("Extracted FFmpeg executable failed its SHA-256 check.");
+    }
+    if (sha256(extractedProbe) !== PROBE_SHA256) {
+      throw new Error("Extracted FFprobe executable failed its SHA-256 check.");
     }
     fs.mkdirSync(destinationDir, { recursive: true });
     const temporaryDestination = `${destination}.copying-${process.pid}`;

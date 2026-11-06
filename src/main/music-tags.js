@@ -1,17 +1,33 @@
 const path = require('path');
 const crypto = require('crypto');
-const normalize = (value) => String(value ?? '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+// Tags come from many programs. Treat typographic punctuation as the ordinary
+// punctuation the listener expects, so Jane's and Jane’s are one artist.
+const normalize = (value) => String(value ?? '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+  .replace(/[‘’‛`´]/g, "'").replace(/[“”„]/g, '"').replace(/[‐‑‒–—―]/g, '-')
+  .replace(/\s+/g, ' ').toLowerCase().trim();
 const list = (value) => (Array.isArray(value) ? value : String(value || '').split(/[;|]/)).map(String).map(s => s.trim()).filter(Boolean);
+const PORTABLE_CUSTOM_TAGS = new Set(['RATING', 'FAVORITE', 'DO_NOT_PLAY', 'HOLIDAY', 'PLAY_COUNT', 'PLAYCOUNT', 'SKIP_COUNT', 'SKIPCOUNT', 'LAST_PLAYED', 'LASTFM_TRACK_POPULARITY_0_100', 'LASTFM_ARTIST_SIMILAR', 'MOOD', 'AMP_TRACK_ID']);
 // Some ID3 readers treat the slash in AC/DC as an artist separator and leave
 // only "AC" in the primary artist field. Canonicalize that known legacy form
 // everywhere WaveDeck displays or matches an artist.
 const canonicalArtist = value => normalize(value) === 'ac' ? 'AC/DC' : String(value || '').trim();
+function customTags(metadata) {
+  const custom = {};
+  for (const frames of Object.values(metadata?.native || {})) for (const frame of frames || []) {
+    const id = String(frame?.id || '');
+    if (id.startsWith('TXXX:')) { custom[id.slice(5).toUpperCase()] = frame.value; continue; }
+    const key = id.toUpperCase();
+    if (PORTABLE_CUSTOM_TAGS.has(key)) custom[key] = frame.value;
+  }
+  return custom;
+}
+function portableTrackId(relativePath, library) {
+  const normalizedPath = String(relativePath || '').replace(/\\/g, '/').replace(/\.[^.\/]+$/, '');
+  return crypto.createHash('sha256').update(`${library}\0${normalizedPath}`).digest('hex');
+}
 function extractTrack(metadata, relativePath, library = 'portable') {
   const c = metadata.common || {};
-  const custom = {};
-  for (const frames of Object.values(metadata.native || {})) for (const frame of frames) {
-    if (frame.id.startsWith('TXXX:')) custom[frame.id.slice(5).toUpperCase()] = frame.value;
-  }
+  const custom = customTags(metadata);
   const number = (...keys) => {
     const value = keys.map(k => custom[k]).find(v => v !== undefined && v !== '');
     return Number.isFinite(Number(value)) ? Number(value) : null;
@@ -54,7 +70,7 @@ function extractTrack(metadata, relativePath, library = 'portable') {
   const title = c.title || path.basename(relativePath, path.extname(relativePath));
   const artist = canonicalArtist(c.artist || '');
   return {
-    id: crypto.createHash('sha256').update(`${library}\0${relativePath}`).digest('hex'), relativePath, library,
+    id: portableTrackId(relativePath, library), relativePath, library,
     title, artist, artists: (c.artists || list(artist)).map(canonicalArtist), album: c.album || '', albumArtist: canonicalArtist(c.albumartist || ''),
     year: c.year || c.originalyear || null, genres: c.genre || [], composer: c.composer || [],
     comments: (c.comment || []).map(v => typeof v === 'string' ? v : v.text || ''),
@@ -63,6 +79,7 @@ function extractTrack(metadata, relativePath, library = 'portable') {
     ratingSource: ratingEntry?.source || '',
     favorite: /^(1|true|yes)$/i.test(String(custom.FAVORITE || '')),
     doNotPlay: /^(1|true|yes)$/i.test(String(custom.DO_NOT_PLAY || '')),
+    holiday: /^(1|true|yes)$/i.test(String(custom.HOLIDAY || '')),
     playCount: number('PLAY_COUNT', 'PLAYCOUNT') || 0, skipCount: number('SKIP_COUNT', 'SKIPCOUNT') || 0,
     lastPlayed: String(custom.LAST_PLAYED || ''),
     popularity: number('LASTFM_TRACK_POPULARITY_0_100'),
@@ -76,4 +93,4 @@ function compilation(track) {
     /soundtrack|original motion picture/i.test(track.album || '');
 }
 function radioArtist(track) { return canonicalArtist((!compilation(track) && track.albumArtist) || track.artist); }
-module.exports = { extractTrack, normalize, canonicalArtist, compilation, radioArtist };
+module.exports = { extractTrack, customTags, portableTrackId, normalize, canonicalArtist, compilation, radioArtist };

@@ -1,0 +1,226 @@
+const wavedeck = embeddedWavedeck;
+const $ = id => document.getElementById(id);
+const content = $('content');
+const search = $('search');
+const searchWrap = document.createElement('div');
+searchWrap.className = 'search-wrap';
+search.parentNode.insertBefore(searchWrap, search);
+searchWrap.append(search);
+const clearSearch = document.createElement('button');
+clearSearch.type = 'button';
+clearSearch.className = 'clear-search';
+clearSearch.textContent = '×';
+clearSearch.title = 'Clear search';
+clearSearch.setAttribute('aria-label', 'Clear search');
+searchWrap.append(clearSearch);
+const summary = $('summary');
+const ROW_HEIGHT = 49;
+const LOADING_DETAIL_HEIGHT = 62;
+let artists = [], query = '', activeArtist = '', detail = null, activeRelease = '', editingTrack = '', playingTrack = '';
+let expandedDetailHeight = 0, viewport = null, searchTimer = 0, focusedTrack = '';
+let artistsLoad = null, artistsLoadQuery = '', focusRequest = 0;
+
+const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+const duration = seconds => { const whole = Math.max(0, Math.round(Number(seconds) || 0)); return whole ? `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, '0')}` : '—'; };
+const currentScroll = () => viewport?.isConnected ? viewport.scrollTop : 0;
+
+function expandedHeight() {
+  if (!activeArtist) return 0;
+  if (!detail) return LOADING_DETAIL_HEIGHT;
+  const release = detail.releases.find(value => value.key === activeRelease);
+  return expandedDetailHeight || (98 + detail.releases.length * 43 + (release ? release.tracks.length * 39 + (editingTrack ? 185 : 0) : 0));
+}
+function loadArtists({ keepOpen = false } = {}) {
+  const scrollTop = currentScroll();
+  const requestedQuery = query;
+  const request = wavedeck.getPortableMusicArtists(requestedQuery).then(result => {
+    if (query !== requestedQuery) return;
+    artists = result;
+    if (!keepOpen || !artists.some(artist => artist.key === activeArtist)) { activeArtist = ''; detail = null; activeRelease = ''; editingTrack = ''; expandedDetailHeight = 0; }
+    summary.textContent = `${artists.length.toLocaleString()} artists in Portable Music`;
+    render(scrollTop);
+  });
+  artistsLoadQuery = requestedQuery;
+  artistsLoad = request;
+  return request;
+}
+async function openArtist(key) {
+  const scrollTop = currentScroll();
+  if (activeArtist === key) { activeArtist = ''; detail = null; activeRelease = ''; editingTrack = ''; expandedDetailHeight = 0; render(scrollTop); return; }
+  activeArtist = key; activeRelease = ''; editingTrack = ''; detail = null; expandedDetailHeight = 0; render(scrollTop);
+  try { detail = await wavedeck.getPortableMusicArtistDetail(key, query); expandedDetailHeight = 0; render(scrollTop); }
+  catch (error) { activeArtist = ''; detail = null; expandedDetailHeight = 0; summary.textContent = error.message; render(scrollTop); }
+}
+async function refreshDetail() {
+  if (!activeArtist) return loadArtists();
+  const scrollTop = currentScroll(); detail = await wavedeck.getPortableMusicArtistDetail(activeArtist, query); expandedDetailHeight = 0; render(scrollTop);
+}
+function updateRatedSummary(before, after) {
+  const artist = artists.find(value => value.key === activeArtist); if (!artist) return;
+  const wasRated = Number(before.rating) > 0, isRated = Number(after.rating) > 0;
+  if (wasRated === isRated) return;
+  artist.ratedCount = Math.max(0, (Number(artist.ratedCount) || 0) + (isRated ? 1 : -1));
+  artist.ratedPercent = artist.trackCount ? Math.round((artist.ratedCount / artist.trackCount) * 100) : 0;
+}
+function applyTrackPatch(track, patch) {
+  const next = { ...track, ...patch };
+  for (const release of detail?.releases || []) { const index = release.tracks.findIndex(value => value.id === track.id); if (index >= 0) release.tracks[index] = next; }
+  updateRatedSummary(track, next); return next;
+}
+async function saveTrack(track, patch) {
+  const scrollTop = currentScroll(), next = applyTrackPatch(track, patch); editingTrack = ''; render(scrollTop);
+  try { await wavedeck.savePortableMusicTrack({ id: track.id, ...patch }); }
+  catch (error) { applyTrackPatch(next, track); summary.textContent = error.message; render(scrollTop); }
+}
+async function saveReleaseHoliday(release, holiday) {
+  const scrollTop = currentScroll(); release.holiday = holiday; release.tracks.forEach(track => { track.holiday = holiday; }); render(scrollTop);
+  try { await wavedeck.savePortableMusicReleaseHoliday(release.tracks.map(track => track.id), holiday); }
+  catch (error) { release.holiday = !holiday; release.tracks.forEach(track => { track.holiday = !holiday; }); summary.textContent = error.message; render(scrollTop); }
+}
+function smallButton(label, title, action, className = '') {
+  const button = document.createElement('button'); button.className = `icon-button ${className}`; button.textContent = label; button.title = title;
+  button.onclick = event => { event.stopPropagation(); void action(); }; return button;
+}
+const vocalMic = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-4 3-3-3 3-4"/><path d="m11 12 3 3"/><path d="M13 12.5a5 5 0 1 0-1.5-1.5L4 18.5 5.5 20z"/><path d="M16 5c1.5.2 2.8 1.5 3 3"/></svg>';
+function ratingControls(track) {
+  const controls = document.createElement('div'); controls.className = 'rating-controls';
+  const djState = track.djClip?.state || 'missing';
+  const djButton = smallButton('', djState === 'ready' ? 'DJ clips are ready for this track' : (djState === 'queued' || djState === 'generating' ? 'DJ clips are queued' : 'Generate DJ clips for this track'), async () => {
+    const scrollTop = currentScroll(); track.djClip = { state: 'queued', manual: true }; render(scrollTop);
+    try { await wavedeck.queueDjClipsForTrack(track.id); }
+    catch (error) { track.djClip = { state: 'missing' }; summary.textContent = error.message; render(scrollTop); }
+  }, `dj-mic dj-${djState}`);
+  djButton.innerHTML = vocalMic;
+  djButton.setAttribute('aria-label', djButton.title);
+  controls.append(djButton);
+  controls.append(smallButton('⊘', 'Do Not Play', () => saveTrack(track, { doNotPlay: !track.doNotPlay }), track.doNotPlay ? 'on-ban' : ''));
+  const stars = document.createElement('div'); stars.className = 'stars';
+  for (let value = 1; value <= 10; value += 1) stars.append(smallButton('★', `Rate ${value} of 10`, () => saveTrack(track, { rating: Number(track.rating) === value ? 0 : value }), Number(track.rating) >= value ? 'on-star' : ''));
+  controls.append(stars, smallButton(track.favorite ? '♥' : '♡', 'Favorite', () => saveTrack(track, { favorite: !track.favorite }), track.favorite ? 'on-heart' : ''));
+  return controls;
+}
+function trackEditor(track) {
+  const editor = document.createElement('form'); editor.className = 'track-editor';
+  editor.innerHTML = `<label>Title <input name="title" value="${esc(track.title)}"></label><label>Artist <input name="artist" value="${esc(track.artist)}"></label><label>Release <input name="album" value="${esc(track.album || '')}"></label><button>Save details</button><button type="button">Cancel</button>`;
+  editor.onsubmit = event => { event.preventDefault(); void saveTrack(track, { title: editor.elements.title.value, artist: editor.elements.artist.value, album: editor.elements.album.value }); };
+  editor.querySelector('[type="button"]').onclick = () => { editingTrack = ''; expandedDetailHeight = 0; render(currentScroll()); };
+  const pronunciation = document.createElement('div'); pronunciation.className = 'pronunciation-editor';
+  pronunciation.innerHTML = '<label>Artist pronunciation hint <input maxlength="200" placeholder="Spell it how the DJ should say it"></label><button type="button" class="test-hint">Test</button><button type="button" class="save-hint">Save hint</button><span class="hint-status"></span>';
+  const input = pronunciation.querySelector('input'), result = pronunciation.querySelector('.hint-status');
+  void wavedeck.getDjArtistPronunciation(track.artist).then(hint => { if (pronunciation.isConnected && !input.value) input.value = hint; }).catch(error => { result.textContent = error.message; });
+  pronunciation.querySelector('.test-hint').onclick = async () => {
+    try { result.textContent = 'Preparing voice sample…'; const sample = await wavedeck.testDjArtistPronunciation(input.value.trim() || track.artist); const audio = new Audio(`data:audio/wav;base64,${sample}`); await audio.play(); result.textContent = ''; }
+    catch (error) { result.textContent = error.message; }
+  };
+  pronunciation.querySelector('.save-hint').onclick = async () => {
+    try { await wavedeck.saveDjArtistPronunciation(track.artist, input.value); result.textContent = 'Saved. Existing clips for this artist are queued quietly.'; }
+    catch (error) { result.textContent = error.message; }
+  };
+  const titleHint = document.createElement('div'); titleHint.className = 'pronunciation-editor';
+  titleHint.innerHTML = '<label>Song-title pronunciation hint <input maxlength="200" placeholder="Spell the title how the DJ should say it"></label><button type="button" class="test-hint">Test</button><button type="button" class="save-hint">Save hint</button><span class="hint-status"></span>';
+  const titleInput = titleHint.querySelector('input'), titleResult = titleHint.querySelector('.hint-status');
+  void wavedeck.getDjTitleHint(track.id).then(hint => { if (titleHint.isConnected && !titleInput.value) titleInput.value = hint; }).catch(error => { titleResult.textContent = error.message; });
+  titleHint.querySelector('.test-hint').onclick = async () => {
+    try { titleResult.textContent = 'Preparing voice sample…'; const sample = await wavedeck.testDjArtistPronunciation(titleInput.value.trim() || track.title); await new Audio(`data:audio/wav;base64,${sample}`).play(); titleResult.textContent = ''; }
+    catch (error) { titleResult.textContent = error.message; }
+  };
+  titleHint.querySelector('.save-hint').onclick = async () => {
+    try { await wavedeck.saveDjTitleHint(track.id, titleInput.value); titleResult.textContent = 'Saved. Existing clips for this song are queued quietly.'; }
+    catch (error) { titleResult.textContent = error.message; }
+  };
+  const cues = document.createElement('div'); cues.className = 'song-cues-editor';
+  cues.innerHTML = '<label>Start at <input class="cue-start" type="text" inputmode="numeric" placeholder="0:05" aria-label="Start at, minutes and seconds"></label><button type="button" class="test-start">Test Start</button><label>End at <input class="cue-end" type="text" inputmode="numeric" placeholder="3:47" aria-label="End at, minutes and seconds"></label><button type="button" class="test-end">Test End</button><button type="button" class="save-cues">Save points</button><span class="cue-status"></span>';
+  const startInput = cues.querySelector('.cue-start'), endInput = cues.querySelector('.cue-end'), cueStatus = cues.querySelector('.cue-status');
+  void wavedeck.getSongCues(track.id).then(saved => { if (cues.isConnected) { startInput.value = saved.start || ''; endInput.value = saved.end || ''; } }).catch(error => { cueStatus.textContent = error.message; });
+  const values = () => ({ start: startInput.value.trim(), end: endInput.value.trim() });
+  for (const kind of ['start', 'end']) cues.querySelector(`.test-${kind}`).onclick = async () => {
+    try { await wavedeck.testSongCue(track.id, kind, values()); cueStatus.textContent = `Testing ${kind} point…`; }
+    catch (error) { cueStatus.textContent = error.message; }
+  };
+  cues.querySelector('.save-cues').onclick = async () => {
+    try { const saved = await wavedeck.saveSongCues(track.id, values()); startInput.value = saved.start; endInput.value = saved.end; cueStatus.textContent = 'Radio playback points saved.'; }
+    catch (error) { cueStatus.textContent = error.message; }
+  };
+  const wrap = document.createElement('div'); wrap.className = 'track-edit-wrap'; wrap.append(editor, pronunciation, titleHint, cues); return wrap;
+}
+function trackRow(track) {
+  const wrap = document.createElement('div'); wrap.className = 'track-wrap'; const row = document.createElement('div'); row.className = `track-row${track.doNotPlay ? ' disabled-track' : ''}`;
+  if (focusedTrack === track.id) {
+    wrap.classList.add('focused-track');
+    wrap.style.background = 'rgba(112, 184, 90, .2)';
+    wrap.style.boxShadow = 'inset 3px 0 #70b85a';
+  }
+  row.append(smallButton(playingTrack === track.id ? '●' : '▶', 'Play this track now', async () => { playingTrack = track.id; render(currentScroll()); await wavedeck.playMusic(track.id, 'song'); }));
+  row.append(smallButton('＋', `Play ${track.title || 'this song'} next`, async () => { try { await wavedeck.queueMusicNext(track.id); summary.textContent = `Queued ${track.title || 'song'} next.`; } catch (error) { summary.textContent = error.message; } }));
+  const number = document.createElement('span'); number.className = 'track-number'; number.textContent = track.track ? String(track.track) : '—'; row.append(number);
+  const title = document.createElement('button'); title.className = 'track-title'; title.textContent = track.title || 'Untitled track'; title.title = 'Edit track details';
+  title.onclick = () => { editingTrack = editingTrack === track.id ? '' : track.id; expandedDetailHeight = 0; render(currentScroll()); }; row.append(title);
+  const time = document.createElement('span'); time.className = 'track-time'; time.textContent = duration(track.duration); row.append(time);
+  const popularity = document.createElement('span'); popularity.className = 'track-popularity'; popularity.title = 'Last.fm popularity'; popularity.textContent = Number.isFinite(Number(track.popularity)) ? Math.round(Number(track.popularity)) : '—'; row.append(popularity, ratingControls(track));
+  wrap.append(row); if (editingTrack === track.id) wrap.append(trackEditor(track)); return wrap;
+}
+function relatedEditor() {
+  const box = document.createElement('div'); box.className = 'related-row'; const lastfm = detail.lastFmRelated.length ? detail.lastFmRelated.join(' · ') : 'No Last.fm related artists yet';
+  box.innerHTML = `<div><b>Related artists</b><span class="lastfm-related">Last.fm: ${esc(lastfm)}</span></div>`;
+  const manual = document.createElement('div'); manual.className = 'manual-related';
+  for (const artist of detail.manualRelated) { const chip = document.createElement('span'); chip.className = 'related-chip'; chip.textContent = artist; chip.append(smallButton('×', `Remove ${artist}`, async () => { await wavedeck.saveArtistRelationships(detail.artist, detail.manualRelated.filter(value => value !== artist)); await refreshDetail(); })); manual.append(chip); }
+  const form = document.createElement('form'); form.className = 'add-related'; form.innerHTML = '<input placeholder="Add a related artist" aria-label="Add a related artist"><button>Add</button>';
+  form.onsubmit = async event => { event.preventDefault(); const value = form.querySelector('input').value.trim(); if (!value) return; await wavedeck.saveArtistRelationships(detail.artist, [...detail.manualRelated, value]); await refreshDetail(); };
+  box.append(manual, form); return box;
+}
+function artistDetail() {
+  const box = document.createElement('div'); box.className = 'artist-detail'; if (!detail) { box.textContent = 'Loading releases…'; return box; }
+  box.append(relatedEditor()); const releases = document.createElement('div'); releases.className = 'release-list';
+  for (const release of detail.releases) {
+    const entry = document.createElement('section'); entry.className = 'release'; const button = document.createElement('button'); button.className = `release-row${activeRelease === release.key ? ' expanded' : ''}`;
+    button.innerHTML = `<span class="release-caret">›</span><span>${esc(release.title)}${release.year ? ` <span class="release-year">(${release.year})</span>` : ''}</span><span>${release.tracks.length} track${release.tracks.length === 1 ? '' : 's'}${release.compilation ? ' · Compilation' : ''}</span>`;
+    button.onclick = () => { activeRelease = activeRelease === release.key ? '' : release.key; editingTrack = ''; expandedDetailHeight = 0; render(currentScroll()); };
+    entry.append(button); if (activeRelease === release.key) { const holiday = document.createElement('label'); holiday.className = 'holiday-toggle'; const input = document.createElement('input'); input.type = 'checkbox'; input.checked = release.holiday === true; input.onchange = () => void saveReleaseHoliday(release, input.checked); holiday.append(input, document.createTextNode('Holiday Music')); const tracks = document.createElement('div'); tracks.className = 'track-list'; release.tracks.forEach(track => tracks.append(trackRow(track))); entry.append(holiday, tracks); } releases.append(entry);
+  }
+  box.append(releases); return box;
+}
+function render(scrollTop = currentScroll()) {
+  content.replaceChildren(); const nextViewport = document.createElement('div'); nextViewport.className = 'artist-viewport'; const expandedIndex = artists.findIndex(artist => artist.key === activeArtist); const detailHeight = expandedHeight();
+  const stage = document.createElement('div'); stage.className = 'artist-stage'; stage.style.height = `${artists.length * ROW_HEIGHT + (expandedIndex >= 0 ? detailHeight : 0)}px`; nextViewport.append(stage); content.append(nextViewport); viewport = nextViewport;
+  const draw = () => {
+    stage.replaceChildren(); const top = nextViewport.scrollTop, bottom = top + nextViewport.clientHeight; let offset = 0;
+    artists.forEach((artist, index) => {
+      const expanded = index === expandedIndex, height = ROW_HEIGHT + (expanded ? detailHeight : 0);
+      if (offset + height >= top - 120 && offset <= bottom + 120) {
+        const row = document.createElement('article'); row.className = `artist-row${expanded ? ' open' : ''}`; row.style.top = `${offset}px`; row.style.height = expanded ? 'auto' : `${height}px`;
+        const button = document.createElement('button'); button.className = 'artist-summary'; button.innerHTML = `<span>${esc(artist.artist)}</span><span>${artist.itemCount.toLocaleString()}</span><span>${artist.ratedPercent}%</span>`; button.onclick = () => void openArtist(artist.key); row.append(button);
+        if (expanded) row.append(artistDetail()); stage.append(row);
+        if (expanded && detail) requestAnimationFrame(() => { const measured = Math.ceil(row.getBoundingClientRect().height - ROW_HEIGHT); if (measured > 0 && measured !== expandedDetailHeight) { expandedDetailHeight = measured; render(nextViewport.scrollTop); } });
+      }
+      offset += height;
+    });
+  };
+  nextViewport.onscroll = draw; nextViewport.scrollTop = Math.min(scrollTop, Math.max(0, Number.parseInt(stage.style.height, 10) - nextViewport.clientHeight)); draw();
+}
+search.oninput = () => { clearSearch.hidden = !search.value; clearTimeout(searchTimer); searchTimer = setTimeout(() => { query = search.value.trim(); void loadArtists(); }, 120); };
+clearSearch.hidden = !search.value;
+clearSearch.onclick = () => { search.value = ''; search.oninput(); search.focus(); };
+async function focusPortableTrack(target = {}) {
+  if (!target.artistKey || !target.releaseKey || !target.trackId) return;
+  const request = ++focusRequest;
+  const hadFilter = Boolean(query);
+  query = ''; search.value = ''; clearSearch.hidden = true;
+  // The window is already loading the complete artist list on first open.
+  // Reuse that request, and fetch only this artist's releases in parallel.
+  const list = hadFilter || artistsLoadQuery ? loadArtists() : (artistsLoad || loadArtists());
+  const targetDetail = wavedeck.getPortableMusicArtistDetail(target.artistKey, '');
+  const [, focusedDetail] = await Promise.all([list, targetDetail]);
+  if (request !== focusRequest) return;
+  if (!artists.some(artist => artist.key === target.artistKey)) return;
+  activeArtist = target.artistKey; activeRelease = target.releaseKey; editingTrack = ''; focusedTrack = target.trackId; expandedDetailHeight = 0;
+  detail = focusedDetail;
+  const index = artists.findIndex(artist => artist.key === activeArtist);
+  render(Math.max(0, index * ROW_HEIGHT - 16));
+  setTimeout(() => { if (focusedTrack === target.trackId) { focusedTrack = ''; render(currentScroll()); } }, 4200);
+}
+void loadArtists().catch(error => { summary.textContent = error.message; });
+window.addEventListener('message', event => {
+  if (event.source !== window.parent || event.data?.type !== 'focus-portable-track') return;
+  void focusPortableTrack(event.data.track).catch(error => { summary.textContent = error.message; });
+});
+window.parent.postMessage({ type: 'embedded-ready' }, '*');

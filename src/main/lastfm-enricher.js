@@ -15,11 +15,12 @@ function popularityScore(listeners) {
 }
 
 class LastFmEnricher {
-  constructor({ library, getPreferences, fetchImpl, onStatus = () => {}, requestIntervalMs = REQUEST_INTERVAL_MS }) {
+  constructor({ library, getPreferences, fetchImpl, onStatus = () => {}, onTrackUpdated = () => {}, requestIntervalMs = REQUEST_INTERVAL_MS }) {
     this.library = library;
     this.getPreferences = getPreferences;
     this.fetchImpl = fetchImpl;
     this.onStatus = onStatus;
+    this.onTrackUpdated = onTrackUpdated;
     this.requestIntervalMs = Math.max(0, Number(requestIntervalMs) || 0);
     this.running = false;
     this.timer = null;
@@ -95,7 +96,7 @@ class LastFmEnricher {
         ? remote.toptags.tag.map(tag => typeof tag === 'string' ? tag : tag.name).filter(Boolean).slice(0, 8)
         : [];
       const value = { ...base, listeners: Number(remote.listeners) || 0, playCount: Number(remote.playcount) || 0, popularity: popularityScore(remote.listeners), tags, updatedAt: at, retryAfter: '', status: 'matched' };
-      await this.library.updateLastFmTrack(value); this.library.applyLastFmTrack(value);
+      await this.library.updateLastFmTrack(value); this.library.applyLastFmTrack(value); this.onTrackUpdated(this.library.tracks.find(item => item.id === value.id));
     } catch (error) {
       const retryAfter = new Date(Date.now() + (error.notFound ? SIX_MONTHS_MS : RETRY_MS)).toISOString();
       await this.library.updateLastFmTrack({ ...base, listeners: 0, playCount: 0, popularity: null, tags: [], updatedAt: '', retryAfter, status: error.notFound ? 'not-found' : 'retry' });

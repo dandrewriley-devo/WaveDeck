@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'" />
-  <title>WaveDeck Live Radio Log</title>
+  <title>WaveDeck Log</title>
   <link rel="stylesheet" href="./radio-log.css" />
 </head>
 <body>
@@ -12,7 +12,7 @@
     <header>
       <div>
         <h1>Live Radio Log</h1>
-        <p>Shows the real selection details whenever Artist Radio or Song Radio picks its next track.</p>
+        <p>Shows the story behind each Local Radio, Explore Radio, Artist Radio, and Local Mix selection.</p>
       </div>
       <div class="actions">
         <button id="saveLog" type="button">Save Log…</button>
@@ -22,6 +22,7 @@
     <div id="saveStatus" class="save-status" role="status"></div>
     <section id="entries" aria-live="polite"></section>
   </main>
+  <script src="./embedded-settings-bridge.js"></script>
   <script src="./radio-log.js"></script>
 </body>
 </html>

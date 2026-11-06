@@ -3,6 +3,7 @@ const fs = require('fs/promises');
 const fsSync = require('fs');
 const path = require('path');
 const { extractTrack, normalize } = require('./music-tags');
+const { artistKey, baseSongIdentity, comparisonSignatures, sameSong } = require('./song-identity');
 const { loadLocalMixInventory, isTrackEligibleForMix, MINIMUM_LOCAL_MIX_TRACKS, qualityForTrackCount } = require('./local-mixes');
 let db, parseFile, scanning = null;
 let workerOperation = Promise.resolve();
@@ -10,18 +11,26 @@ let lastFmWrites = 0;
 const SIX_MONTHS_MS = 183 * 24 * 60 * 60 * 1000;
 const FULL_REFRESH_RECHECK_MS = 7 * 24 * 60 * 60 * 1000;
 const MUSIC_INDEX_VERSION = 3;
+const MUSIC_SEARCH_INDEX_VERSION = 1;
+const RADIO_IDENTITY_VERSION = 1;
 const portableRoot = path.join(path.dirname(workerData.dataDir), 'Music');
 let additionalMusicFolder = String(workerData.additionalMusicFolder || '').trim();
 const dbPath = path.join(workerData.dataDir, 'music.sqlite');
 const localMixCachePath = path.join(workerData.dataDir, 'local-mix-availability.json');
-let status = { scanning: false, count: 0, checked: 0, errors: 0, folder: portableRoot, message: '' };
+let status = { scanning: false, count: 0, portableCount: 0, additionalCount: 0, checked: 0, errors: 0, folder: portableRoot, message: '' };
 let refreshAllTrackMetadata = false;
+let radioIdentityRebuild = null;
 const rows = (sql, params = []) => {
   const statement = db.prepare(sql);
   try { statement.bind(params); const result = []; while (statement.step()) result.push(statement.getAsObject()); return result; }
   finally { statement.free(); }
 };
 const emit = () => parentPort.postMessage({ event: 'status', value: status });
+function updateTrackCounts() {
+  status.count = visibleTracks().length;
+  status.portableCount = Number(rows("SELECT COUNT(*) AS n FROM tracks WHERE path LIKE 'portable:%'")[0]?.n) || 0;
+  status.additionalCount = Number(rows("SELECT COUNT(*) AS n FROM tracks WHERE path LIKE 'additional:%'")[0]?.n) || 0;
+}
 const emitLocalMixes = value => parentPort.postMessage({ event: 'local-mixes', value });
 const albumKey = track => {
   const artist = normalize(track.albumArtist || track.artist);
@@ -33,6 +42,17 @@ function lastFmMaps() {
   const tracks = new Map(rows('SELECT * FROM lastfm_tracks').map(row => [row.id, row]));
   const artists = new Map(rows('SELECT * FROM lastfm_artists').map(row => [row.artist_key, row]));
   return { tracks, artists };
+}
+function lastFmMapsForTracks(tracks = []) {
+  const ids = [...new Set(tracks.map(track => String(track?.id || '')).filter(Boolean))];
+  const artistKeys = [...new Set(tracks.flatMap(track => merge(track?.artists || [track?.artist]).map(normalize)).filter(Boolean))];
+  const trackRows = ids.length
+    ? rows(`SELECT * FROM lastfm_tracks WHERE id IN (${ids.map(() => '?').join(', ')})`, ids)
+    : [];
+  const artistRows = artistKeys.length
+    ? rows(`SELECT * FROM lastfm_artists WHERE artist_key IN (${artistKeys.map(() => '?').join(', ')})`, artistKeys)
+    : [];
+  return { tracks: new Map(trackRows.map(row => [row.id, row])), artists: new Map(artistRows.map(row => [row.artist_key, row])) };
 }
 function withLastFm(track, maps = lastFmMaps()) {
   const entry = maps.tracks.get(track.id);
@@ -58,7 +78,130 @@ function withLastFm(track, maps = lastFmMaps()) {
     }
   };
 }
-function storedTracks() { return rows('SELECT json FROM tracks').map(row => JSON.parse(row.json)); }
+let storedTrackCache = null;
+function invalidateTrackCache() { storedTrackCache = null; }
+function storedTracks() {
+  if (storedTrackCache) return storedTrackCache;
+  storedTrackCache = rows('SELECT json FROM tracks').map(row => JSON.parse(row.json));
+  return storedTrackCache;
+}
+function duplicateKey(track) {
+  return [track.artist, track.title, track.albumArtist || track.artist, track.album, track.disc || 0, track.track || 0, Math.round((Number(track.duration) || 0) * 2) / 2]
+    .map(normalize).join('\n');
+}
+function visibleTracks() {
+  const all = storedTracks(); const portable = new Set(all.filter(track => track.library === 'portable').map(duplicateKey));
+  return all.filter(track => track.library !== 'additional' || !portable.has(duplicateKey(track)));
+}
+
+function radioIdentityNeedsRebuild(force = false) {
+  if (force) return true;
+  const version = Number(rows('SELECT value FROM music_index_meta WHERE key = ?', ['radio_identity_version'])[0]?.value) || 0;
+  const dirty = rows('SELECT value FROM music_index_meta WHERE key = ?', ['radio_identity_dirty'])[0]?.value === '1';
+  return version !== RADIO_IDENTITY_VERSION || dirty;
+}
+
+function queueRadioIdentityRebuild(force = false) {
+  if (radioIdentityRebuild) return radioIdentityRebuild;
+  radioIdentityRebuild = (async () => {
+    if (!radioIdentityNeedsRebuild(force)) return { state: 'current', total: 0, changed: 0 };
+    const entries = rows("SELECT path, json FROM tracks WHERE path LIKE 'portable:%'")
+      .map(row => ({ path: row.path, track: JSON.parse(row.json) }))
+      .sort((left, right) => {
+        const artist = artistKey(left.track).localeCompare(artistKey(right.track));
+        return artist || baseSongIdentity(left.track).localeCompare(baseSongIdentity(right.track)) || left.path.localeCompare(right.path);
+      });
+    const groupsByArtist = new Map(); let changed = 0;
+    const changedEntries = [];
+    for (let index = 0; index < entries.length; index += 1) {
+      const entry = entries[index]; const artist = artistKey(entry.track);
+      const groups = groupsByArtist.get(artist) || { buckets: new Map() };
+      groupsByArtist.set(artist, groups);
+      const possible = new Set();
+      for (const signature of comparisonSignatures(entry.track)) for (const candidate of groups.buckets.get(signature) || []) possible.add(candidate);
+      let group = [...possible].find(candidate => sameSong(candidate.track, entry.track));
+      if (!group) {
+        group = { track: entry.track, identity: baseSongIdentity(entry.track) };
+        for (const signature of comparisonSignatures(entry.track)) {
+          const candidates = groups.buckets.get(signature) || [];
+          candidates.push(group); groups.buckets.set(signature, candidates);
+        }
+      }
+      if (entry.track.radioIdentity !== group.identity) {
+        entry.track.radioIdentity = group.identity;
+        changedEntries.push(entry); changed += 1;
+      }
+      if (index > 0 && index % 250 === 0) {
+        parentPort.postMessage({ event: 'radio-identities', value: { rebuilding: true, completed: index, total: entries.length, changed } });
+        await new Promise(resolve => setImmediate(resolve));
+      }
+    }
+    if (changedEntries.length) {
+      db.run('BEGIN TRANSACTION');
+      try {
+        const statement = db.prepare('UPDATE tracks SET json = ? WHERE path = ?');
+        try { for (const entry of changedEntries) statement.run([JSON.stringify(entry.track), entry.path]); }
+        finally { statement.free(); }
+        db.run('COMMIT');
+      } catch (error) { db.run('ROLLBACK'); throw error; }
+      invalidateTrackCache();
+    }
+    db.run('INSERT OR REPLACE INTO music_index_meta (key, value) VALUES (?, ?)', ['radio_identity_version', String(RADIO_IDENTITY_VERSION)]);
+    db.run('INSERT OR REPLACE INTO music_index_meta (key, value) VALUES (?, ?)', ['radio_identity_dirty', '0']);
+    await persist();
+    const result = { state: 'complete', total: entries.length, changed };
+    parentPort.postMessage({ event: 'radio-identities', value: { rebuilding: false, ...result } });
+    return result;
+  })().finally(() => { radioIdentityRebuild = null; });
+  return radioIdentityRebuild;
+}
+
+function scheduleRadioIdentityRebuild(force = false, delay = 0) {
+  const timer = setTimeout(() => {
+    workerOperation = workerOperation.then(
+      () => queueRadioIdentityRebuild(force),
+      () => queueRadioIdentityRebuild(force)
+    ).catch(() => {});
+  }, delay);
+  timer.unref?.();
+}
+
+function searchTerms(value) {
+  return normalize(value).replace(/[^\p{L}\p{N}]+/gu, ' ').trim().slice(0, 500)
+    .split(/\s+/).filter(Boolean).slice(0, 12);
+}
+
+function rebuildSearchIndex() {
+  // Index only the tracks that can appear in the main Local Music results.
+  // A duplicate in an Additional Music Folder should not cost a search hit.
+  db.run('DELETE FROM music_search');
+  const all = rows('SELECT path, json, search FROM tracks');
+  const portable = new Set();
+  for (const row of all) {
+    const track = JSON.parse(row.json);
+    row.track = track;
+    if (track.library === 'portable') portable.add(duplicateKey(track));
+  }
+  const statement = db.prepare('INSERT INTO music_search (path, search) VALUES (?, ?)');
+  try {
+    for (const row of all) {
+      if (row.track.library === 'additional' && portable.has(duplicateKey(row.track))) continue;
+      statement.run([row.path, row.search]);
+    }
+  } finally { statement.free(); }
+  db.run('INSERT OR REPLACE INTO music_index_meta (key, value) VALUES (?, ?)', ['music_search_index_version', String(MUSIC_SEARCH_INDEX_VERSION)]);
+}
+
+function ensureSearchIndex() {
+  const version = Number(rows('SELECT value FROM music_index_meta WHERE key = ?', ['music_search_index_version'])[0]?.value) || 0;
+  const indexed = Number(rows('SELECT COUNT(*) AS n FROM music_search')[0]?.n) || 0;
+  const total = Number(rows('SELECT COUNT(*) AS n FROM tracks')[0]?.n) || 0;
+  if (version !== MUSIC_SEARCH_INDEX_VERSION || (total > 0 && indexed === 0)) {
+    rebuildSearchIndex();
+    return true;
+  }
+  return false;
+}
 function trackById(id) { return storedTracks().find(track => track.id === String(id)) || null; }
 function lastFmCurrent(entry, now = Date.now()) {
   return entry?.status === 'matched' && Date.parse(entry.updated_at || '') > now - SIX_MONTHS_MS;
@@ -134,6 +277,20 @@ function publicMixAvailability(mix, eligibleTrackCount = 0) {
     quality: qualityForTrackCount(eligibleTrackCount)
   };
 }
+async function cachedLocalMixAvailability() {
+  const inventory = loadLocalMixInventory(workerData.dataDir);
+  const cache = await readLocalMixCache();
+  const trackRevision = localMixTrackRevision();
+  if (cache.trackRevision !== trackRevision) return null;
+  const mixes = [];
+  for (const mix of inventory) {
+    if (!mix.valid) { mixes.push(publicMixAvailability(mix)); continue; }
+    const saved = cache.books[mix.id];
+    if (!saved || saved.sourceSignature !== localMixFileSignature(mix) || !Number.isInteger(saved.eligibleTrackCount)) return null;
+    mixes.push(publicMixAvailability(mix, saved.eligibleTrackCount));
+  }
+  return { analyzing: false, completed: inventory.length, total: inventory.length, mixes, cacheValid: true };
+}
 async function analyzeLocalMixes() {
   const inventory = loadLocalMixInventory(workerData.dataDir);
   const cache = await readLocalMixCache();
@@ -161,15 +318,15 @@ async function analyzeLocalMixes() {
     await new Promise(resolve => setImmediate(resolve));
   }
   await writeLocalMixCache(nextCache);
-  const value = { analyzing: false, completed: total, total, mixes };
+  const value = { analyzing: false, completed: total, total, mixes, cacheValid: true };
   emitLocalMixes(value);
   return value;
 }
 async function scan() {
   if (scanning) return scanning;
   scanning = (async () => {
-    status = { ...status, scanning: true, checked: 0, errors: 0, message: '' }; emit();
-    let indexChanged = false;
+    status = { ...status, scanning: true, checked: 0, errors: 0, changed: false, message: '' }; emit();
+    let indexChanged = false; let portableIndexChanged = false;
     try {
       await fs.mkdir(portableRoot, { recursive: true });
       const seen = new Set();
@@ -186,7 +343,13 @@ async function scan() {
           const file = path.join(directory, entry.name);
           if (entry.isDirectory()) { if (!await walk(file, root)) return false; continue; }
           // Do not follow symlinks outside a selected music tree.
-          if (!entry.isFile() || !/\.mp3$/i.test(entry.name)) continue;
+          const extension = path.extname(entry.name).toLowerCase();
+          const portableAudio = root.id === 'portable' && (extension === '.mp3' || extension === '.opus');
+          const additionalAudio = root.id === 'additional' && (extension === '.mp3' || extension === '.opus');
+          if (!entry.isFile() || (!portableAudio && !additionalAudio)) continue;
+          if (root.id === 'portable' && extension === '.mp3' && entries.some(candidate =>
+            candidate.isFile() && candidate.name === `${path.basename(entry.name, extension)}.opus`
+          )) continue;
           const relative = path.relative(root.folder, file).split(path.sep).join('/');
           const key = `${root.id}:${relative}`;
           seen.add(key);
@@ -196,11 +359,13 @@ async function scan() {
             if (refreshAllTrackMetadata || !old || old.size !== stat.size || old.mtime !== stat.mtimeMs) {
               const metadata = await parseFile(file, { skipCovers: true, duration: true });
               const track = extractTrack(metadata, relative, root.id);
+              if (track.library === 'portable') track.radioIdentity = baseSongIdentity(track);
               const search = normalize([track.title, track.artist, track.albumArtist, track.album, track.year,
                 ...track.genres, ...track.composer, ...track.comments, track.track, track.disc, relative].join(' '));
               db.run('INSERT OR REPLACE INTO tracks VALUES (?, ?, ?, ?, ?, ?)',
                 [key, track.id, stat.size, stat.mtimeMs, JSON.stringify(track), search]);
               indexChanged = true;
+              if (root.id === 'portable') portableIndexChanged = true;
             }
           } catch { status.errors++; }
           status.checked++;
@@ -215,16 +380,25 @@ async function scan() {
         const library = /^(portable|additional):/.test(String(row.path))
           ? String(row.path).split(':', 1)[0]
           : 'portable';
-        if (completeRoots.has(library) && !seen.has(row.path)) { db.run('DELETE FROM tracks WHERE path = ?', [row.path]); indexChanged = true; }
+        if (completeRoots.has(library) && !seen.has(row.path)) {
+          db.run('DELETE FROM tracks WHERE path = ?', [row.path]); indexChanged = true;
+          if (library === 'portable') portableIndexChanged = true;
+        }
       }
       db.run('DELETE FROM lastfm_tracks WHERE id NOT IN (SELECT id FROM tracks)');
       if (refreshAllTrackMetadata && completeRoots.size === roots.length) {
         db.run('INSERT OR REPLACE INTO music_index_meta (key, value) VALUES (?, ?)', ['track_metadata_version', String(MUSIC_INDEX_VERSION)]);
         refreshAllTrackMetadata = false;
       }
-      if (indexChanged) bumpLocalMixTrackRevision();
+      if (indexChanged) {
+        invalidateTrackCache();
+        rebuildSearchIndex();
+        bumpLocalMixTrackRevision();
+      }
+      if (portableIndexChanged) db.run('INSERT OR REPLACE INTO music_index_meta (key, value) VALUES (?, ?)', ['radio_identity_dirty', '1']);
       await persist();
-      status.count = rows('SELECT COUNT(*) AS n FROM tracks')[0].n;
+      updateTrackCounts();
+      status.changed = indexChanged;
       status.message = status.errors ? `${status.errors} files or folders could not be read; rescan to retry.` : '';
     } catch (error) { status.message = error.message; }
     finally { status.scanning = false; scanning = null; emit(); }
@@ -240,14 +414,22 @@ async function initialize() {
   try { bytes = await fs.readFile(dbPath); } catch (e) { if (e.code !== 'ENOENT') throw e; }
   db = new SQL.Database(bytes);
   db.run('CREATE TABLE IF NOT EXISTS tracks (path TEXT PRIMARY KEY, id TEXT UNIQUE, size REAL, mtime REAL, json TEXT, search TEXT)');
+  db.run("CREATE VIRTUAL TABLE IF NOT EXISTS music_search USING fts4(path, search, prefix='2 3 4')");
   db.run('CREATE TABLE IF NOT EXISTS music_index_meta (key TEXT PRIMARY KEY, value TEXT)');
   db.run('CREATE TABLE IF NOT EXISTS lastfm_tracks (id TEXT PRIMARY KEY, artist TEXT, title TEXT, album_key TEXT, listeners REAL, playcount REAL, popularity REAL, tags_json TEXT, updated_at TEXT, last_attempt_at TEXT, retry_after TEXT, status TEXT)');
   db.run('CREATE TABLE IF NOT EXISTS lastfm_artists (artist_key TEXT PRIMARY KEY, artist TEXT, similar_json TEXT, updated_at TEXT, last_attempt_at TEXT, retry_after TEXT, status TEXT)');
   db.run('CREATE TABLE IF NOT EXISTS lastfm_jobs (album_key TEXT PRIMARY KEY, priority INTEGER, force INTEGER, queued_at TEXT)');
   const metadataVersion = Number(rows('SELECT value FROM music_index_meta WHERE key = ?', ['track_metadata_version'])[0]?.value) || 0;
   refreshAllTrackMetadata = metadataVersion < MUSIC_INDEX_VERSION;
-  status.count = rows('SELECT COUNT(*) AS n FROM tracks')[0].n;
+  const searchIndexChanged = ensureSearchIndex();
+  if (searchIndexChanged) await persist();
+  updateTrackCounts();
+  const cachedMixes = await cachedLocalMixAvailability();
+  if (cachedMixes) emitLocalMixes(cachedMixes);
   emit();
+  // Let Local Music become playable first. This only runs for libraries made
+  // before persistent radio identities existed, or after new portable music.
+  if (radioIdentityNeedsRebuild()) scheduleRadioIdentityRebuild(false, 3000);
 }
 const ready = initialize();
 ready.catch(() => {});
@@ -260,20 +442,43 @@ async function handleRequest({ id, method, args = [] }) {
     else if (method === 'set-roots') {
       additionalMusicFolder = String(args[0] || '').trim();
       db.run("DELETE FROM tracks WHERE path LIKE 'additional:%'");
+      invalidateTrackCache();
+      rebuildSearchIndex();
       bumpLocalMixTrackRevision();
       await persist();
-      status.count = rows('SELECT COUNT(*) AS n FROM tracks')[0].n;
+      updateTrackCounts();
       value = status;
     }
     else if (method === 'all') {
-      const maps = lastFmMaps(); value = storedTracks().map(track => withLastFm(track, maps));
+      const maps = lastFmMaps(); value = visibleTracks().map(track => withLastFm(track, maps));
+    }
+    else if (method === 'track:update') {
+      const track = args[0] || {};
+      const existing = rows('SELECT path, size FROM tracks WHERE id = ?', [String(track.id || '')])[0];
+      if (!existing || track.library !== 'portable') throw new Error('That portable track is no longer indexed.');
+      track.radioIdentity = baseSongIdentity(track);
+      const search = normalize([track.title, track.artist, track.albumArtist, track.album, track.year,
+        ...(track.genres || []), ...(track.composer || []), ...(track.comments || []), track.track, track.disc, track.relativePath].join(' '));
+      db.run('UPDATE tracks SET json = ?, search = ?, mtime = ? WHERE id = ?', [JSON.stringify(track), search, -1, String(track.id)]);
+      invalidateTrackCache();
+      rebuildSearchIndex();
+      bumpLocalMixTrackRevision();
+      db.run('INSERT OR REPLACE INTO music_index_meta (key, value) VALUES (?, ?)', ['radio_identity_dirty', '1']);
+      await persist();
+      value = true;
+    }
+    else if (method === 'radio-identities:rebuild') {
+      value = await queueRadioIdentityRebuild(args[0] === true);
     }
     else if (method === 'search') {
-      const words = normalize(args[0]).slice(0, 500).split(/\s+/).filter(Boolean);
-      const where = words.length ? ' WHERE ' + words.map(() => 'instr(search, ?) > 0').join(' AND ') : '';
-      const total = rows('SELECT COUNT(*) AS n FROM tracks' + where, words)[0].n;
-      const maps = lastFmMaps();
-      value = { total, tracks: words.length ? rows('SELECT json FROM tracks' + where + ' ORDER BY search LIMIT 200', words).map(r => withLastFm(JSON.parse(r.json), maps)) : [] };
+      const words = searchTerms(args[0]);
+      const query = words.map(word => `${word}*`).join(' AND ');
+      const total = words.length ? Number(rows('SELECT COUNT(*) AS n FROM music_search WHERE music_search MATCH ?', [query])[0]?.n) || 0 : 0;
+      const matches = words.length
+        ? rows('SELECT tracks.json FROM music_search JOIN tracks ON tracks.path = music_search.path WHERE music_search MATCH ? ORDER BY music_search.search LIMIT 200', [query]).map(row => JSON.parse(row.json))
+        : [];
+      const maps = lastFmMapsForTracks(matches);
+      value = { total, tracks: matches.map(track => withLastFm(track, maps)) };
     } else if (method === 'local-mixes:analyze') {
       value = await analyzeLocalMixes();
     } else if (method === 'lastfm:queue-album') {
@@ -328,7 +533,7 @@ async function handleRequest({ id, method, args = [] }) {
       db.run('DELETE FROM lastfm_jobs WHERE album_key = ?', [String(args[0] || '')]);
       await persist(); value = true;
     } else if (method === 'lastfm:status') {
-      const maps = lastFmMaps(); const tracks = storedTracks(); const now = Date.now();
+      const maps = lastFmMaps(); const tracks = visibleTracks(); const now = Date.now();
       value = {
         tracksTotal: tracks.length,
         tracksCurrent: tracks.filter(track => lastFmCurrent(maps.tracks.get(track.id), now)).length,
@@ -337,12 +542,20 @@ async function handleRequest({ id, method, args = [] }) {
       };
     } else throw new Error('Unknown music request.');
     parentPort.postMessage({ id, value });
+    if (method === 'scan' && value?.changed) scheduleRadioIdentityRebuild();
+    if (method === 'track:update') scheduleRadioIdentityRebuild();
   } catch (error) { parentPort.postMessage({ id, error: error.message }); }
 }
 // Every command can mutate and persist the same in-memory SQLite database.
 // Keep them in order so a background update, scan, and manual refresh cannot
 // race over music.sqlite.tmp.
 parentPort.on('message', message => {
+  // Searching is read-only and indexed. Let it run between the asynchronous
+  // filesystem steps of a background scan instead of waiting behind it.
+  if (message?.method === 'search') {
+    void handleRequest(message);
+    return;
+  }
   workerOperation = workerOperation.then(
     () => handleRequest(message),
     () => handleRequest(message)

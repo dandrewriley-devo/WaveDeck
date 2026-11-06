@@ -1,7 +1,7 @@
 const { Worker } = require('worker_threads');
 const fs = require('fs/promises');
 const path = require('path');
-const { canonicalArtist } = require('./music-tags');
+const { canonicalArtist, normalize } = require('./music-tags');
 function canonicalTrack(track) {
   if (!track || typeof track !== 'object') return track;
   const artist = canonicalArtist(track.artist);
@@ -11,9 +11,9 @@ function canonicalTrack(track) {
   return { ...track, artist, albumArtist, artists, songKey: `${String(artist).toLowerCase()}\n${String(track.title || '').toLowerCase()}` };
 }
 class MusicLibrary {
-  constructor({ dataDir, onStatus = () => {}, onLocalMixAvailability = () => {}, additionalMusicFolder = '' }) {
+  constructor({ dataDir, onStatus = () => {}, onTracksChanged = () => {}, onLocalMixAvailability = () => {}, additionalMusicFolder = '' }) {
     this.dataDir = dataDir; this.onStatus = onStatus; this.pending = new Map(); this.sequence = 0;
-    this.tracks = []; this.enabled = false; this.worker = null; this.revision = 0;
+    this.tracks = []; this.enabled = false; this.worker = null; this.revision = 0; this.metadataRevision = 0; this.onTracksChanged = onTracksChanged;
     this.onLocalMixAvailability = onLocalMixAvailability;
     this.localMixAvailability = { analyzing: false, completed: 0, total: 0, mixes: [] };
     this.mixAnalysisPromise = null;
@@ -24,11 +24,19 @@ class MusicLibrary {
     this.worker = new Worker(path.join(__dirname, 'music-worker.js'), { workerData: { dataDir: this.dataDir, additionalMusicFolder: this.additionalMusicFolder } });
     this.worker.on('message', message => {
       if (message.event === 'status') { this.onStatus(message.value); return; }
+      if (message.event === 'radio-identities') {
+        // The worker's idle migration changes only radio bookkeeping. Refresh
+        // the in-memory track objects without disturbing visible Local Music.
+        if (!message.value?.rebuilding && this.enabled) {
+          void this.call('all').then(tracks => { this.tracks = tracks.map(canonicalTrack); this.revision += 1; this.onTracksChanged(); }).catch(() => {});
+        }
+        return;
+      }
       if (message.event === 'local-mixes') {
         this.localMixAvailability = {
           ...message.value,
           sourceSignature: this.localMixAvailability.sourceSignature || '',
-          libraryRevision: this.localMixAvailability.libraryRevision || 0
+          libraryRevision: this.localMixAvailability.libraryRevision || this.revision
         };
         this.onLocalMixAvailability(this.localMixAvailability);
         return;
@@ -70,13 +78,23 @@ class MusicLibrary {
     }
   }
   async rescan() {
-    const status = await this.call('scan'); this.tracks = (await this.call('all')).map(canonicalTrack); this.revision += 1; this.onStatus(status); return status;
+    const status = await this.call('scan');
+    if (status.changed) { this.tracks = (await this.call('all')).map(canonicalTrack); this.revision += 1; }
+    this.onStatus(status); return status;
   }
   getLocalMixAvailability() { return this.localMixAvailability; }
+  setLocalMixSourceSignature(sourceSignature = '') {
+    this.localMixAvailability = {
+      ...this.localMixAvailability,
+      sourceSignature: String(sourceSignature),
+      libraryRevision: this.revision
+    };
+    this.onLocalMixAvailability(this.localMixAvailability);
+  }
   async analyzeLocalMixes(sourceSignature = '') {
     if (this.mixAnalysisPromise) return this.mixAnalysisPromise;
     const current = this.localMixAvailability;
-    if (!current.analyzing && !current.error && current.total && current.sourceSignature === sourceSignature && current.libraryRevision === this.revision) {
+    if (!current.analyzing && !current.error && current.cacheValid === true && current.total && current.sourceSignature === sourceSignature && current.libraryRevision === this.revision) {
       return current;
     }
     this.localMixAvailability = { ...current, analyzing: true, error: '', sourceSignature, libraryRevision: this.revision };
@@ -97,6 +115,16 @@ class MusicLibrary {
   async nextLastFmAlbum() { return this.call('lastfm:next'); }
   async updateLastFmTrack(value) { return this.call('lastfm:update-track', value); }
   async updateLastFmArtist(value) { return this.call('lastfm:update-artist', value); }
+  async updatePortableTrack(value) {
+    const index = this.tracks.findIndex(track => track.id === value?.id && track.library === 'portable');
+    if (index < 0) throw new Error('That portable track is no longer available.');
+    const next = canonicalTrack({ ...this.tracks[index], ...value });
+    this.tracks[index] = next;
+    this.revision += 1;
+    await this.call('track:update', next);
+    return next;
+  }
+  async rebuildRadioIdentities(force = true) { return this.call('radio-identities:rebuild', force === true); }
   async completeLastFmAlbum(key) { return this.call('lastfm:complete', key); }
   applyLastFmTrack(value) {
     const index = this.tracks.findIndex(track => track.id === value?.id);
@@ -108,25 +136,30 @@ class MusicLibrary {
       genres: [...new Set([...(current.genres || []), ...(value.tags || [])])],
       lastFm: { source: 'lastfm', status: value.status, updatedAt: value.updatedAt || '', listeners: value.listeners || 0, playCount: value.playCount || 0, popularity: value.popularity }
     };
+    this.metadataRevision += 1;
   }
   applyLastFmArtist(value) {
-    const key = String(value?.artist || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+    const key = normalize(value?.artist || '');
+    let changed = false;
     for (let index = 0; index < this.tracks.length; index++) {
       const track = this.tracks[index];
-      if (!(track.artists || [track.artist]).some(artist => String(artist).normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim() === key)) continue;
+      if (!(track.artists || [track.artist]).some(artist => normalize(artist) === key)) continue;
       this.tracks[index] = { ...track, similarArtists: [...new Set([...(track.similarArtists || []), ...(value.similarArtists || [])])] };
+      changed = true;
     }
+    if (changed) this.metadataRevision += 1;
   }
   async resolve(id) {
     let track = this.tracks.find(t => t.id === id);
-    if (!track) { this.tracks = (await this.call('all')).map(canonicalTrack); track = this.tracks.find(t => t.id === id); }
+    if (!track) { this.tracks = (await this.call('all')).map(canonicalTrack); this.revision += 1; this.onTracksChanged(); track = this.tracks.find(t => t.id === id); }
     if (!track) throw new Error('That song is no longer indexed. Rescan Music.');
     const rootPath = track.library === 'additional' ? this.additionalMusicFolder : path.join(path.dirname(this.dataDir), 'Music');
     if (!rootPath) throw new Error('The additional music folder is no longer selected.');
     const root = await fs.realpath(rootPath);
     const file = await fs.realpath(path.join(root, track.relativePath));
     const relative = path.relative(root, file);
-    if (relative.startsWith('..') || path.isAbsolute(relative) || !/\.mp3$/i.test(file)) throw new Error('Song is outside Music.');
+    const allowed = track.library === 'additional' ? /\.(mp3|opus)$/i : /\.(mp3|opus)$/i;
+    if (relative.startsWith('..') || path.isAbsolute(relative) || !allowed.test(file)) throw new Error('Song is outside Music.');
     return { ...track, path: file };
   }
   close() { this.disable(); this.worker?.terminate(); }

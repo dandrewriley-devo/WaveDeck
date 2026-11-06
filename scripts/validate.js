@@ -82,10 +82,14 @@ const {
 } = require("../src/renderer/search");
 const {
   PortableStorage,
+  DEFAULT_AUTO_DJ_STATION_IDS,
+  DEFAULT_AUTO_DJ_EXTRA_LINES,
+  EXTRA_ID_SLOTS,
   STARTER_PRESET_NAMES,
   cleanStationGainDb,
   validateGroups,
   validateLibrary,
+  validatePreferences,
   validateStations,
   validateSubgroups
 } = require("../src/main/storage");
@@ -145,16 +149,18 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "1.0.5");
-assert.strictEqual(packageJson.wavedeckVersion, "1.0.5");
+assert.strictEqual(packageJson.version, "1.2.0");
+assert.strictEqual(packageJson.wavedeckVersion, "1.2.0");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
+assert.strictEqual(packageJson.build.appId, "com.a17press.wavedeck");
 assert.strictEqual(packageJson.dependencies.x11, "^4.1.0");
 assert.strictEqual(packageJson.dependencies["dbus-next"], "^0.10.2");
 assert.ok(packageJson.scripts["prepare:linux-recorder"].includes("prepare-linux-ffmpeg.js"));
+assert.ok(packageJson.scripts["prepare:dj-model"].includes("prepare-dj-model.js"));
 assert.ok(packageJson.scripts.start.includes("prepare:linux-recorder"));
 assert.ok(packageJson.scripts["dist:linux"].includes("prepare:linux-recorder"));
-assert.ok(!packageJson.build.asarUnpack);
+assert.deepStrictEqual(packageJson.build.asarUnpack, ["node_modules/@img/sharp-libvips-linux-x64/**"]);
 assert.ok(packageJson.build.files.includes("!node_modules/usocket{,/**/*}"), "Linux packages must exclude the incompatible optional usocket module");
 assert.deepStrictEqual(packageJson.build.extraResources, [
   {
@@ -164,6 +170,14 @@ assert.deepStrictEqual(packageJson.build.extraResources, [
   {
     from: ".cache/wavedeck-tools/linux/ffprobe",
     to: "recording/ffprobe"
+  },
+  {
+    from: ".cache/wavedeck-tools/linux/icecast",
+    to: "streaming"
+  },
+  {
+    from: ".cache/wavedeck-tools/dj-models",
+    to: "dj-models"
   }
 ]);
 assert.strictEqual(packageJson.build.linux.syncDesktopName, true);
@@ -349,9 +363,26 @@ try {
     localRadioSongRepeatHours: 4,
     localRadioArtistRepeatMinutes: 90,
     localRadioArtistSetSize: 1,
+    localMixFavorLastFm: false,
+    localRadioExploreDistance: "detour",
     localMusicCrossfadeEnabled: true,
+    replayGainEnabled: false,
+    replayGainPaused: false,
+    finishCurrentSongOnStationChange: false,
+    portableImportWorkers: 2,
     miniPlayerDisplayMode: "now-playing",
     miniPlayerColorScheme: "default",
+    autoDjEnabled: false,
+    autoDjBreakIntervalMinutes: 15,
+    autoDjStationName: "WaveDeck Radio",
+    autoDjName: "Amber Wolfe",
+    autoDjVoice: "female",
+    autoDjExtraLines: [...DEFAULT_AUTO_DJ_EXTRA_LINES],
+    autoDjExtraDefaultsVersion: 1,
+    autoDjArtistPronunciations: {},
+    autoDjTitlePronunciations: {},
+    autoDjStationIds: DEFAULT_AUTO_DJ_STATION_IDS.map((text, index) => EXTRA_ID_SLOTS.has(index + 1) ? `${text} [xl]` : text),
+    autoDjStationIdDefaultsVersion: 1,
     localMixEnabled: {},
     localMixFavorites: {},
     streamingUi: {
@@ -369,6 +400,7 @@ try {
     settingsWindowBounds: null,
     radioLogWindowBounds: null,
     localRadioControlsWindowBounds: null,
+    musicLibraryWindowBounds: null,
     mainWindowBounds: null,
     miniPlayerWindowBounds: null,
     lastLibraryUpdate: "",
@@ -384,26 +416,57 @@ try {
     localRadioSongRepeatHours: 4,
     localRadioArtistRepeatMinutes: 90,
     localRadioArtistSetSize: 1,
+    localMixFavorLastFm: false,
+    localRadioExploreDistance: "detour",
     localMusicCrossfadeEnabled: true,
+    replayGainEnabled: false,
+    replayGainPaused: false,
+    finishCurrentSongOnStationChange: false,
+    portableImportWorkers: 2,
     miniPlayerDisplayMode: "now-playing",
     miniPlayerColorScheme: "default",
+    autoDjEnabled: false,
+    autoDjBreakIntervalMinutes: 15,
+    autoDjStationName: "WaveDeck Radio",
+    autoDjName: "Amber Wolfe",
+    autoDjVoice: "female",
+    autoDjExtraLines: [...DEFAULT_AUTO_DJ_EXTRA_LINES],
+    autoDjArtistPronunciations: {},
+    autoDjTitlePronunciations: {},
+    autoDjStationIds: DEFAULT_AUTO_DJ_STATION_IDS.map((text, index) => EXTRA_ID_SLOTS.has(index + 1) ? `${text} [xl]` : text),
     localMixEnabled: {},
     localMixFavorites: {},
     launchInSidebarMode: false,
     settingsWindowBounds: null,
     radioLogWindowBounds: null,
     localRadioControlsWindowBounds: null,
+    musicLibraryWindowBounds: null,
     mainWindowBounds: null,
     miniPlayerWindowBounds: null
   });
   assert.deepStrictEqual(storage.getUiPreferences(), storage.getLinuxUiPreferences());
+  assert.strictEqual(DEFAULT_AUTO_DJ_EXTRA_LINES.length, 40);
+  assert.strictEqual(EXTRA_ID_SLOTS.size, 20);
+  const customizedIds = [...DEFAULT_AUTO_DJ_STATION_IDS];
+  customizedIds[0] = 'My custom [station] ID for [dj].';
+  const migratedDj = validatePreferences({ autoDjStationIds: customizedIds, autoDjStationIdDefaultsVersion: 1, autoDjVoice: 'male' });
+  assert.strictEqual(migratedDj.autoDjStationIds[0], 'My custom [station] ID for [dj]. [xl]');
+  assert.strictEqual(migratedDj.autoDjStationIds[1], customizedIds[1]);
+  assert.strictEqual(migratedDj.autoDjVoice, 'female');
+  assert.deepStrictEqual(validatePreferences(migratedDj).autoDjStationIds, migratedDj.autoDjStationIds);
+  assert.deepStrictEqual(validatePreferences({ autoDjExtraLines: ['My extra line.'] }).autoDjExtraLines.slice(0, 2), ['My extra line.', '']);
   assert.strictEqual(storage.setLaunchInSidebarMode(true).launchInSidebarMode, true);
   assert.strictEqual(storage.setProModeEnabled(true).proModeEnabled, true);
   assert.strictEqual(storage.setAdditionalMusicFolder("/mnt/music").additionalMusicFolder, "/mnt/music");
   assert.strictEqual(storage.setLastFmSettings({ enabled: true }).lastFmEnabled, true);
   assert.strictEqual(storage.setLocalRadioFamiliarity('hits').localRadioFamiliarity, 'hits');
   assert.deepStrictEqual(storage.setLocalRadioTuning({ songRepeatHours: 6, artistRepeatMinutes: 180, artistSetSize: 2 }).localRadioArtistSetSize, 2);
+  assert.strictEqual(storage.setLocalMixFavorLastFm(true).localMixFavorLastFm, true);
+  assert.strictEqual(storage.setLocalRadioExploreDistance('explore').localRadioExploreDistance, 'explore');
   assert.strictEqual(storage.setLocalMusicCrossfadeEnabled(false).localMusicCrossfadeEnabled, false);
+  assert.strictEqual(storage.setFinishCurrentSongOnStationChange(true).finishCurrentSongOnStationChange, true);
+  assert.strictEqual(storage.setPortableImportWorkers(6).portableImportWorkers, 6);
+  assert.strictEqual(storage.setPortableImportWorkers(12).portableImportWorkers, 12);
   assert.strictEqual(storage.setMiniPlayerDisplayMode('source').miniPlayerDisplayMode, 'source');
   assert.strictEqual(storage.setMiniPlayerColorScheme('bamboo').miniPlayerColorScheme, 'bamboo');
   assert.strictEqual(storage.setLocalMixEnabled('classic-rock', false).localMixEnabled['classic-rock'], false);
@@ -450,6 +513,12 @@ try {
     width: 482,
     height: 479
   });
+  assert.deepStrictEqual(storage.setMusicLibraryWindowBounds({ x: 63.6, y: 74.5, width: 1141.8, height: 761.2 }), {
+    x: 64,
+    y: 75,
+    width: 1142,
+    height: 761
+  });
   assert.deepStrictEqual(storage.setMainWindowBounds({ x: 84.4, y: 96.6, width: 300.2, height: 640.8 }), {
     x: 84,
     y: 97,
@@ -473,15 +542,31 @@ try {
     localRadioSongRepeatHours: 6,
     localRadioArtistRepeatMinutes: 180,
     localRadioArtistSetSize: 2,
+    localMixFavorLastFm: true,
+    localRadioExploreDistance: "explore",
     localMusicCrossfadeEnabled: false,
+    replayGainEnabled: false,
+    replayGainPaused: false,
+    finishCurrentSongOnStationChange: true,
+    portableImportWorkers: 12,
     miniPlayerDisplayMode: "source",
     miniPlayerColorScheme: "bamboo",
+    autoDjEnabled: false,
+    autoDjBreakIntervalMinutes: 15,
+    autoDjStationName: "WaveDeck Radio",
+    autoDjName: "Amber Wolfe",
+    autoDjVoice: "female",
+    autoDjExtraLines: [...DEFAULT_AUTO_DJ_EXTRA_LINES],
+    autoDjArtistPronunciations: {},
+    autoDjTitlePronunciations: {},
+    autoDjStationIds: DEFAULT_AUTO_DJ_STATION_IDS.map((text, index) => EXTRA_ID_SLOTS.has(index + 1) ? `${text} [xl]` : text),
     localMixEnabled: { "classic-rock": false },
     localMixFavorites: { "classic-rock": true },
     launchInSidebarMode: true,
     settingsWindowBounds: { x: 2100, y: 41, width: 1120, height: 841 },
     radioLogWindowBounds: { x: 14, y: 23, width: 864, height: 700 },
     localRadioControlsWindowBounds: { x: 30, y: 49, width: 482, height: 479 },
+    musicLibraryWindowBounds: { x: 64, y: 75, width: 1142, height: 761 },
     mainWindowBounds: { x: 84, y: 97, width: 300, height: 641 },
     miniPlayerWindowBounds: { x: 189, y: 28, width: 560, height: 32 }
   });
@@ -519,7 +604,7 @@ try {
   assert.strictEqual(exportedLibrary.stations[0].gainDb, undefined);
   const reloadedStorage = new PortableStorage({ dataDir, defaultsDir });
   reloadedStorage.initialize();
-  assert.deepStrictEqual(reloadedStorage.readListeningHistory(), { version: 3, stations: {}, recentStationIds: [], recentLocalStations: [], localStationPresets: [] });
+  assert.deepStrictEqual(reloadedStorage.readListeningHistory(), { version: 4, stations: {}, recentStationIds: [], recentLocalStations: [], localStationPresets: [], localStationProfiles: {} });
   reloadedStorage.writeListeningHistory({
     version: 1,
     stations: { alpha: { seconds: 325, lastListenedAt: "2026-09-02T00:00:00.000Z" } },
@@ -531,12 +616,26 @@ try {
     version: 2, stations: {}, recentStationIds: [],
     recentLocalStations: [{ mode: 'radio', seedId: 'comfortably-numb', label: 'Comfortably Numb Radio', title: 'Comfortably Numb', artist: 'Pink Floyd' }]
   });
-  assert.deepStrictEqual(reloadedStorage.readListeningHistory().recentLocalStations.map(station => station.key), ['radio:comfortably-numb']);
+  assert.deepStrictEqual(reloadedStorage.readListeningHistory().recentLocalStations.map(station => station.key), ['portable:radio:comfortably-numb']);
   reloadedStorage.writeListeningHistory({
     version: 3, stations: {}, recentStationIds: [], recentLocalStations: [],
     localStationPresets: [{ mode: 'artist', seedId: 'wish-you-were-here', label: 'Pink Floyd Radio', artist: 'Pink Floyd' }]
   });
-  assert.deepStrictEqual(reloadedStorage.readListeningHistory().localStationPresets.map(station => station.key), ['artist:wish-you-were-here']);
+  assert.deepStrictEqual(reloadedStorage.readListeningHistory().localStationPresets.map(station => station.key), ['portable:artist:wish-you-were-here']);
+  reloadedStorage.writeListeningHistory({
+    version: 3, stations: {}, recentStationIds: [],
+    recentLocalStations: [{ mode: 'explore', seedId: 'stupid-girl', label: 'Stupid Girl X Radio', title: 'Stupid Girl', artist: 'Garbage' }],
+    localStationPresets: [{ mode: 'explore', seedId: 'stupid-girl', label: 'Stupid Girl X Radio', title: 'Stupid Girl', artist: 'Garbage' }]
+  });
+  const restartedHistory = new PortableStorage({ dataDir, defaultsDir });
+  restartedHistory.initialize();
+  assert.deepStrictEqual(restartedHistory.readListeningHistory().recentLocalStations.map(station => station.key), ['portable:explore:stupid-girl'], 'Explore Radio remains in recents after disk reload');
+  assert.deepStrictEqual(restartedHistory.readListeningHistory().localStationPresets.map(station => station.label), ['Stupid Girl X Radio'], 'starred Explore Radio keeps its short label after disk reload');
+  reloadedStorage.writeListeningHistory({
+    version: 4, stations: {}, recentStationIds: [], recentLocalStations: [], localStationPresets: [],
+    localStationProfiles: { 'portable:explore:stupid-girl': { localRadioFamiliarity: 'deep-cuts', localRadioSongRepeatHours: 6, localRadioArtistRepeatMinutes: 180, localRadioArtistSetSize: 1, localRadioExploreDistance: 'explore' } }
+  });
+  assert.deepStrictEqual(reloadedStorage.readListeningHistory().localStationProfiles['portable:explore:stupid-girl'], { localRadioFamiliarity: 'deep-cuts', localRadioSongRepeatHours: 6, localRadioArtistRepeatMinutes: 180, localRadioArtistSetSize: 1, localRadioExploreDistance: 'explore' }, 'Local Radio station profiles survive disk validation');
 
   const subgroupStations = reloadedStorage.readStations();
   const subgroupGroup = subgroupStations[0].group;
@@ -860,17 +959,42 @@ listeningHistory.handleStatus({
   state: "playing", playing: true, mediaState: "playing", currentStation: null,
   currentMusic: { mode: "radio", label: "Comfortably Numb Radio", seed: { id: "seed-1", title: "Comfortably Numb", artist: "Pink Floyd", album: "The Wall" } }
 });
-assert.deepStrictEqual(listeningHistory.getStats().recentLocalStations.map(station => station.key), ["radio:seed-1"]);
+assert.deepStrictEqual(listeningHistory.getStats().recentLocalStations.map(station => station.key), ["portable:radio:seed-1"]);
 listeningHistory.handleStatus({
   state: "playing", playing: true, mediaState: "playing", currentStation: null,
   currentMusic: { mode: "artist", label: "Pink Floyd Radio", seed: { id: "seed-2", title: "Wish You Were Here", artist: "Pink Floyd" } }
 });
-assert.deepStrictEqual(listeningHistory.getStats().recentLocalStations.map(station => station.key), ["artist:seed-2", "radio:seed-1"]);
+assert.deepStrictEqual(listeningHistory.getStats().recentLocalStations.map(station => station.key), ["portable:artist:seed-2", "portable:radio:seed-1"]);
+listeningHistory.handleStatus({
+  state: "playing", playing: true, mediaState: "playing", currentStation: null,
+  currentMusic: { mode: "explore", label: "Comfortably Numb Explore Radio", seed: { id: "seed-3", title: "Comfortably Numb", artist: "Pink Floyd" } }
+});
+assert.deepStrictEqual(listeningHistory.getStats().recentLocalStations.map(station => station.key), ["portable:explore:seed-3", "portable:artist:seed-2", "portable:radio:seed-1"], 'Explore stations appear in Recently Played Local Stations');
+assert.strictEqual(listeningHistory.getStats().recentLocalStations[0].label, 'Comfortably Numb X Radio');
 assert.strictEqual(listeningHistory.toggleLocalStationPreset(listeningHistory.getStats().recentLocalStations[0]).saved, true);
-assert.deepStrictEqual(listeningHistory.getStats().localStationPresets.map(station => station.key), ["artist:seed-2"]);
+assert.deepStrictEqual(listeningHistory.getStats().localStationPresets.map(station => station.key), ["portable:explore:seed-3"]);
 assert.strictEqual(listeningHistory.toggleLocalStationPreset(listeningHistory.getStats().recentLocalStations[0]).saved, false);
 assert.deepStrictEqual(listeningHistory.getStats().localStationPresets, []);
+const savedExploreProfile = listeningHistory.setLocalStationProfile({ libraryProfile: 'portable', mode: 'explore', seedId: 'seed-3', profile: { localRadioFamiliarity: 'deep-cuts', localRadioSongRepeatHours: 6, localRadioArtistRepeatMinutes: 180, localRadioArtistSetSize: 1, localRadioExploreDistance: 'explore' } });
+assert.deepStrictEqual(savedExploreProfile, { localRadioFamiliarity: 'deep-cuts', localRadioSongRepeatHours: 6, localRadioArtistRepeatMinutes: 180, localRadioArtistSetSize: 1, localRadioExploreDistance: 'explore' }, 'a Local Radio station can retain its own controls');
+assert.deepStrictEqual(listeningHistory.getLocalStationProfile({ libraryProfile: 'portable', mode: 'explore', seedId: 'seed-3' }), savedExploreProfile, 'saved Local Radio controls reload by station identity');
 listeningHistory.close();
+
+const profileHistory = new ListeningHistory({
+  storage: { readListeningHistory: () => ({ version: 3, stations: {} }), writeListeningHistory: history => history },
+  getAdditionalProfile: () => 'additional:andrew-desk:/music',
+  now: () => 1,
+  setTimer: () => 1,
+  clearTimer: () => {}
+});
+profileHistory.handleStatus({
+  state: 'playing', playing: true, mediaState: 'playing', currentStation: null,
+  currentMusic: { mode: 'radio', label: 'Desk Radio', seed: { id: 'desk-seed', title: 'Desk Song', artist: 'Desk Artist', library: 'additional' } }
+});
+assert.deepStrictEqual(profileHistory.getStats('portable').recentLocalStations, [], 'Additional Music stations stay with their remembered library profile');
+assert.deepStrictEqual(profileHistory.getStats('additional:andrew-desk:/music').recentLocalStations.map(station => station.key), ['additional:andrew-desk:/music:radio:desk-seed']);
+assert.strictEqual(profileHistory.removeUnavailableLocalStations(station => station.seedId !== 'desk-seed'), true, 'unavailable unstarred Local Stations are pruned');
+assert.deepStrictEqual(profileHistory.getStats('additional:andrew-desk:/music').recentLocalStations, []);
 
 let indieTime = 0;
 const indieWrites = [];
@@ -1251,6 +1375,7 @@ assert.ok(preloadSource.includes('subscribe("ui:preferences-changed"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("listening:get"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("listening:reset"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("listening:toggle-local-preset", station)'));
+assert.ok(preloadSource.includes('ipcRenderer.invoke("listening:remove-local-station", station)'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("sections:get-state"'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("sections:set-state", state)'));
 assert.ok(preloadSource.includes('subscribe("sections:state-changed"'));
@@ -1272,6 +1397,13 @@ assert.ok(preloadSource.includes("ipcRenderer.invoke('music:mixes:manage')"));
 assert.ok(preloadSource.includes("ipcRenderer.invoke('music:mixes:set-enabled', id, enabled)"));
 assert.ok(preloadSource.includes("ipcRenderer.invoke('music:feedback', kind)"));
 assert.ok(preloadSource.includes("ipcRenderer.invoke('music:local-radio:open-controls')"));
+assert.ok(preloadSource.includes("music:optimization-changed"));
+assert.ok(preloadSource.includes("ui:remember-additional-music-folder"));
+assert.ok(preloadSource.includes("ui:use-additional-music-folder-this-time"));
+assert.ok(preloadSource.includes("ui:get-remembered-music-computers"));
+assert.ok(preloadSource.includes("ui:rename-remembered-music-computer"));
+assert.ok(preloadSource.includes("music:additional:refresh"));
+assert.ok(preloadSource.includes("music:import:preview"));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("recording:get-state")'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("recording:toggle")'));
 assert.ok(preloadSource.includes('ipcRenderer.invoke("recordings:list")'));
@@ -1280,7 +1412,9 @@ assert.ok(preloadSource.includes("platform: process.platform"));
 assert.ok(!preloadSource.includes("showStationContextMenu"));
 const settingsHtml = fs.readFileSync(path.join(root, "src", "renderer", "settings.html"), "utf8");
 const radioLogHtml = fs.readFileSync(path.join(root, "src", "renderer", "radio-log.html"), "utf8");
+assert.ok(radioLogHtml.indexOf('src="./embedded-settings-bridge.js"') < radioLogHtml.indexOf('src="./radio-log.js"') && radioLogHtml.includes('src="./embedded-settings-bridge.js"'), 'Radio Log loads its Settings bridge before the log renderer');
 const radioLogSource = fs.readFileSync(path.join(root, "src", "renderer", "radio-log.js"), "utf8");
+const musicRadioSource = fs.readFileSync(path.join(root, "src", "main", "music-radio.js"), "utf8");
 const localRadioControlsHtml = fs.readFileSync(path.join(root, "src", "renderer", "local-radio-controls.html"), "utf8");
 const localRadioControlsSource = fs.readFileSync(path.join(root, "src", "renderer", "local-radio-controls.js"), "utf8");
 const miniPlayerHtml = fs.readFileSync(path.join(root, "src", "renderer", "mini-player.html"), "utf8");
@@ -1290,6 +1424,26 @@ assert.ok(!radioLogHtml.includes("Waiting for the next radio pick"));
 assert.ok(radioLogSource.includes("clearMusicDebugHistory"));
 assert.ok(radioLogSource.includes(".slice().reverse()"));
 assert.ok(radioLogSource.includes("Selected seed track"));
+assert.ok(radioLogSource.includes("How it was picked"));
+assert.ok(radioLogSource.includes("Song Familiarity"));
+assert.ok(radioLogSource.includes("Local Radio Controls"));
+assert.ok(radioLogSource.includes("Rejected Tracks"));
+assert.ok(radioLogSource.includes("Proposed ${artist} set:"));
+assert.ok(radioLogSource.includes("Thumbs-up feedback"));
+assert.ok(radioLogSource.includes("Seed song:"));
+assert.ok(radioLogSource.includes("WaveDeck skipped ${quoted(skipped.title)}"));
+assert.ok(radioLogSource.includes("Related artists available in your library were"));
+assert.ok(radioLogSource.includes("This is track ${artistSet.position} of ${artistSet.size} in the artist set"));
+assert.ok(radioLogSource.includes("expanded through a ${recovery.hops}-hop related-artist route"));
+assert.ok(musicRadioSource.includes("howPicked"));
+assert.ok(musicRadioSource.includes("summarizeArtistChoices"));
+assert.ok(musicRadioSource.includes("applyArtistSetPreference"));
+assert.ok(musicRadioSource.includes("songIdentity"));
+assert.ok(musicRadioSource.includes("artistSetNote"));
+assert.ok(musicRadioSource.includes("recoveryCandidates"));
+assert.ok(musicRadioSource.includes("NON_MUSIC_GENRES"));
+assert.ok(radioLogSource.includes("renderStationId"));
+assert.ok(radioLogSource.includes("Genres:"));
 assert.ok(!settingsHtml.includes('data-tab="launcher"'));
 assert.ok(!settingsHtml.includes('id="tab-launcher"'));
 assert.ok(settingsHtml.includes('id="tab-interface"'));
@@ -1302,6 +1456,7 @@ assert.ok(settingsHtml.includes("Local Music Setup and Music Information"));
 assert.ok(settingsHtml.includes("How Local Radio Chooses Music"));
 assert.ok(settingsHtml.includes("0.11.0 — Various Refinements"));
 assert.ok(settingsHtml.includes('<h3>WaveDeck 1.0 - Full Release - Oct 2, 2026</h3>'));
+assert.ok(settingsHtml.includes('<h3>WaveDeck 1.0.1 - Streaming Update</h3>'));
 assert.ok(settingsHtml.includes('<p class="about-scripture">"Whatever you do, do it all for the glory of God."</p>'));
 assert.ok(settingsHtml.indexOf('WaveDeck 1.0 - Full Release - Oct 2, 2026</h3>') < settingsHtml.indexOf('0.11.0 — Various Refinements'));
 assert.ok(!settingsHtml.includes("<h3>WaveDeck 0.11.2"));
@@ -1320,6 +1475,10 @@ assert.ok(settingsHtml.includes('id="launchInSidebarMode"'));
 assert.ok(settingsHtml.includes('id="proModeEnabled"'));
 assert.ok(!settingsHtml.includes('id="proMusicSettings"'));
 assert.ok(settingsHtml.includes('data-tab="localmusic" hidden>Local Music</button>'));
+assert.ok(settingsHtml.includes('id="portableMusicTitle">Your Library</div>'));
+assert.ok(settingsHtml.includes('id="portableMusicProgress"'));
+assert.ok(settingsHtml.includes('id="additionalMusicFolderChoice"'));
+assert.ok(settingsHtml.includes('Remember this computer'));
 assert.ok(settingsHtml.indexOf('data-tab="groups"') < settingsHtml.indexOf('data-tab="localmusic"'));
 assert.ok(settingsHtml.indexOf('data-tab="localmusic"') < settingsHtml.indexOf('data-tab="about"'));
 assert.ok(settingsHtml.includes('id="tab-localmusic"'));
@@ -1338,7 +1497,8 @@ assert.ok(!localRadioControlsHtml.includes('Use these sliders to shape your Song
 assert.ok(localRadioControlsHtml.includes('id="localRadioFamiliarity"'));
 assert.ok(localRadioControlsHtml.includes('Favor the Hits'));
 assert.ok(localRadioControlsHtml.includes('Balanced Mix'));
-assert.ok(localRadioControlsHtml.includes('Play Deep Cuts Too'));
+assert.ok(localRadioControlsHtml.includes('Allow Deep Cuts'));
+assert.ok(localRadioControlsHtml.includes('Hits Only'));
 assert.ok(localRadioControlsHtml.includes("Don't play the same song for how long?"));
 assert.ok(localRadioControlsHtml.includes("Don't play the same artist for how long?"));
 assert.ok(!localRadioControlsHtml.includes('1 hour'));
@@ -1347,20 +1507,32 @@ assert.ok(!localRadioControlsHtml.includes('localRadioFamiliarityHelp'));
 assert.ok(!localRadioControlsHtml.includes('localRadioSongRepeatHelp'));
 assert.ok(!localRadioControlsHtml.includes('localRadioArtistRepeatHelp'));
 assert.ok(!localRadioControlsHtml.includes('localRadioArtistSetHelp'));
-assert.ok(settingsHtml.includes('id="lastFmProgress"'));
-assert.ok(settingsHtml.includes('id="lastFmUpdating"'));
+assert.ok(settingsHtml.includes('id="lastFmChart"'));
+assert.ok(settingsHtml.includes('id="lastFmPercent"'));
 assert.ok(!settingsHtml.includes('radio-rule-tab'));
 assert.ok(!settingsHtml.includes('id="resetAllRadioRules"'));
 assert.ok(settingsHtml.includes('id="chooseAdditionalMusicFolderBtn"'));
 assert.ok(settingsHtml.includes('id="lastFmEnabled"'));
 assert.ok(!settingsHtml.includes('id="lastFmApiKey"'));
 assert.ok(settingsHtml.includes('id="queueLastFmRefreshBtn"'));
+assert.ok(settingsHtml.includes('id="connectLastFmBtn"'));
+assert.ok(settingsHtml.includes('id="disconnectLastFmBtn"'));
+assert.ok(settingsHtml.includes('>Enable Last.fm</span>'));
+assert.ok(settingsHtml.includes('id="localMixSummary"'));
+assert.ok(settingsHtml.includes('id="manageLocalMixesBtn"'));
+assert.ok(settingsHtml.includes('id="localMixDetails"'));
+assert.ok(!settingsHtml.includes('id="openRadioLogBtn"'));
 assert.ok(localRadioControlsHtml.includes('min="1" max="24" step="1"'));
 assert.ok(localRadioControlsHtml.includes('>Three-way<'));
 assert.ok(localRadioControlsHtml.includes('>Four-play<'));
-assert.ok(settingsHtml.includes('id="openRadioLogBtn"'));
 assert.ok(localRadioControlsHtml.includes('id="localMusicCrossfade"'));
+assert.ok(localRadioControlsHtml.includes('id="localMixFavorLastFm"'));
+assert.ok(localRadioControlsHtml.includes('id="localRadioExploreDistance"'));
+assert.ok(localRadioControlsHtml.includes('How Far Should We Stray From the Seed?'));
+assert.ok(localRadioControlsHtml.includes('Favor Last.fm Data for Local Mixes'));
 assert.ok(localRadioControlsSource.includes('setLocalRadioTuning'));
+assert.ok(localRadioControlsSource.includes('setLocalMixFavorLastFm'));
+assert.ok(localRadioControlsSource.includes('setLocalRadioExploreDistance'));
 assert.ok(localRadioControlsSource.includes('setLocalMusicCrossfade'));
 assert.ok(!localRadioControlsSource.includes('FAMILIARITY_COPY'));
 assert.ok(miniPlayerHtml.includes('id="playPauseBtn"'));
@@ -1417,6 +1589,7 @@ assert.ok(settingsStyles.includes("overflow: auto"));
 assert.ok(settingsStyles.includes("flex:1 1 auto"));
 assert.ok(!settingsStyles.includes("min(62vh"));
 const mainSource = fs.readFileSync(path.join(root, "src", "main", "main.js"), "utf8");
+const musicWorkerSource = fs.readFileSync(path.join(root, "src", "main", "music-worker.js"), "utf8");
 assert.ok(!mainSource.includes("loadSidebarState"));
 assert.ok(!mainSource.includes("saveSidebarState"));
 assert.ok(!mainSource.includes("screen.getCursorScreenPoint()"));
@@ -1525,6 +1698,8 @@ assert.ok(mainSource.includes("function openLocalRadioControlsWindow()"));
 assert.ok(mainSource.includes("localRadioControlsWindow"));
 assert.ok(mainSource.includes("localRadioControlsWindowBounds"));
 assert.ok(mainSource.includes("storage.setLocalRadioControlsWindowBounds(bounds)"));
+assert.ok(mainSource.includes("openSettingsWindow('', 'musicmanager'"));
+assert.ok(mainSource.includes("openSettingsWindow('', 'radiolog'"));
 assert.ok(mainSource.includes("mainWindowBounds"));
 assert.ok(mainSource.includes("storage.setMainWindowBounds(bounds)"));
 assert.ok(mainSource.includes("function toggleMiniPlayer()"));
@@ -1546,13 +1721,19 @@ assert.ok(mainSource.includes("function createTray()"));
 assert.ok(mainSource.includes("Show WaveDeck"));
 assert.ok(mainSource.includes("Quit WaveDeck"));
 assert.ok(mainSource.includes("tray?.destroy()"));
+assert.ok(mainSource.includes("QUIET_MUSIC_MAINTENANCE_MS = 180000"));
+assert.ok(mainSource.includes("scheduleQuietMusicMaintenance"));
+assert.ok(mainSource.includes("activeMusicLibraryProfile"));
+assert.ok(mainSource.includes("removeUnavailableLocalStations"));
 const desktopLauncherSource = fs.readFileSync(path.join(root, "src", "main", "desktop-launcher.js"), "utf8");
 assert.ok(desktopLauncherSource.includes('.local", "share", "applications"'));
 assert.ok(desktopLauncherSource.includes("X-WaveDeck-Managed=true"));
 const rendererSource = fs.readFileSync(path.join(root, "src", "renderer", "renderer.js"), "utf8");
 assert.ok(rendererSource.includes("warmLocalMusicView"));
 assert.ok(indexHtml.includes('id="localRadioControlsBtn"'));
+assert.ok(indexHtml.includes('id="openPortableMusicLibraryBtn"'));
 assert.ok(rendererSource.includes("localRadioControlsBtn"));
+assert.ok(rendererSource.includes("openPortableMusicLibraryBtn"));
 assert.ok(rendererSource.includes("Loading your Local Music library…"));
 assert.ok(rendererSource.includes("savePresetOrder"));
 assert.ok(rendererSource.includes('meta.draggable = true'));
@@ -1622,8 +1803,10 @@ assert.ok(rendererSource.includes("Recently Played Local Stations"));
 assert.ok(rendererSource.includes("recentLocalStations"));
 assert.ok(rendererSource.includes("localStationPresets"));
 assert.ok(rendererSource.includes("toggleLocalStationPreset"));
+assert.ok(rendererSource.includes("removeRecentLocalStation"));
+assert.ok(rendererSource.includes("status.changed !== false"));
 assert.ok(rendererSource.includes("details.music-row[open]"));
-assert.ok(rendererSource.includes("['radio', 'Song Radio'], ['artist', 'Artist Radio'], ['album', 'Play Album']"));
+assert.ok(rendererSource.includes("['radio', 'Song Radio'], ['explore', 'Explore Radio'], ['artist', 'Artist Radio'], ['album', 'Play Album']"));
 assert.ok(!rendererSource.includes("Play Song"));
 assert.ok(indexHtml.includes('id="clearMusicSearchBtn"'));
 assert.ok(!indexHtml.includes('id="musicContextLabel"'));
@@ -1657,6 +1840,8 @@ assert.ok(settingsSource.includes("if (days < 1000) return"));
 assert.ok(!mainSource.includes("music:rules:get"));
 assert.ok(!mainSource.includes("music:rules:reset-all"));
 assert.ok(mainSource.includes("music:local-radio:set-familiarity"));
+assert.ok(mainSource.includes("music:local-radio:set-lastfm-mode"));
+assert.ok(musicWorkerSource.includes('music_search'));
 
 const windowsBuild = JSON.parse(fs.readFileSync(path.join(root, "electron-builder.windows.json"), "utf8"));
 assert.strictEqual(windowsBuild.win.artifactName, "WaveDeck.exe");
@@ -1698,19 +1883,75 @@ assert.ok(windowsSidebarNativeSource.includes("SHAppBarMessage(ABM_REMOVE"));
 assert.ok(windowsSidebarNativeSource.includes('RegisterWindowMessageW(L"TaskbarCreated")'));
 assert.ok(windowsSidebarNativeSource.includes("target_rect.top = monitor_info.rcWork.top"));
 assert.ok(windowsSidebarNativeSource.includes("target_rect.bottom = monitor_info.rcWork.bottom"));
-const windowsWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "windows-portable.yml"), "utf8");
-assert.ok(windowsWorkflow.includes("  push:"));
-assert.ok(windowsWorkflow.includes("Build and inspect Windows Sidebar helper"));
-assert.ok(windowsWorkflow.includes("jobs:"));
-assert.ok(windowsWorkflow.includes("linux:"));
-assert.ok(windowsWorkflow.includes("needs: [linux, windows]"));
-assert.ok(windowsWorkflow.includes("npm run dist:linux -- --publish never"));
-assert.ok(windowsWorkflow.includes("WaveDeck-1.0.5-Linux"));
-assert.ok(windowsWorkflow.includes("WaveDeck-1.0.5-Windows"));
-assert.ok(windowsWorkflow.includes("Publish WaveDeck 1.0.5 for Linux and Windows"));
-assert.ok(windowsWorkflow.includes("release-assets/linux/WaveDeck.AppImage"));
-assert.ok(windowsWorkflow.includes("release-assets/windows/WaveDeck.exe"));
-assert.ok(windowsWorkflow.includes('chmod 755 "$appimage"'));
+const mainWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "wavedeck-1.2.yml"), "utf8");
+assert.ok(mainWorkflow.includes("branches: [main]"));
+assert.ok(mainWorkflow.includes("runs-on: ubuntu-22.04"));
+assert.ok(mainWorkflow.includes("npm test"));
+assert.ok(mainWorkflow.includes("npm run dist:linux -- --publish never"));
+assert.ok(mainWorkflow.includes("Verify portable AppImage, voice, and Icecast"));
+assert.ok(mainWorkflow.includes("tag_name: v1.2.0"));
+assert.ok(mainWorkflow.includes("release-assets/WaveDeck.AppImage"));
+assert.ok(!fs.existsSync(path.join(root, ".github", "workflows", "windows-portable.yml")), "The obsolete 1.0.5 publication workflow must not be dispatchable");
+const djWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "dj-portable.yml"), "utf8");
+assert.ok(djWorkflow.includes("branches: [dj-portable]"));
+assert.ok(djWorkflow.includes("npm run dist:linux -- --publish never"));
+assert.ok(djWorkflow.includes("WaveDeckDJ-0.1.11-Linux"));
+assert.ok(djWorkflow.includes("dist/WaveDeckDJ.AppImage"));
+assert.ok(djWorkflow.includes("Verify packaged DJ voice"));
+assert.ok(djWorkflow.includes("runs-on: ubuntu-22.04"));
+assert.ok(djWorkflow.includes("Verify packaged Icecast on older glibc"));
+assert.ok(djWorkflow.includes("Packaged Icecast opened its listening port."));
+assert.ok(djWorkflow.includes("tag_name: dj-v0.1.11"));
+assert.ok(djWorkflow.includes("Publish WaveDeck DJ 0.1.11"));
+const djClipsSource = fs.readFileSync(path.join(root, "src", "main", "dj-clips.js"), "utf8");
+assert.ok(djClipsSource.includes("DJ Clips"));
+assert.ok(djClipsSource.includes("__${kind}-"));
+assert.ok(djClipsSource.includes("LASTFM_MINIMUM = 70"));
+assert.ok(djClipsSource.includes("af_heart"));
+assert.ok(djClipsSource.includes("48k"));
+assert.ok(djClipsSource.includes("af_heart"));
+assert.ok(djClipsSource.includes("station_ids"));
+assert.ok(djClipsSource.includes("id-${String(id.slot).padStart(2, '0')}.opus"));
+assert.ok(settingsHtml.includes('Enable Auto DJ'));
+assert.ok(settingsHtml.includes('>Edit IDs<'));
+assert.ok(settingsHtml.includes('>Generate clips<'));
+assert.ok(settingsHtml.includes('A virtual DJ that occasionally talks between songs.'));
+const musicLibraryHtml = fs.readFileSync(path.join(root, "src", "renderer", "music-library.html"), "utf8");
+const musicLibraryRenderer = fs.readFileSync(path.join(root, "src", "renderer", "music-library.js"), "utf8");
+assert.ok(musicLibraryHtml.includes('Search artists, albums, songs, or genres'));
+assert.ok(musicLibraryHtml.includes('<span>Items</span><span>Rated</span>'));
+assert.ok(musicLibraryRenderer.includes('getPortableMusicArtists'));
+assert.ok(musicLibraryRenderer.includes('getPortableMusicArtistDetail'));
+assert.ok(musicLibraryRenderer.includes("Last.fm popularity"));
+assert.ok(musicLibraryRenderer.includes('release-year'));
+assert.ok(mainSource.includes('portableManagerReleaseYear'));
+const opusOptimizerSource = fs.readFileSync(path.join(root, "src", "main", "opus-optimizer.js"), "utf8");
+assert.ok(opusOptimizerSource.includes('deduplicationPending'));
+assert.ok(mainSource.includes('opus-dedup-diagnostics.json'));
+assert.ok(opusOptimizerSource.includes('fingerprintCache'));
+assert.ok(opusOptimizerSource.includes('same-copy-name-different-audio'));
+assert.ok(opusOptimizerSource.includes('same-release-tags-different-audio'));
+assert.ok(settingsHtml.includes('data-tab="musicmanager"'));
+assert.ok(settingsHtml.includes('data-tab="musicmanager" hidden>Library</button>'));
+assert.ok(settingsHtml.includes('id="djClipProgress"'));
+assert.ok(fs.readFileSync(path.join(root, 'src', 'main', 'dj-clips.js'), 'utf8').includes('refreshLibraryProgress'));
+assert.ok(fs.readFileSync(path.join(root, 'src', 'renderer', 'music-library.js'), 'utf8').includes('djButton.innerHTML = vocalMic'));
+assert.ok(settingsHtml.includes('data-tab="radiolog"'));
+assert.ok(settingsHtml.includes('External Tracks'));
+assert.ok(settingsHtml.includes('data-src="./music-library.html"'));
+assert.ok(settingsHtml.includes('data-src="./radio-log.html"'));
+assert.ok(localRadioControlsHtml.includes('Finish current song when changing stations'));
+assert.ok(preloadSource.includes('settings:open-tab'));
+assert.ok(preloadSource.includes('music:local-radio:set-finish-current'));
+const embeddedBridgeSource = fs.readFileSync(path.join(root, 'src', 'renderer', 'embedded-settings-bridge.js'), 'utf8');
+assert.ok(embeddedBridgeSource.includes('embedded-request'));
+assert.ok(embeddedBridgeSource.includes('getPortableMusicArtistDetail'));
+const linuxFfmpegScript = fs.readFileSync(path.join(root, "scripts", "prepare-linux-ffmpeg.js"), "utf8");
+assert.ok(linuxFfmpegScript.includes('PROBE_SHA256'));
+assert.ok(linuxFfmpegScript.includes('e7aad93f155216d82cdb353e1ddb283a5bcde7ed739dbe1da1ef3c11dff72bec'));
+const lastFmScrobblerSource = fs.readFileSync(path.join(root, "src", "main", "lastfm-scrobbler.js"), "utf8");
+assert.ok(lastFmScrobblerSource.includes("track.scrobble"));
+assert.ok(lastFmScrobblerSource.includes("track.updateNowPlaying"));
 const macosInstructions = fs.readFileSync(path.join(root, "START-HERE-MACOS.txt"), "utf8");
 assert.ok(macosInstructions.includes("Version 0.6.1 universal build"));
 assert.ok(macosInstructions.includes("WaveDeck is unsigned"));
@@ -1721,6 +1962,7 @@ for (const file of [
   "src/main/desktop-launcher.js",
   "src/main/player.js",
   "src/main/portable-paths.js",
+  "src/main/portable-importer.js",
   "src/main/storage.js",
   "src/main/stream-probe.js",
   "src/main/sidebar.js",
@@ -1729,6 +1971,7 @@ for (const file of [
   "src/main/windows-media-keys.js",
   "src/main/windows-sidebar.js",
   "src/main/media-controller.js",
+  "src/main/lastfm-scrobbler.js",
   "src/main/listening-history.js",
   "src/main/mpris.js",
   "src/main/window-layout.js",
@@ -1737,6 +1980,8 @@ for (const file of [
   "src/renderer/mini-player.js",
   "src/renderer/renderer.js",
   "src/renderer/settings.js"
+  ,"src/renderer/auto-dj-ids.js"
+  ,"src/renderer/music-library.js"
 ]) {
   new Function(fs.readFileSync(path.join(root, file), "utf8"));
 }

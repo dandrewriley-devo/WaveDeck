@@ -4,10 +4,20 @@ const os = require('os');
 const path = require('path');
 const crypto = require('crypto');
 const { MusicLibrary } = require('../src/main/music-library');
-const { MusicRadio, weight, COOLDOWN } = require('../src/main/music-radio');
+const { MusicRadio, scoreTrack, weight, COOLDOWN } = require('../src/main/music-radio');
+const { RadioSelection } = require('../src/main/radio-selection');
+const { PortableManagerIndex, portableManagerArtistKey, portableManagerReleaseKey } = require('../src/main/portable-manager-index');
 const { extractTrack, radioArtist } = require('../src/main/music-tags');
+const { OpusOptimizer, OPUS_BITRATE, SOURCE_EXTENSIONS, outputFor, stableAmpId } = require('../src/main/opus-optimizer');
+const { trackKey } = require('../src/main/portable-importer');
+const { ComputerMusicFolders, resolveComputerIdentity } = require('../src/main/computer-music-folders');
 const { MediaController, serializeTransport } = require('../src/main/media-controller');
+const { CrossfadeMpvPlayer } = require('../src/main/player');
+const { SongCues, parseCue } = require('../src/main/song-cues');
+const { ReplayGain } = require('../src/main/replay-gain');
+const { PersonalStream, validHost, validMountName } = require('../src/main/personal-stream');
 const { LastFmEnricher, popularityScore } = require('../src/main/lastfm-enricher');
+const { LastFmScrobbler, signatureFor } = require('../src/main/lastfm-scrobbler');
 const { resolveLocalMix, listLocalMixes, loadLocalMixes, getLocalMixAvailability, isTrackEligibleForMix, qualityForTrackCount } = require('../src/main/local-mixes');
 
 function fixture() {
@@ -21,6 +31,95 @@ function fixture() {
 function track(id, more = {}) { return { id, songKey: id, title: id, artist: 'Artist', artists: ['Artist'], albumArtist: 'Artist', album: 'Album', track: Number(id) || 1, disc: 1, relativePath: `${id}.mp3`, genres: ['Pop'], similarArtists: [], rating: null, ...more }; }
 
 async function run() {
+  assert.equal(parseCue('3:47'), 227);
+  assert.equal(parseCue(''), null);
+  assert.throws(() => parseCue('3:72'), /m:ss/);
+  const cueDir = await fs.mkdtemp(path.join(os.tmpdir(), 'wavedeck-cues-test-'));
+  try {
+    const songCues = new SongCues(cueDir);
+    const cueTrack = { id: 'portable-song', library: 'portable', duration: 60 };
+    assert.deepEqual(songCues.set(cueTrack, { start: '0:05', end: '0:47' }), { start: '0:05', end: '0:47' });
+    assert.deepEqual(new SongCues(cueDir).get(cueTrack.id), { start: 5, end: 47 }, 'radio edit points survive reopening the portable Data folder');
+    assert.throws(() => songCues.set(cueTrack, { start: '0:48', end: '0:47' }), /after Start/);
+    assert.throws(() => songCues.set(cueTrack, { start: '', end: '1:20' }), /within the song/);
+    songCues.set(cueTrack, { start: '', end: '' });
+    assert.deepEqual(new SongCues(cueDir).display(cueTrack.id), { start: '', end: '' }, 'clearing points restores normal playback');
+  } finally { await fs.rm(cueDir, { recursive: true, force: true }); }
+  assert.equal(validHost('music.example.org'), true);
+  assert.equal(validHost('example.org/evil'), false);
+  assert.equal(validHost('http://example.org'), false);
+  assert.equal(validMountName('andrews-radio'), true);
+  assert.equal(validMountName('a'), true);
+  assert.equal(validMountName('../private'), false);
+  assert.equal(validMountName('name with spaces'), false);
+  assert.equal(validMountName('a'.repeat(49)), false);
+  const personalStreamDir = await fs.mkdtemp(path.join(os.tmpdir(), 'wavedeck-personal-stream-test-'));
+  try {
+    const volumeEvents = []; const audioDevices = [];
+    const broadcastPlayer = new CrossfadeMpvPlayer({ executable: 'mpv', ipcPath: '/tmp/wavedeck-stream-test' });
+    for (const lane of Object.values(broadcastPlayer.lanes)) {
+      lane.process = { kill() {} };
+      lane.setVolume = async value => volumeEvents.push(value);
+      lane.setAudioDevice = async value => audioDevices.push(value);
+      lane.stop = async () => {};
+    }
+    await broadcastPlayer.setVolume(30);
+    await broadcastPlayer.toggleMute();
+    const monitorEvents = [];
+    await broadcastPlayer.setBroadcastOutput('private-bus', async (...values) => monitorEvents.push(values));
+    assert.equal(audioDevices.every(device => device === 'pulse/private-bus'), true);
+    assert.equal(volumeEvents.at(-1), 100, 'muting speakers cannot silence broadcast audio');
+    assert.deepEqual(monitorEvents.at(-1), [30, true]);
+    await broadcastPlayer.setVolume(20);
+    assert.equal(volumeEvents.at(-1), 100, 'local volume cannot lower broadcast audio');
+    assert.deepEqual(monitorEvents.at(-1), [20, true], 'local volume reaches only the speaker loopback');
+    await broadcastPlayer.setBroadcastOutput(null);
+    assert.equal(audioDevices.at(-1), 'auto');
+    assert.equal(volumeEvents.at(-1), 0, 'speaker mute is restored after broadcast stops');
+    const breakPlayer = new CrossfadeMpvPlayer({ executable: 'mpv', ipcPath: '/tmp/wavedeck-break-test' });
+    const breakEvents = [];
+    for (const [name, lane] of Object.entries(breakPlayer.lanes)) {
+      lane.process = { kill() {} };
+      lane.start = async () => true;
+      lane.stop = async () => { breakEvents.push(`${name}:stop`); };
+      lane.setStationGain = async gain => { breakEvents.push(`${name}:gain:${gain}`); };
+      lane.setVolume = async volume => { breakEvents.push(`${name}:volume:${volume}`); };
+      lane.play = async file => { breakEvents.push(`${name}:play:${file}`); };
+      lane.setPaused = async paused => { breakEvents.push(`${name}:paused:${paused}`); };
+      lane.seek = async position => { breakEvents.push(`${name}:seek:${position}`); };
+    }
+    assert.equal(await breakPlayer.prepareBreak('/dj/outro.opus', 3), true);
+    assert.ok(breakEvents.indexOf('b:volume:0') < breakEvents.indexOf('b:play:/dj/outro.opus'), 'the spare lane is silent before it loads the outro');
+    assert.equal(await breakPlayer.playPreparedBreak('/dj/outro.opus'), true);
+    assert.equal(breakPlayer.activeLane, 'b');
+    assert.equal(breakPlayer.stationGain, 3);
+    assert.ok(breakEvents.includes('b:paused:false'), 'the already-loaded outro is unpaused at the hard boundary');
+    const stream = new PersonalStream({ dataDir: personalStreamDir, player: broadcastPlayer, ffmpeg: 'ffmpeg', icecast: 'icecast2' });
+    const state = stream.setHost('music.example.org');
+    assert.match(state.url, /^http:\/\/music\.example\.org:18037\/[a-f0-9]{48}\.mp3$/);
+    assert.match(stream.configXml(), /<hidden>1<\/hidden>/);
+    assert.match(stream.configXml(), /<public>0<\/public>/);
+    const reloaded = new PersonalStream({ dataDir: personalStreamDir, player: broadcastPlayer, ffmpeg: 'ffmpeg', icecast: 'icecast2' });
+    assert.equal(reloaded.state().url, state.url, 'the QR station address is stable across restarts');
+    assert.throws(() => stream.setMountName('../bad'), /Use 1–48/);
+    const named = await stream.setMountName('Andrews-Radio');
+    assert.equal(named.mountName, 'andrews-radio');
+    assert.equal(named.url, 'http://music.example.org:18037/andrews-radio.mp3');
+    assert.match(stream.configXml(), /<mount-name>\/andrews-radio\.mp3<\/mount-name>/);
+    const namedReloaded = new PersonalStream({ dataDir: personalStreamDir, player: broadcastPlayer, ffmpeg: 'ffmpeg', icecast: 'icecast2' });
+    assert.equal(namedReloaded.state().url, named.url, 'the chosen station name persists across restarts');
+    const restartEvents = [];
+    stream.config.enabled = true;
+    stream.status = 'broadcasting';
+    stream.stopResources = async () => restartEvents.push('stop');
+    stream.start = async () => { restartEvents.push('start'); stream.status = 'broadcasting'; return stream.state(); };
+    const renamed = await stream.setMountName('car-radio');
+    assert.deepEqual(restartEvents, ['stop', 'start'], 'changing an active name restarts the source and server');
+    assert.equal(renamed.url, 'http://music.example.org:18037/car-radio.mp3');
+    assert.equal(renamed.status, 'broadcasting');
+  } finally { await fs.rm(personalStreamDir, { recursive: true, force: true }); }
+  assert.ok(SOURCE_EXTENSIONS.has('.flac'), 'portable Music recognizes FLAC sources for conversion');
+  assert.equal(trackKey(track('1', { title: 'Same Song', track: 1, duration: 245 })), trackKey(track('2', { title: 'Same Song', track: 1, duration: 245 })), 'portable imports identify matching tagged tracks regardless of source path');
   assert.equal(qualityForTrackCount(19), 'Not Enough');
   assert.equal(qualityForTrackCount(20), 'Weak');
   assert.equal(qualityForTrackCount(50), 'Solid');
@@ -28,10 +127,42 @@ async function run() {
   assert.equal(qualityForTrackCount(400), 'Excellent');
   const temp = await fs.mkdtemp(path.join(os.tmpdir(), 'wavedeck-music-test-')); let library;
   try {
+    const computerIdentity = resolveComputerIdentity({ platform: 'linux', hostname: 'test-computer', readFile: () => 'stable-machine-id\n' });
+    assert.equal(computerIdentity.label, 'test-computer', 'saved computer folders use a friendly local computer name');
+    const computerFolders = new ComputerMusicFolders({ dataDir: path.join(temp, 'computer-folders') });
+    computerFolders.initialize();
+    computerFolders.remember({ ...computerIdentity, folder: '/mnt/test-music' });
+    assert.equal(computerFolders.get(computerIdentity.id).folder, '/mnt/test-music', 'an Additional Music Folder can be remembered per computer');
+    computerFolders.rename(computerIdentity.id, 'Andrew’s Desk');
+    assert.equal(computerFolders.list()[0].label, 'Andrew’s Desk', 'remembered computers can have a custom name');
+    const reloadedComputerFolders = new ComputerMusicFolders({ dataDir: path.join(temp, 'computer-folders') });
+    reloadedComputerFolders.initialize();
+    assert.equal(reloadedComputerFolders.get(computerIdentity.id).folder, '/mnt/test-music', 'remembered computer folders persist in portable Data');
     const dataDir = path.join(temp, 'Data'); const musicDir = path.join(temp, 'Music'); await fs.mkdir(musicDir, { recursive: true });
+    await fs.mkdir(dataDir, { recursive: true });
+    const gainTrack = track('gain-song', { library: 'portable', relativePath: 'gain-song.opus' });
+    const replayGain = new ReplayGain({ dataDir, getTracks: () => [gainTrack], ffmpegPath: () => 'ffmpeg' });
+    assert.equal(replayGain.source(gainTrack), path.join(musicDir, 'gain-song.opus'), 'loudness analysis resolves the portable source beside Data');
+    assert.deepEqual([replayGain.status().ready, replayGain.status().total], [0, 1]);
+    replayGain.entries.set(replayGain.key(gainTrack), { gainDb: -3 });
+    assert.equal(replayGain.gainFor(gainTrack), 0, 'ReplayGain is opt-in');
+    replayGain.setSettings({ enabled: true, paused: true });
+    assert.equal(replayGain.gainFor(gainTrack), -3, 'measured gain applies when enabled, even while analysis is paused');
+    replayGain.close();
     const file = path.join(musicDir, 'song.MP3'); await fs.writeFile(file, fixture());
     const digest = async () => crypto.createHash('sha256').update(await fs.readFile(file)).digest('hex'); const before = await digest();
     library = new MusicLibrary({ dataDir }); await library.enable(); await library.rescan();
+    const indexedRevision = library.revision;
+    const unchangedScan = await library.rescan();
+    assert.equal(unchangedScan.changed, false, 'an unchanged library scan reports that it found nothing new');
+    // The scan itself does not rebuild the index. An independently scheduled
+    // radio-identity maintenance pass may finish between these two awaits,
+    // however, and legitimately advances the shared library revision.
+    assert.ok(library.revision >= indexedRevision, 'an unchanged library scan never rolls the ready in-memory index backward');
+    const identityRebuild = await library.rebuildRadioIdentities(true);
+    assert.equal(identityRebuild.total, 1, 'the portable identity rebuild checks the indexed portable library');
+    const identityTracks = await library.call('all');
+    assert.ok(identityTracks[0].radioIdentity, 'the portable music database persists each track’s radio identity');
     assert.equal(library.tracks[0].ratingStars, 4, 'ratings are copied into the local index');
     assert.equal(library.tracks[0].favorite, true, 'Favorite tags are copied into the local index');
     assert.equal(library.tracks[0].doNotPlay, true, 'Do Not Play tags are copied into the local index');
@@ -41,18 +172,100 @@ async function run() {
     await fs.access(path.join(dataDir, 'local-mix-availability.json'));
     assert.equal(await digest(), before, 'scanning never changes MP3 bytes');
     assert.equal((await library.call('search', "' OR 1=1 --")).total, 0);
+    const indexedSearch = await library.call('search', 'test son');
+    assert.equal(indexedSearch.total, 1, 'the main Local Music search uses its indexed multi-word lookup');
+    assert.equal(indexedSearch.tracks[0].title, 'Test Song');
     assert.equal(extractTrack({ common: { rating: [{ rating: 0.8 }] }, native: {} }, 'fallback.mp3').ratingStars, 4);
     const tenPointRating = extractTrack({ common: {}, native: { 'ID3v2.4': [{ id: 'TXXX:RATING', value: '5' }] } }, 'five-of-ten.mp3');
     assert.equal(tenPointRating.rating, 5, 'custom RATING remains on the portable 0–10 scale');
     assert.equal(tenPointRating.ratingStars, 2.5, 'custom RATING=5 means 2.5 stars');
     const doNotPlayTag = extractTrack({ common: {}, native: { 'ID3v2.4': [{ id: 'TXXX:DO_NOT_PLAY', value: 'yes' }, { id: 'TXXX:FAVORITE', value: 'true' }] } }, 'skip.mp3');
     assert.equal(doNotPlayTag.doNotPlay, true); assert.equal(doNotPlayTag.favorite, true);
+    const opusTag = extractTrack({ common: { title: 'Opus Song', artist: 'Artist' }, native: { vorbis: [{ id: 'RATING', value: '8' }, { id: 'FAVORITE', value: '1' }, { id: 'DO_NOT_PLAY', value: '1' }, { id: 'HOLIDAY', value: '1' }, { id: 'AMP_TRACK_ID', value: 'wdop_test' }] } }, 'same-song.opus');
+    const mp3Tag = extractTrack({ common: { title: 'MP3 Song', artist: 'Artist' }, native: {} }, 'same-song.mp3');
+    assert.equal(opusTag.rating, 8, 'Opus Vorbis comments retain WaveDeck’s 0–10 RATING tag');
+    assert.equal(opusTag.favorite, true, 'Opus Vorbis comments retain FAVORITE');
+    assert.equal(opusTag.doNotPlay, true, 'Opus Vorbis comments retain DO_NOT_PLAY');
+    assert.equal(opusTag.holiday, true, 'Opus Vorbis comments retain HOLIDAY');
+    assert.equal(opusTag.id, mp3Tag.id, 'an MP3 and its Opus counterpart keep one Local Music identity');
+    assert.equal(OPUS_BITRATE, '96k', 'WaveDeck Opus targets 96 kbps Opus audio');
+    const optimizeRoot = path.join(temp, 'opus-portable', 'Music'); const optimizeSource = path.join(optimizeRoot, 'Album', 'song.mp3');
+    await fs.mkdir(path.dirname(optimizeSource), { recursive: true }); await fs.writeFile(optimizeSource, fixture());
+    await fs.writeFile(path.join(path.dirname(optimizeSource), 'cover.jpg'), 'cover'); await fs.writeFile(path.join(path.dirname(optimizeSource), 'lyrics.lrc'), 'lyrics');
+    let optimizerRescans = 0;
+    const optimizer = new OpusOptimizer({ musicRoot: optimizeRoot, ffmpegExecutable: 'fake-ffmpeg', ffprobeExecutable: 'fake-ffprobe', rescanLibrary: async () => { optimizerRescans += 1; }, spawnImpl: async (executable, args) => { if (executable === 'fake-ffprobe') return 'opus\n'; await fs.writeFile(args.at(-1), Buffer.alloc(2048, 1)); return ''; } });
+    optimizer.parseFile = async () => ({ common: { title: 'Song', artist: 'Artist', album: 'Album', albumartist: 'Artist', track: { no: 1 }, disk: { no: 1 }, year: 1992, genre: ['Rock'] }, native: { 'ID3v2.4': [{ id: 'TXXX:RATING', value: '8' }] } });
+    await optimizer.start();
+    assert.equal(await fs.access(outputFor(optimizeSource)).then(() => true, () => false), true, 'portable MP3s are atomically replaced with Opus files');
+    assert.equal(await fs.access(optimizeSource).then(() => true, () => false), false, 'the source MP3 is removed only after Opus validation');
+    assert.equal(await fs.access(path.join(path.dirname(optimizeSource), 'cover.jpg')).then(() => true, () => false), false, 'loose cover art is removed from portable Music');
+    assert.equal(await fs.access(path.join(path.dirname(optimizeSource), 'lyrics.lrc')).then(() => true, () => false), false, 'loose lyric files are removed from portable Music');
+    assert.equal(optimizerRescans, 1, 'the Local Music index refreshes after an optimization batch');
+    assert.equal(optimizer.getStatus().total, 1, 'portable optimization reports its total track count');
+    assert.equal(optimizer.getStatus().converted, 1, 'portable optimization reports converted track progress');
+    assert.equal(optimizer.getStatus().current, '', 'portable optimization clears its current track after finishing');
+    assert.ok(stableAmpId(optimizeRoot, optimizeSource).startsWith('wdop_'), 'converted files receive a stable portable music ID');
+    const duplicateRoot = path.join(temp, 'opus-duplicates', 'Music'); const originalDuplicate = path.join(duplicateRoot, 'Artist', 'Album', '01 - Song.opus'); const copiedDuplicate = path.join(duplicateRoot, 'Artist', 'Album', '01 - Song (2).opus');
+    await fs.mkdir(path.dirname(originalDuplicate), { recursive: true }); await fs.writeFile(originalDuplicate, Buffer.alloc(2048, 1)); await fs.writeFile(copiedDuplicate, Buffer.alloc(2048, 1));
+    const duplicateOptimizer = new OpusOptimizer({ musicRoot: duplicateRoot, ffmpegExecutable: 'fake-ffmpeg', ffprobeExecutable: 'fake-ffprobe', spawnImpl: async executable => executable === 'fake-ffprobe' ? 'opus\n' : '', audioFingerprintImpl: async () => 'same-audio' });
+    duplicateOptimizer.parseFile = async () => ({ common: { title: 'Song', artist: 'Artist', album: 'Album', albumartist: 'Artist', track: { no: 1 }, disk: { no: 1 }, year: 1992, genre: ['Rock'] }, native: { 'ID3v2.4': [{ id: 'TXXX:RATING', value: '8' }] } });
+    await duplicateOptimizer.start();
+    assert.equal(await fs.access(originalDuplicate).then(() => true, () => false), true, 'duplicate cleanup keeps the original unsuffixed Opus file');
+    assert.equal(await fs.access(copiedDuplicate).then(() => true, () => false), false, 'duplicate cleanup removes matching copied Opus files');
+    const diagnosticRoot = path.join(temp, 'opus-dedup-diagnostics', 'Music'); const firstVariant = path.join(diagnosticRoot, 'Artist', 'Album', '01 - Song.opus'); const secondVariant = path.join(diagnosticRoot, 'Artist', 'Album', '01 - Song (2).opus'); const diagnosticFile = path.join(temp, 'opus-dedup-diagnostics', 'Data', 'opus-dedup-diagnostics.json');
+    await fs.mkdir(path.dirname(firstVariant), { recursive: true }); await fs.writeFile(firstVariant, Buffer.alloc(2048, 1)); await fs.writeFile(secondVariant, Buffer.alloc(2048, 1));
+    const diagnosticOptimizer = new OpusOptimizer({ musicRoot: diagnosticRoot, diagnosticsPath: diagnosticFile, ffmpegExecutable: 'fake-ffmpeg', ffprobeExecutable: 'fake-ffprobe', spawnImpl: async (executable, args) => { if (executable === 'fake-ffprobe') return 'opus\n'; await fs.writeFile(args.at(-1), Buffer.alloc(2048, 1)); return ''; }, audioFingerprintImpl: async (_executable, file) => path.basename(file).includes('(2)') ? 'second-source-encoding' : 'first-source-encoding' });
+    diagnosticOptimizer.parseFile = async file => ({ common: { title: 'Song', artist: 'Artist', album: 'Album', albumartist: file === firstVariant ? '' : 'Artist', track: { no: 1 }, disk: { no: file === firstVariant ? 0 : 1 }, year: 1992, genre: ['Rock'] }, native: { 'ID3v2.4': [{ id: 'TXXX:RATING', value: file === firstVariant ? '3' : '9' }, { id: 'TXXX:FAVORITE', value: file === secondVariant ? '1' : '0' }] } });
+    await diagnosticOptimizer.start();
+    assert.equal(await fs.access(firstVariant).then(() => true, () => false), true, 'same-release copies keep the original unsuffixed Opus file');
+    assert.equal(await fs.access(secondVariant).then(() => true, () => false), false, 'same-release copies are cleaned even when old source encodes differ');
+    const diagnosticReport = JSON.parse(await fs.readFile(diagnosticFile, 'utf8'));
+    assert.equal(diagnosticReport.lastRun.removed, 1, 'duplicate cleanup records the number of physical copies removed');
+    assert.ok(diagnosticReport.lastRun.groups.some(group => group.type === 'same-release-tags-different-audio' && group.action === 'removed' && group.merged?.rating === 9), 'diagnostics explain the kept same-release copy and merged personal tags');
     assert.equal(radioArtist(track('x', { albumArtist: 'Various Artists', artist: 'Solo' })), 'Solo');
 
     const savedTracks = []; const savedArtists = [];
     const lastFmLibrary = { enabled: true, worker: {}, getLastFmStatus: async () => ({ tracksTotal: 1, tracksCurrent: 0, queuedAlbums: 1 }), nextLastFmAlbum: async () => ({ albumKey: 'artist\\nalbum', queued: true, tracks: [track('lastfm')], artists: ['Artist'] }), updateLastFmTrack: async value => savedTracks.push(value), updateLastFmArtist: async value => savedArtists.push(value), applyLastFmTrack: () => {}, applyLastFmArtist: () => {}, completeLastFmAlbum: async () => {} };
     const enricher = new LastFmEnricher({ library: lastFmLibrary, getPreferences: () => ({ lastFmEnabled: true, lastFmApiKey: 'key' }), requestIntervalMs: 0, fetchImpl: async url => ({ ok: true, json: async () => url.includes('track.getInfo') ? { track: { listeners: '100000', toptags: { tag: [{ name: 'Progressive Rock' }] } } } : { similarartists: { artist: [{ name: 'David Gilmour' }] } } }) });
     await enricher.tick(); enricher.stop(); assert(savedTracks[0].popularity > 0 && savedArtists[0].similarArtists.includes('David Gilmour')); assert(popularityScore(100000) > popularityScore(1000));
+    assert.match(signatureFor({ b: '2', a: '1' }, 'test-secret'), /^[a-f0-9]{32}$/, 'Last.fm write calls use a stable signed request');
+    const scrobbleRequests = [];
+    const scrobbler = new LastFmScrobbler({ dataDir: path.join(temp, 'lastfm-scrobble'), now: () => 1_000_000, fetchImpl: async (url, options = {}) => {
+      scrobbleRequests.push({ url, options }); return { ok: true, json: async () => ({ scrobbles: { accepted: '1' } }) };
+    } });
+    scrobbler.data.sessionKey = 'a'.repeat(32); scrobbler.data.username = 'Andrew';
+    scrobbler.trackStarted(track('scrobble', { title: 'Scrobble Song', artist: 'Scrobble Artist', duration: 240 }));
+    scrobbler.observe({ mediaState: 'playing', position: 120, duration: 240, currentMusic: { track: { id: 'scrobble' } } });
+    await new Promise(resolve => setTimeout(resolve, 0));
+    assert.ok(scrobbleRequests.some(request => String(request.options.body || '').includes('method=track.scrobble')), 'Local Music queues and submits a scrobble after genuine listening');
+    assert.equal(scrobbler.getStatus().pending, 0, 'accepted scrobbles leave the offline queue');
+    scrobbler.data.sessionKey = 'opaque-lastfm-session-key'; scrobbler.data.username = 'Andrew'; scrobbler.save();
+    assert.equal(new LastFmScrobbler({ dataDir: path.join(temp, 'lastfm-scrobble'), fetchImpl: async () => ({ ok: true, json: async () => ({}) }) }).getStatus().connected, true, 'a saved opaque Last.fm session survives application restart');
+    scrobbler.stop();
+
+    let sessionChecks = 0;
+    const connectionStates = [];
+    const connectingScrobbler = new LastFmScrobbler({
+      dataDir: path.join(temp, 'lastfm-connect'), now: () => 1_000_000, pollMs: 999_999,
+      openExternal: async () => {}, onStatus: status => connectionStates.push(status),
+      fetchImpl: async url => {
+        const method = new URL(String(url)).searchParams.get('method');
+        if (method === 'auth.getToken') return { ok: true, json: async () => ({ token: 'c'.repeat(32) }) };
+        sessionChecks += 1;
+        if (sessionChecks === 1) return { ok: true, json: async () => ({ error: 14, message: 'Token has not been authorized' }) };
+        return { ok: true, json: async () => ({ session: { key: 'b'.repeat(32), name: 'Andrew' } }) };
+      }
+    });
+    await connectingScrobbler.connect();
+    await new Promise(resolve => setTimeout(resolve, 0));
+    assert.equal(connectingScrobbler.getStatus().connecting, true, 'Last.fm keeps checking after the browser has not yet authorized a token');
+    assert.match(connectingScrobbler.getStatus().message, /Waiting for approval/, 'Last.fm reports browser authorization state instead of silently resetting');
+    await connectingScrobbler.finishConnect();
+    assert.equal(connectingScrobbler.getStatus().connected, true, 'Last.fm saves the completed desktop session');
+    assert.equal(connectingScrobbler.getStatus().username, 'Andrew', 'Last.fm reports the account that actually connected');
+    assert.equal(connectingScrobbler.getStatus().lastMessage, '', 'a completed Last.fm connection clears earlier authorization diagnostics');
+    assert.ok(connectionStates.some(status => status.connected), 'Last.fm publishes the completed connection state to Settings');
+    connectingScrobbler.stop();
 
     let now = 10_000_000;
     const seed = track('comfortably-numb', { title: 'Comfortably Numb', artist: 'Pink Floyd', artists: ['Pink Floyd'], albumArtist: 'Pink Floyd', album: 'The Wall', genres: ['Progressive Rock', 'Rock'], similarArtists: ['David Gilmour'] });
@@ -66,12 +279,132 @@ async function run() {
     const diagnosticRadio = new MusicRadio({ dataDir: path.join(temp, 'persistent-diagnostics'), now: () => now, random: () => 0, onDecision: decision => diagnosticSelections.push(decision) });
     assert.equal(diagnosticRadio.choose([sameAlbum], seed, 'radio').id, sameAlbum.id);
     assert.equal(diagnosticSelections.length, 1, 'Local Radio records every selection through its diagnostic callback without requiring a visible log window');
+    assert.deepEqual(diagnosticSelections[0].selected.genres, ['Rock'], 'automatic Radio Log entries retain the track’s actual stored genre tags');
     diagnosticRadio.recordManualStart(seed, 'radio', 'radio:comfortably-numb');
     assert.equal(diagnosticSelections.length, 2, 'The selected opening Song Radio track is recorded in diagnostics');
     assert.equal(diagnosticSelections.at(-1).selectionTrigger, 'start');
     assert.equal(diagnosticSelections.at(-1).selected.title, 'Comfortably Numb');
+    assert.deepEqual(diagnosticSelections.at(-1).selected.genres, ['Progressive Rock', 'Rock'], 'manual Radio Log entries retain the seed’s actual stored genre tags');
+    const nonMusicTracks = ['Comedy', 'Stand-up Comedy', 'Spoken Word'].map((genre, index) => track(`non-music-${index}`, {
+      title: `${genre} Track`, artist: 'Pink Floyd', artists: ['Pink Floyd'], albumArtist: 'Pink Floyd', album: 'The Wall', genres: [genre]
+    }));
+    const nonMusicRadio = new MusicRadio({ dataDir: path.join(temp, 'non-music-genres'), now: () => now, random: () => 0 });
+    assert.equal(nonMusicRadio.choose(nonMusicTracks, seed, 'radio'), null, 'Comedy, Stand-up Comedy, and Spoken Word never enter Local Radio');
+    assert.equal(nonMusicRadio.getLastDecision().counts.skippedForNonMusicGenre, 3, 'diagnostics count tracks excluded for a non-music genre');
+    assert.equal(scoreTrack(nonMusicTracks[0], { id: 'personal-mix', policy: { personalLibrary: true } }, 'mix', [], now).excluded, 'non-music genre', 'the genre exclusion also applies to every Local Mix');
+    const initialSetSeed = track('initial-set-seed', { title: 'Seed Song', artist: 'Initial Set Artist', artists: ['Initial Set Artist'], albumArtist: 'Initial Set Artist', rating: 8 });
+    const initialSetSecond = track('initial-set-second', { title: 'Second Song', artist: 'Initial Set Artist', artists: ['Initial Set Artist'], albumArtist: 'Initial Set Artist', rating: 8 });
+    const initialSetThird = track('initial-set-third', { title: 'Third Song', artist: 'Initial Set Artist', artists: ['Initial Set Artist'], albumArtist: 'Initial Set Artist', rating: 8 });
+    const initialSetRadio = new MusicRadio({ dataDir: path.join(temp, 'initial-artist-set'), now: () => now, random: () => 0, getTuning: () => ({ artistSetSize: 3 }) });
+    initialSetRadio.beginSession();
+    const initialPlan = initialSetRadio.planInitialArtistSet([initialSetSeed, initialSetSecond, initialSetThird], initialSetSeed, 'radio', 'radio:initial-set');
+    assert.deepEqual(initialPlan.proposed.map(item => item.title), ['Seed Song', 'Second Song', 'Third Song'], 'a manually selected Song Radio seed becomes track one of its first Artist Set');
+    initialSetRadio.record(initialSetSeed);
+    const initialDiagnostic = initialSetRadio.recordManualStart(initialSetSeed, 'radio', 'radio:initial-set', initialPlan);
+    assert.equal(initialDiagnostic.howPicked.artistSet.position, 1, 'the opening seed records its Artist Set proposal in the Live Radio Log');
+    assert.equal(initialSetRadio.choose([initialSetSeed, initialSetSecond, initialSetThird], initialSetSeed, 'radio', new Set(), 'next', 'radio:initial-set').id, initialSetSecond.id, 'the next Song Radio choice follows the opening Artist Set plan');
+    const genreSetSeed = track('genre-set-seed', { artist: 'Genre Set Artist', artists: ['Genre Set Artist'], albumArtist: 'Genre Set Artist', rating: 8 });
+    const genreSetSecond = track('genre-set-second', { artist: 'Genre Set Artist', artists: ['Genre Set Artist'], albumArtist: 'Genre Set Artist', rating: 8 });
+    const genreSetThird = track('genre-set-third', { artist: 'Genre Set Artist', artists: ['Genre Set Artist'], albumArtist: 'Genre Set Artist', rating: 8 });
+    const genreSetRadio = new MusicRadio({ dataDir: path.join(temp, 'genre-artist-set'), now: () => now, random: () => 0, getTuning: () => ({ artistSetSize: 3 }) });
+    genreSetRadio.beginSession();
+    genreSetRadio.planInitialArtistSet([genreSetSeed, genreSetSecond, genreSetThird], genreSetSeed, 'radio', 'radio:genre-set');
+    genreSetRadio.record(genreSetSeed); genreSetSecond.genres = ['Comedy'];
+    assert.equal(genreSetRadio.choose([genreSetSeed, genreSetSecond, genreSetThird], genreSetSeed, 'radio', new Set(), 'next', 'radio:genre-set').id, genreSetThird.id, 'Artist Sets keep honoring a new Comedy exclusion before playing a queued follow-up');
+    const largeArtist = Array.from({ length: 12000 }, (_value, index) => track(`large-artist-${index}`, {
+      title: `Large Artist Song ${index}`, artist: 'Large Artist', artists: ['Large Artist'], albumArtist: 'Large Artist', album: 'Large Artist Collection', duration: 180 + (index % 40), rating: 8
+    }));
+    const largeSeed = largeArtist[0];
+    const largeSetRadio = new MusicRadio({ dataDir: path.join(temp, 'large-artist-set'), now: () => now, random: () => 0, getTuning: () => ({ artistSetSize: 4 }) });
+    const planningStarted = Date.now();
+    const largePlan = largeSetRadio.planInitialArtistSet(largeArtist, largeSeed, 'radio', 'radio:large-artist-set');
+    assert.equal(largePlan.size, 4, 'a large artist retains the requested Artist Set size');
+    // The test intentionally uses a 12,000-track pool. Allow slower shared
+    // CI runners while still catching the old quadratic implementation.
+    assert.ok(Date.now() - planningStarted < 5000, 'Artist Set planning stays linear for a large artist library');
+    const largeChoiceRadio = new MusicRadio({ dataDir: path.join(temp, 'large-artist-choice'), now: () => now, random: () => 0, getTuning: () => ({ artistSetSize: 4 }) });
+    const selectionStarted = Date.now();
+    assert.ok(largeChoiceRadio.choose(largeArtist, largeSeed, 'radio'), 'a large artist remains playable');
+    assert.ok(Date.now() - selectionStarted < 5000, 'choosing from a large artist pool stays responsive');
     assert.equal(radio.choose([country], seed, 'radio'), null, 'a broad Rock tag alone is never enough');
+    const compoundBroad = track('compound-broad', { artist: 'Billy Joel', artists: ['Billy Joel'], albumArtist: 'Billy Joel', album: 'The Longest Time', genres: ['Rock, Pop'] });
+    const hipHopSeed = track('hip-hop-seed', { artist: 'Beastie Boys', artists: ['Beastie Boys'], albumArtist: 'Beastie Boys', album: 'Intergalactic', genres: ['Hip-Hop'] });
+    assert.equal(radio.choose([compoundBroad], hipHopSeed, 'radio'), null, 'a compound broad tag never becomes a fake specific relationship');
     assert.equal(radio.choose([sameAlbum, country], seed, 'radio').id, sameAlbum.id, 'same-album songs lead Song Radio');
+    const waitingDiagnostics = [];
+    const waitingRadio = new MusicRadio({ dataDir: path.join(temp, 'waiting-diagnostics'), now: () => now, random: () => 0, onDecision: decision => waitingDiagnostics.push(decision) });
+    assert.equal(waitingRadio.choose([country], seed, 'radio'), null, 'unrelated broad-genre music is never used as a fallback');
+    assert.equal(waitingDiagnostics.at(-1).selected, null, 'a genuine no-pick decision is retained for the Live Radio Log');
+    assert.equal(waitingDiagnostics.at(-1).howPicked.waiting, true, 'a genuine no-pick decision records its recovery attempt');
+    const shortenedSetRadio = new MusicRadio({ dataDir: path.join(temp, 'shortened-set'), now: () => now, random: () => 0, getTuning: () => ({ artistSetSize: 4 }) });
+    assert.equal(shortenedSetRadio.choose([sameAlbum], seed, 'radio').id, sameAlbum.id, 'an unavailable four-play falls back to a playable short set instead of waiting');
+    assert.equal(shortenedSetRadio.getLastDecision().artistSet.size, 1, 'shortened artist-set diagnostics record the actual playable size');
+    assert.equal(shortenedSetRadio.getLastDecision().artistSet.shortened, true, 'shortened artist sets are explicitly reported');
+    const bridge = track('bridge', { artist: 'Bridge Artist', artists: ['Bridge Artist'], albumArtist: 'Bridge Artist', similarArtists: ['Far Artist'], doNotPlay: true });
+    const far = track('far', { artist: 'Far Artist', artists: ['Far Artist'], albumArtist: 'Far Artist', similarArtists: ['Bridge Artist'] });
+    const rescueSeed = track('rescue-seed', { artist: 'Rescue Seed', artists: ['Rescue Seed'], albumArtist: 'Rescue Seed', similarArtists: ['Bridge Artist'] });
+    const familyRescueRadio = new MusicRadio({ dataDir: path.join(temp, 'family-rescue'), now: () => now, random: () => 0 });
+    assert.equal(familyRescueRadio.choose([bridge, far], rescueSeed, 'radio').id, far.id, 'Song Radio expands through related artists of related artists before it gives up');
+    assert.equal(familyRescueRadio.getLastDecision().howPicked.recovery.kind, 'related-route', 'the rescue route is recorded for explanation and orange station text');
+    const artistRestCandidate = track('artist-rest-candidate', { artist: 'Pink Floyd', artists: ['Pink Floyd'], albumArtist: 'Pink Floyd', album: 'Wish You Were Here' });
+    const artistRestHistory = track('artist-rest-history', { artist: 'Pink Floyd', artists: ['Pink Floyd'], albumArtist: 'Pink Floyd', album: 'Animals' });
+    const artistRestRadio = new MusicRadio({ dataDir: path.join(temp, 'artist-rest-recovery'), now: () => now, random: () => 0, getTuning: () => ({ artistRepeatMinutes: 180 }) });
+    artistRestRadio.record(artistRestHistory);
+    assert.equal(artistRestRadio.choose([artistRestCandidate], seed, 'radio').id, artistRestCandidate.id, 'artist rest softens inside the station family only after route recovery fails');
+    assert.equal(artistRestRadio.getLastDecision().howPicked.recovery.relaxedRepeat, 'artist', 'artist-rest recovery is recorded');
+    const songRestRadio = new MusicRadio({ dataDir: path.join(temp, 'song-rest-recovery'), now: () => now, random: () => 0, getTuning: () => ({ songRepeatHours: 4, artistRepeatMinutes: 180 }) });
+    songRestRadio.record(sameAlbum);
+    assert.equal(songRestRadio.choose([sameAlbum], seed, 'radio').id, sameAlbum.id, 'the least-recent credible station-family song is used only after every other recovery step fails');
+    assert.equal(songRestRadio.getLastDecision().howPicked.recovery.relaxedRepeat, 'song', 'song-rest recovery is recorded');
+    const holidayTrack = track('holiday-track', { artist: 'Pink Floyd', artists: ['Pink Floyd'], albumArtist: 'Pink Floyd', album: 'Christmas', title: 'Holiday Song', holiday: true });
+    assert.equal(new MusicRadio({ dataDir: path.join(temp, 'holiday-radio'), now: () => now }).choose([holidayTrack], seed, 'radio'), null, 'Holiday Music is excluded from ordinary Local Radio');
+    const spellingOne = track('smokey', { artist: 'Ronnie Milsap', artists: ['Ronnie Milsap'], albumArtist: 'Ronnie Milsap', title: 'Smokey Mountain Rain', duration: 240 });
+    const spellingTwo = track('smoky', { artist: 'Ronnie Milsap', artists: ['Ronnie Milsap'], albumArtist: 'Ronnie Milsap', title: 'Smoky Mountain Rain', duration: 241 });
+    const anotherMilsap = track('another-milsap', { artist: 'Ronnie Milsap', artists: ['Ronnie Milsap'], albumArtist: 'Ronnie Milsap', title: 'Stranger in My House', duration: 230 });
+    const spellingSeed = track('spelling-seed', { artist: 'Seed Artist', artists: ['Seed Artist'], similarArtists: ['Ronnie Milsap'] });
+    const spellingRadio = new MusicRadio({ dataDir: path.join(temp, 'near-duplicate-set'), now: () => now, random: () => 0, getTuning: () => ({ artistSetSize: 3 }) });
+    assert.equal(spellingRadio.choose([spellingOne, spellingTwo, anotherMilsap], spellingSeed, 'radio').id, spellingOne.id);
+    assert.deepEqual(spellingRadio.getLastDecision().artistSet.proposed.map(item => item.title), ['Smokey Mountain Rain', 'Stranger in My House'], 'near-identical song titles cannot share an Artist Set');
+    const exploreSeed = track('explore-seed', { artist: 'Seed Artist', artists: ['Seed Artist'], albumArtist: 'Seed Artist', similarArtists: ['First Neighbor'] });
+    const exploreFirst = track('explore-first', { artist: 'First Neighbor', artists: ['First Neighbor'], albumArtist: 'First Neighbor', similarArtists: ['Second Neighbor'] });
+    const exploreSecond = track('explore-second', { artist: 'Second Neighbor', artists: ['Second Neighbor'], albumArtist: 'Second Neighbor', similarArtists: ['Seed Artist'] });
+    const exploreRadio = new MusicRadio({ dataDir: path.join(temp, 'explore-radio'), now: () => now, random: () => 0, getTuning: () => ({ localRadioExploreDistance: 'detour' }) });
+    exploreRadio.beginExploreSession(exploreSeed); exploreRadio.record(exploreSeed);
+    assert.equal(exploreRadio.choose([exploreFirst, exploreSecond], exploreSeed, 'explore').id, 'explore-first', 'Explore Radio starts from a direct neighbor of the seed');
+    exploreRadio.record(exploreFirst);
+    assert.equal(exploreRadio.choose([exploreFirst, exploreSecond], exploreSeed, 'explore').id, 'explore-second', 'Explore Radio daisy-chains through the current related artist');
+    const explainedExplorePick = exploreRadio.getLastDecision();
+    assert.equal(explainedExplorePick.howPicked.seed.artist, 'Seed Artist', 'Live Radio diagnostics retain the original station seed');
+    assert(explainedExplorePick.howPicked.relatedArtists.includes('Second Neighbor'), 'Live Radio diagnostics identify available related artists');
+    assert.equal(explainedExplorePick.howPicked.artist.eligibleTracks, 1, 'Live Radio diagnostics count eligible tracks for the selected artist');
+    assert.equal(explainedExplorePick.howPicked.explore.hops, 2, 'Live Radio diagnostics record Explore Radio hop distance');
+    const setRouteRoot = track('set-route-root', { artist: 'Route Root', artists: ['Route Root'], albumArtist: 'Route Root', similarArtists: ['Route A'] });
+    const setRouteA = track('set-route-a', { artist: 'Route A', artists: ['Route A'], albumArtist: 'Route A', similarArtists: ['Route B'] });
+    const setRouteB = track('set-route-b', { artist: 'Route B', artists: ['Route B'], albumArtist: 'Route B', similarArtists: ['Route C'] });
+    const setRouteCOne = track('set-route-c-one', { artist: 'Route C', title: 'Route C One', artists: ['Route C'], albumArtist: 'Route C', similarArtists: ['Route Root'] });
+    const setRouteCTwo = track('set-route-c-two', { artist: 'Route C', title: 'Route C Two', artists: ['Route C'], albumArtist: 'Route C', similarArtists: ['Route Root'] });
+    const setRouteReturn = track('set-route-return', { artist: 'Route Root', title: 'Route Root Return', artists: ['Route Root'], albumArtist: 'Route Root', similarArtists: ['Route A'] });
+    const setRouteRadio = new MusicRadio({ dataDir: path.join(temp, 'explore-set-route'), now: () => now, random: () => 0, getTuning: () => ({ localRadioExploreDistance: 'detour', artistSetSize: 2 }) });
+    setRouteRadio.beginExploreSession(setRouteRoot);
+    setRouteRadio.exploreStation.current = { ...setRouteB }; setRouteRadio.exploreStation.hops = 2;
+    assert.equal(setRouteRadio.choose([setRouteCOne, setRouteCTwo, setRouteReturn], setRouteRoot, 'explore').id, setRouteCOne.id, 'Explore Radio can start an Artist Set at its configured hop limit');
+    setRouteRadio.record(setRouteCOne);
+    assert.equal(setRouteRadio.choose([setRouteCOne, setRouteCTwo, setRouteReturn], setRouteRoot, 'explore').id, setRouteCTwo.id, 'Explore Radio plays the planned continuation of that set');
+    assert.equal(setRouteRadio.exploreStation.hops, 3, 'a planned Artist Set continuation does not reset Explore Radio hops');
+    assert.equal(setRouteRadio.exploreStation.current.artist, 'Route C', 'a planned Artist Set continuation keeps its Explore Radio anchor');
+    setRouteRadio.record(setRouteCTwo);
+    assert.equal(setRouteRadio.choose([setRouteCOne, setRouteCTwo, setRouteReturn], setRouteRoot, 'explore').id, setRouteReturn.id, 'after the set ends, Explore Radio returns toward the original seed');
+    assert.equal(setRouteRadio.exploreStation.hops, 0, 'the fresh post-set selection resets hops only by returning to the original seed');
+    const rescueRoot = track('rescue-root', { artist: 'Root Artist', artists: ['Root Artist'], albumArtist: 'Root Artist', similarArtists: ['Blocked Branch', 'Rescue Branch'] });
+    const blockedBranch = track('blocked-branch', { artist: 'Blocked Branch', artists: ['Blocked Branch'], albumArtist: 'Blocked Branch', similarArtists: ['Stuck Branch'] });
+    const stuckBranch = track('stuck-branch', { artist: 'Stuck Branch', artists: ['Stuck Branch'], albumArtist: 'Stuck Branch', similarArtists: ['Blocked Branch'] });
+    const rescueBranch = track('rescue-branch', { artist: 'Rescue Branch', artists: ['Rescue Branch'], albumArtist: 'Rescue Branch', similarArtists: ['Root Artist'] });
+    const rescueRadio = new MusicRadio({ dataDir: path.join(temp, 'explore-rescue'), now: () => now, random: () => 0, getTuning: () => ({ localRadioExploreDistance: 'explore', artistRepeatMinutes: 180 }) });
+    rescueRadio.beginSession(); rescueRadio.beginExploreSession(rescueRoot); rescueRadio.record(blockedBranch); rescueRadio.record(stuckBranch);
+    rescueRadio.exploreStation.current = { ...stuckBranch }; rescueRadio.exploreStation.hops = 2;
+    assert.equal(rescueRadio.choose([blockedBranch, stuckBranch, rescueBranch], rescueRoot, 'explore').id, rescueBranch.id, 'Explore Radio uses a nearby unblocked related-artist route when its current path runs dry');
+    assert.equal(rescueRadio.getLastDecision().explore.rescueUsed, true, 'Explore Radio diagnostics identify a rescue route');
+    assert.equal(rescueRadio.isExploringAwayFromSeed(), true, 'Explore Radio exposes when the current route is away from its original seed');
     assert(weight(seedArtist, seed, 'artist', [], now) > weight(similar, seed, 'artist', [], now), 'Artist Radio returns to seed artist');
     assert(weight(similar, seed, 'artist', [], now) > 0 && weight(specificTag, seed, 'radio', [], now) > 0, 'Last.fm and specific tags are meaningful links');
     assert.equal(weight(country, seed, 'radio', [], now), 0);
@@ -96,6 +429,10 @@ async function run() {
     assert(['rated-seven', 'rated-ten'].includes(personalPoolPick.id), 'Favor the Hits excludes unrated and 6/10 songs when 7–10 songs are available');
     assert.equal(personalPoolRadio.getLastDecision().counts.personal, 2, 'diagnostics identify the personal pool');
     assert.equal(personalPoolRadio.getLastDecision().counts.lastFmFamiliar, 0, 'Last.fm does not dilute an available personal pool');
+    const hitsOnlyPoolRadio = new MusicRadio({ dataDir: path.join(temp, 'hits-only-pool'), now: () => now, random: () => 0.99, getFamiliarity: () => 'hits-only' });
+    const ratedEight = track('rated-eight', { artist: 'Pink Floyd', artists: ['Pink Floyd'], rating: 8, popularity: 0 });
+    assert.equal(hitsOnlyPoolRadio.choose([ratedSeven, ratedEight], seed, 'radio').id, ratedEight.id, 'Hits Only uses the 8/10 personal-rating threshold');
+    assert.equal(hitsOnlyPoolRadio.getLastDecision().familiarity, 'hits-only');
     const balancedPoolRadio = new MusicRadio({ dataDir: path.join(temp, 'balanced-pool'), now: () => now, random: () => 0, getFamiliarity: () => 'balanced' });
     assert(['rated-six', 'rated-seven', 'rated-ten'].includes(balancedPoolRadio.choose([unratedPopular, ratedSix, ratedSeven, ratedTen], seed, 'radio').id), 'Balanced Mix uses its 5–10 personal pool');
     const deepPoolRadio = new MusicRadio({ dataDir: path.join(temp, 'deep-pool'), now: () => now, random: () => 0, getFamiliarity: () => 'deep-cuts' });
@@ -124,20 +461,45 @@ async function run() {
     const sparseArtistRadio = new MusicRadio({ dataDir: path.join(temp, 'sparse-artist-radio'), now: () => now, random: () => 0 });
     sparseArtistRadio.beginArtistSession(metallicaSeed);
     assert.equal(sparseArtistRadio.choose([megadeth], metallicaSeed, 'artist'), null, 'Artist Radio waits instead of substituting related music when no seed-artist track is eligible');
-    radio.record(sameAlbum); assert.equal(radio.choose([sameAlbum], seed, 'radio'), null, 'exact song repeats wait two hours'); now += COOLDOWN;
+    radio.record(sameAlbum); assert.equal(radio.choose([sameAlbum], seed, 'radio').id, sameAlbum.id, 'an otherwise-empty station uses its least-recent credible song instead of waiting'); assert.equal(radio.getLastDecision().howPicked.recovery.relaxedRepeat, 'song'); now += COOLDOWN;
     assert.equal(radio.choose([sameAlbum], seed, 'radio').id, sameAlbum.id); assert.equal(radio.getLastDecision().policy, 'automatic-local-radio-v2');
     const dayWaitRadio = new MusicRadio({ dataDir: path.join(temp, 'day-wait'), now: () => now, random: () => 0, getTuning: () => ({ songRepeatHours: 24, artistRepeatMinutes: 30, artistSetSize: 1 }) });
     assert.equal(dayWaitRadio.choose([sameAlbum], seed, 'radio').id, sameAlbum.id); dayWaitRadio.record(sameAlbum); now += 23 * 60 * 60 * 1000;
-    assert.equal(dayWaitRadio.choose([sameAlbum], seed, 'radio'), null, 'the 24-hour song-repeat stop is honored'); now += 60 * 60 * 1000;
+    assert.equal(dayWaitRadio.choose([sameAlbum], seed, 'radio').id, sameAlbum.id, 'the 24-hour song-repeat stop yields to the station safety net only when no other credible song exists'); assert.equal(dayWaitRadio.getLastDecision().howPicked.recovery.relaxedRepeat, 'song'); now += 60 * 60 * 1000;
     assert.equal(dayWaitRadio.choose([sameAlbum], seed, 'radio').id, sameAlbum.id, 'the 24-hour song-repeat stop releases at 24 hours');
     const rotationA = track('rotation-a', { artist: 'David Gilmour', artists: ['David Gilmour'], albumArtist: 'David Gilmour', album: 'A' });
     const rotationB = track('rotation-b', { artist: 'David Gilmour', artists: ['David Gilmour'], albumArtist: 'David Gilmour', album: 'B' });
     const artistWaitRadio = new MusicRadio({ dataDir: path.join(temp, 'artist-wait'), now: () => now, random: () => 0, getTuning: () => ({ songRepeatHours: 2, artistRepeatMinutes: 90, artistSetSize: 1 }) });
     assert.equal(artistWaitRadio.choose([rotationA], seed, 'radio').id, rotationA.id); artistWaitRadio.record(rotationA);
-    assert.equal(artistWaitRadio.choose([rotationB], seed, 'radio'), null, 'artist repeat wait blocks a different song by the same artist');
+    assert.equal(artistWaitRadio.choose([rotationB], seed, 'radio').id, rotationB.id, 'artist repeat wait softens only when no other credible station-family song can play');
+    assert.equal(artistWaitRadio.getLastDecision().howPicked.recovery.relaxedRepeat, 'artist');
+    artistWaitRadio.beginSession();
+    assert.equal(artistWaitRadio.choose([rotationB], seed, 'radio').id, rotationB.id, 'starting a new Local Radio station resets artist rest while retaining exact-song history');
     const twoFerRadio = new MusicRadio({ dataDir: path.join(temp, 'two-fer'), now: () => now, random: () => 0, getTuning: () => ({ songRepeatHours: 2, artistRepeatMinutes: 90, artistSetSize: 2 }) });
-    assert.equal(twoFerRadio.choose([rotationA, rotationB], seed, 'radio').id, rotationA.id); twoFerRadio.record(rotationA);
+    assert.equal(twoFerRadio.choose([rotationA, rotationB], seed, 'radio').id, rotationA.id);
+    assert.deepEqual(twoFerRadio.getLastDecision().artistSet.proposed.map(item => item.title), [rotationA.title, rotationB.title], 'the first entry in an artist set records the complete proposed set');
+    twoFerRadio.record(rotationA);
     assert.equal(twoFerRadio.choose([rotationA, rotationB], seed, 'radio').id, rotationB.id, 'Artist Sets intentionally continues the selected artist');
+    assert.equal(twoFerRadio.getLastDecision().artistSet.proposed, null, 'later tracks do not repeat the proposed-set diagnostic');
+    const setSeed = track('set-seed', { artist: 'Set Seed', artists: ['Set Seed'], albumArtist: 'Set Seed', similarArtists: ['Set Artist'] });
+    const duplicateRollOne = track('roll-box', { songKey: 'roll-box', title: 'Roll With It', artist: 'Set Artist', artists: ['Set Artist'], albumArtist: 'Set Artist', rating: 8 });
+    const duplicateRollTwo = track('roll-compilation', { songKey: 'roll-compilation', title: 'Roll With It', artist: 'Set Artist', artists: ['Set Artist'], albumArtist: 'Set Artist', rating: 8 });
+    const higherLove = track('higher-love', { title: 'Higher Love', artist: 'Set Artist', artists: ['Set Artist'], albumArtist: 'Set Artist', rating: 8 });
+    const duplicateSetRadio = new MusicRadio({ dataDir: path.join(temp, 'duplicate-set'), now: () => now, random: () => 0, getTuning: () => ({ artistSetSize: 3 }) });
+    assert.equal(duplicateSetRadio.choose([duplicateRollOne, duplicateRollTwo, higherLove], setSeed, 'radio').id, duplicateRollOne.id);
+    assert.deepEqual(duplicateSetRadio.getLastDecision().artistSet.proposed.map(item => item.title), ['Roll With It', 'Higher Love'], 'Artist Sets never propose the same song twice from a box set and compilation copy');
+    duplicateSetRadio.record(duplicateRollOne);
+    assert.equal(duplicateSetRadio.choose([duplicateRollOne, duplicateRollTwo, higherLove], setSeed, 'radio').id, higherLove.id, 'Artist Sets continue to a distinct planned song after an equivalent copy is resting');
+    const resilientFirst = track('resilient-first', { title: 'First', artist: 'Resilient Artist', artists: ['Resilient Artist'], albumArtist: 'Resilient Artist', rating: 8 });
+    const resilientUnavailable = track('resilient-unavailable', { title: 'Unavailable', artist: 'Resilient Artist', artists: ['Resilient Artist'], albumArtist: 'Resilient Artist', rating: 8 });
+    const resilientThird = track('resilient-third', { title: 'Third', artist: 'Resilient Artist', artists: ['Resilient Artist'], albumArtist: 'Resilient Artist', rating: 8 });
+    const resilientSeed = track('resilient-seed', { artist: 'Resilient Seed', artists: ['Resilient Seed'], albumArtist: 'Resilient Seed', similarArtists: ['Resilient Artist'] });
+    const resilientSetRadio = new MusicRadio({ dataDir: path.join(temp, 'resilient-set'), now: () => now, random: () => 0, getTuning: () => ({ artistSetSize: 3 }) });
+    assert.equal(resilientSetRadio.choose([resilientFirst, resilientUnavailable, resilientThird], resilientSeed, 'radio').id, resilientFirst.id);
+    resilientSetRadio.record(resilientFirst); resilientUnavailable.doNotPlay = true;
+    const shiftedAnchor = track('shifted-anchor', { artist: 'Different Route', artists: ['Different Route'], albumArtist: 'Different Route' });
+    assert.equal(resilientSetRadio.choose([resilientFirst, resilientUnavailable, resilientThird], shiftedAnchor, 'radio').id, resilientThird.id, 'Artist Sets skip an unavailable planned song and retain their approved artist connection when the radio route moves');
+    assert.equal(resilientSetRadio.getLastDecision().howPicked.artistSet.skipped[0].title, 'Unavailable', 'Artist Set diagnostics record a skipped planned song');
 
     const feedbackDir = path.join(temp, 'feedback');
     const feedbackRadio = new MusicRadio({ dataDir: feedbackDir, now: () => now, random: () => 0.99 });
@@ -169,6 +531,8 @@ async function run() {
     await fs.writeFile(path.join(portableMixData, 'local-mixes', 'holiday-christmas.json'), JSON.stringify({ id: 'holiday-christmas', name: 'Holiday & Christmas', description: 'Holiday tag test', coreArtists: ['The Beach Boys'], formatPolicy: { genreTags: ['Christmas', 'Holiday', 'Xmas'] } }));
     const holidayMix = loadLocalMixes(portableMixData).find(mix => mix.id === 'holiday-christmas');
     assert.equal(isTrackEligibleForMix(track('holiday-tagged', { artist: 'Unknown Artist', genres: ['Christmas Music'], year: 2020 }), holidayMix).eligible, true, 'Holiday & Christmas admits an explicit Christmas genre tag');
+    assert.equal(isTrackEligibleForMix(track('holiday-flagged', { artist: 'Unknown Artist', holiday: true, genres: ['Rock'] }), holidayMix).eligible, true, 'Holiday & Christmas admits an explicit Holiday Music album tag');
+    assert.equal(isTrackEligibleForMix(track('holiday-outside', { artist: 'Boston', holiday: true, genres: ['Rock'], year: 1976 }), { id: 'classic-rock' }).eligible, false, 'Holiday Music stays out of ordinary Local Mixes');
     assert.equal(isTrackEligibleForMix(track('not-holiday', { artist: 'The Beach Boys', genres: ['Pop'], year: 1966 }), holidayMix).eligible, false, 'Holiday & Christmas never admits an ordinary song by a listed artist');
     const classicMix = resolveLocalMix('classic-rock', classicSeedTracks, portableMixData);
     assert.equal(classicMix.seeds.length, 4, 'Classic Rock resolves its curated seed tracks from the Local Music library');
@@ -185,10 +549,90 @@ async function run() {
     assert.equal(bestMixRadio.choose([ratedFavorite, bestMixPopular], bestMix, 'mix').id, ratedFavorite.id, 'Wild Card Radio uses personal ratings before Last.fm popularity');
     const fallbackRadio = new MusicRadio({ dataDir: path.join(temp, 'best-music-fallback'), now: () => now, random: () => 0, getFamiliarity: () => 'balanced' });
     assert.equal(fallbackRadio.choose([bestMixPopular, track('unrated-obscure', { artist: 'Frank Zappa', artists: ['Frank Zappa'], popularity: 10 })], bestMix, 'mix').id, bestMixPopular.id, 'Wild Card Radio falls back to Last.fm familiarity when no personal ratings or Favorites exist');
+    const lastFmOnlyMixRadio = new MusicRadio({ dataDir: path.join(temp, 'lastfm-only-mix'), now: () => now, random: () => 0.99, getTuning: () => ({ localMixFavorLastFm: true }) });
+    const favoriteLowPopularity = track('favorite-low-popularity', { artist: 'Metallica', artists: ['Metallica'], favorite: true, rating: 10, popularity: 5 });
+    const highPopularity = track('high-popularity', { artist: 'Miles Davis', artists: ['Miles Davis'], rating: 1, popularity: 95 });
+    const missingPopularity = track('missing-popularity', { artist: 'David Bowie', artists: ['David Bowie'], favorite: true, rating: 10 });
+    assert.equal(lastFmOnlyMixRadio.choose([favoriteLowPopularity, highPopularity, missingPopularity], bestMix, 'mix').id, highPopularity.id, 'Favor Last.fm Data for Local Mixes ignores ratings and Favorites, excludes missing Last.fm data, and selects by popularity');
+    assert.equal(lastFmOnlyMixRadio.getLastDecision().reason.includes('Last.fm popularity'), true, 'Local Mix diagnostics identify strict Last.fm popularity mode');
+    const lastFmBalancedMixRadio = new MusicRadio({ dataDir: path.join(temp, 'lastfm-balanced-mix'), now: () => now, random: () => 0.99, getFamiliarity: () => 'balanced', getTuning: () => ({ localMixFavorLastFm: true }) });
+    const popularity55 = track('popularity-55', { artist: 'Miles Davis', artists: ['Miles Davis'], popularity: 55 });
+    const popularity60 = track('popularity-60', { artist: 'David Bowie', artists: ['David Bowie'], popularity: 60 });
+    assert.equal(lastFmBalancedMixRadio.choose([popularity55, popularity60], bestMix, 'mix').id, popularity60.id, 'Balanced Mix applies the 60+ Last.fm threshold when the Local Mix toggle is on');
     const classicRadio = new MusicRadio({ dataDir: path.join(temp, 'classic-format'), now: () => now, random: () => 0 });
     const modernColdplay = track('coldplay', { artist: 'Coldplay', artists: ['Coldplay'], title: 'Charlie Brown', year: 2011, rating: 10, similarArtists: ['U2'] });
     assert.equal(classicRadio.choose([...classicSeedTracks, modernColdplay], classicMix, 'mix').artist, 'Boston', 'Last.fm similarity cannot admit a non-format Classic Rock artist');
     assert.throws(() => resolveLocalMix('yacht-rock', classicSeedTracks, portableMixData), /no longer available/, 'the retired Yacht Rock book is removed from portable Data');
+    const managerIndex = new PortableManagerIndex();
+    const managerTracks = Array.from({ length: 38000 }, (_, index) => track(`manager-${index}`, {
+      library: 'portable', artist: `Artist ${Math.floor(index / 10)}`, album: `Release ${Math.floor(index / 5)}`,
+      title: `Song ${index}`, genres: index === 37 ? ['Dream Pop'] : ['Rock'], rating: index === 37 ? 8 : 0
+    }));
+    managerIndex.ensure(managerTracks, 1);
+    assert.equal(managerIndex.summaries().length, 3800, 'a large portable library is grouped once by artist');
+    const cachedGroups = managerIndex.groups;
+    assert.equal(managerIndex.summaries('Dream Pop').length, 1, 'genre search returns artist rows without rebuilding the index');
+    assert.ok(managerIndex.summaries('Song 37').some(summary => summary.artist === 'Artist 3'), 'song search returns the matching artist');
+    assert.strictEqual(managerIndex.groups, cachedGroups, 'search queries reuse the same artist index');
+    const managerArtist = portableManagerArtistKey(managerTracks[37].artist);
+    assert.equal(managerIndex.tracksForArtist(managerArtist).length, 10, 'the target artist opens without scanning every portable track');
+    assert.equal(portableManagerReleaseKey(managerTracks[37]).startsWith('album:'), true);
+    const updatedManagerTrack = { ...managerTracks[37], rating: 0, title: 'Changed Title' };
+    managerTracks[37] = updatedManagerTrack;
+    managerIndex.replaceTrack(track('manager-37', { ...updatedManagerTrack, title: 'Song 37', rating: 8 }), updatedManagerTrack, 2);
+    assert.equal(managerIndex.summaries('Changed Title')[0].ratedCount, 0, 'a track edit updates only its artist instead of rebuilding 38,000 rows');
+    assert.equal(managerIndex.summaries('Song 37').some(summary => summary.key === managerArtist), false);
+
+    const workerTracks = [
+      track('worker-seed', { artist: 'Worker Artist', artists: ['Worker Artist'], albumArtist: 'Worker Artist' }),
+      track('worker-next', { artist: 'Worker Artist', artists: ['Worker Artist'], albumArtist: 'Worker Artist' }),
+      track('worker-blocked', { artist: 'Worker Artist', artists: ['Worker Artist'], albumArtist: 'Worker Artist', doNotPlay: true })
+    ];
+    const workerDecisions = [];
+    const selection = new RadioSelection({ dataDir: path.join(temp, 'radio-worker'), onDecision: value => workerDecisions.push(value), getDjClipStatus: selected => ({ intro: selected.id === 'worker-seed' ? 3 : 0, outro: selected.id === 'worker-seed' ? 3 : 0, eligible: true }) });
+    try {
+      await selection.setTracks(workerTracks, 1);
+      await selection.beginSession();
+      await selection.beginArtistSession(workerTracks[0]);
+      await selection.record(workerTracks[0]);
+      await selection.recordManualStart(workerTracks[0], 'artist', 'artist:worker-seed');
+      assert.equal(workerDecisions.length, 1, 'the opening station decision still reaches the Live Radio Log');
+      assert.deepEqual(workerDecisions[0].selected.djClips, { intro: 3, outro: 3, eligible: true }, 'worker decisions report real DJ clips from the main process');
+      assert.equal(selection.trackForDiagnosticId(workerDecisions[0].selected.clipDiagnosticId), workerTracks[0], 'log links resolve to the exact library track');
+      const workerChoice = await selection.choose(workerTracks, workerTracks[0], 'artist', new Set(), 'prepared', 'artist:worker-seed', true);
+      assert.equal(workerChoice.id, 'worker-next', 'the worker keeps Local Radio eligibility and repeat protection');
+      assert.equal(workerDecisions.length, 1, 'a prepared decision remains hidden until its song starts');
+      assert.equal(selection.getLastDecision().selected.title, 'worker-next');
+      await selection.publishDecision(selection.getLastDecision());
+      assert.equal(workerDecisions.length, 2, 'the deferred worker decision is published at the audible handoff');
+      const largeRadioPool = [...workerTracks, ...Array.from({ length: 8000 }, (_, index) => track(`worker-large-${index}`, {
+        artist: 'Worker Artist', artists: ['Worker Artist'], albumArtist: 'Worker Artist'
+      }))];
+      await selection.setTracks(largeRadioPool, 2);
+      let selectionSettled = false;
+      const largeChoice = selection.choose(largeRadioPool, workerTracks[0], 'artist', new Set(), 'next', 'artist:worker-seed', true)
+        .then(value => { selectionSettled = true; return value; });
+      await new Promise(resolve => setImmediate(resolve));
+      assert.equal(selectionSettled, false, 'a large artist selection runs off the main event loop');
+      assert.ok((await largeChoice)?.id, 'the off-thread selection still returns a playable choice');
+      const canceledChoice = selection.choose(largeRadioPool, workerTracks[0], 'artist', new Set(), 'prepared', 'artist:worker-seed', true);
+      selection.cancelPending();
+      await assert.rejects(canceledChoice, /selection canceled/, 'switching stations cancels queued or active old selections');
+      await selection.beginSession();
+      const workerPlayer = { getStatus: () => ({ playing: true, position: 0 }), setStationGain: async () => {}, play: async () => {}, stop: async () => {}, setPaused: async () => {} };
+      const workerLibrary = { tracks: workerTracks, revision: 3, resolve: async id => ({ ...workerTracks.find(item => item.id === id), path: `/${id}` }) };
+      const workerController = serializeTransport(new MediaController({ player: workerPlayer, getStations: () => [] }));
+      workerController.configureMusic(workerLibrary, selection);
+      await workerController.playMusic('worker-seed', 'artist');
+      await new Promise(resolve => setTimeout(resolve, 1100));
+      await workerController.handleEnded({ reason: 'eof' });
+      assert.equal(workerController.getStatus().currentMusic.track.id, 'worker-next', 'the real playback controller consumes the prepared worker choice');
+      assert.equal(workerDecisions.at(-1).preparation.usedBy, 'advance', 'worker preparation diagnostics follow the actual handoff');
+      assert.ok(Number.isFinite(workerDecisions.at(-1).preparation.workerSelectionMs), 'diagnostics separate worker selection time from the total handoff time');
+      await workerController.stop();
+      await selection.flush();
+      assert.equal(JSON.parse(await fs.readFile(path.join(temp, 'radio-worker', 'music-history.json'), 'utf8')).length, 3, 'worker history flushes on quit');
+    } finally { selection.close(); }
     const grungeTracks = [
       track('grunge-1', { artist: 'Nirvana', title: 'Come as You Are', year: 1991 }),
       track('grunge-2', { artist: 'Pearl Jam', title: 'Even Flow', year: 1991 }),
@@ -201,10 +645,79 @@ async function run() {
     assert.equal(isTrackEligibleForMix(grungeTracks[0], grungeMix).eligible, true, 'Grunge Era Rock admits core period material');
 
     const player = { getStatus: () => ({ playing: true, position: 0 }), setStationGain: async () => {}, play: async () => {}, stop: async () => {}, setPaused: async () => {}, seek: async () => {} };
-    const tracks = [track('2', { track: 2 }), track('1'), track('3', { album: 'Other' }), track('blocked', { doNotPlay: true }), track('va-1', { album: 'Hits', albumArtist: 'Various Artists', artist: 'Artist One', artists: ['Artist One'] }), track('va-2', { track: 2, album: 'Hits', albumArtist: 'Various Artists', artist: 'Artist Two', artists: ['Artist Two'] })]; const fakeLibrary = { tracks, resolve: async id => { const found = tracks.find(t => t.id === id); if (!found) throw Error('missing'); return { ...found, path: '/' + id }; } };
+    const tracks = [track('2', { track: 2 }), track('1'), track('3', { album: 'Other', library: 'portable' }), track('blocked', { doNotPlay: true }), track('va-1', { album: 'Hits', albumArtist: 'Various Artists', artist: 'Artist One', artists: ['Artist One'] }), track('va-2', { track: 2, album: 'Hits', albumArtist: 'Various Artists', artist: 'Artist Two', artists: ['Artist Two'] })]; const fakeLibrary = { tracks, resolve: async id => { const found = tracks.find(t => t.id === id); if (!found) throw Error('missing'); return { ...found, path: '/' + id }; } };
     const playbackDiagnostics = [];
     const controller = serializeTransport(new MediaController({ player, getStations: () => [{ id: 's', url: 'https://example.org', name: 'Streaming', preset: true }] })); controller.configureMusic(fakeLibrary, new MusicRadio({ dataDir: path.join(temp, 'playback'), now: () => now, onDecision: decision => playbackDiagnostics.push(decision) }));
+    await controller.playMusic('1', 'song');
+    await assert.rejects(controller.queueMusicNext('blocked'), /playable portable song/);
+    await controller.queueMusicNext('3');
+    assert.equal(controller.getQueueView().queued[0].title, '3', 'the private queue shows the explicit next song');
+    await controller.handleEnded({ reason: 'eof' });
+    assert.equal(controller.getStatus().currentMusic.track.id, '3', 'Play Next takes precedence even after a single selected song');
     await controller.playMusic('2', 'album'); assert.equal(controller.getStatus().currentMusic.track.id, '1'); await controller.handleEnded({ reason: 'eof' }); assert.equal(controller.getStatus().currentMusic.track.id, '2'); await controller.handleEnded({ reason: 'eof' }); assert.equal(controller.getStatus().currentMusic.mode, 'artist'); await controller.playMusic('va-1', 'album'); assert.equal(controller.getStatus().currentMusic.track.id, 'va-1'); await controller.handleEnded({ reason: 'eof' }); assert.equal(controller.getStatus().currentMusic.track.id, 'va-2'); await controller.handleEnded({ reason: 'eof' }); assert.equal(controller.getStatus().currentMusic, null, 'Various Artists albums stop when the album ends'); await controller.playMusic('1', 'radio'); assert.equal(controller.getStatus().currentMusic.seed.id, '1'); assert.equal(playbackDiagnostics.at(-1).selectionTrigger, 'start', 'Song Radio logs its opening seed track after playback begins'); await assert.rejects(controller.playMusic('blocked', 'radio'), /marked Do Not Play/); await controller.playStationById('s'); assert.equal(controller.getStatus().currentMusic, null);
+    const profileTracks = [
+      track('profile-seed', { title: 'Profile Seed', artist: 'Profile Artist', artists: ['Profile Artist'], albumArtist: 'Profile Artist', similarArtists: ['Profile Neighbor'] }),
+      track('profile-neighbor', { title: 'Profile Neighbor', artist: 'Profile Neighbor', artists: ['Profile Neighbor'], albumArtist: 'Profile Neighbor', similarArtists: ['Profile Artist'] })
+    ];
+    const stationProfiles = [];
+    const profileController = serializeTransport(new MediaController({
+      player, getStations: () => [],
+      getLocalStationProfile: ({ mode, seed }) => mode === 'explore' ? { key: `portable:explore:${seed.id}`, mode, seedId: seed.id, libraryProfile: 'portable', label: `${seed.title} X Radio`, profile: { localRadioFamiliarity: 'deep-cuts', localRadioSongRepeatHours: 6, localRadioArtistRepeatMinutes: 180, localRadioArtistSetSize: 1, localRadioExploreDistance: 'explore' } } : null,
+      onLocalStationStart: station => stationProfiles.push(station)
+    }));
+    const profileRadio = new RadioSelection({ dataDir: path.join(temp, 'station-profile') });
+    profileController.configureMusic({ tracks: profileTracks, revision: 1, resolve: async id => ({ ...profileTracks.find(item => item.id === id), path: `/${id}` }) }, profileRadio);
+    await profileController.playMusic('profile-seed', 'explore');
+    assert.deepStrictEqual(profileController.getStatus().currentMusic.mode, 'explore', 'an Explore Radio station starts normally with its saved profile');
+    assert.equal(profileRadio.getLastDecision().familiarity, 'deep-cuts', 'the opening Explore Radio decision uses the station profile familiarity');
+    assert.equal(profileRadio.getLastDecision().tuning.localRadioExploreDistance, 'explore', 'the opening Explore Radio decision uses the station profile distance');
+    assert.equal(stationProfiles.at(-1).profile.localRadioArtistRepeatMinutes, 180, 'the started station reports its saved profile back to the controls');
+    await profileController.stop(); profileRadio.close();
+    const preparedTracks = [
+      track('prepared-a', { title: 'Prepared A', artist: 'Prepared Artist', artists: ['Prepared Artist'], albumArtist: 'Prepared Artist', duration: 240 }),
+      track('prepared-b', { title: 'Prepared B', artist: 'Prepared Artist', artists: ['Prepared Artist'], albumArtist: 'Prepared Artist', duration: 240 }),
+      track('prepared-c', { title: 'Prepared C', artist: 'Prepared Artist', artists: ['Prepared Artist'], albumArtist: 'Prepared Artist', duration: 240 })
+    ];
+    const preparedDiagnostics = [];
+    const preparedLibrary = { tracks: preparedTracks, resolve: async id => ({ ...preparedTracks.find(item => item.id === id), path: `/${id}` }) };
+    const preparedController = serializeTransport(new MediaController({ player, getStations: () => [] }));
+    preparedController.configureMusic(preparedLibrary, new MusicRadio({ dataDir: path.join(temp, 'prepared-next'), now: () => now, random: () => 0, onDecision: decision => preparedDiagnostics.push(decision) }));
+    await preparedController.playMusic('prepared-a', 'radio');
+    await new Promise(resolve => setTimeout(resolve, 1100));
+    assert.equal(preparedDiagnostics.length, 1, 'the prepared next Local Radio choice stays out of the visible log until it actually begins');
+    await preparedController.rateMusic('up');
+    await preparedController.handleEnded({ reason: 'eof' });
+    assert.equal(preparedController.getStatus().currentMusic.track.id, 'prepared-b', 'the prepared next Local Radio song is used after a thumbs-up instead of being replaced');
+    assert.equal(preparedDiagnostics.at(-1).selected.title, 'Prepared B', 'the prepared choice enters the Live Radio Log only when it starts');
+    assert.equal(preparedDiagnostics.at(-1).preparation.usedBy, 'advance', 'prepared diagnostics show that the selection was used by the normal advance path');
+    await preparedController.stop();
+    const albumPreparationTracks = [1, 2, 3].map(index => track(`album-prepared-${index}`, { track: index, album: 'Prepared Album' }));
+    const albumPreparationLibrary = { tracks: albumPreparationTracks, resolve: async id => ({ ...albumPreparationTracks.find(item => item.id === id), path: `/${id}` }) };
+    const albumPreparationController = serializeTransport(new MediaController({ player, getStations: () => [] }));
+    albumPreparationController.configureMusic(albumPreparationLibrary, new MusicRadio({ dataDir: path.join(temp, 'album-preparation') }));
+    await albumPreparationController.playMusic('album-prepared-1', 'album');
+    await new Promise(resolve => setTimeout(resolve, 1100));
+    await albumPreparationController.handleEnded({ reason: 'eof' });
+    assert.equal(albumPreparationController.getStatus().currentMusic.track.id, 'album-prepared-2', 'prepared albums consume their reserved next song before remaining queue entries');
+    await albumPreparationController.handleEnded({ reason: 'eof' });
+    assert.equal(albumPreparationController.getStatus().currentMusic.track.id, 'album-prepared-3', 'album preparation does not skip a track when the next handoff arrives early');
+    await albumPreparationController.stop();
+    const inFlightTracks = [
+      track('inflight-a', { artist: 'In Flight', artists: ['In Flight'], albumArtist: 'In Flight' }),
+      track('inflight-b', { artist: 'In Flight', artists: ['In Flight'], albumArtist: 'In Flight' })
+    ];
+    const inFlightRadio = new MusicRadio({ dataDir: path.join(temp, 'inflight-preparation'), random: () => 0 });
+    const realChoose = inFlightRadio.choose.bind(inFlightRadio);
+    let inFlightChoices = 0;
+    inFlightRadio.choose = async (...args) => { inFlightChoices += 1; await new Promise(resolve => setTimeout(resolve, 300)); return realChoose(...args); };
+    const inFlightController = serializeTransport(new MediaController({ player, getStations: () => [] }));
+    inFlightController.configureMusic({ tracks: inFlightTracks, resolve: async id => ({ ...inFlightTracks.find(item => item.id === id), path: `/${id}` }) }, inFlightRadio);
+    await inFlightController.playMusic('inflight-a', 'artist');
+    await new Promise(resolve => setTimeout(resolve, 1050));
+    await inFlightController.handleEnded({ reason: 'eof' });
+    assert.equal(inFlightController.getStatus().currentMusic.track.id, 'inflight-b');
+    assert.equal(inFlightChoices, 1, 'an EOF waits for in-flight preparation instead of making a second radio selection');
+    await inFlightController.stop();
     let position = 0; const crossfades = [];
     const crossfadePlayer = {
       isCrossfading: false,
@@ -227,6 +740,227 @@ async function run() {
     assert.equal(crossfades[0].file, '/crossfade-b');
     assert.equal(crossfadeController.getStatus().currentMusic.track.id, 'crossfade-b');
     await crossfadeController.stop();
+    let cuePosition = 0; const cuePlays = [];
+    const cuePlayer = {
+      isCrossfading: false,
+      getStatus: () => ({ playing: true, position: cuePosition, duration: 60 }),
+      setStationGain: async () => {}, stop: async () => {}, setPaused: async () => {}, seek: async () => {},
+      play: async (file, startAt) => { cuePlays.push({ file, startAt }); cuePosition = startAt; }
+    };
+    const cueTracks = [
+      track('cue-a', { library: 'portable', artist: 'Cue A', albumArtist: 'Cue A', duration: 60 }),
+      track('cue-b', { library: 'portable', artist: 'Cue B', albumArtist: 'Cue B', duration: 60 })
+    ];
+    const cueController = serializeTransport(new MediaController({
+      player: cuePlayer, getStations: () => [], getCrossfadeEnabled: () => false,
+      getSongCue: song => song.id === 'cue-a' ? { start: 5, end: 25 } : { start: 3, end: null }
+    }));
+    cueController.configureMusic({ tracks: cueTracks, resolve: async id => ({ ...cueTracks.find(item => item.id === id), path: `/${id}` }) }, {
+      record: async () => {}, setTracks: async () => {}, choose: async () => ({ id: 'cue-b' }), getLastDecision: () => null, recordFeedback: async () => {}
+    });
+    await cueController.playMusic('cue-a', 'radio');
+    assert.deepEqual(cuePlays.at(-1), { file: '/cue-a', startAt: 5 }, 'radio honors the optional song start point');
+    await new Promise(resolve => setTimeout(resolve, 1100));
+    assert.equal(cueController.getQueueView().next.title, 'cue-b', 'queue diagnostics show the automatically prepared song');
+    cuePosition = 25;
+    await new Promise(resolve => setTimeout(resolve, 400));
+    assert.deepEqual(cuePlays.at(-1), { file: '/cue-b', startAt: 3 }, 'radio advances at the optional end point and starts the next song at its cue');
+    await cueController.playMusic('cue-a', 'song');
+    assert.deepEqual(cuePlays.at(-1), { file: '/cue-a', startAt: 0 }, 'direct song playback ignores radio start and end points');
+    await cueController.stop();
+    let stationIdClock = new Date(2026, 0, 1, 12, 28).getTime(); let stationIdPosition = 0;
+    const stationIdPlays = []; const stationIdFades = []; const stationIdStarts = []; const stationIdLogs = [];
+    const stationIdPlayer = {
+      isCrossfading: false,
+      getStatus: () => ({ playing: true, position: stationIdPosition, duration: 60 }),
+      setStationGain: async () => {}, stop: async () => {}, setPaused: async () => {}, seek: async () => {},
+      play: async file => { stationIdPlays.push(file); stationIdPosition = 0; },
+      crossfadeTo: async file => { stationIdFades.push(file); stationIdPosition = 0; }
+    };
+    const stationIdTracks = [1, 2, 3, 4, 5, 6].map(index => track(`id-song-${index}`, { track: index, album: 'ID Album', duration: 60 }));
+    const stationIdLibrary = { tracks: stationIdTracks, resolve: async id => ({ ...stationIdTracks.find(item => item.id === id), path: `/${id}` }) };
+    const stationIdDataDir = path.join(temp, 'station-id-test', 'Data');
+    const stationIdController = serializeTransport(new MediaController({
+      player: stationIdPlayer, getStations: () => [], dataDir: stationIdDataDir,
+      getCrossfadeEnabled: () => true, now: () => stationIdClock, random: () => 0,
+      onStationIdPlayed: entry => stationIdLogs.push(entry)
+    }));
+    stationIdController.configureMusic(stationIdLibrary, new MusicRadio({ dataDir: path.join(temp, 'station-id-radio') }), track => stationIdStarts.push(track.id));
+    const idsDir = path.join(temp, 'station-id-test', 'Station IDs');
+    assert.equal((await fs.stat(idsDir)).isDirectory(), true, 'WaveDeck creates Station IDs beside Data and Music');
+    const halfHourIds = path.join(idsDir, 'Half Hour');
+    const topOfHourIds = path.join(idsDir, 'Top of Hour');
+    assert.equal((await fs.stat(halfHourIds)).isDirectory(), true, 'WaveDeck creates the Half Hour Station ID pool');
+    assert.equal((await fs.stat(topOfHourIds)).isDirectory(), true, 'WaveDeck creates the Top of Hour Station ID pool');
+    await fs.writeFile(path.join(halfHourIds, 'one.mp3'), 'fixture');
+    await fs.writeFile(path.join(halfHourIds, 'two.opus'), 'fixture');
+    await fs.writeFile(path.join(halfHourIds, 'ignore.txt'), 'fixture');
+    await stationIdController.playMusic('id-song-1', 'album');
+    stationIdPosition = 53;
+    await new Promise(resolve => setTimeout(resolve, 350));
+    assert.deepEqual(stationIdFades, ['/id-song-2'], 'ordinary Local Music still crossfades before an ID is due');
+    stationIdClock = new Date(2026, 0, 1, 12, 29).getTime(); stationIdPosition = 53;
+    await new Promise(resolve => setTimeout(resolve, 350));
+    assert.deepEqual(stationIdFades, ['/id-song-2'], 'a :29 ID waits for the song to finish instead of cutting off its final seconds');
+    await stationIdController.handleEnded({ reason: 'eof' });
+    assert.equal(stationIdController.getStatus().currentMusic.track.stationId, true);
+    assert.equal(stationIdPlays.at(-1), path.join(halfHourIds, 'one.mp3'));
+    assert.deepEqual(stationIdLogs.at(-1), { type: 'station-id', at: new Date(stationIdClock).toISOString(), stationKey: 'album:id-song-1', mode: 'album', fileName: 'one.mp3', pool: 'Half Hour' }, 'each played ID produces a compact Radio Log entry');
+    assert.deepEqual(stationIdStarts, ['id-song-1', 'id-song-2'], 'an ID is not reported as a library song');
+    await assert.rejects(stationIdController.rateMusic('up'), /Start Local Radio/, 'an ID cannot be rated as the previous song');
+    await stationIdController.handleEnded({ reason: 'eof' });
+    assert.equal(stationIdController.getStatus().currentMusic.track.id, 'id-song-3', 'music resumes after the ID');
+    stationIdClock = new Date(2026, 0, 1, 12, 59).getTime(); stationIdPosition = 53;
+    await new Promise(resolve => setTimeout(resolve, 350));
+    assert.deepEqual(stationIdFades, ['/id-song-2', '/id-song-4'], 'an empty Top of Hour pool gracefully keeps the normal crossfade');
+    await fs.writeFile(path.join(topOfHourIds, 'top.mp3'), 'fixture');
+    stationIdClock = new Date(2026, 0, 1, 13, 29).getTime(); stationIdPosition = 53;
+    await new Promise(resolve => setTimeout(resolve, 350));
+    await stationIdController.handleEnded({ reason: 'eof' });
+    assert.equal(stationIdPlays.at(-1), path.join(halfHourIds, 'two.opus'), 'the Half Hour pool avoids repeating an ID when another clip exists');
+    await stationIdController.handleEnded({ reason: 'eof' });
+    assert.equal(stationIdController.getStatus().currentMusic.track.id, 'id-song-5');
+    stationIdClock = new Date(2026, 0, 1, 13, 59).getTime(); stationIdPosition = 53;
+    await new Promise(resolve => setTimeout(resolve, 350));
+    await stationIdController.handleEnded({ reason: 'eof' });
+    assert.equal(stationIdPlays.at(-1), path.join(topOfHourIds, 'top.mp3'), 'the Top of Hour has its own Station ID pool');
+    assert.equal(stationIdLogs.at(-1).pool, 'Top of Hour');
+    await stationIdController.stop();
+    let autoDjNow = 0; let autoDjPosition = 0; const autoDjPlays = []; const autoDjPreloads = []; const autoDjBreaks = []; let autoDjCanChecks = 0;
+    const autoDjPlayer = {
+      isCrossfading: false,
+      getStatus: () => ({ playing: true, position: autoDjPosition, duration: 180 }),
+      setStationGain: async () => {}, stop: async () => {}, setPaused: async () => {}, seek: async () => {},
+      play: async file => { autoDjPlays.push(file); }, crossfadeTo: async file => { autoDjPlays.push(file); },
+      prepareBreak: async file => { autoDjPreloads.push(file); return true; },
+      playPreparedBreak: async file => { autoDjPlays.push(file); return true; }
+    };
+    const autoDjTracks = [
+      track('auto-dj-a', { title: 'Before the Break', artist: 'First Artist', albumArtist: 'First Artist', duration: 180 }),
+      track('auto-dj-b', { title: 'After the Break', artist: 'Second Artist', albumArtist: 'Second Artist', duration: 180 })
+    ];
+    const autoDjRadio = {
+      record: async () => {}, setTracks: async () => {}, choose: async () => ({ id: 'auto-dj-b' }),
+      getLastDecision: () => null, recordFeedback: async () => {}
+    };
+    const autoDjController = serializeTransport(new MediaController({
+      player: autoDjPlayer, getStations: () => [], now: () => autoDjNow, getCrossfadeEnabled: () => true,
+      getAutoDjIntervalMinutes: () => 1,
+      canBuildAutoDjBreak: () => { autoDjCanChecks += 1; return true; },
+      takeAutoDjBreak: () => ({
+        outro: { file: '/dj/outro.opus', slot: 1 }, stationId: { file: '/dj/id-07.opus', slot: 7, text: 'This is [station].' },
+        intro: { file: '/dj/intro.opus', slot: 2 }
+      }),
+      onAutoDjBreak: entry => autoDjBreaks.push(entry)
+    }));
+    autoDjController.configureMusic({ tracks: autoDjTracks, revision: 1, resolve: async id => ({ ...autoDjTracks.find(item => item.id === id), path: `/${id}` }) }, autoDjRadio);
+    await autoDjController.playMusic('auto-dj-a', 'radio');
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    assert.equal(autoDjController.music.prepared?.id, 'auto-dj-b', 'the incoming song is selected while music is playing');
+    autoDjNow = 60 * 1000; autoDjPosition = 168;
+    await new Promise(resolve => setTimeout(resolve, 350));
+    assert.deepEqual(autoDjPreloads, ['/dj/outro.opus'], 'an eligible outgoing DJ outro is preloaded before the hard boundary');
+    autoDjNow = 60 * 1000; autoDjPosition = 173;
+    await new Promise(resolve => setTimeout(resolve, 350));
+    assert.deepEqual(autoDjPlays, ['/auto-dj-a'], 'a due break with an unprepared next song waits for EOF instead of crossfading past the DJ opportunity');
+    await autoDjController.handleEnded({ reason: 'eof' });
+    assert.ok(autoDjCanChecks >= 2, 'DJ readiness is checked during preparation and at the actual boundary');
+    assert.equal(autoDjPlays.at(-1), '/dj/outro.opus', 'a due Auto DJ break begins with the outgoing song outro');
+    assert.equal(autoDjController.getStatus().currentMusic.track.autoDj, true, 'the player exposes a DJ clip while a break is running');
+    await autoDjController.handleEnded({ reason: 'eof' });
+    assert.equal(autoDjPlays.at(-1), '/dj/id-07.opus', 'the Station ID follows the outro without a music crossfade');
+    await autoDjController.handleEnded({ reason: 'eof' });
+    assert.equal(autoDjPlays.at(-1), '/dj/intro.opus', 'the incoming song intro follows the Station ID');
+    await autoDjController.handleEnded({ reason: 'eof' });
+    assert.equal(autoDjPlays.at(-1), '/auto-dj-b', 'the queued song starts only after the full DJ break');
+    assert.equal(autoDjBreaks.at(-1).stationIdSlot, 7, 'each Auto DJ break writes a compact Radio Log entry');
+    assert.equal(autoDjBreaks.at(-1).preloaded, true, 'the break log confirms the already prepared outro was used');
+    await autoDjController.stop();
+    let stationPosition = 0;
+    const stationPlays = [], stationFades = [], stationDecisions = [];
+    const stationPlayer = {
+      isCrossfading: false,
+      getStatus: () => ({ playing: true, position: stationPosition, duration: 60 }),
+      setStationGain: async () => {}, stop: async () => {}, setPaused: async () => {}, seek: async () => {},
+      play: async file => { stationPlays.push(file); stationPosition = 0; },
+      crossfadeTo: async (file, ms) => { stationFades.push({ file, ms }); stationPosition = 0; }
+    };
+    const stationTracks = ['station-one', 'station-two', 'station-three'].map((id, index) => track(id, { title: `Station Song ${index + 1}`, artist: `Station Artist ${index + 1}`, duration: 60 }));
+    const stationLibrary = { tracks: stationTracks, revision: 1, resolve: async id => ({ ...stationTracks.find(item => item.id === id), path: `/${id}` }) };
+    const stationController = serializeTransport(new MediaController({ player: stationPlayer, getStations: () => [], getCrossfadeEnabled: () => true, getFinishCurrentSongOnStationChange: () => true }));
+    stationController.configureMusic(stationLibrary, new MusicRadio({ dataDir: path.join(temp, 'pending-station'), onDecision: decision => stationDecisions.push(decision) }));
+    await stationController.playMusic('station-one', 'radio');
+    await stationController.playMusic('station-two', 'radio');
+    await stationController.playMusic('station-three', 'radio');
+    assert.equal(stationController.getStatus().currentMusic.track.id, 'station-one', 'choosing another station leaves the current song playing');
+    assert.deepEqual(stationPlays, ['/station-one'], 'a queued station does not start a second player lane early');
+    await new Promise(resolve => setTimeout(resolve, 350));
+    stationPosition = 53;
+    await new Promise(resolve => setTimeout(resolve, 350));
+    assert.equal(stationFades.length, 1, 'the latest station starts at the fade boundary');
+    assert.equal(stationFades[0].file, '/station-three');
+    assert.equal(stationController.getStatus().currentMusic.track.id, 'station-three');
+    assert.equal(stationDecisions.at(-1).selectionTrigger, 'start', 'the first song of the new station reaches the log at handoff');
+    await stationController.stop();
+    const eofController = serializeTransport(new MediaController({ player: stationPlayer, getStations: () => [], getCrossfadeEnabled: () => false, getFinishCurrentSongOnStationChange: () => true }));
+    eofController.configureMusic(stationLibrary, new MusicRadio({ dataDir: path.join(temp, 'pending-station-eof') }));
+    await eofController.playMusic('station-one', 'radio');
+    await eofController.playMusic('station-two', 'artist');
+    assert.equal(eofController.getStatus().currentMusic.track.id, 'station-one');
+    await eofController.handleEnded({ reason: 'eof' });
+    assert.equal(eofController.getStatus().currentMusic.track.id, 'station-two', 'without crossfade, EOF starts the queued station');
+    await eofController.stop();
+    let preparedCrossfadePosition = 0; const preparedCrossfades = []; const preparedCrossfadeDiagnostics = []; let preparedCrossfadeResolveCount = 0;
+    const preparedCrossfadePlayer = {
+      isCrossfading: false,
+      getStatus: () => ({ playing: true, position: preparedCrossfadePosition, duration: 2 }),
+      setStationGain: async () => {}, play: async () => {}, stop: async () => {}, setPaused: async () => {}, seek: async () => {},
+      crossfadeTo: async (file, duration) => { preparedCrossfades.push({ file, duration }); preparedCrossfadePosition = 0; }
+    };
+    const preparedCrossfadeTracks = [
+      track('prepared-crossfade-a', { artist: 'Prepared Crossfade Artist', artists: ['Prepared Crossfade Artist'], albumArtist: 'Prepared Crossfade Artist', duration: 2 }),
+      track('prepared-crossfade-b', { artist: 'Prepared Crossfade Artist', artists: ['Prepared Crossfade Artist'], albumArtist: 'Prepared Crossfade Artist', duration: 2 })
+    ];
+    const preparedCrossfadeLibrary = { tracks: preparedCrossfadeTracks, resolve: async id => {
+      preparedCrossfadeResolveCount++;
+      const found = preparedCrossfadeTracks.find(item => item.id === id); return { ...found, path: `/${id}` };
+    } };
+    const preparedCrossfadeController = serializeTransport(new MediaController({ player: preparedCrossfadePlayer, getStations: () => [], getCrossfadeEnabled: () => true }));
+    preparedCrossfadeController.configureMusic(preparedCrossfadeLibrary, new MusicRadio({ dataDir: path.join(temp, 'prepared-crossfade'), now: () => now, random: () => 0, onDecision: decision => preparedCrossfadeDiagnostics.push(decision) }));
+    await preparedCrossfadeController.playMusic('prepared-crossfade-a', 'artist');
+    await new Promise(resolve => setTimeout(resolve, 1100));
+    preparedCrossfadePosition = 1.5;
+    await new Promise(resolve => setTimeout(resolve, 350));
+    assert.equal(preparedCrossfades.length, 1, 'a prepared Local Radio choice is used at the crossfade boundary');
+    assert.equal(preparedCrossfadeDiagnostics.at(-1).selected.id, undefined, 'diagnostic tracks remain public-safe');
+    assert.equal(preparedCrossfadeDiagnostics.at(-1).selected.title, preparedCrossfadeTracks[1].title, 'the prepared crossfade choice reaches the Live Radio Log');
+    assert.equal(preparedCrossfadeDiagnostics.at(-1).preparation.usedBy, 'crossfade', 'prepared diagnostics show that the choice was used by a crossfade');
+    assert.equal(preparedCrossfadeResolveCount, 3, 'the crossfade reuses the already resolved prepared track instead of resolving it a second time');
+    await preparedCrossfadeController.stop();
+    let deferredPreparationPosition = 0; let deferredPreparationResolveCount = 0;
+    const deferredPreparationPlayer = {
+      isCrossfading: false,
+      getStatus: () => ({ playing: true, position: deferredPreparationPosition, duration: 2 }),
+      setStationGain: async () => {}, play: async () => {}, stop: async () => {}, setPaused: async () => {}, seek: async () => {},
+      crossfadeTo: async () => { deferredPreparationPosition = 0; }
+    };
+    const deferredPreparationTracks = [
+      track('deferred-preparation-a', { artist: 'Deferred Preparation Artist', artists: ['Deferred Preparation Artist'], albumArtist: 'Deferred Preparation Artist', duration: 2 }),
+      track('deferred-preparation-b', { artist: 'Deferred Preparation Artist', artists: ['Deferred Preparation Artist'], albumArtist: 'Deferred Preparation Artist', duration: 2 }),
+      track('deferred-preparation-c', { artist: 'Deferred Preparation Artist', artists: ['Deferred Preparation Artist'], albumArtist: 'Deferred Preparation Artist', duration: 2 })
+    ];
+    const deferredPreparationLibrary = { tracks: deferredPreparationTracks, resolve: async id => {
+      deferredPreparationResolveCount++;
+      const found = deferredPreparationTracks.find(item => item.id === id); return { ...found, path: `/${id}` };
+    } };
+    const deferredPreparationController = serializeTransport(new MediaController({ player: deferredPreparationPlayer, getStations: () => [], getCrossfadeEnabled: () => true }));
+    deferredPreparationController.configureMusic(deferredPreparationLibrary, new MusicRadio({ dataDir: path.join(temp, 'deferred-crossfade-preparation'), now: () => now, random: () => 0 }));
+    await deferredPreparationController.playMusic('deferred-preparation-a', 'artist');
+    deferredPreparationPosition = 1.5;
+    await new Promise(resolve => setTimeout(resolve, 400));
+    await new Promise(resolve => setTimeout(resolve, 1100));
+    assert.equal(deferredPreparationResolveCount, 3, 'the next Local Radio selection waits until the active crossfade has finished');
+    await deferredPreparationController.stop();
     console.log('Music tests passed: read-only MP3 scan, Last.fm enrichment, Local Radio tuning, repeat protection, diagnostics, album handoff, and source switching.');
   } finally { library?.close(); await fs.rm(temp, { recursive: true, force: true }); }
 }

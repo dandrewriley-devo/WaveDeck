@@ -4,6 +4,9 @@ const panels = new Map([
   ["stations", document.getElementById("tab-stations")],
   ["groups", document.getElementById("tab-groups")],
   ["localmusic", document.getElementById("tab-localmusic")],
+  ["personalstream", document.getElementById("tab-personalstream")],
+  ["musicmanager", document.getElementById("tab-musicmanager")],
+  ["radiolog", document.getElementById("tab-radiolog")],
   ["about", document.getElementById("tab-about")]
 ]);
 
@@ -13,6 +16,33 @@ const statusGroups = document.getElementById("statusGroups");
 const statusImportExport = document.getElementById("statusImportExport");
 const statusLocalMusic = document.getElementById("statusLocalMusic");
 const localMusicTab = document.querySelector('[data-tab="localmusic"]');
+const musicManagerTab = document.querySelector('[data-tab="musicmanager"]');
+const radioLogTab = document.querySelector('[data-tab="radiolog"]');
+const musicManagerFrame = document.getElementById('musicManagerFrame');
+const radioLogFrame = document.getElementById('radioLogFrame');
+let pendingFocusedTrack = null;
+let requestedAdvancedTab = '';
+const embeddedMethods = new Set([
+  'getPortableMusicArtists', 'getPortableMusicArtistDetail', 'playMusic',
+  'saveArtistRelationships', 'savePortableMusicReleaseHoliday', 'savePortableMusicTrack',
+  'clearMusicDebugHistory', 'getMusicDebugHistory', 'saveMusicDebugLog', 'openMusicDebugTrack', 'queueDjClipsForTrack',
+  'getDjArtistPronunciation', 'testDjArtistPronunciation', 'saveDjArtistPronunciation', 'getDjTitleHint', 'saveDjTitleHint', 'queueMusicNext', 'getSongCues', 'saveSongCues', 'testSongCue'
+]);
+window.addEventListener('message', async event => {
+  if (![musicManagerFrame.contentWindow, radioLogFrame.contentWindow].includes(event.source)) return;
+  const { type, id, method, args } = event.data || {};
+  if (type === 'embedded-ready') {
+    if (event.source === musicManagerFrame.contentWindow) { musicManagerFrame.dataset.loaded = 'true'; deliverFocusedTrack(); }
+    return;
+  }
+  if (type !== 'embedded-request' || !embeddedMethods.has(method) || !Number.isSafeInteger(id) || !Array.isArray(args)) return;
+  try {
+    const result = await window.wavedeck[method](...args);
+    event.source.postMessage({ type: 'embedded-response', id, result }, '*');
+  } catch (error) {
+    event.source.postMessage({ type: 'embedded-response', id, error: error?.message || 'The request failed.' }, '*');
+  }
+});
 const stationSearch = document.getElementById("stationSearch");
 const stationGroupFilter = document.getElementById("stationGroupFilter");
 const newStationBtn = document.getElementById("newStationBtn");
@@ -50,23 +80,73 @@ const advancedFeaturesOff = document.getElementById('advancedFeaturesOff');
 const additionalMusicFolder = document.getElementById('additionalMusicFolder');
 const chooseAdditionalMusicFolderBtn = document.getElementById('chooseAdditionalMusicFolderBtn');
 const clearAdditionalMusicFolderBtn = document.getElementById('clearAdditionalMusicFolderBtn');
+const additionalMusicFolderChoice = document.getElementById('additionalMusicFolderChoice');
+const rememberAdditionalMusicFolderBtn = document.getElementById('rememberAdditionalMusicFolderBtn');
+const useAdditionalMusicFolderThisTimeBtn = document.getElementById('useAdditionalMusicFolderThisTimeBtn');
+const additionalMusicFolderStatus = document.getElementById('additionalMusicFolderStatus');
+const rememberedMusicComputers = document.getElementById('rememberedMusicComputers');
+const rememberedMusicComputersList = document.getElementById('rememberedMusicComputersList');
+const portableImportStatus = document.getElementById('portableImportStatus');
+const portableImportProgressWrap = document.getElementById('portableImportProgressWrap');
+const portableImportProgress = document.getElementById('portableImportProgress');
+const portableImportProgressLabel = document.getElementById('portableImportProgressLabel');
+const portableImportBtn = document.getElementById('portableImportBtn');
+const portableImportSpeed = document.getElementById('portableImportSpeed');
+const portableImportReady = document.getElementById('portableImportReady');
+const portableImportReadyCount = document.getElementById('portableImportReadyCount');
+const portableImportSpace = document.getElementById('portableImportSpace');
+const portableImportRequiredSpace = document.getElementById('portableImportRequiredSpace');
+const portableImportAvailableSpace = document.getElementById('portableImportAvailableSpace');
+const openPortableMusicLibraryBtn = document.getElementById('openPortableMusicLibraryBtn');
+const openMusicDebugLogBtn = document.getElementById('openMusicDebugLogBtn');
 const musicLibraryStatus = document.getElementById('musicLibraryStatus');
+const portableTrackCount = document.getElementById('portableTrackCount');
+const externalTrackCountWrap = document.getElementById('externalTrackCountWrap');
+const externalTrackCount = document.getElementById('externalTrackCount');
+const libraryTotalAvailable = document.getElementById('libraryTotalAvailable');
 const rescanMusicBtn = document.getElementById('rescanMusicBtn');
+const portableMusicProgressWrap = document.getElementById('portableMusicProgressWrap');
+const portableMusicProgress = document.getElementById('portableMusicProgress');
+const portableMusicProgressLabel = document.getElementById('portableMusicProgressLabel');
+const portableStorageChart = document.getElementById('portableStorageChart');
+const portableStoragePercent = document.getElementById('portableStoragePercent');
+const portableStorageLabel = document.getElementById('portableStorageLabel');
 const lastFmEnabled = document.getElementById('lastFmEnabled');
-const lastFmDetails = document.getElementById('lastFmDetails');
 const lastFmStatus = document.getElementById('lastFmStatus');
-const lastFmProgressWrap = document.getElementById('lastFmProgressWrap');
-const lastFmProgress = document.getElementById('lastFmProgress');
-const lastFmProgressLabel = document.getElementById('lastFmProgressLabel');
-const lastFmUpdating = document.getElementById('lastFmUpdating');
+const lastFmChart = document.getElementById('lastFmChart');
+const lastFmPercent = document.getElementById('lastFmPercent');
+const lastFmConnection = document.getElementById('lastFmConnection');
+const replayGainEnabled = document.getElementById('replayGainEnabled');
+const replayGainPause = document.getElementById('replayGainPause');
+const replayGainStatus = document.getElementById('replayGainStatus');
+const replayGainChart = document.getElementById('replayGainChart');
+const replayGainPercent = document.getElementById('replayGainPercent');
+const connectLastFmBtn = document.getElementById('connectLastFmBtn');
+const disconnectLastFmBtn = document.getElementById('disconnectLastFmBtn');
 const localMixManager = document.getElementById('localMixManager');
+const localMixDetails = document.getElementById('localMixDetails');
+const localMixSummary = document.getElementById('localMixSummary');
+const localMixReadyCount = document.getElementById('localMixReadyCount');
+const localMixReadyLabel = document.getElementById('localMixReadyLabel');
+const manageLocalMixesBtn = document.getElementById('manageLocalMixesBtn');
 const queueLastFmRefreshBtn = document.getElementById('queueLastFmRefreshBtn');
-const openRadioLogBtn = document.getElementById('openRadioLogBtn');
+const djClipStatus = document.getElementById('djClipStatus');
+const djClipProgressWrap = document.getElementById('djClipProgressWrap');
+const djClipProgress = document.getElementById('djClipProgress');
+const djClipProgressLabel = document.getElementById('djClipProgressLabel');
+const queueQualifyingDjClipsBtn = document.getElementById('queueQualifyingDjClipsBtn');
+const autoDjEnabled = document.getElementById('autoDjEnabled');
+const autoDjStationName = document.getElementById('autoDjStationName');
+const autoDjName = document.getElementById('autoDjName');
+const autoDjBreakInterval = document.getElementById('autoDjBreakInterval');
+const editAutoDjIdsBtn = document.getElementById('editAutoDjIdsBtn');
 const resetListeningBtn = document.getElementById("resetListeningBtn");
 const platform = window.wavedeck.platform;
 
 const sidebarPlatform = platform === "linux" || platform === "win32";
 if (platform !== "linux") document.querySelectorAll(".linux-launcher-only").forEach((node) => { node.hidden = true; });
+if (platform !== 'linux') document.querySelectorAll('.linux-stream-only').forEach(node => { node.hidden = true; });
+if (platform !== 'linux') document.querySelector('.replay-gain-card').style.display = 'none';
 if (!sidebarPlatform) document.querySelectorAll(".mini-player-platform-only").forEach((node) => { node.hidden = true; });
 
 let stations = [];
@@ -79,14 +159,112 @@ let reloadQueued = false;
 let initialized = false;
 let pendingEditId = "";
 let activeSubgroupRename = null;
+let renamingRememberedComputerId = '';
+let portableImportLoading = false;
+let portableImportFolder = '';
+
+function formatBytes(bytes) {
+  const value = Math.max(0, Number(bytes) || 0); const units = ['B', 'KB', 'MB', 'GB', 'TB']; let size = value; let unit = 0;
+  while (size >= 1024 && unit < units.length - 1) { size /= 1024; unit += 1; }
+  return `${size >= 10 || unit === 0 ? Math.round(size) : size.toFixed(1)} ${units[unit]}`;
+}
+
+function formatBytesRoundedUp(bytes) {
+  const value = Math.max(0, Number(bytes) || 0); const units = ['B', 'KB', 'MB', 'GB', 'TB']; let size = value; let unit = 0;
+  while (size >= 1024 && unit < units.length - 1) { size /= 1024; unit += 1; }
+  return `${Math.ceil(size)} ${units[unit]}`;
+}
+
+function formatEta(seconds) {
+  const total = Math.max(0, Number(seconds) || 0); if (!total) return '';
+  const minutes = Math.ceil(total / 60); return minutes < 60 ? `About ${minutes} min remaining` : `About ${Math.floor(minutes / 60)}h ${minutes % 60}m remaining`;
+}
+
+function renderPortableStorage(storage = {}) {
+  const total = Math.max(0, Number(storage.totalBytes) || 0); const available = Math.max(0, Number(storage.availableBytes) || 0);
+  if (!total) { portableStoragePercent.textContent = '—'; portableStorageLabel.textContent = 'Drive space unavailable'; return; }
+  const usedPercent = Math.max(0, Math.min(100, Math.round(((total - available) / total) * 100)));
+  portableStorageChart.style.background = `conic-gradient(#e7541f 0deg ${usedPercent * 3.6}deg, #3a3a3a ${usedPercent * 3.6}deg 360deg)`;
+  portableStoragePercent.textContent = `${usedPercent}%`;
+  portableStorageLabel.textContent = `${formatBytes(available)} free of ${formatBytes(total)}`;
+}
+
+async function loadPortableStorage() {
+  try { renderPortableStorage(await window.wavedeck.getPortableStorage()); } catch { renderPortableStorage({}); }
+}
+
+function renderPortableImport(status = {}) {
+  const state = String(status.state || 'waiting'); const total = Math.max(0, Number(status.total || 0)); const completed = Math.min(total, Math.max(0, Number(status.completed || 0)));
+  const importing = state === 'importing'; portableImportProgressWrap.hidden = !importing;
+  const estimated = Math.max(0, Number(status.estimatedBytes) || 0);
+  const available = Math.max(0, Number(status.availableBytes) || 0);
+  const reserve = Math.max(0, Number(status.totalBytes) || 0) * 0.03;
+  const ready = state === 'ready' && Number(status.eligible) > 0;
+  const enoughSpace = estimated <= Math.max(0, available - reserve);
+  portableImportReady.hidden = !ready;
+  portableImportSpace.hidden = !ready;
+  if (ready) {
+    portableImportReadyCount.textContent = Number(status.eligible).toLocaleString();
+    portableImportRequiredSpace.textContent = `Required space: ${formatBytesRoundedUp(estimated)}`;
+    portableImportAvailableSpace.textContent = `Available space: ${formatBytes(available)}`;
+  }
+  portableImportStatus.hidden = ready;
+  if (importing) { portableImportProgress.max = Math.max(1, total); portableImportProgress.value = completed; portableImportProgressLabel.textContent = `${completed.toLocaleString()} of ${total.toLocaleString()}`; }
+  if (state === 'ready') portableImportStatus.textContent = status.message;
+  else if (importing) portableImportStatus.textContent = `${completed.toLocaleString()} of ${total.toLocaleString()} imported · ${Number(status.workers) || 2} at a time${formatEta(status.etaSeconds) ? ` · ${formatEta(status.etaSeconds)}` : ''}`;
+  else portableImportStatus.textContent = status.message || 'Checking music available to import…';
+  portableImportBtn.disabled = !status.eligible || !enoughSpace || importing || state === 'checking';
+  portableImportBtn.textContent = importing ? 'Importing…' : 'Import Missing Music';
+  if (state === 'complete') void loadPortableStorage();
+}
+
+async function loadPortableImport() {
+  const folder = additionalMusicFolder.value;
+  if (!folder) { portableImportFolder = ''; renderPortableImport({ state: 'waiting', message: 'Choose an External Music Folder to see import options.' }); return; }
+  if (portableImportLoading || portableImportFolder === folder) return;
+  portableImportLoading = true; portableImportFolder = folder;
+  try { renderPortableImport(await window.wavedeck.getPortableImportPreview()); }
+  catch (error) { portableImportFolder = ''; renderPortableImport({ state: 'waiting', message: `Could not check imports: ${error.message}` }); }
+  finally { portableImportLoading = false; }
+}
 
 function renderMusicLibraryStatus(status = {}) {
   const count = Number(status.count || 0);
-  musicLibraryStatus.textContent = status.message || (status.scanning
-    ? `Scanning Local Music… ${Number(status.checked || 0).toLocaleString()} checked`
-    : `${count.toLocaleString()} songs in your Local Music library`);
+  const portableCount = Number(status.portableCount || 0);
+  const total = Math.max(0, Number(status.total || 0));
+  const converted = Math.min(total, Math.max(0, Number(status.converted || 0)));
+  const remaining = Math.max(0, total - converted);
+  const showPortableProgress = total > 0 || status.optimizing === true;
+  portableMusicProgressWrap.hidden = !showPortableProgress;
+  if (showPortableProgress) {
+    portableMusicProgress.max = Math.max(1, total);
+    portableMusicProgress.value = converted;
+    portableMusicProgressLabel.textContent = `${converted.toLocaleString()} of ${total.toLocaleString()}`;
+    portableMusicProgress.setAttribute('aria-valuetext', `${converted.toLocaleString()} of ${total.toLocaleString()} portable tracks converted`);
+  }
+  portableTrackCount.textContent = portableCount.toLocaleString();
+  externalTrackCountWrap.hidden = !additionalMusicFolder.value;
+  externalTrackCount.textContent = Number(status.additionalCount || 0).toLocaleString();
+  libraryTotalAvailable.hidden = !additionalMusicFolder.value;
+  if (additionalMusicFolder.value) libraryTotalAvailable.textContent = `${count.toLocaleString()} total tracks available`;
+  musicLibraryStatus.textContent = status.optimizing
+    ? `${converted.toLocaleString()} of ${total.toLocaleString()} portable tracks converted · ${remaining.toLocaleString()} remaining`
+    : total > 0
+      ? `${converted.toLocaleString()} of ${total.toLocaleString()} portable tracks converted${status.errors ? ` · ${Number(status.errors).toLocaleString()} need attention` : ''}`
+      : status.scanning
+        ? `Scanning Local Music… ${Number(status.checked || 0).toLocaleString()} checked`
+        : status.message || (count ? `${count.toLocaleString()} songs in your Local Music library` : 'No portable music found yet.');
   rescanMusicBtn.disabled = status.scanning === true;
-  rescanMusicBtn.textContent = status.scanning ? 'Scanning…' : 'Rescan';
+  rescanMusicBtn.textContent = status.scanning ? 'Scanning…' : 'Refresh';
+  if (additionalMusicFolder.value) {
+    additionalMusicFolderStatus.textContent = status.scanning
+      ? `Scanning Local Music… ${Number(status.checked || 0).toLocaleString()} files checked`
+      : `${Number(status.additionalCount || 0).toLocaleString()} tracks in this computer’s External Music Folder`;
+  } else {
+    additionalMusicFolderStatus.textContent = 'No External Music Folder selected for this computer.';
+  }
+  if (!status.scanning && additionalMusicFolder.value) void loadPortableImport();
+  if (!status.scanning) void loadPortableStorage();
 }
 
 async function loadMusicLibraryStatus() {
@@ -98,38 +276,145 @@ function renderProMusicSettings(preferences) {
   const folder = String(preferences?.additionalMusicFolder || '');
   if (advancedFeaturesOff) advancedFeaturesOff.hidden = proEnabled;
   localMusicTab.hidden = !proEnabled;
+  musicManagerTab.hidden = !proEnabled;
+  radioLogTab.hidden = !proEnabled;
   panels.get('localmusic').hidden = !proEnabled;
-  if (!proEnabled && document.querySelector('.tab.active')?.dataset.tab === 'localmusic') showTab('interface');
+  panels.get('musicmanager').hidden = !proEnabled;
+  panels.get('radiolog').hidden = !proEnabled;
+  if (!proEnabled && ['localmusic', 'musicmanager', 'radiolog'].includes(document.querySelector('.tab.active')?.dataset.tab)) showTab('interface');
   additionalMusicFolder.value = folder;
   clearAdditionalMusicFolderBtn.disabled = !folder;
+  additionalMusicFolderChoice.hidden = preferences?.additionalMusicFolderNeedsDecision !== true;
   lastFmEnabled.checked = preferences?.lastFmEnabled !== false;
-  lastFmDetails.hidden = !lastFmEnabled.checked;
-  if (proEnabled) { void loadLastFmStatus(); void loadLocalMixManager(); void loadMusicLibraryStatus(); }
+  autoDjEnabled.checked = preferences?.autoDjEnabled === true;
+  autoDjStationName.value = preferences?.autoDjStationName || '';
+  autoDjName.value = preferences?.autoDjName || '';
+  autoDjBreakInterval.value = String(preferences?.autoDjBreakIntervalMinutes ?? 15);
+  portableImportSpeed.value = String([2, 6, 12].includes(Number(preferences?.portableImportWorkers)) ? preferences.portableImportWorkers : 2);
+  if (proEnabled) {
+    if (requestedAdvancedTab) { const requested = requestedAdvancedTab; requestedAdvancedTab = ''; showTab(requested); }
+    void loadLastFmStatus(); void loadDjClipStatus(); void loadReplayGainStatus(); void loadLocalMixSummary(); void loadMusicLibraryStatus(); void loadRememberedMusicComputers(); void loadPortableStorage();
+    if (localMixDetails.open) void loadLocalMixManager();
+  }
+}
+
+function renderRememberedMusicComputers(computers = []) {
+  rememberedMusicComputers.hidden = !computers.length;
+  rememberedMusicComputersList.replaceChildren();
+  for (const computer of computers) {
+    const row = element('div', 'remembered-music-computer-row');
+    if (renamingRememberedComputerId === computer.id) {
+      const rename = element('div', 'remembered-music-computer-rename');
+      const input = element('input', 'input');
+      input.type = 'text'; input.maxLength = 120; input.value = computer.label || '';
+      input.setAttribute('aria-label', 'Computer name');
+      const actions = element('div', 'remembered-music-computer-actions');
+      const save = element('button', 'subtle-link', 'Save'); save.type = 'button';
+      const cancel = element('button', 'subtle-link', 'Cancel'); cancel.type = 'button';
+      save.addEventListener('click', async () => {
+        save.disabled = true;
+        try { renamingRememberedComputerId = ''; renderRememberedMusicComputers(await window.wavedeck.renameRememberedMusicComputer(computer.id, input.value)); }
+        catch (error) { save.disabled = false; setStatus(statusLocalMusic, `Could not rename this computer: ${error.message}`, false); }
+      });
+      cancel.addEventListener('click', () => { renamingRememberedComputerId = ''; renderRememberedMusicComputers(computers); });
+      input.addEventListener('keydown', event => { if (event.key === 'Enter') save.click(); if (event.key === 'Escape') cancel.click(); });
+      actions.append(save, document.createTextNode('·'), cancel);
+      rename.append(input, actions);
+      row.append(rename);
+      row.append(element('span', 'remembered-music-computer-folder', computer.folder));
+      setTimeout(() => input.focus(), 0);
+    } else {
+      const copy = element('div', 'remembered-music-computer-copy');
+      copy.append(element('span', 'remembered-music-computer-name', computer.label || 'Unnamed computer'), element('span', 'remembered-music-computer-folder', computer.folder));
+      const actions = element('div', 'remembered-music-computer-actions');
+      const rename = element('button', 'subtle-link', 'Rename'); rename.type = 'button';
+      const forget = element('button', 'subtle-link', 'Forget'); forget.type = 'button';
+      rename.addEventListener('click', () => { renamingRememberedComputerId = computer.id; renderRememberedMusicComputers(computers); });
+      forget.addEventListener('click', async () => {
+        forget.disabled = true;
+        try { renamingRememberedComputerId = ''; renderRememberedMusicComputers(await window.wavedeck.forgetRememberedMusicComputer(computer.id)); }
+        catch (error) { forget.disabled = false; setStatus(statusLocalMusic, `Could not forget this computer: ${error.message}`, false); }
+      });
+      actions.append(rename, document.createTextNode('·'), forget);
+      row.append(copy, actions);
+    }
+    rememberedMusicComputersList.append(row);
+  }
+}
+
+async function loadRememberedMusicComputers() {
+  try { renderRememberedMusicComputers(await window.wavedeck.getRememberedMusicComputers()); } catch {}
 }
 
 function renderLastFmStatus(status) {
   if (!status) return;
   const total = Number(status.tracksTotal || 0);
   const current = Math.min(total, Number(status.tracksCurrent || 0));
-  const showProgress = status.enabled === true && status.configured === true && total > 0;
-  lastFmProgressWrap.hidden = !showProgress;
-  if (showProgress) {
-    lastFmProgress.max = total;
-    lastFmProgress.value = current;
-    lastFmProgressLabel.textContent = `${Math.round((current / total) * 100)}%`;
-    lastFmProgress.setAttribute('aria-valuetext', `${current.toLocaleString()} of ${total.toLocaleString()} tracks have current Last.fm data`);
-  }
+  const percent = total ? Math.round((current / total) * 100) : 0;
+  const progressColor = `hsl(${Math.round(4 + (116 * percent / 100))} 78% 48%)`;
+  lastFmChart.style.background = `conic-gradient(${progressColor} 0deg ${percent * 3.6}deg, #3a3a3a ${percent * 3.6}deg 360deg)`;
+  lastFmPercent.textContent = total ? `${percent}%` : '—';
+  lastFmChart.title = `${current.toLocaleString()} of ${total.toLocaleString()} tracks enriched`;
+  lastFmChart.setAttribute('aria-label', lastFmChart.title);
   const queued = Number(status.queuedAlbums || 0);
   const updating = status.processing === true || queued > 0;
-  lastFmUpdating.hidden = !updating;
-  queueLastFmRefreshBtn.disabled = updating;
-  queueLastFmRefreshBtn.textContent = updating ? 'Updating Music Data…' : 'Refresh Last.fm Music Data';
+  queueLastFmRefreshBtn.disabled = updating || !status.enabled;
+  const scrobble = status.scrobble || {};
+  const connected = scrobble.connected === true;
+  connectLastFmBtn.hidden = connected;
+  disconnectLastFmBtn.hidden = !connected;
+  connectLastFmBtn.disabled = scrobble.connecting === true;
+  disconnectLastFmBtn.disabled = scrobble.connecting === true;
+  const lastScrobbled = scrobble.lastScrobbled?.artist && scrobble.lastScrobbled?.track
+    ? `Last scrobbled: “${scrobble.lastScrobbled.track}” by ${scrobble.lastScrobbled.artist}.`
+    : '';
+  const connectionMessage = scrobble.message || scrobble.lastMessage || '';
+  lastFmConnection.textContent = connected
+    ? `Connected as ${scrobble.username || 'Last.fm listener'}${Number(scrobble.pending || 0) ? ` · ${Number(scrobble.pending).toLocaleString()} scrobbles waiting` : ''}${lastScrobbled ? ` · ${lastScrobbled}` : ''}${connectionMessage && !/^Connected as /.test(connectionMessage) ? ` · ${connectionMessage}` : ''}`
+    : (scrobble.connecting ? (connectionMessage || 'Finish connecting in your browser.') : (connectionMessage || 'Connect Last.fm to scrobble Local Music.'));
   if (!status.enabled) { lastFmStatus.textContent = 'Last.fm music data is off.'; return; }
   lastFmStatus.textContent = `Last.fm: ${current.toLocaleString()} of ${total.toLocaleString()} tracks current${queued ? ` · ${queued.toLocaleString()} albums queued` : ''}${status.message ? ` · ${status.message}` : ''}`;
 }
 
 async function loadLastFmStatus() {
   try { renderLastFmStatus(await window.wavedeck.getLastFmStatus()); } catch {}
+}
+
+function renderReplayGainStatus(status = {}) {
+  const ready = Number(status.ready || 0);
+  const total = Number(status.total || 0);
+  const percent = total ? Math.round(100 * ready / total) : 0;
+  replayGainChart.style.background = `conic-gradient(#67ce2a 0deg ${percent * 3.6}deg, #3a3a3a ${percent * 3.6}deg 360deg)`;
+  replayGainPercent.textContent = total ? `${percent}%` : '—';
+  replayGainChart.title = `${ready.toLocaleString()} of ${total.toLocaleString()} portable songs analyzed`;
+  replayGainEnabled.checked = status.enabled === true;
+  replayGainPause.textContent = status.paused ? 'Resume analysis' : 'Pause analysis';
+  replayGainPause.disabled = !status.enabled;
+  replayGainStatus.textContent = `${ready.toLocaleString()} of ${total.toLocaleString()} analyzed${status.paused ? ' · paused' : status.running ? ' · analyzing quietly' : status.enabled ? ' · waiting for idle time' : ' · off'}`;
+}
+
+async function loadReplayGainStatus() {
+  try { renderReplayGainStatus(await window.wavedeck.getReplayGainStatus()); } catch {}
+}
+
+function renderDjClipStatus(status = {}) {
+  if (!djClipStatus || !queueQualifyingDjClipsBtn) return;
+  const ready = Number(status.progress?.ready || 0);
+  const total = Number(status.progress?.total || 0);
+  djClipProgressWrap.hidden = !status.ready || !total;
+  djClipProgress.max = Math.max(1, total);
+  djClipProgress.value = Math.min(ready, total);
+  djClipProgressLabel.textContent = `${ready.toLocaleString()} of ${total.toLocaleString()}`;
+  const queued = Number(status.queued || 0);
+  const busy = status.state === 'generating';
+  const enabled = status.enabled === true;
+  queueQualifyingDjClipsBtn.disabled = busy || !enabled;
+  editAutoDjIdsBtn.disabled = false;
+  queueQualifyingDjClipsBtn.textContent = busy ? 'Generating clips' : 'Generate clips';
+  djClipStatus.textContent = status.message || (enabled ? (queued ? `${queued.toLocaleString()} track${queued === 1 ? '' : 's'} queued quietly in the background.` : 'Auto DJ is ready.') : 'Auto DJ is off.');
+}
+async function loadDjClipStatus() {
+  try { renderDjClipStatus(await window.wavedeck.getDjClipStatus()); } catch (error) { if (djClipStatus) djClipStatus.textContent = error.message; }
 }
 
 function element(tag, className, text) {
@@ -203,11 +488,22 @@ function renderLocalMixAnalysis(status) {
   localMixManager.append(progress);
 }
 
+function renderLocalMixSummary(availability = {}) {
+  if (availability.analyzing) { localMixReadyCount.textContent = '—'; localMixReadyLabel.textContent = 'Checking Local Mixes…'; return; }
+  if (availability.error) { localMixReadyCount.textContent = '—'; localMixReadyLabel.textContent = 'Local Mixes need attention'; return; }
+  const mixes = Array.isArray(availability.mixes) ? availability.mixes : [];
+  const viable = mixes.filter(mix => mix.valid && mix.ready).length;
+  const ready = mixes.filter(mix => mix.valid && mix.enabled && mix.ready).length;
+  localMixReadyCount.textContent = `${ready.toLocaleString()} of ${viable.toLocaleString()}`;
+  localMixReadyLabel.textContent = 'Local Mixes Ready';
+}
+
 async function loadLocalMixManager() {
   const version = ++localMixManagerLoadVersion;
   try {
     const availability = await window.wavedeck.getLocalMixInventory();
     if (version !== localMixManagerLoadVersion) return;
+    renderLocalMixSummary(availability);
     if (availability?.analyzing) { renderLocalMixAnalysis(availability); return; }
     if (availability?.error) { localMixManager.textContent = `Could not check Local Mixes: ${availability.error}`; return; }
     renderLocalMixManager(Array.isArray(availability?.mixes) ? availability.mixes : []);
@@ -215,6 +511,14 @@ async function loadLocalMixManager() {
     if (version !== localMixManagerLoadVersion) return;
     localMixManager.textContent = `Could not check Local Mixes: ${error.message}`;
   }
+}
+
+async function loadLocalMixSummary() {
+  try {
+    const availability = await window.wavedeck.getLocalMixInventory();
+    renderLocalMixSummary(availability);
+    if (localMixDetails.open) void loadLocalMixManager();
+  } catch { localMixSummary.textContent = 'Local Mixes unavailable'; }
 }
 
 function lowerKey(value) {
@@ -273,10 +577,81 @@ function setStatus(node, message = "", success = true) {
 }
 
 function showTab(name) {
-  const selected = panels.has(name) && (name !== 'localmusic' || !localMusicTab.hidden) ? name : (name === 'localmusic' ? 'interface' : 'stations');
+  const advanced = ['localmusic', 'musicmanager', 'radiolog'].includes(name);
+  const selected = panels.has(name) && (!advanced || !localMusicTab.hidden) ? name : (advanced ? 'interface' : 'stations');
   tabs.forEach((tab) => tab.classList.toggle("active", tab.dataset.tab === selected));
   for (const [panelName, panel] of panels) panel.classList.toggle("hidden", panelName !== selected);
+  const frame = selected === 'musicmanager' ? musicManagerFrame : selected === 'radiolog' ? radioLogFrame : null;
+  if (frame && !frame.getAttribute('src')) frame.setAttribute('src', frame.dataset.src);
+  if (selected === 'musicmanager') deliverFocusedTrack();
 }
+
+const streamEnabled = document.getElementById('personalStreamEnabled');
+const streamStatus = document.getElementById('personalStreamStatus');
+const streamHost = document.getElementById('personalStreamHost');
+const streamMountName = document.getElementById('personalStreamMountName');
+const streamAddressNote = document.getElementById('personalStreamAddressNote');
+const streamUrl = document.getElementById('personalStreamUrl');
+const streamQr = document.getElementById('personalStreamQr');
+const streamMessage = document.getElementById('personalStreamMessage');
+let streamState = null;
+let qrRequest = 0;
+async function renderPersonalStream(state) {
+  if (!state) return;
+  streamState = state;
+  streamEnabled.checked = state.enabled === true;
+  streamStatus.textContent = state.status === 'broadcasting' ? `Broadcasting · ${state.format}`
+    : state.status === 'starting' ? 'Starting your station…'
+    : state.status === 'error' ? `Could not start: ${state.error}` : 'Off';
+  if (document.activeElement !== streamHost) streamHost.value = state.host || '';
+  if (document.activeElement !== streamMountName) streamMountName.value = state.mountName || '';
+  streamAddressNote.textContent = state.internetReady
+    ? 'Internet address saved. The router must also forward TCP port 18037 to this computer.'
+    : `Showing your home-network address${state.localHost ? ` (${state.localHost})` : ''}. Add your public IP or hostname above for use away from home.`;
+  streamUrl.textContent = state.url || 'No address available';
+  const request = ++qrRequest;
+  if (state.url) {
+    try {
+      const data = await window.wavedeck.getPersonalStreamQr();
+      if (request === qrRequest) { streamQr.src = data; streamQr.hidden = !data; }
+    } catch { if (request === qrRequest) streamQr.hidden = true; }
+  } else streamQr.hidden = true;
+}
+window.wavedeck.onPersonalStreamChanged(renderPersonalStream);
+streamEnabled.addEventListener('change', async () => {
+  streamEnabled.disabled = true; streamMessage.textContent = '';
+  try { await renderPersonalStream(await window.wavedeck.setPersonalStreamEnabled(streamEnabled.checked)); }
+  catch (error) { streamMessage.textContent = error.message; await renderPersonalStream(await window.wavedeck.getPersonalStream()); }
+  finally { streamEnabled.disabled = false; }
+});
+document.getElementById('personalStreamSaveHost').addEventListener('click', async () => {
+  try { await renderPersonalStream(await window.wavedeck.setPersonalStreamHost(streamHost.value)); streamMessage.textContent = 'Address saved.'; }
+  catch (error) { streamMessage.textContent = error.message; }
+});
+document.getElementById('personalStreamSaveMountName').addEventListener('click', async () => {
+  try { await renderPersonalStream(await window.wavedeck.setPersonalStreamMountName(streamMountName.value)); streamMessage.textContent = 'Station name saved. Use the new address in your listening app.'; }
+  catch (error) { streamMessage.textContent = error.message; }
+});
+document.getElementById('personalStreamCopy').addEventListener('click', async () => {
+  if (!streamState?.url) return;
+  try { await window.wavedeck.copyPersonalStreamUrl(); streamMessage.textContent = 'Address copied.'; }
+  catch (error) { streamMessage.textContent = error.message; }
+});
+
+function deliverFocusedTrack() {
+  if (!pendingFocusedTrack || musicManagerFrame.dataset.loaded !== 'true') return;
+  musicManagerFrame.contentWindow.postMessage({ type: 'focus-portable-track', track: pendingFocusedTrack }, '*');
+  pendingFocusedTrack = null;
+}
+window.wavedeck.onPortableMusicTrackFocus(track => {
+  pendingFocusedTrack = track;
+  requestedAdvancedTab = 'musicmanager';
+  if (!localMusicTab.hidden) { requestedAdvancedTab = ''; showTab('musicmanager'); }
+});
+window.wavedeck.onSettingsTabRequested(tab => {
+  if (['musicmanager', 'radiolog'].includes(tab) && localMusicTab.hidden) requestedAdvancedTab = tab;
+  else showTab(tab);
+});
 
 function renderLauncherStatus(status) {
   const available = status?.available === true;
@@ -1041,7 +1416,7 @@ chooseAdditionalMusicFolderBtn.addEventListener('click', async () => {
     const folder = await window.wavedeck.chooseAdditionalMusicFolder();
     if (!folder) return;
     renderProMusicSettings(await window.wavedeck.setAdditionalMusicFolder(folder));
-    setStatus(statusLocalMusic, 'Additional music folder saved. Use Music’s Rescan button when you want to index it.');
+    setStatus(statusLocalMusic, 'Choose whether this music folder is remembered on this computer.');
   } catch (error) {
     setStatus(statusLocalMusic, `Could not save the music folder: ${error.message}`, false);
   } finally {
@@ -1052,11 +1427,46 @@ chooseAdditionalMusicFolderBtn.addEventListener('click', async () => {
 clearAdditionalMusicFolderBtn.addEventListener('click', async () => {
   clearAdditionalMusicFolderBtn.disabled = true;
   try {
-    renderProMusicSettings(await window.wavedeck.setAdditionalMusicFolder(''));
-    setStatus(statusLocalMusic, 'Additional music folder removed.');
+    renderProMusicSettings(await window.wavedeck.removeAdditionalMusicFolder());
+    setStatus(statusLocalMusic, 'External music folder removed.');
   } catch (error) {
     setStatus(statusLocalMusic, `Could not remove the music folder: ${error.message}`, false);
   }
+});
+
+rememberAdditionalMusicFolderBtn.addEventListener('click', async () => {
+  rememberAdditionalMusicFolderBtn.disabled = true;
+  try {
+    renderProMusicSettings(await window.wavedeck.rememberAdditionalMusicFolder());
+    setStatus(statusLocalMusic, 'This computer and music folder will be remembered.');
+  } catch (error) {
+    setStatus(statusLocalMusic, `Could not remember this computer: ${error.message}`, false);
+  } finally { rememberAdditionalMusicFolderBtn.disabled = false; }
+});
+
+portableImportBtn.addEventListener('click', async () => {
+  portableImportBtn.disabled = true;
+  try { renderPortableImport(await window.wavedeck.startPortableImport()); }
+  catch (error) { setStatus(statusLocalMusic, `Could not start import: ${error.message}`, false); portableImportFolder = ''; await loadPortableImport(); }
+});
+portableImportSpeed.addEventListener('change', async () => { renderProMusicSettings(await window.wavedeck.setPortableImportWorkers(Number(portableImportSpeed.value))); });
+openPortableMusicLibraryBtn.addEventListener('click', () => { void window.wavedeck.openPortableMusicLibrary(); });
+openMusicDebugLogBtn.addEventListener('click', () => { void window.wavedeck.openMusicDebugLog(); });
+manageLocalMixesBtn.addEventListener('click', () => {
+  localMixDetails.open = true;
+  void loadLocalMixManager();
+  localMixDetails.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+localMixDetails.addEventListener('toggle', () => { if (localMixDetails.open) void loadLocalMixManager(); });
+
+useAdditionalMusicFolderThisTimeBtn.addEventListener('click', async () => {
+  useAdditionalMusicFolderThisTimeBtn.disabled = true;
+  try {
+    renderProMusicSettings(await window.wavedeck.useAdditionalMusicFolderThisTime());
+    setStatus(statusLocalMusic, 'This music folder will be used for this visit only.');
+  } catch (error) {
+    setStatus(statusLocalMusic, `Could not use the music folder: ${error.message}`, false);
+  } finally { useAdditionalMusicFolderThisTimeBtn.disabled = false; }
 });
 
 rescanMusicBtn.addEventListener('click', async () => {
@@ -1090,15 +1500,58 @@ queueLastFmRefreshBtn.addEventListener('click', async () => {
     setStatus(statusLocalMusic, 'Last.fm catch-up refresh queued.');
   } catch (error) {
     queueLastFmRefreshBtn.disabled = false;
-    queueLastFmRefreshBtn.textContent = 'Refresh Last.fm Music Data';
     setStatus(statusLocalMusic, `Could not queue Last.fm refresh: ${error.message}`, false);
-  }
-  finally {
-    if (!queueLastFmRefreshBtn.disabled) queueLastFmRefreshBtn.textContent = 'Refresh Last.fm Music Data';
   }
 });
 
-openRadioLogBtn.addEventListener('click', () => { void window.wavedeck.openMusicDebugLog(); });
+queueQualifyingDjClipsBtn.addEventListener('click', async () => {
+  queueQualifyingDjClipsBtn.disabled = true;
+  try {
+    const status = await window.wavedeck.queueQualifyingDjClips();
+    renderDjClipStatus(status);
+  } catch (error) { setStatus(statusLocalMusic, error.message, false); }
+  finally { if (queueQualifyingDjClipsBtn.textContent !== 'Generating clips') queueQualifyingDjClipsBtn.disabled = false; }
+});
+async function saveAutoDjSettings() {
+  try {
+    const minutes = Number(autoDjBreakInterval.value);
+    if (!Number.isInteger(minutes) || minutes < 1 || minutes > 60) throw new Error('Choose 1 to 60 minutes between DJ break attempts.');
+    const preferences = await window.wavedeck.setAutoDjSettings({ enabled: autoDjEnabled.checked, stationName: autoDjStationName.value, djName: autoDjName.value, breakIntervalMinutes: minutes });
+    renderProMusicSettings(preferences);
+    await loadDjClipStatus();
+  } catch (error) { setStatus(statusLocalMusic, `Could not save Auto DJ settings: ${error.message}`, false); }
+}
+autoDjEnabled.addEventListener('change', saveAutoDjSettings);
+autoDjStationName.addEventListener('change', saveAutoDjSettings);
+autoDjName.addEventListener('change', saveAutoDjSettings);
+autoDjBreakInterval.addEventListener('change', saveAutoDjSettings);
+editAutoDjIdsBtn.addEventListener('click', () => { void window.wavedeck.openAutoDjStationIds(); });
+replayGainEnabled.addEventListener('change', async () => {
+  replayGainEnabled.disabled = true;
+  try { renderReplayGainStatus(await window.wavedeck.setReplayGainSettings({ enabled: replayGainEnabled.checked })); }
+  catch (error) { setStatus(statusLocalMusic, `Could not change ReplayGain: ${error.message}`, false); await loadReplayGainStatus(); }
+  finally { replayGainEnabled.disabled = false; }
+});
+replayGainPause.addEventListener('click', async () => {
+  replayGainPause.disabled = true;
+  try { renderReplayGainStatus(await window.wavedeck.setReplayGainSettings({ paused: replayGainPause.textContent === 'Pause analysis' })); }
+  catch (error) { setStatus(statusLocalMusic, `Could not change ReplayGain: ${error.message}`, false); }
+  finally { await loadReplayGainStatus(); }
+});
+
+connectLastFmBtn.addEventListener('click', async () => {
+  connectLastFmBtn.disabled = true;
+  try { renderLastFmStatus(await window.wavedeck.connectLastFm()); }
+  catch (error) { setStatus(statusLocalMusic, `Could not start Last.fm connection: ${error.message}`, false); }
+  finally { void loadLastFmStatus(); }
+});
+
+disconnectLastFmBtn.addEventListener('click', async () => {
+  disconnectLastFmBtn.disabled = true;
+  try { renderLastFmStatus(await window.wavedeck.disconnectLastFm()); }
+  catch (error) { setStatus(statusLocalMusic, `Could not disconnect Last.fm: ${error.message}`, false); }
+  finally { void loadLastFmStatus(); }
+});
 
 async function reloadEverything() {
   await loadData();
@@ -1141,8 +1594,22 @@ window.wavedeck.onUiPreferencesChanged((preferences) => {
   if (sidebarPlatform) launchInSidebarMode.checked = preferences?.launchInSidebarMode === true;
 });
 window.wavedeck.onLastFmChanged(renderLastFmStatus);
+window.wavedeck.onReplayGainChanged(renderReplayGainStatus);
+window.wavedeck.onDjClipsChanged(renderDjClipStatus);
+window.wavedeck.onMusicDebugLog(decision => {
+  if (radioLogFrame.getAttribute('src')) radioLogFrame.contentWindow?.postMessage({ type: 'embedded-event', name: 'debug-log', data: decision }, '*');
+});
+window.wavedeck.onMusicDebugReset(() => {
+  if (radioLogFrame.getAttribute('src')) radioLogFrame.contentWindow?.postMessage({ type: 'embedded-event', name: 'debug-reset' }, '*');
+});
 window.wavedeck.onMusicChanged(renderMusicLibraryStatus);
-window.wavedeck.onLocalMixesChanged(() => { if (!localMusicTab.hidden) void loadLocalMixManager(); });
+window.wavedeck.onMusicOptimizationChanged(renderMusicLibraryStatus);
+window.wavedeck.onMusicImportChanged(renderPortableImport);
+window.wavedeck.onLocalMixesChanged(() => {
+  if (localMusicTab.hidden) return;
+  void loadLocalMixSummary();
+  if (localMixDetails.open) void loadLocalMixManager();
+});
 
 (async function initialize() {
   showTab(document.querySelector(".tab.active")?.dataset.tab || "interface");
@@ -1152,6 +1619,7 @@ window.wavedeck.onLocalMixesChanged(() => { if (!localMusicTab.hidden) void load
     loadUiPreferences(),
     loadLibraryUpdateState()
   ]);
+  if (platform === 'linux') await renderPersonalStream(await window.wavedeck.getPersonalStream());
   clearForm();
   initialized = true;
   if (pendingEditId) {

@@ -18,10 +18,32 @@
 
       <div class="divider"></div>
 
+      <label class="preference-toggle">
+        <input id="finishCurrentSongOnStationChange" type="checkbox" />
+        <span class="toggle-switch" aria-hidden="true"></span>
+        <span>Finish current song when changing stations</span>
+      </label>
+
+      <div class="divider"></div>
+
+      <label class="preference-toggle">
+        <input id="localMixFavorLastFm" type="checkbox" />
+        <span class="toggle-switch" aria-hidden="true"></span>
+        <span>Favor Last.fm Data for Local Mixes</span>
+      </label>
+
+      <div class="divider"></div>
+
       <div class="control">
         <label for="localRadioFamiliarity">Song familiarity</label>
-        <input id="localRadioFamiliarity" type="range" min="0" max="2" step="1" value="1" />
-        <div class="stops three" aria-hidden="true"><span>Play Deep Cuts Too</span><span>Balanced Mix</span><span>Favor the Hits</span></div>
+        <input id="localRadioFamiliarity" type="range" min="0" max="3" step="1" value="1" />
+        <div class="stops four" aria-hidden="true"><span>Allow Deep Cuts</span><span>Balanced Mix</span><span>Favor the Hits</span><span>Hits Only</span></div>
+      </div>
+
+      <div class="control">
+        <label for="localRadioExploreDistance">How Far Should We Stray From the Seed?</label>
+        <input id="localRadioExploreDistance" type="range" min="0" max="2" step="1" value="1" />
+        <div class="stops three" aria-hidden="true"><span>Close to Home</span><span>Take a Detour</span><span>Go Exploring</span></div>
       </div>
 
       <div class="control">
@@ -41,6 +63,9 @@
         <input id="localRadioArtistSet" type="range" min="0" max="3" step="1" value="0" />
         <div class="stops four" aria-hidden="true"><span>Single Tracks</span><span>Two-fers</span><span>Three-way</span><span>Four-play</span></div>
       </div>
+
+      <p id="localRadioStationProfile" class="station-profile" hidden></p>
+      <p class="repeat-note">Starting a new station resets artist rest. Song rest carries over.</p>
     </section>
     <div id="status" class="status" role="status"></div>
   </main>

@@ -1,0 +1,128 @@
+name: Build WaveDeck DJ
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [dj-portable]
+
+permissions:
+  contents: write
+
+jobs:
+  linux:
+    # Build native streaming libraries against an older glibc for Linux Mint compatibility.
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: sudo DEBIAN_FRONTEND=noninteractive apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y icecast2
+      - run: npm install --package-lock=false --no-audit --no-fund
+      - run: npm test
+      - run: npm run dist:linux -- --publish never
+      - name: Inspect WaveDeck DJ AppImage
+        shell: bash
+        run: |
+          set -euo pipefail
+          appimage="dist/WaveDeckDJ.AppImage"
+          chmod 755 "$appimage"
+          test -f "$appimage"
+          test -x "$appimage"
+          size=$(stat --format=%s "$appimage")
+          if [ "$size" -lt 100000000 ]; then
+            echo "WaveDeckDJ.AppImage is unexpectedly small: $size bytes."
+            exit 1
+          fi
+          sha256sum "$appimage"
+      - name: Verify packaged DJ voice
+        shell: bash
+        run: |
+          set -euo pipefail
+          appimage="$GITHUB_WORKSPACE/dist/WaveDeckDJ.AppImage"
+          workdir=$(mktemp -d)
+          trap 'rm -rf "$workdir"' EXIT
+          (
+            cd "$workdir"
+            "$appimage" --appimage-extract >/dev/null
+          )
+          appdir="$workdir/squashfs-root"
+          NODE_PATH="$appdir/resources/app.asar/node_modules" ELECTRON_RUN_AS_NODE=1 "$appdir/wavedeck-dj" "$GITHUB_WORKSPACE/scripts/verify-dj-voice-runtime.js" "$appdir"
+      - name: Verify packaged Icecast on older glibc
+        shell: bash
+        run: |
+          set -euo pipefail
+          appimage="$GITHUB_WORKSPACE/dist/WaveDeckDJ.AppImage"
+          workdir=$(mktemp -d)
+          pid=''
+          trap 'if [ -n "$pid" ]; then kill "$pid" 2>/dev/null || true; wait "$pid" 2>/dev/null || true; fi; rm -rf "$workdir"' EXIT
+          (
+            cd "$workdir"
+            "$appimage" --appimage-extract 'resources/streaming/*' >/dev/null
+          )
+          appdir="$workdir/squashfs-root"
+          icecast="$appdir/resources/streaming/icecast2"
+          libdir="$appdir/resources/streaming/lib"
+          for binary in "$icecast" "$libdir"/*.so*; do
+            required=$(readelf -W --version-info "$binary" | grep -oE 'GLIBC_[0-9]+\.[0-9]+' | cut -d_ -f2 | sort -V | tail -1 || true)
+            if [ -n "$required" ] && ! dpkg --compare-versions "$required" le 2.35; then
+              echo "$binary requires glibc $required (maximum supported: 2.35)"
+              exit 1
+            fi
+          done
+          cat > "$workdir/icecast.xml" <<EOF
+          <icecast><location>CI</location><admin>local@localhost</admin>
+          <limits><clients>2</clients><sources>1</sources></limits>
+          <authentication><source-password>test-source</source-password><admin-user>admin</admin-user><admin-password>test-admin</admin-password></authentication>
+          <hostname>localhost</hostname><listen-socket><port>18038</port><bind-address>127.0.0.1</bind-address></listen-socket>
+          <paths><basedir>$workdir</basedir><logdir>$workdir</logdir><webroot>$workdir</webroot><adminroot>$workdir</adminroot></paths>
+          <logging><accesslog>access.log</accesslog><errorlog>error.log</errorlog><loglevel>2</loglevel></logging>
+          <security><chroot>0</chroot></security></icecast>
+          EOF
+          LD_LIBRARY_PATH="$libdir" "$icecast" -c "$workdir/icecast.xml" >"$workdir/icecast.out" 2>&1 &
+          pid=$!
+          ready=0
+          for attempt in $(seq 1 50); do
+            if curl --silent --max-time 1 --output /dev/null http://127.0.0.1:18038/; then ready=1; break; fi
+            if ! kill -0 "$pid" 2>/dev/null; then break; fi
+            sleep 0.1
+          done
+          if [ "$ready" -ne 1 ]; then
+            cat "$workdir/icecast.out"
+            test ! -f "$workdir/error.log" || tail -30 "$workdir/error.log"
+            exit 1
+          fi
+          echo 'Packaged Icecast opened its listening port.'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WaveDeckDJ-0.1.11-Linux
+          path: dist/WaveDeckDJ.AppImage
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+
+  publish:
+    needs: linux
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: WaveDeckDJ-0.1.11-Linux
+          path: release-assets
+      - name: Inspect release asset
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f release-assets/WaveDeckDJ.AppImage
+          sha256sum release-assets/WaveDeckDJ.AppImage
+      - name: Publish WaveDeck DJ 0.1.11
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: dj-v0.1.11
+          target_commitish: ${{ github.sha }}
+          name: WaveDeck DJ 0.1.11
+          body: "Linux x64 WaveDeck DJ. Adds title pronunciation hints, Play Next and a hidden queue, quiet ReplayGain analysis, more even DJ clips, and advance preparation of DJ break outros. Existing portable music, DJ clips, and settings remain intact."
+          files: release-assets/WaveDeckDJ.AppImage
+          overwrite_files: true
+          fail_on_unmatched_files: true

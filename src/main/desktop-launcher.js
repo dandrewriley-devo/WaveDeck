@@ -23,7 +23,7 @@ function buildDesktopEntry({ appImagePath, version }) {
   return `[Desktop Entry]
 Type=Application
 Name=WaveDeck
-Comment=Portable sidebar internet radio player
+Comment=Portable music and internet radio player
 Exec=${quoteExecArgument(appImagePath)}
 Icon=wavedeck
 Terminal=false

@@ -15,6 +15,8 @@ button:hover { background:#343434; }
 .entry { background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--accent); }
 .entry-head { align-items:baseline; background:#202020; border-bottom:1px solid var(--line); display:flex; gap:10px; justify-content:space-between; padding:10px 12px; }
 .entry-head b { color:#dfeec0; }
+.song-link{background:none;border:0;color:inherit;cursor:pointer;font:inherit;font-weight:700;padding:0;text-align:left;text-decoration:underline;text-decoration-color:transparent;text-underline-offset:3px}
+.song-link:hover,.song-link:focus-visible{background:none;color:#a7df9c;text-decoration-color:currentColor}
 .time, .muted { color:var(--muted); font-size:12px; }
 .entry-body { display:grid; gap:12px; padding:12px; }
 .track { font-size:16px; }

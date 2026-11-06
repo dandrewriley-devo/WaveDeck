@@ -69,6 +69,7 @@ class MpvPlayer {
     this.onStatus = onStatus || (() => {});
     this.onEnded = onEnded || (() => {});
     this.activeEntry = null;
+    this.audioDevice = 'auto';
 
     this.process = null;
     this.socket = null;
@@ -141,6 +142,7 @@ class MpvPlayer {
         "--no-ytdl",
         "--network-timeout=10",
         "--cache=yes",
+        `--audio-device=${this.audioDevice}`,
         `--input-ipc-server=${this.ipcPath}`
       ], {
         windowsHide: true,
@@ -357,7 +359,7 @@ class MpvPlayer {
     });
   }
 
-  async play(url) {
+  async play(url, startAt = 0) {
     await this.start();
     this.activeEntry = null;
     this.playSequence += 1;
@@ -366,13 +368,18 @@ class MpvPlayer {
       bitrateKbps: null,
       bitrateResolved: false
     });
-    await this.command(["loadfile", url, "replace"]);
+    await this.command(startAt > 0 ? ["loadfile", url, "replace", -1, `start=${startAt}`] : ["loadfile", url, "replace"]);
     await this.command(['set_property', 'pause', false]);
     return true;
   }
 
   async setPaused(paused) {
     await this.command(['set_property', 'pause', Boolean(paused)]);
+  }
+
+  async setAudioDevice(device) {
+    this.audioDevice = device || 'auto';
+    if (this.socket && !this.socket.destroyed) await this.command(['set_property', 'audio-device', this.audioDevice]);
   }
 
   async seek(seconds) {
@@ -497,8 +504,11 @@ class CrossfadeMpvPlayer {
     this.volume = 100;
     this.muted = false;
     this.stationGain = 0;
+    this.broadcastOutput = false;
+    this.onMonitorVolume = () => {};
     this.activeLane = 'a';
     this.crossfade = null;
+    this.preparedBreak = null;
     this.lanes = {};
     for (const name of ['a', 'b']) {
       const lanePath = platform === 'win32' ? `${ipcPath}-${name}` : `${ipcPath}-${name}`;
@@ -530,7 +540,7 @@ class CrossfadeMpvPlayer {
     if (!lane.process) return;
     await lane.stop().catch(() => null);
   }
-  #outputVolume(gain = 1) { return this.muted ? 0 : Math.max(0, Math.min(100, this.volume * gain)); }
+  #outputVolume(gain = 1) { return this.broadcastOutput ? Math.max(0, Math.min(100, gain * 100)) : (this.muted ? 0 : Math.max(0, Math.min(100, this.volume * gain))); }
   #applyLaneVolume(name, gain = 1) {
     const lane = this.lanes[name];
     if (!lane.process) return;
@@ -545,33 +555,72 @@ class CrossfadeMpvPlayer {
     if (stopBackground) await this.#stopLane(this.#otherLane(this.activeLane));
   }
 
-  async play(url) {
+  async prepareBreak(url, gainDb = 3) {
+    if (this.crossfade || !url) return false;
+    if (this.preparedBreak?.url === url) return true;
+    const incoming = this.#otherLane();
+    this.preparedBreak = null;
+    await this.#stopLane(incoming);
+    const target = this.lanes[incoming];
+    try {
+      await target.start();
+      await target.setStationGain(gainDb);
+      await target.setVolume(0);
+      await target.play(url);
+      await target.setPaused(true);
+      await target.seek(0);
+      this.preparedBreak = { url, incoming, gainDb };
+      return true;
+    } catch {
+      await this.#stopLane(incoming);
+      return false;
+    }
+  }
+
+  async playPreparedBreak(url) {
+    const prepared = this.preparedBreak;
+    if (!prepared || prepared.url !== url || prepared.incoming !== this.#otherLane()) return false;
+    this.preparedBreak = null;
+    const outgoing = this.activeLane;
+    this.activeLane = prepared.incoming;
+    this.stationGain = prepared.gainDb;
+    await this.lanes[prepared.incoming].setVolume(this.#outputVolume());
+    await this.lanes[prepared.incoming].setPaused(false);
+    void this.#stopLane(outgoing);
+    this.onStatus(this.getStatus());
+    return true;
+  }
+
+  async play(url, startAt = 0) {
     await this.#cancelCrossfade();
+    this.preparedBreak = null;
     await Promise.all(['a', 'b'].map(name => this.#stopLane(name)));
     this.activeLane = 'a';
     await this.lanes.a.setStationGain(this.stationGain);
-    await this.lanes.a.play(url);
+    await this.lanes.a.play(url, startAt);
     this.#applyLaneVolume('a', 1);
     return true;
   }
 
-  async crossfadeTo(url, durationMs = 8000) {
+  async crossfadeTo(url, durationMs = 8000, gainDb = this.stationGain, startAt = 0) {
+    this.preparedBreak = null;
     const outgoing = this.activeLane;
     const incoming = this.#otherLane(outgoing);
     await this.#cancelCrossfade();
     await this.#stopLane(incoming);
     const target = this.lanes[incoming];
     await target.start();
-    await target.setStationGain(this.stationGain);
+    await target.setStationGain(gainDb);
     await target.setVolume(0);
     try {
-      await target.play(url);
+      await target.play(url, startAt);
     } catch (error) {
       this.#applyLaneVolume(outgoing, 1);
       await this.#stopLane(incoming);
       throw error;
     }
     this.activeLane = incoming;
+    this.stationGain = gainDb;
     const duration = Math.max(1000, Math.round(Number(durationMs) || 8000));
     const startedAt = Date.now();
     const apply = () => {
@@ -600,6 +649,7 @@ class CrossfadeMpvPlayer {
   async seek(seconds) { return this.lanes[this.activeLane].seek(seconds); }
 
   async stop() {
+    this.preparedBreak = null;
     await this.#cancelCrossfade({ stopBackground: false });
     await Promise.all(['a', 'b'].map(name => this.#stopLane(name)));
     this.activeLane = 'a';
@@ -610,6 +660,7 @@ class CrossfadeMpvPlayer {
     this.volume = Math.min(Math.max(Number(value) || 0, 0), 100);
     this.#applyLaneVolume(this.activeLane, 1);
     if (this.crossfade) this.#applyLaneVolume(this.#otherLane(this.activeLane), 1);
+    if (this.broadcastOutput) await this.onMonitorVolume(this.volume, this.muted);
     this.onStatus(this.getStatus());
     return this.volume;
   }
@@ -625,8 +676,26 @@ class CrossfadeMpvPlayer {
     this.muted = !this.muted;
     this.#applyLaneVolume(this.activeLane, 1);
     if (this.crossfade) this.#applyLaneVolume(this.#otherLane(this.activeLane), 1);
+    if (this.broadcastOutput) await this.onMonitorVolume(this.volume, this.muted);
     this.onStatus(this.getStatus());
     return this.muted;
+  }
+
+  async setBroadcastOutput(sinkName, onMonitorVolume = () => {}) {
+    const enabled = Boolean(sinkName);
+    const previous = this.broadcastOutput;
+    this.broadcastOutput = enabled;
+    this.onMonitorVolume = enabled ? onMonitorVolume : () => {};
+    try {
+      await Promise.all(Object.values(this.lanes).map(lane => lane.setAudioDevice(enabled ? `pulse/${sinkName}` : 'auto')));
+    } catch (error) {
+      this.broadcastOutput = previous;
+      throw error;
+    }
+    this.#applyLaneVolume(this.activeLane, 1);
+    if (this.crossfade) this.#applyLaneVolume(this.#otherLane(this.activeLane), 1);
+    if (enabled) await this.onMonitorVolume(this.volume, this.muted);
+    this.onStatus(this.getStatus());
   }
 
   close() {

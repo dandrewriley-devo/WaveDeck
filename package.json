@@ -1,8 +1,8 @@
 {
   "name": "wavedeck",
-  "version": "1.0.5",
-  "wavedeckVersion": "1.0.5",
-  "description": "WaveDeck portable internet-radio player for Linux, Windows, and macOS",
+  "version": "1.2.0",
+  "wavedeckVersion": "1.2.0",
+  "description": "WaveDeck portable music and radio player",
   "author": "Andrew Riley",
   "license": "MIT",
   "desktopName": "wavedeck.desktop",
@@ -10,9 +10,11 @@
   "scripts": {
     "prestart": "node scripts/ensure-music-dependencies.js",
     "prepare:linux-recorder": "node scripts/prepare-linux-ffmpeg.js",
+    "prepare:linux-icecast": "node scripts/prepare-linux-icecast.js",
+    "prepare:dj-model": "node scripts/prepare-dj-model.js",
     "start": "npm run prepare:linux-recorder && electron .",
     "test": "node scripts/validate.js && node scripts/test-music.js",
-    "dist:linux": "npm run prepare:linux-recorder && electron-builder --linux AppImage --x64",
+    "dist:linux": "npm run prepare:linux-recorder && npm run prepare:linux-icecast && npm run prepare:dj-model && electron-builder --linux AppImage --x64",
     "dist:windows": "electron-builder --win portable --x64 --config electron-builder.windows.json",
     "dist:macos": "electron-builder --mac dir --universal --config electron-builder.macos.json"
   },
@@ -24,6 +26,9 @@
     "appId": "com.a17press.wavedeck",
     "productName": "WaveDeck",
     "asar": true,
+    "asarUnpack": [
+      "node_modules/@img/sharp-libvips-linux-x64/**"
+    ],
     "files": [
       "assets/**/*",
       "build/**/*",
@@ -40,6 +45,14 @@
       {
         "from": ".cache/wavedeck-tools/linux/ffprobe",
         "to": "recording/ffprobe"
+      },
+      {
+        "from": ".cache/wavedeck-tools/linux/icecast",
+        "to": "streaming"
+      },
+      {
+        "from": ".cache/wavedeck-tools/dj-models",
+        "to": "dj-models"
       }
     ],
     "directories": {
@@ -62,7 +75,9 @@
   },
   "dependencies": {
     "dbus-next": "^0.10.2",
+    "kokoro-js": "1.2.1",
     "music-metadata": "11.9.0",
+    "qrcode": "1.5.4",
     "sql.js": "1.13.0",
     "x11": "^4.1.0"
   }

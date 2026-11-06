@@ -2,16 +2,56 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { normalize, radioArtist } = require('./music-tags');
+const { artistKey, baseSongIdentity, comparisonSignatures, songIdentity, sameSong } = require('./song-identity');
 const { isTrackEligibleForMix } = require('./local-mixes');
 
 const COOLDOWN = 4 * 60 * 60 * 1000;
 const COMMON_TAGS = new Set(['rock', 'pop', 'country', 'jazz', 'blues', 'folk', 'metal', 'indie', 'dance', 'electronic', 'hip hop', 'hip-hop', 'rap', 'r&b', 'rnb', 'classical', 'soundtrack', 'alternative', 'soul', 'music']);
+const NON_MUSIC_GENRES = new Set(['comedy', 'stand up comedy', 'spoken word']);
 
 const matches = (a, b) => Boolean(a && b && normalize(a) === normalize(b));
 const artistList = track => Array.isArray(track?.artists) && track.artists.length ? track.artists : [track?.artist];
 const overlaps = (left = [], right = []) => left.some(a => right.some(b => matches(a, b)));
 const stableId = track => crypto.createHash('sha256').update(String(track?.songKey || track?.id || '')).digest('hex').slice(0, 16);
-const artistKey = track => normalize(radioArtist(track) || track?.artist || '');
+function storedGenres(track) {
+  const values = Array.isArray(track?.genres) ? track.genres : [track?.genres];
+  return [...new Set(values.map(value => String(value || '').trim()).filter(Boolean))];
+}
+function nonMusicGenre(track) {
+  for (const value of storedGenres(track)) {
+    for (const token of value.split(/[;,|/&]+/)) {
+      const genre = normalize(token).replace(/-/g, ' ');
+      if (NON_MUSIC_GENRES.has(genre)) return genre;
+    }
+  }
+  return '';
+}
+function historyIndexes(history = []) {
+  const last = new Map();
+  const lastByIdentity = new Map();
+  const byArtist = new Map();
+  for (const item of history) {
+    const key = String(item?.key || '');
+    if (key && !last.has(key)) last.set(key, item);
+    const identity = songIdentity(item);
+    if (identity && !lastByIdentity.has(identity)) lastByIdentity.set(identity, item);
+    const artist = artistKey(item);
+    if (!artist) continue;
+    const items = byArtist.get(artist) || [];
+    items.push(item);
+    byArtist.set(artist, items);
+  }
+  return { last, lastByIdentity, byArtist };
+}
+function lastPlayedFor(track, history, context) {
+  const exact = context?.last?.get(track.songKey);
+  if (exact) return exact;
+  const canonical = context?.lastByIdentity?.get(songIdentity(track));
+  if (canonical) return canonical;
+  const artistHistory = context?.historyByArtist?.get(artistKey(track));
+  if (artistHistory) return artistHistory.find(item => sameSong(track, item)) || null;
+  return history.find(item => item.key === track.songKey || sameSong(track, item)) || null;
+}
 function localRadioTuning(value = {}) {
   const songRepeatHours = Number(value.songRepeatHours ?? value.localRadioSongRepeatHours);
   const artistRepeatMinutes = Number(value.artistRepeatMinutes ?? value.localRadioArtistRepeatMinutes);
@@ -19,15 +59,19 @@ function localRadioTuning(value = {}) {
   return {
     songRepeatHours: Number.isInteger(songRepeatHours) && songRepeatHours >= 1 && songRepeatHours <= 24 ? songRepeatHours : 4,
     artistRepeatMinutes: [30, 60, 90, 120, 180].includes(artistRepeatMinutes) ? artistRepeatMinutes : 90,
-    artistSetSize: [1, 2, 3, 4].includes(artistSetSize) ? artistSetSize : 1
+    artistSetSize: [1, 2, 3, 4].includes(artistSetSize) ? artistSetSize : 1,
+    localMixFavorLastFm: value.localMixFavorLastFm === true,
+    localRadioExploreDistance: ['close', 'detour', 'explore'].includes(value.localRadioExploreDistance) ? value.localRadioExploreDistance : 'detour'
   };
 }
 
 function specificSharedTags(left = [], right = []) {
+  const tokens = values => values.flatMap(value => String(value || '').split(/[;,|/]+/)).map(value => value.trim()).filter(Boolean);
+  const rightTags = tokens(right);
   const result = [];
-  for (const tag of left) {
+  for (const tag of tokens(left)) {
     const key = normalize(tag);
-    if (!key || COMMON_TAGS.has(key) || !right.some(other => matches(tag, other))) continue;
+    if (!key || COMMON_TAGS.has(key) || !rightTags.some(other => matches(tag, other))) continue;
     if (!result.some(other => matches(other, tag))) result.push(String(tag));
   }
   return result;
@@ -72,9 +116,10 @@ function recentPenalty(track, seedArtist, history) {
   return { multiplier, notes };
 }
 const FAMILIARITY_RATINGS = {
+  'hits-only': { minimum: 8, label: 'Hits Only', values: [0, 0.2, 0.3, 0.4, 0.5, 0.6, 0.75, 1, 1.35, 1.8, 2.35] },
   hits: { minimum: 7, label: 'Favor the Hits', values: [0, 0.2, 0.3, 0.4, 0.5, 0.6, 0.75, 1, 1.35, 1.8, 2.35] },
   balanced: { minimum: 5, label: 'Balanced Mix', values: [0, 0.45, 0.55, 0.65, 0.8, 1, 1.13, 1.28, 1.45, 1.65, 1.85] },
-  'deep-cuts': { minimum: 3, label: 'Play Deep Cuts Too', values: [0, 0.6, 0.7, 1, 1.04, 1.08, 1.12, 1.16, 1.2, 1.22, 1.24] }
+  'deep-cuts': { minimum: 3, label: 'Allow Deep Cuts', values: [0, 0.6, 0.7, 1, 1.04, 1.08, 1.12, 1.16, 1.2, 1.22, 1.24] }
 };
 function ratingOutOfTen(track) {
   const raw = track?.rating ?? (Number.isFinite(Number(track?.ratingStars)) ? Number(track.ratingStars) * 2 : NaN);
@@ -107,9 +152,19 @@ function hasPersonalSignal(track, familiarity) {
   const policy = FAMILIARITY_RATINGS[familiarity] || FAMILIARITY_RATINGS.balanced;
   return track?.favorite === true || (ratingOutOfTen(track) || 0) >= policy.minimum;
 }
-function hasLastFmFamiliarity(track) {
+function hasLastFmFamiliarity(track, familiarity = 'balanced') {
   const popularity = Number(track?.popularity);
-  return Number.isFinite(popularity) && popularity >= 60;
+  const minimum = { 'deep-cuts': 50, balanced: 60, hits: 70, 'hits-only': 80 }[familiarity] ?? 60;
+  return Number.isFinite(popularity) && popularity >= minimum;
+}
+function preferredPool(items, { lastFmOnlyMix = false, artistRadio = false, personalLibraryMix = false, familiarity = 'balanced' } = {}) {
+  const credible = items.filter(item => item.score > 0);
+  const personal = lastFmOnlyMix ? [] : credible.filter(item => hasPersonalSignal(item.track, familiarity));
+  const lastFm = lastFmOnlyMix
+    ? credible
+    : (!artistRadio && !personal.length && (personalLibraryMix || familiarity === 'hits' || familiarity === 'hits-only')
+      ? credible.filter(item => hasLastFmFamiliarity(item.track, familiarity)) : []);
+  return { credible, personal, lastFm, candidates: personal.length ? personal : (lastFm.length ? lastFm : credible) };
 }
 function familiarityMultiplier(popularity, familiarity) {
   if (!Number.isFinite(popularity)) return { value: 1, note: 'missing (neutral)' };
@@ -119,7 +174,7 @@ function familiarityMultiplier(popularity, familiarity) {
   return { value: 1 + (score * 0.002), note: 'Balanced Mix' };
 }
 function scoreTrack(track, seed, mode, history = [], now = Date.now(), context = null, familiarity = 'balanced') {
-  const last = context?.last?.get(track.songKey) || history.find(item => item.key === track.songKey);
+  const last = lastPlayedFor(track, history, context);
   const relation = mode === 'mix' ? mixRelationship(track, seed) : relationship(track, seed, mode);
   if (mode === 'radio' && Array.isArray(context?.secondarySeeds)) {
     for (const secondary of context.secondarySeeds) {
@@ -131,7 +186,10 @@ function scoreTrack(track, seed, mode, history = [], now = Date.now(), context =
     }
   }
   if (track?.doNotPlay) return { score: 0, excluded: 'do not play', relationship: relation, additions: [], multipliers: [] };
-  if (last && now - last.at < (Number(context?.songCooldown) || COOLDOWN)) return { score: 0, excluded: 'cooldown', relationship: relation, additions: [], multipliers: [] };
+  if (track?.holiday && !(mode === 'mix' && seed?.id === 'holiday-christmas')) return { score: 0, excluded: 'holiday music', relationship: relation, additions: [], multipliers: [] };
+  if (nonMusicGenre(track)) return { score: 0, excluded: 'non-music genre', relationship: relation, additions: [], multipliers: [] };
+  const songCooldown = Number.isFinite(Number(context?.songCooldown)) ? Number(context.songCooldown) : COOLDOWN;
+  if (last && now - last.at < songCooldown) return { score: 0, excluded: 'cooldown', relationship: relation, additions: [], multipliers: [] };
   const heardArtistAt = context?.artistLast?.get(artistKey(track));
   // Artist Radio is deliberately artist-led. Its own artist is allowed to
   // continue between songs; the artist-repeat wait still protects every
@@ -162,6 +220,123 @@ function scoreTrack(track, seed, mode, history = [], now = Date.now(), context =
 }
 function weight(track, seed, mode, history, now, context, familiarity) { return scoreTrack(track, seed, mode, history, now, context, familiarity).score; }
 
+// Explore Radio should never have to make a broad genre leap just because one
+// related-artist path is resting. When that happens, walk a *small* Last.fm
+// relationship graph from the original seed and offer tracks by another local
+// related artist as a bridge. This is deliberately only used after the normal
+// current-route choice has failed.
+function exploreRescueCandidates(tracks, root, excluded, history, now, context, familiarity, maxHops) {
+  const artistTracks = new Map(); const artistNames = new Map(); const neighbors = new Map();
+  const addNeighbor = (from, to) => {
+    if (!from || !to || from === to) return;
+    const set = neighbors.get(from) || new Set(); set.add(to); neighbors.set(from, set);
+  };
+  const addTrack = track => {
+    const artist = artistKey(track);
+    if (!artist) return;
+    const entries = artistTracks.get(artist) || []; entries.push(track); artistTracks.set(artist, entries);
+    if (!artistNames.has(artist)) artistNames.set(artist, radioArtist(track) || track.artist || artist);
+    for (const related of track.similarArtists || []) {
+      const relatedKey = normalize(related);
+      if (!relatedKey) continue;
+      addNeighbor(artist, relatedKey); addNeighbor(relatedKey, artist);
+    }
+  };
+  for (let index = 0; index < tracks.length; index += 1) {
+    if ((index & 127) === 0 && context.shouldCancel?.()) throw new Error('Local Radio selection canceled.');
+    addTrack(tracks[index]);
+  }
+  addTrack(root);
+
+  const rootArtist = artistKey(root); if (!rootArtist) return [];
+  const queue = [{ artist: rootArtist, hops: 0 }]; const visited = new Set([rootArtist]); const found = [];
+  for (let offset = 0; offset < queue.length; offset += 1) {
+    const entry = queue[offset];
+    if (entry.hops > 0) {
+      const name = artistNames.get(entry.artist) || entry.artist;
+      const anchor = { artist: name, artists: [name], similarArtists: [...(neighbors.get(entry.artist) || [])] };
+      for (const candidate of artistTracks.get(entry.artist) || []) {
+        if (context.shouldCancel?.()) throw new Error('Local Radio selection canceled.');
+        if (excluded.has(candidate.id)) continue;
+        const scored = scoreTrack(candidate, anchor, 'radio', history, now, context, familiarity);
+        if (scored.score > 0) found.push({ track: candidate, ...scored, rescue: { artist: name, hops: entry.hops } });
+      }
+    }
+    if (entry.hops >= maxHops) continue;
+    for (const neighbor of neighbors.get(entry.artist) || []) {
+      if (visited.has(neighbor)) continue;
+      visited.add(neighbor); queue.push({ artist: neighbor, hops: entry.hops + 1 });
+    }
+  }
+  return found;
+}
+
+function artistSetIdentityMap(items = []) {
+  const identities = new Map(); const artists = new Map();
+  for (const item of items) {
+    const key = artistKey(item.track); const state = artists.get(key) || { buckets: new Map() };
+    artists.set(key, state);
+    // Persisted identities make this an immediate lookup. For a track that has
+    // just arrived, the small signature index retains near-title protection
+    // without ever falling back to an all-against-all comparison.
+    const stored = item.track?.radioIdentity;
+    const candidates = new Set();
+    if (!stored) for (const signature of comparisonSignatures(item.track)) for (const group of state.buckets.get(signature) || []) candidates.add(group);
+    let group = stored ? { track: item.track, identity: songIdentity(item.track) } : [...candidates].find(candidate => sameSong(candidate.track, item.track));
+    if (!group) {
+      group = { track: item.track, identity: baseSongIdentity(item.track) };
+      for (const signature of comparisonSignatures(item.track)) {
+        const groups = state.buckets.get(signature) || []; groups.push(group); state.buckets.set(signature, groups);
+      }
+    }
+    identities.set(item, group.identity);
+  }
+  return identities;
+}
+
+function applyArtistSetPreference(items, requestedSize) {
+  const requested = Math.max(1, Number(requestedSize) || 1);
+  if (requested === 1 || !items.length) return { items, requested, size: 1, shortened: false };
+  const identities = artistSetIdentityMap(items);
+  for (let size = requested; size >= 1; size -= 1) {
+    const counts = new Map();
+    for (const item of items) {
+      const artist = artistKey(item.track); const songs = counts.get(artist) || new Set();
+      songs.add(identities.get(item)); counts.set(artist, songs);
+    }
+    const eligible = items.filter(item => (counts.get(artistKey(item.track))?.size || 0) >= size);
+    if (eligible.length) return { items: eligible, requested, size, shortened: size < requested };
+  }
+  return { items: [], requested, size: 1, shortened: requested > 1 };
+}
+
+function summarizeArtistChoices(items = []) {
+  const groups = new Map();
+  for (const item of items) {
+    const key = artistKey(item.track); if (!key || !item.relationship?.strength) continue;
+    const group = groups.get(key) || { key, artist: radioArtist(item.track) || item.track?.artist || key, tracks: 0, eligibleTracks: 0, artistRestTracks: 0, related: false, reasons: new Set() };
+    group.tracks += 1;
+    if (item.score > 0) group.eligibleTracks += 1;
+    if (item.excluded === 'artist cooldown') group.artistRestTracks += 1;
+    if (item.rescue || item.relationship.reasons.includes('Last.fm similar artist')) group.related = true;
+    for (const reason of item.relationship.reasons || []) group.reasons.add(reason);
+    groups.set(key, group);
+  }
+  return [...groups.values()].map(group => ({ ...group, reasons: [...group.reasons] }));
+}
+
+function choiceReason(selected, picked, anchor) {
+  if (picked?.rescue) return 'it was found through a nearby related-artist route from the original seed';
+  if (isSeedArtistTrack(selected, artistKey(anchor))) return 'it is the active seed artist for this pick';
+  const reasons = picked?.relationship?.reasons || [];
+  if (reasons.includes('Last.fm similar artist')) return 'it is a Last.fm related artist';
+  if (reasons.includes('shared credited artist')) return 'it shares a credited artist with the seed';
+  if (reasons.includes('same album')) return 'it is on the same album as the seed';
+  const tagReason = reasons.find(reason => reason.startsWith('specific shared tag'));
+  if (tagReason) return `it shares ${tagReason.replace('specific shared tags: ', '').replace('specific shared tag: ', '')} with the seed`;
+  return 'it was in the eligible pool for this station';
+}
+
 function cleanFeedback(value) {
   const stations = {};
   for (const [key, station] of Object.entries(value?.stations || {})) {
@@ -181,47 +356,145 @@ function cleanFeedback(value) {
 }
 
 class MusicRadio {
-  constructor({ dataDir, random = Math.random, now = Date.now, onDecision = () => {}, getFamiliarity = () => 'balanced', getTuning = () => ({}) }) {
-    this.file = path.join(dataDir, 'music-history.json'); this.random = random; this.now = now; this.onDecision = onDecision; this.getFamiliarity = getFamiliarity; this.getTuning = getTuning;
-    this.history = []; this.error = ''; this.lastDecision = null; this.artistSet = null; this.artistStation = null;
+  constructor({ dataDir, random = Math.random, now = Date.now, onDecision = () => {}, getDjClipStatus = () => null, getFamiliarity = () => 'balanced', getTuning = () => ({}), shouldCancel = () => false }) {
+    this.file = path.join(dataDir, 'music-history.json'); this.random = random; this.now = now; this.onDecision = onDecision; this.getDjClipStatus = getDjClipStatus; this.getFamiliarity = getFamiliarity; this.getTuning = getTuning; this.shouldCancel = shouldCancel;
+    this.history = []; this.error = ''; this.lastDecision = null; this.artistSet = null; this.artistSetNote = null; this.artistStation = null; this.exploreStation = null; this.stationArtistLast = new Map(); this.recoveryAwayFromSeed = false; this.emergencySongRepeats = new Set();
+    this.historySaveTimer = null; this.historyWriting = null; this.historyDirty = false;
     this.feedbackFile = path.join(dataDir, 'local-radio-feedback.json'); this.feedback = { version: 1, stations: {} };
     try { const saved = JSON.parse(fs.readFileSync(this.file, 'utf8')); if (Array.isArray(saved)) this.history = saved.filter(item => typeof item?.key === 'string' && Number.isFinite(item?.at)).slice(0, 5000); }
     catch (error) { if (error.code !== 'ENOENT') this.error = 'Music history could not be read; Local Radio is paused to protect repeat history.'; }
     try { this.feedback = cleanFeedback(JSON.parse(fs.readFileSync(this.feedbackFile, 'utf8'))); } catch {}
   }
   getLastDecision() { return this.lastDecision ? JSON.parse(JSON.stringify(this.lastDecision)) : null; }
-  beginSession() { this.artistSet = null; this.artistStation = null; }
+  publishDecision(decision = this.lastDecision) {
+    if (!decision) return null;
+    this.lastDecision = decision;
+    try { this.onDecision(this.getLastDecision()); } catch {}
+    return this.getLastDecision();
+  }
+  scheduleHistorySave(delay = 2 * 60 * 1000) {
+    this.historyDirty = true;
+    if (this.historySaveTimer || this.historyWriting) return;
+    this.historySaveTimer = setTimeout(() => {
+      this.historySaveTimer = null;
+      void this.flushHistory();
+    }, delay);
+    this.historySaveTimer.unref?.();
+  }
+  async flushHistory() {
+    if (this.historyWriting) return this.historyWriting;
+    if (!this.historyDirty) return false;
+    this.historyDirty = false;
+    const snapshot = JSON.stringify(this.history);
+    this.historyWriting = (async () => {
+      try {
+        await fs.promises.mkdir(path.dirname(this.file), { recursive: true });
+        await fs.promises.writeFile(this.file + '.tmp', snapshot);
+        await fs.promises.rename(this.file + '.tmp', this.file);
+      } catch {
+        this.error = 'Music history could not be saved; check that Data is writable.';
+      }
+    })();
+    try { await this.historyWriting; }
+    finally {
+      this.historyWriting = null;
+      if (this.historyDirty) this.scheduleHistorySave();
+    }
+    return true;
+  }
+  async flush() {
+    if (this.historySaveTimer) clearTimeout(this.historySaveTimer);
+    this.historySaveTimer = null;
+    do { await this.flushHistory(); } while (this.historyDirty || this.historyWriting);
+    return true;
+  }
+  beginSession() { this.artistSet = null; this.artistSetNote = null; this.artistStation = null; this.exploreStation = null; this.recoveryAwayFromSeed = false; this.emergencySongRepeats.clear(); this.stationArtistLast.clear(); }
+  beginExploreSession(seed) { this.exploreStation = seed ? { root: { ...seed }, current: { ...seed }, hops: 0 } : null; }
+  isExploringAwayFromSeed() {
+    return Boolean(this.exploreStation && artistKey(this.exploreStation.current) && artistKey(this.exploreStation.current) !== artistKey(this.exploreStation.root));
+  }
+  isAwayFromSeed() { return this.isExploringAwayFromSeed() || this.recoveryAwayFromSeed; }
   beginArtistSession(seed) {
     const artist = artistKey(seed);
     // The song the listener clicked is the first artist selection. Starting
     // the counter at one keeps the first related palate change at 10%.
     this.artistStation = artist ? { artist, seedSelections: 1 } : null;
   }
-  record(track) {
-    this.history.unshift({ key: track.songKey, artist: track.artist, album: track.album, at: this.now() }); this.history = this.history.slice(0, 5000);
-    try { fs.mkdirSync(path.dirname(this.file), { recursive: true }); fs.writeFileSync(this.file + '.tmp', JSON.stringify(this.history)); fs.renameSync(this.file + '.tmp', this.file); }
-    catch { this.error = 'Music history could not be saved; check that Data is writable.'; }
+  planInitialArtistSet(tracks, seed, mode, stationKey = '') {
+    if (!seed || !['radio', 'explore'].includes(mode)) return null;
+    const settings = localRadioTuning(this.getTuning());
+    const requested = settings.artistSetSize;
+    if (requested <= 1) return null;
+
+    // The listener-picked seed is the first song. Reserve the remaining songs
+    // now, using the normal familiarity and repeat rules, so it truly begins
+    // the requested Artist Set instead of being outside one.
+    const now = this.now();
+    const familiarity = ['hits-only', 'hits', 'balanced', 'deep-cuts'].includes(this.getFamiliarity()) ? this.getFamiliarity() : 'balanced';
+    const history = historyIndexes(this.history);
+    const context = {
+      ...history, historyByArtist: history.byArtist, artistLast: new Map(this.stationArtistLast),
+      songCooldown: settings.songRepeatHours * 60 * 60 * 1000,
+      artistCooldown: settings.artistRepeatMinutes * 60 * 1000,
+      setArtist: artistKey(seed), feedback: this.feedbackFor(stationKey),
+      secondarySeeds: mode === 'radio' ? this.secondarySeeds(stationKey, tracks) : []
+    };
+    const scored = [];
+    for (let index = 0; index < tracks.length; index += 1) {
+      if ((index & 127) === 0 && this.shouldCancel()) throw new Error('Local Radio selection canceled.');
+      const track = tracks[index];
+      if (artistKey(track) === artistKey(seed) && !sameSong(track, seed)) scored.push({ track, ...scoreTrack(track, seed, 'radio', this.history, now, context, familiarity) });
+    }
+    const pool = preferredPool(scored, { familiarity }).candidates;
+    const identities = new Set(artistSetIdentityMap(pool).values());
+    let size = 1;
+    for (let candidateSize = requested; candidateSize >= 2; candidateSize -= 1) {
+      if (identities.size >= candidateSize - 1) { size = candidateSize; break; }
+    }
+    if (size <= 1) return null;
+    const weightedPick = values => {
+      let remaining = this.random() * values.reduce((sum, item) => sum + item.score, 0);
+      return values.find(item => (remaining -= item.score) < 0) || values.at(-1) || null;
+    };
+    const available = [...pool]; const planned = []; const plannedTracks = [];
+    while (planned.length < size - 1 && available.length) {
+      const next = weightedPick(available); if (!next) break;
+      planned.push({ id: next.track.id, songKey: next.track.songKey || '', identity: songIdentity(next.track), title: next.track.title || '', artist: next.track.artist || '', duration: Number(next.track.duration) || 0 });
+      plannedTracks.push(next.track);
+      for (let index = available.length - 1; index >= 0; index -= 1) if (sameSong(available[index].track, next.track)) available.splice(index, 1);
+    }
+    if (planned.length !== size - 1) return null;
+    this.artistSet = { artist: artistKey(seed), remaining: planned, size, played: 1, skipped: [] };
+    return { requested, size, shortened: size < requested, proposed: [seed, ...plannedTracks].map(track => ({ title: track.title || '', artist: track.artist || '' })) };
   }
-  recordManualStart(track, mode, stationKey = '') {
-    if (!track || !['radio', 'artist'].includes(mode)) return null;
+  record(track) {
+    const at = this.now();
+    this.history.unshift({ key: track.songKey, artist: track.artist, album: track.album, title: track.title || '', duration: Number(track.duration) || 0, at }); this.history = this.history.slice(0, 5000);
+    const artist = artistKey(track); if (artist) this.stationArtistLast.set(artist, at);
+    this.scheduleHistorySave();
+  }
+  recordManualStart(track, mode, stationKey = '', initialArtistSet = null) {
+    if (!track || !['radio', 'artist', 'explore'].includes(mode)) return null;
     const now = this.now();
     const settings = localRadioTuning(this.getTuning());
     const familiarity = mode === 'artist'
       ? 'balanced'
-      : (['hits', 'balanced', 'deep-cuts'].includes(this.getFamiliarity()) ? this.getFamiliarity() : 'balanced');
+      : (['hits-only', 'hits', 'balanced', 'deep-cuts'].includes(this.getFamiliarity()) ? this.getFamiliarity() : 'balanced');
     this.lastDecision = {
       at: new Date(now).toISOString(), mode, stationKey, selectionTrigger: 'start',
-      seed: { diagnosticId: stableId(track), title: track.title || track.name || '', artist: track.artist || '', album: track.album || '', genres: track.genres || [] },
+      seed: { diagnosticId: stableId(track), title: track.title || track.name || '', artist: track.artist || '', album: track.album || '', genres: storedGenres(track) },
       policy: 'manual-local-radio-start-v1', familiarity, tuning: settings,
-      artistSet: { size: 1, remaining: 0 },
+      artistSet: { size: initialArtistSet?.size || 1, remaining: initialArtistSet ? Math.max(0, initialArtistSet.size - 1) : 0, requested: initialArtistSet?.requested || settings.artistSetSize, shortened: initialArtistSet?.shortened === true, proposed: initialArtistSet?.proposed || null },
       artistRadio: mode === 'artist' ? { seedTargetPercent: 90, seedSelectionsSinceRelated: this.artistStation?.seedSelections || 1 } : null,
-      counts: { totalTracks: 0, skippedByPlaybackError: 0, skippedForCooldown: 0, skippedForArtistCooldown: 0, skippedForDoNotPlay: 0, credible: 0, personal: 0, personalMinimum: FAMILIARITY_RATINGS[familiarity].minimum, lastFmFamiliar: 0, finalPool: 0 },
-      selected: { diagnosticId: stableId(track), title: track.title || '', artist: track.artist || '', album: track.album || '', eligibilityReasons: ['Manually selected seed track'], score: null, additions: [], multipliers: [], favorite: track.favorite === true, rating: ratingOutOfTen(track), popularity: Number.isFinite(Number(track.popularity)) ? Number(track.popularity) : null, tags: [] },
+      howPicked: { manualStart: true, seed: { title: track.title || track.name || '', artist: track.artist || '' }, artistSet: initialArtistSet ? { ...initialArtistSet, position: 1, skipped: [] } : null, explore: mode === 'explore' ? { distance: settings.localRadioExploreDistance, limit: { close: 1, detour: 3, explore: 6 }[settings.localRadioExploreDistance] || 3, hops: 0, awayFromSeed: false } : null },
+      counts: { totalTracks: 0, skippedByPlaybackError: 0, skippedForCooldown: 0, skippedForArtistCooldown: 0, skippedForDoNotPlay: 0, skippedForNonMusicGenre: 0, credible: 0, personal: 0, personalMinimum: FAMILIARITY_RATINGS[familiarity].minimum, lastFmFamiliar: 0, finalPool: 0 },
+      selected: { diagnosticId: stableId(track), clipDiagnosticId: stableId({ id: track.id }), title: track.title || '', artist: track.artist || '', album: track.album || '', genres: storedGenres(track), eligibilityReasons: ['Manually selected seed track'], score: null, additions: [], multipliers: [], favorite: track.favorite === true, rating: ratingOutOfTen(track), popularity: Number.isFinite(Number(track.popularity)) ? Number(track.popularity) : null, tags: [] },
       diagnostics: { topFinalCandidates: [], recentHistory: this.history.slice(0, 12).map(item => ({ diagnosticId: stableId({ songKey: item.key }), artist: item.artist, album: item.album, at: new Date(item.at).toISOString() })) },
-      reason: 'Started from the selected seed track. WaveDeck will make the next Local Radio selection automatically.'
+      reason: initialArtistSet
+        ? `Started from the selected seed track as the first song in a ${initialArtistSet.size}-song Artist Set.`
+        : 'Started from the selected seed track. WaveDeck will make the next Local Radio selection automatically.'
     };
-    try { this.onDecision(this.getLastDecision()); } catch {}
-    return this.getLastDecision();
+    return this.publishDecision(this.lastDecision);
   }
   feedbackFor(stationKey) { return this.feedback.stations[String(stationKey)]?.tracks || {}; }
   recordFeedback(stationKey, track, kind) {
@@ -240,27 +513,63 @@ class MusicRadio {
       .sort((a, b) => Number(b[1].up) - Number(a[1].up)).slice(0, 4)
       .map(([key]) => tracks.find(track => String(track.songKey || track.id) === key)).filter(Boolean);
   }
-  choose(tracks, seed, mode, excluded = new Set(), selectionTrigger = 'next', stationKey = '') {
+  choose(tracks, seed, mode, excluded = new Set(), selectionTrigger = 'next', stationKey = '', deferDecision = false) {
     if (this.error) throw new Error(this.error);
-    const now = this.now(); const settings = localRadioTuning(this.getTuning()); const artistRadio = mode === 'artist';
-    const context = { last: new Map(), artistLast: new Map(), songCooldown: settings.songRepeatHours * 60 * 60 * 1000, artistCooldown: settings.artistRepeatMinutes * 60 * 1000, setArtist: this.artistSet?.artist || '', feedback: this.feedbackFor(stationKey), secondarySeeds: mode === 'radio' ? this.secondarySeeds(stationKey, tracks) : [] };
+    const carriedArtistSetNote = this.artistSetNote; this.artistSetNote = null;
+    const now = this.now(); const settings = localRadioTuning(this.getTuning()); const artistRadio = mode === 'artist'; const exploring = mode === 'explore';
+    const exploreLimit = { close: 1, detour: 3, explore: 6 }[settings.localRadioExploreDistance] || 3;
+    if (exploring && !this.exploreStation) this.beginExploreSession(seed);
+    const returningToSeed = exploring && (this.exploreStation?.hops || 0) >= exploreLimit;
+    const selectionSeed = exploring ? (returningToSeed ? this.exploreStation.root : this.exploreStation.current) : seed;
+    const scoreMode = exploring ? 'radio' : mode;
+    const history = historyIndexes(this.history);
+    const context = { ...history, historyByArtist: history.byArtist, artistLast: new Map(), songCooldown: settings.songRepeatHours * 60 * 60 * 1000, artistCooldown: settings.artistRepeatMinutes * 60 * 1000, setArtist: this.artistSet?.artist || '', feedback: this.feedbackFor(stationKey), secondarySeeds: mode === 'radio' ? this.secondarySeeds(stationKey, tracks) : [], shouldCancel: this.shouldCancel };
     // Artist Radio has a fixed, balanced taste profile. Song Radio and Local
     // Mixes continue to use the listener's Song Familiarity setting.
-    const familiarity = artistRadio ? 'balanced' : (['hits', 'balanced', 'deep-cuts'].includes(this.getFamiliarity()) ? this.getFamiliarity() : 'balanced');
-    this.history.forEach(item => { if (!context.last.has(item.key)) context.last.set(item.key, item); if (!context.artistLast.has(artistKey(item))) context.artistLast.set(artistKey(item), item.at); });
+    const familiarity = artistRadio ? 'balanced' : (['hits-only', 'hits', 'balanced', 'deep-cuts'].includes(this.getFamiliarity()) ? this.getFamiliarity() : 'balanced');
+    const lastFmOnlyMix = mode === 'mix' && settings.localMixFavorLastFm;
+    context.artistLast = new Map(this.stationArtistLast);
     const forcedArtist = this.artistSet?.remaining?.length ? this.artistSet.artist : '';
-    const scored = tracks.filter(track => !excluded.has(track.id) && (!forcedArtist || artistKey(track) === forcedArtist)).map(track => ({ track, ...scoreTrack(track, seed, mode, this.history, now, context, familiarity) }));
+    const scoreItems = (scoreContext, requiredArtist = '') => {
+      const items = [];
+      for (let index = 0; index < tracks.length; index += 1) {
+        if ((index & 127) === 0 && this.shouldCancel()) throw new Error('Local Radio selection canceled.');
+        const track = tracks[index];
+        if (excluded.has(track.id) || (requiredArtist && artistKey(track) !== requiredArtist)) continue;
+        const item = { track, ...scoreTrack(track, selectionSeed, scoreMode, this.history, now, scoreContext, familiarity) };
+        if (!lastFmOnlyMix || item.excluded) { items.push(item); continue; }
+        const popularity = Number(track?.popularity);
+        if (!Number.isFinite(popularity)) { items.push({ ...item, score: 0, excluded: 'missing Last.fm popularity', multipliers: [] }); continue; }
+        if (!hasLastFmFamiliarity(track, familiarity)) { items.push({ ...item, score: 0, excluded: `Last.fm popularity below ${{ 'deep-cuts': 50, balanced: 60, hits: 70, 'hits-only': 80 }[familiarity] ?? 60}`, multipliers: [] }); continue; }
+        items.push({
+          ...item,
+          // Format books still gate eligibility; only popularity weighs the pick.
+          score: Math.max(1, popularity),
+          multipliers: [{ label: 'Last.fm popularity', value: Math.max(1, popularity), source: `${Math.round(popularity)}/100` }],
+          popularity
+        });
+      }
+      return items;
+    };
+    const scored = scoreItems(context, forcedArtist);
     const cooldownExcluded = scored.filter(item => item.excluded === 'cooldown').length;
     const artistCooldownExcluded = scored.filter(item => item.excluded === 'artist cooldown').length;
     const doNotPlayExcluded = scored.filter(item => item.excluded === 'do not play').length;
-    const credibleCandidates = scored.filter(item => item.score > 0); const credibleCount = credibleCandidates.length;
-    // Each familiarity stop starts with the listener's own quality threshold.
-    // Unrated songs stay neutral, but cannot displace qualifying rated/Favorite music.
-    const personalCandidates = credibleCandidates.filter(item => hasPersonalSignal(item.track, familiarity));
+    const holidayExcluded = scored.filter(item => item.excluded === 'holiday music').length;
+    const nonMusicGenreExcluded = scored.filter(item => item.excluded === 'non-music genre').length;
+    const noMeaningfulConnectionExcluded = scored.filter(item => item.excluded === 'no credible relationship').length;
+    const missingLastFmExcluded = scored.filter(item => item.excluded === 'missing Last.fm popularity').length;
     const personalLibraryMix = mode === 'mix' && seed?.policy?.personalLibrary === true;
-    const lastFmCandidates = !artistRadio && !personalCandidates.length && (personalLibraryMix || familiarity === 'hits')
-      ? credibleCandidates.filter(item => hasLastFmFamiliarity(item.track)) : [];
-    let candidates = personalCandidates.length ? personalCandidates : (lastFmCandidates.length ? lastFmCandidates : credibleCandidates);
+    const poolOptions = { lastFmOnlyMix, artistRadio, personalLibraryMix, familiarity };
+    const primaryPool = preferredPool(scored, poolOptions);
+    const credibleCandidates = primaryPool.credible; const credibleCount = credibleCandidates.length;
+    const personalCandidates = primaryPool.personal; const lastFmCandidates = primaryPool.lastFm;
+    let candidates = primaryPool.candidates;
+    let explanationItems = scored;
+    let rescueUsed = false;
+    let recovery = null;
+    let effectiveArtistSetSize = artistRadio ? 1 : settings.artistSetSize;
+    let artistSetShortened = false;
     let artistLane = '';
     if (artistRadio) {
       const seedArtist = artistKey(seed);
@@ -273,44 +582,139 @@ class MusicRadio {
       candidates = takePalateChange ? relatedCandidates : seedCandidates;
       artistLane = takePalateChange ? 'related artist palate change' : 'seed artist';
     }
-    // A two-fer/three-play/four-play is planned before the first song starts.
-    // Do not begin a set unless there are enough playable tracks to complete it.
-    const artistSetSize = artistRadio ? 1 : settings.artistSetSize;
-    if (!forcedArtist && artistSetSize > 1) {
-      const counts = new Map();
-      for (const item of candidates) counts.set(artistKey(item.track), (counts.get(artistKey(item.track)) || 0) + 1);
-      candidates = candidates.filter(item => (counts.get(artistKey(item.track)) || 0) >= artistSetSize);
+    if (!forcedArtist && !artistRadio) {
+      const setPlan = applyArtistSetPreference(candidates, effectiveArtistSetSize);
+      candidates = setPlan.items; effectiveArtistSetSize = setPlan.size; artistSetShortened = setPlan.shortened;
     }
-    // A set is intentional, not a reason to pause radio. If its artist has no
-    // second eligible track, end the set and immediately choose the next artist.
-    if (!candidates.length && forcedArtist) {
-      this.artistSet = null;
-      return this.choose(tracks, seed, mode, excluded, selectionTrigger, stationKey);
+    // If the current Explore Radio path is exhausted, look for another small,
+    // credible route from the original seed. Do not use genre similarity here:
+    // every bridge comes from the stored related-artist graph.
+    const rescueRoot = exploring ? (this.exploreStation?.root || seed) : seed;
+    const canExpandRelatedRoute = !artistRadio && mode !== 'mix' && !forcedArtist;
+    if (canExpandRelatedRoute && !candidates.length) {
+      const rescuePool = exploreRescueCandidates(
+        tracks, rescueRoot, excluded, this.history, now, context, familiarity,
+        Math.min(3, exploring ? exploreLimit : 3)
+      );
+      const rescueChoice = preferredPool(rescuePool, poolOptions);
+      const setPlan = applyArtistSetPreference(rescueChoice.candidates, artistRadio ? 1 : settings.artistSetSize);
+      candidates = setPlan.items; effectiveArtistSetSize = setPlan.size; artistSetShortened = setPlan.shortened;
+      explanationItems = rescuePool;
+      rescueUsed = candidates.length > 0;
+      if (rescueUsed) recovery = { kind: 'related-route', hops: Math.max(...candidates.map(item => Number(item.rescue?.hops) || 0)), relaxedRepeat: '' };
     }
+    // A station should not stop merely because its nearby artists are resting.
+    // First reopen artist rest, then—only when absolutely necessary—song rest.
+    const recoveryCandidates = (repeatRule) => {
+      const relaxedContext = { ...context, artistCooldown: repeatRule === 'artist' || repeatRule === 'song' ? 0 : context.artistCooldown, songCooldown: repeatRule === 'song' ? 0 : context.songCooldown };
+      const direct = scoreItems(relaxedContext, forcedArtist);
+      const related = canExpandRelatedRoute
+        ? exploreRescueCandidates(tracks, rescueRoot, excluded, this.history, now, relaxedContext, familiarity, Math.min(3, exploring ? exploreLimit : 3))
+        : [];
+      const seen = new Set();
+      const source = [...direct, ...related].filter(item => {
+        const id = String(item.track?.id || item.track?.songKey || '');
+        if (!id || seen.has(id)) return false;
+        seen.add(id); return true;
+      });
+      const choice = preferredPool(source, poolOptions);
+      let eligible = choice.candidates;
+      if (artistRadio) eligible = choice.credible.filter(item => isSeedArtistTrack(item.track, artistKey(seed)));
+      const setPlan = applyArtistSetPreference(eligible, artistRadio ? 1 : settings.artistSetSize);
+      return { source, candidates: setPlan.items, setPlan };
+    };
+    if (!candidates.length && !forcedArtist) {
+      const artistRecovery = recoveryCandidates('artist');
+      if (artistRecovery.candidates.length) {
+        candidates = artistRecovery.candidates; explanationItems = artistRecovery.source;
+        effectiveArtistSetSize = artistRecovery.setPlan.size; artistSetShortened = artistRecovery.setPlan.shortened;
+        const usedRelatedRoute = candidates.some(item => item.rescue);
+        recovery = { kind: usedRelatedRoute ? 'related-route' : 'repeat-recovery', hops: usedRelatedRoute ? Math.max(...candidates.map(item => Number(item.rescue?.hops) || 0)) : 0, relaxedRepeat: 'artist' };
+      }
+    }
+    let emergencySongRepeat = false;
+    if (!candidates.length && !forcedArtist) {
+      const songRecovery = recoveryCandidates('song');
+      songRecovery.candidates = songRecovery.candidates.filter(item => !this.emergencySongRepeats.has(songIdentity(item.track)));
+      if (songRecovery.candidates.length) {
+        candidates = songRecovery.candidates; explanationItems = songRecovery.source;
+        effectiveArtistSetSize = songRecovery.setPlan.size; artistSetShortened = songRecovery.setPlan.shortened;
+        emergencySongRepeat = true;
+        const usedRelatedRoute = candidates.some(item => item.rescue);
+        recovery = { kind: usedRelatedRoute ? 'related-route' : 'repeat-recovery', hops: usedRelatedRoute ? Math.max(...candidates.map(item => Number(item.rescue?.hops) || 0)) : 0, relaxedRepeat: 'song' };
+      }
+    }
+    // A planned set keeps its already-approved artist relationship. On later
+    // tracks, only a real safety change (song rest, Do Not Play, a failed file,
+    // or a missing file) can remove a planned song from that set.
     const weightedPick = values => {
       let remaining = this.random() * values.reduce((sum, item) => sum + item.score, 0);
       return values.find(item => (remaining -= item.score) < 0) || values.at(-1) || null;
     };
-    let picked = null;
+    let selectedSetSize = forcedArtist ? (Number(this.artistSet?.size) || settings.artistSetSize) : effectiveArtistSetSize;
+    let picked = null; let proposedSet = null; let artistSetSnapshot = null;
     if (forcedArtist) {
-      const nextId = this.artistSet.remaining[0];
-      picked = candidates.find(item => item.track.id === nextId) || null;
-      if (picked) this.artistSet.remaining.shift();
-      else { this.artistSet = null; return this.choose(tracks, seed, mode, excluded, selectionTrigger, stationKey); }
+      const activeSet = this.artistSet;
+      const skipped = [];
+      while (activeSet?.remaining?.length) {
+        const planned = activeSet.remaining[0];
+        const plan = typeof planned === 'string' ? { id: planned } : planned;
+        const matching = scored.find(item => item.track.id === plan.id)
+          || scored.find(item => plan.songKey && item.track.songKey === plan.songKey)
+          || scored.find(item => plan.identity && songIdentity(item.track) === plan.identity);
+        activeSet.remaining.shift();
+        const lastPlayed = matching ? context.last.get(matching.track.songKey) : null;
+        const songResting = Boolean(lastPlayed && now - lastPlayed.at < context.songCooldown);
+        if (matching && !matching.track.doNotPlay && !nonMusicGenre(matching.track) && !songResting) {
+          picked = matching.score > 0 ? matching : {
+            ...matching,
+            score: 1,
+            excluded: '',
+            relationship: { ...matching.relationship, strength: Math.max(1, Number(matching.relationship?.strength) || 0), reasons: ['planned artist set'] },
+            additions: [{ label: 'planned artist set', amount: 1 }]
+          };
+          break;
+        }
+        const reason = !matching
+          ? (tracks.some(track => track.id === plan.id || (plan.songKey && track.songKey === plan.songKey) || (plan.identity && songIdentity(track) === plan.identity)) ? 'previously failed to play' : 'is no longer in your library')
+          : (matching.track.doNotPlay ? 'is tagged Do Not Play' : (nonMusicGenre(matching.track) ? 'has a non-music genre' : (songResting ? 'is resting under your song repeat wait' : 'is no longer eligible')));
+        skipped.push({ title: plan.title || matching?.track?.title || 'Untitled track', artist: plan.artist || matching?.track?.artist || activeSet.artist, reason });
+      }
+      if (skipped.length) activeSet.skipped = [...(activeSet.skipped || []), ...skipped];
+      if (picked) {
+        activeSet.played = Math.max(0, Number(activeSet.played) || 1) + 1;
+        activeSet.size = Math.max(1, activeSet.played + activeSet.remaining.length);
+        artistSetSnapshot = { ...activeSet, remaining: [...activeSet.remaining], skipped: [...(activeSet.skipped || [])] };
+        selectedSetSize = activeSet.size;
+      } else {
+        this.artistSetNote = { artist: activeSet?.artist || forcedArtist, skipped: [...(activeSet?.skipped || [])] };
+        this.artistSet = null;
+        return this.choose(tracks, seed, mode, excluded, selectionTrigger, stationKey, deferDecision);
+      }
+    } else if (emergencySongRepeat) {
+      picked = [...candidates].sort((a, b) => {
+        const aLast = context.last.get(a.track.songKey)?.at || -Infinity;
+        const bLast = context.last.get(b.track.songKey)?.at || -Infinity;
+        return aLast - bLast || b.score - a.score;
+      })[0] || null;
     } else picked = weightedPick(candidates);
     const selected = picked?.track || null;
     if (selected) {
       if (forcedArtist) {
         if (!this.artistSet.remaining.length) this.artistSet = null;
-      } else if (artistSetSize > 1) {
-        const sameArtist = candidates.filter(item => item.track.id !== selected.id && artistKey(item.track) === artistKey(selected));
-        const planned = [];
-        while (planned.length < artistSetSize - 1 && sameArtist.length) {
+      } else if (selectedSetSize > 1) {
+        const sameArtist = candidates.filter(item => item.track.id !== selected.id && artistKey(item.track) === artistKey(selected) && !sameSong(item.track, selected));
+        const planned = []; const plannedTracks = [];
+        while (planned.length < selectedSetSize - 1 && sameArtist.length) {
           const next = weightedPick(sameArtist);
-          planned.push(next.track.id);
-          sameArtist.splice(sameArtist.indexOf(next), 1);
+          planned.push({ id: next.track.id, songKey: next.track.songKey || '', identity: songIdentity(next.track), title: next.track.title || '', artist: next.track.artist || '', duration: Number(next.track.duration) || 0 });
+          plannedTracks.push(next.track);
+          for (let index = sameArtist.length - 1; index >= 0; index -= 1) if (sameSong(sameArtist[index].track, next.track)) sameArtist.splice(index, 1);
         }
-        this.artistSet = planned.length === artistSetSize - 1 ? { artist: artistKey(selected), remaining: planned } : null;
+        if (planned.length === selectedSetSize - 1) {
+          this.artistSet = { artist: artistKey(selected), remaining: planned, size: selectedSetSize, played: 1, skipped: [] };
+          proposedSet = [selected, ...plannedTracks].map(track => ({ title: track.title || '', artist: track.artist || '' }));
+        } else this.artistSet = null;
       }
       if (artistRadio && this.artistStation) {
         this.artistStation.seedSelections = isSeedArtistTrack(selected, this.artistStation.artist)
@@ -318,12 +722,52 @@ class MusicRadio {
           : 0;
       }
     } else if (forcedArtist) this.artistSet = null;
-    const diagnostic = item => ({ diagnosticId: stableId(item.track), title: item.track.title, artist: item.track.artist, album: item.track.album, eligibilityReasons: item.relationship.reasons, score: item.score, additions: item.additions, multipliers: item.multipliers, favorite: item.track.favorite === true, rating: ratingOutOfTen(item.track), popularity: item.popularity, tags: item.relationship.tags });
+    // A planned Artist Set is one Explore Radio move, not several. The first
+    // song establishes the new anchor and hop count; its already-approved
+    // follow-ups must not make the route look as if it jumped back to the
+    // original seed (especially when the first song reached the hop limit).
+    const continuingExploreArtistSet = Boolean(exploring && forcedArtist && artistSetSnapshot && artistSetSnapshot.played > 1);
+    if (selected && exploring && this.exploreStation && !continuingExploreArtistSet) {
+      const oldArtist = artistKey(this.exploreStation.current);
+      this.exploreStation.current = { ...selected };
+      this.exploreStation.hops = picked?.rescue
+        ? picked.rescue.hops
+        : (returningToSeed
+          ? (artistKey(selected) === artistKey(this.exploreStation.root) ? 0 : 1)
+          : this.exploreStation.hops + (artistKey(selected) !== oldArtist ? 1 : 0));
+    }
+    this.recoveryAwayFromSeed = Boolean(selected && !exploring && recovery?.kind === 'related-route' && recovery.hops > 0);
+    const diagnostic = item => ({ diagnosticId: stableId(item.track), clipDiagnosticId: stableId({ id: item.track.id }), title: item.track.title, artist: item.track.artist, album: item.track.album, genres: storedGenres(item.track), eligibilityReasons: item.relationship.reasons, score: item.score, additions: item.additions, multipliers: item.multipliers, favorite: item.track.favorite === true, rating: ratingOutOfTen(item.track), popularity: item.popularity, tags: item.relationship.tags });
     const ranked = [...candidates].sort((a, b) => b.score - a.score).slice(0, 8);
     const threshold = FAMILIARITY_RATINGS[familiarity].minimum;
-    const poolLabel = artistRadio ? artistLane : (personalCandidates.length ? `personal ${threshold}–10/Favorite` : (lastFmCandidates.length ? 'Last.fm familiar' : 'credible'));
-    this.lastDecision = { at: new Date(now).toISOString(), mode, stationKey, selectionTrigger, seed: { diagnosticId: stableId(seed), title: seed?.title || seed?.name || '', artist: seed?.artist || '', album: seed?.album || '', genres: seed?.genres || [] }, policy: artistRadio ? 'artist-radio-v1' : 'automatic-local-radio-v2', familiarity, tuning: settings, artistSet: { size: artistSetSize, remaining: this.artistSet?.remaining?.length || 0 }, artistRadio: artistRadio ? { seedTargetPercent: 90, seedSelectionsSinceRelated: this.artistStation?.seedSelections || 0 } : null, counts: { totalTracks: tracks.length, skippedByPlaybackError: excluded.size, skippedForCooldown: cooldownExcluded, skippedForArtistCooldown: artistCooldownExcluded, skippedForDoNotPlay: doNotPlayExcluded, credible: credibleCount, personal: personalCandidates.length, personalMinimum: threshold, lastFmFamiliar: lastFmCandidates.length, finalPool: candidates.length }, selected: selected ? diagnostic(picked) : null, diagnostics: { topFinalCandidates: ranked.map(diagnostic), recentHistory: this.history.slice(0, 12).map(item => ({ diagnosticId: stableId({ songKey: item.key }), artist: item.artist, album: item.album, at: new Date(item.at).toISOString() })) }, reason: selected ? `Picked from ${candidates.length} ${poolLabel} Local Radio candidates.` : (artistRadio ? 'No eligible seed-artist song is currently available; Artist Radio is waiting rather than taking over with related music.' : 'No credible Local Radio song is currently available; waiting rather than making a poor leap.') };
-    try { this.onDecision(this.getLastDecision()); } catch {}
+    const poolLabel = recovery?.kind === 'related-route' ? 'related-artist rescue route' : (artistRadio ? artistLane : (lastFmOnlyMix ? 'Last.fm popularity' : (personalCandidates.length ? `personal ${threshold}–10/Favorite` : (lastFmCandidates.length ? 'Last.fm familiar' : 'credible'))));
+    const artistChoices = summarizeArtistChoices(explanationItems);
+    const selectedArtistKey = selected ? artistKey(selected) : '';
+    const selectedArtist = selected ? artistChoices.find(group => group.key === selectedArtistKey) : null;
+    const relatedArtists = artistChoices.filter(group => group.related).map(group => group.artist);
+    const restingRelatedArtists = artistChoices.filter(group => group.related && group.key !== selectedArtistKey && group.artistRestTracks > 0).map(group => group.artist);
+    const feedback = selected ? (this.feedbackFor(stationKey)[selected.songKey || selected.id] || {}) : {};
+    if (selected && emergencySongRepeat) this.emergencySongRepeats.add(songIdentity(selected));
+    const exploreDetails = exploring ? { distance: settings.localRadioExploreDistance, limit: exploreLimit, hops: this.exploreStation?.hops || 0, awayFromSeed: this.isExploringAwayFromSeed(), returningToSeed, rescueUsed: recovery?.kind === 'related-route', activeAnchor: selected && picked?.rescue ? picked.rescue.artist : (continuingExploreArtistSet ? selected?.artist : (selectionSeed?.artist || '')) } : null;
+    const decisionSet = artistSetSnapshot || this.artistSet;
+    const setRemaining = decisionSet?.remaining?.length || 0;
+    const skippedSetTracks = decisionSet?.skipped || [];
+    const artistSetDetails = selectedSetSize > 1 ? { requested: settings.artistSetSize, size: selectedSetSize, position: forcedArtist ? (decisionSet?.played || selectedSetSize - setRemaining) : selectedSetSize - setRemaining, shortened: artistSetShortened || skippedSetTracks.length > 0, proposed: proposedSet, skipped: skippedSetTracks } : null;
+    const recoveryDetails = recovery ? { ...recovery, setShortened: artistSetShortened, requestedSetSize: settings.artistSetSize, selectedSetSize } : null;
+    const secondaryReason = String(picked?.relationship?.reasons?.find(reason => String(reason).startsWith('thumbs-up secondary seed:')) || '');
+    const secondaryArtist = secondaryReason.replace(/^thumbs-up secondary seed:\s*/i, '');
+    const secondaryTrack = secondaryArtist ? context.secondarySeeds.find(track => matches(track.artist, secondaryArtist)) : null;
+    const howPicked = {
+      manualStart: false,
+      seed: { title: seed?.title || seed?.name || '', artist: seed?.artist || '' },
+      relatedArtists,
+      restingRelatedArtists,
+      artist: { name: selectedArtist?.artist || selected?.artist || '', eligibleTracks: selectedArtist?.eligibleTracks || 0, reason: choiceReason(selected, picked, selectionSeed), relatedArtistsEligible: artistChoices.filter(group => group.related && group.eligibleTracks > 0).length },
+      song: { title: selected?.title || '', popularity: Number.isFinite(Number(picked?.popularity)) ? Number(picked.popularity) : null, rating: ratingOutOfTen(selected), favorite: selected?.favorite === true, thumbsUp: Math.max(0, Number(feedback.up) || 0), thumbsDown: Math.max(0, Number(feedback.down) || 0), skips: Math.max(0, Number(feedback.skips) || 0), poolLabel, poolSize: candidates.length, secondarySeed: secondaryTrack ? { title: secondaryTrack.title || '', artist: secondaryTrack.artist || '' } : null },
+      explore: exploreDetails, artistSet: artistSetDetails, artistSetRecovery: carriedArtistSetNote, recovery: recoveryDetails, waiting: !selected
+    };
+    this.lastDecision = { at: new Date(now).toISOString(), mode, stationKey, selectionTrigger, seed: { diagnosticId: stableId(seed), title: seed?.title || seed?.name || '', artist: seed?.artist || '', album: seed?.album || '', genres: storedGenres(seed) }, policy: artistRadio ? 'artist-radio-v1' : (exploring ? 'explore-radio-v1' : 'automatic-local-radio-v2'), familiarity, tuning: settings, explore: exploreDetails, howPicked, artistSet: { size: selectedSetSize, remaining: setRemaining, requested: settings.artistSetSize, shortened: artistSetShortened, proposed: proposedSet }, artistRadio: artistRadio ? { seedTargetPercent: 90, seedSelectionsSinceRelated: this.artistStation?.seedSelections || 0 } : null, counts: { totalTracks: tracks.length, skippedByPlaybackError: excluded.size, skippedForCooldown: cooldownExcluded, skippedForArtistCooldown: artistCooldownExcluded, skippedForDoNotPlay: doNotPlayExcluded, skippedForHolidayMusic: holidayExcluded, skippedForNonMusicGenre: nonMusicGenreExcluded, noMeaningfulConnection: noMeaningfulConnectionExcluded, missingLastFmData: missingLastFmExcluded, credible: credibleCount, personal: personalCandidates.length, personalMinimum: threshold, lastFmFamiliar: lastFmCandidates.length, finalPool: candidates.length }, selected: selected ? diagnostic(picked) : null, diagnostics: { topFinalCandidates: ranked.map(diagnostic), recentHistory: this.history.slice(0, 12).map(item => ({ diagnosticId: stableId({ songKey: item.key }), artist: item.artist, album: item.album, at: new Date(item.at).toISOString() })) }, reason: selected ? `Picked from ${candidates.length} ${poolLabel} Local Radio candidates${recovery?.kind === 'related-route' ? ' through a related-artist recovery route.' : ''}${recovery?.relaxedRepeat === 'artist' ? ' after easing artist rest to keep the station playing.' : ''}${recovery?.relaxedRepeat === 'song' ? ' after using the least-recently-played credible song to keep the station playing.' : ''}` : 'No playable connected track was found without repeating the station’s emergency fallback songs.' };
+    if (!deferDecision) this.publishDecision(this.lastDecision);
     return selected;
   }
 }

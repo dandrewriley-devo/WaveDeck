@@ -1,0 +1,82 @@
+name: Build WaveDeck 1.2
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: sudo DEBIAN_FRONTEND=noninteractive apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y icecast2
+      - run: npm install --package-lock=false --no-audit --no-fund
+      - run: npm test
+      - run: npm run dist:linux -- --publish never
+      - name: Verify portable AppImage, voice, and Icecast
+        shell: bash
+        run: |
+          set -euo pipefail
+          appimage="$GITHUB_WORKSPACE/dist/WaveDeck.AppImage"
+          chmod 755 "$appimage"
+          test "$(stat --format=%s "$appimage")" -gt 100000000
+          sha256sum "$appimage"
+          workdir=$(mktemp -d)
+          pid=''
+          trap 'if [ -n "$pid" ]; then kill "$pid" 2>/dev/null || true; wait "$pid" 2>/dev/null || true; fi; rm -rf "$workdir"' EXIT
+          (cd "$workdir" && "$appimage" --appimage-extract >/dev/null)
+          appdir="$workdir/squashfs-root"
+          NODE_PATH="$appdir/resources/app.asar/node_modules" ELECTRON_RUN_AS_NODE=1 "$appdir/wavedeck" "$GITHUB_WORKSPACE/scripts/verify-dj-voice-runtime.js" "$appdir"
+          icecast="$appdir/resources/streaming/icecast2"
+          libdir="$appdir/resources/streaming/lib"
+          for binary in "$icecast" "$libdir"/*.so*; do
+            required=$(readelf -W --version-info "$binary" | grep -oE 'GLIBC_[0-9]+\.[0-9]+' | cut -d_ -f2 | sort -V | tail -1 || true)
+            if [ -n "$required" ] && ! dpkg --compare-versions "$required" le 2.35; then
+              echo "$binary requires glibc $required (maximum 2.35)"
+              exit 1
+            fi
+          done
+          cat > "$workdir/icecast.xml" <<EOF
+          <icecast><location>CI</location><admin>local@localhost</admin><limits><clients>2</clients><sources>1</sources></limits><authentication><source-password>test-source</source-password><admin-user>admin</admin-user><admin-password>test-admin</admin-password></authentication><hostname>localhost</hostname><listen-socket><port>18038</port><bind-address>127.0.0.1</bind-address></listen-socket><paths><basedir>$workdir</basedir><logdir>$workdir</logdir><webroot>$workdir</webroot><adminroot>$workdir</adminroot></paths><logging><accesslog>access.log</accesslog><errorlog>error.log</errorlog><loglevel>2</loglevel></logging><security><chroot>0</chroot></security></icecast>
+          EOF
+          LD_LIBRARY_PATH="$libdir" "$icecast" -c "$workdir/icecast.xml" >"$workdir/icecast.out" 2>&1 &
+          pid=$!
+          ready=0
+          for attempt in $(seq 1 50); do
+            if curl --silent --max-time 1 --output /dev/null http://127.0.0.1:18038/; then ready=1; break; fi
+            if ! kill -0 "$pid" 2>/dev/null; then break; fi
+            sleep 0.1
+          done
+          if [ "$ready" -ne 1 ]; then cat "$workdir/icecast.out"; exit 1; fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WaveDeck-1.2.0-Linux
+          path: dist/WaveDeck.AppImage
+          if-no-files-found: error
+          compression-level: 0
+
+  publish:
+    needs: linux
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: WaveDeck-1.2.0-Linux
+          path: release-assets
+      - name: Publish WaveDeck 1.2
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.2.0
+          target_commitish: ${{ github.sha }}
+          name: WaveDeck 1.2 - The DJ Update
+          body: "WaveDeck 1.2 brings Auto DJ, optional ReplayGain, pronunciation hints, a diagnostic queue, and radio song start/end points to the main portable player. Keep your Data, Music, and DJ Clips folders beside the new AppImage."
+          files: release-assets/WaveDeck.AppImage
+          fail_on_unmatched_files: true

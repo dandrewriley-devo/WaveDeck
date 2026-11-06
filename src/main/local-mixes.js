@@ -178,6 +178,8 @@ function matchingRule(track, mix) {
 }
 
 function isTrackEligibleForMix(track, mix) {
+  if (track?.holiday && mix?.id !== 'holiday-christmas') return { eligible: false, reason: 'Holiday Music is reserved for Holiday & Christmas', tier: '' };
+  if (track?.holiday && mix?.id === 'holiday-christmas') return { eligible: true, reason: 'Holiday Music tag', tier: 'tag' };
   if (mix?.policy?.personalLibrary) return { eligible: true, reason: 'personal library mix', tier: 'personal' };
   const artists = trackArtists(track);
   const coreSong = mix.coreSongs.some(([artist, title]) => trackMatches(track, artist, title));

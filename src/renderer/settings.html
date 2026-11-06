@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; style-src 'self'; script-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+        content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'">
   <title>WaveDeck Settings</title>
   <link rel="stylesheet" href="./settings.css">
 </head>
@@ -17,15 +17,47 @@
         <button class="tab" data-tab="stations">Stations</button>
         <button class="tab" data-tab="groups">Groups</button>
         <button class="tab" data-tab="localmusic" hidden>Local Music</button>
+        <button class="tab" data-tab="musicmanager" hidden>Library</button>
+        <button class="tab linux-stream-only" data-tab="personalstream">Stream</button>
+        <button class="tab" data-tab="radiolog" hidden>Log</button>
         <button class="tab" data-tab="about">About</button>
       </div>
     </header>
 
     <main>
+      <section id="tab-personalstream" class="panel hidden linux-stream-only">
+        <div class="general-sections">
+          <section class="general-card">
+            <div class="general-card-header"><div class="label">Personal Stream</div>
+              <div class="hint">WaveDeck broadcasts whatever it plays, including Local Music and Streaming stations. Your speaker volume and mute do not change the stream.</div>
+            </div>
+            <div class="general-card-body">
+              <label class="preference-toggle"><input id="personalStreamEnabled" type="checkbox"><span class="toggle-switch" aria-hidden="true"></span><span>Enable Personal Stream</span></label>
+              <div id="personalStreamStatus" class="hint" role="status">Off</div>
+              <p class="hint">WaveDeck needs to remain open on this computer. The stream is shared live with anyone who has its address; it is not listed in public radio directories.</p>
+            </div>
+          </section>
+          <section class="general-card">
+            <div class="general-card-header"><div class="label">Listen on your phone</div>
+              <div class="hint">Set your public IP or a hostname once your TP-Link router forwards TCP port 18037 to this computer. Use the QR code to add the station to Pladio.</div>
+            </div>
+            <div class="general-card-body">
+              <label for="personalStreamHost">Internet address (hostname or public IPv4)</label>
+              <div class="stream-host-row"><input class="input" id="personalStreamHost" type="text" spellcheck="false" placeholder="Your public IP or hostname"><button class="btn" id="personalStreamSaveHost" type="button">Save address</button></div>
+              <div id="personalStreamAddressNote" class="hint"></div>
+              <label for="personalStreamMountName">Station address name (the part before .mp3)</label>
+              <div class="stream-host-row"><input class="input" id="personalStreamMountName" type="text" maxlength="48" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="e.g. andrews-radio"><button class="btn" id="personalStreamSaveMountName" type="button">Save name</button></div>
+              <div class="hint">Use letters, numbers, and hyphens. Changing the name updates the QR code and stops the old address from working. An easy name is easier for others to guess.</div>
+              <div class="stream-share"><img id="personalStreamQr" alt="QR code for the listening address" width="220" height="220"><div><div class="label">Listening address</div><code id="personalStreamUrl"></code><button class="btn" id="personalStreamCopy" type="button">Copy address</button><div class="hint">Add this address as a custom station in Pladio. Anyone with the link can listen, so share it only with people you trust.</div></div></div>
+              <div id="personalStreamMessage" class="status" role="status"></div>
+            </div>
+          </section>
+        </div>
+      </section>
       <!-- INTERFACE -->
       <section id="tab-interface" class="panel hidden">
         <div class="general-meta">
-          <b>WaveDeck version <span id="aboutVersion">1.0.5</span></b>
+          <b>WaveDeck version <span id="aboutVersion">1.2.0</span></b>
         </div>
         <div class="general-sections">
         <section class="general-card">
@@ -221,45 +253,106 @@
 
       <!-- LOCAL MUSIC -->
       <section id="tab-localmusic" class="panel hidden" hidden>
-        <section class="local-music-settings local-music-section">
-          <div class="pro-music-settings-title">Additional Music Folder <span>(optional)</span></div>
+        <div class="local-music-dashboard">
+        <section class="local-music-card dashboard-square library-card" aria-labelledby="portableMusicTitle">
+          <div class="card-title" id="portableMusicTitle">Your Library</div>
+          <div class="library-track-count"><span id="portableTrackCount">—</span><span>Portable Tracks</span></div>
+          <div id="externalTrackCountWrap" class="library-track-count external-track-count" hidden><span id="externalTrackCount">—</span><span>External Tracks</span></div>
+          <div id="libraryTotalAvailable" class="library-total-available" hidden></div>
+          <div class="hint library-card-copy">The music you add to WaveDeck’s “Music” folder is converted to 96 kbps Opus files.</div>
+          <div id="portableMusicProgressWrap" class="portable-music-progress-wrap" hidden>
+            <progress id="portableMusicProgress" class="portable-music-progress" max="1" value="0" aria-label="Portable Music conversion progress"></progress>
+            <span id="portableMusicProgressLabel" class="portable-music-progress-label">0 of 0</span>
+          </div>
+          <div id="musicLibraryStatus" class="card-status" role="status">Checking portable Music…</div>
+          <div class="card-actions"><button id="openPortableMusicLibraryBtn" class="subtle-link" type="button">Manage</button><button id="rescanMusicBtn" class="subtle-link" type="button">Refresh</button><button id="openMusicDebugLogBtn" class="subtle-link" type="button">View Log</button></div>
+        </section>
+        <section class="local-music-card dashboard-square storage-card" aria-labelledby="portableStorageTitle">
+          <div class="card-title" id="portableStorageTitle">Portable Storage</div>
+          <div class="card-donut-wrap">
+            <div id="portableStorageChart" class="portable-storage-chart"><span id="portableStoragePercent">—</span></div>
+            <div id="portableStorageLabel" class="portable-storage-label">Checking drive space…</div>
+          </div>
+        </section>
+        <section class="local-music-card dashboard-square lastfm-card" aria-labelledby="lastFmTitle">
+          <div class="card-title" id="lastFmTitle">Last.fm Music Data</div>
+          <div class="card-donut-wrap">
+            <div id="lastFmChart" class="portable-storage-chart lastfm-storage-chart" title="Checking Last.fm music data…"><span id="lastFmPercent">—</span></div>
+          </div>
+          <div class="lastfm-toggle-row">
+            <label class="preference-toggle"><input id="lastFmEnabled" type="checkbox" /><span class="toggle-switch" aria-hidden="true"></span><span>Enable Last.fm</span></label>
+          </div>
+          <div id="lastFmConnection" class="lastfm-connection">Connect Last.fm to scrobble Local Music.</div>
+          <div id="lastFmStatus" class="visually-hidden">Last.fm is ready when you are.</div>
+          <div class="card-actions"><button id="connectLastFmBtn" class="subtle-link" type="button">Connect Last.fm</button><button id="disconnectLastFmBtn" class="subtle-link" type="button" hidden>Disconnect</button><button id="queueLastFmRefreshBtn" class="subtle-link" type="button">Refresh</button></div>
+        </section>
+        <section class="local-music-card dashboard-square" aria-labelledby="djClipsTitle">
+          <div class="card-title" id="djClipsTitle">Auto DJ</div>
+          <div class="auto-dj-toggle-row"><label class="preference-toggle"><input id="autoDjEnabled" type="checkbox" /><span class="toggle-switch" aria-hidden="true"></span><span>Enable Auto DJ (Virtual DJ)</span></label><span class="info-tip" title="A virtual DJ that occasionally talks between songs." aria-label="A virtual DJ that occasionally talks between songs.">i</span></div>
+          <div class="auto-dj-fields"><input id="autoDjStationName" class="input" maxlength="100" placeholder="Station Name — WaveDeck Radio" /><div class="auto-dj-name"><input id="autoDjName" class="input" maxlength="100" placeholder="DJ Name — Amber Wolfe" /></div></div>
+          <label class="import-speed-label" for="autoDjBreakInterval">Minutes between DJ break attempts <input id="autoDjBreakInterval" class="input" type="number" min="1" max="60" step="1" value="15" /></label>
+          <div id="djClipStatus" class="card-status" role="status">Auto DJ is off.</div>
+          <div id="djClipProgressWrap" class="portable-music-progress-wrap" hidden><progress id="djClipProgress" class="portable-music-progress" max="1" value="0" aria-label="Auto DJ clip generation progress"></progress><span id="djClipProgressLabel" class="portable-music-progress-label">0 of 0</span></div>
+          <div class="card-actions auto-dj-actions"><button id="editAutoDjIdsBtn" class="subtle-link" type="button">Edit IDs</button><button id="queueQualifyingDjClipsBtn" class="subtle-link" type="button">Generate clips</button></div>
+        </section>
+        <section class="local-music-card dashboard-square import-music-section" aria-labelledby="portableImportTitle">
+          <div class="card-title" id="portableImportTitle">Import to Portable Music <span class="info-tip" title="WaveDeck copies selected music into Portable Music as compact Opus files. Your original music is never changed." aria-label="Import copies music without changing the source">i</span></div>
+          <div id="portableImportReady" class="library-track-count import-ready-count" hidden><span id="portableImportReadyCount">—</span><span>Ready to Import</span></div>
+          <div id="portableImportSpace" class="portable-import-space" hidden><span id="portableImportRequiredSpace">Required space: —</span><span id="portableImportAvailableSpace">Available space: —</span></div>
+          <div id="portableImportStatus" class="portable-import-status" role="status">Choose an External Music Folder to see import options.</div>
+          <div id="portableImportProgressWrap" class="portable-import-progress-wrap" hidden>
+            <progress id="portableImportProgress" class="portable-music-progress" max="1" value="0" aria-label="Portable Music import progress"></progress>
+            <span id="portableImportProgressLabel" class="portable-music-progress-label">0 of 0</span>
+          </div>
+          <label class="import-speed-label">Import speed <select id="portableImportSpeed" class="input"><option value="2">USB: 2x speed</option><option value="6">FAST: 6x speed</option><option value="12">TURBO: 12x speed</option></select></label>
+          <button id="portableImportBtn" class="btn import-action" type="button" disabled>Import Missing Music</button>
+        </section>
+        <section class="local-music-card dashboard-square replay-gain-card" aria-labelledby="replayGainTitle">
+          <div class="card-title" id="replayGainTitle">ReplayGain</div>
+          <div class="card-donut-wrap"><div id="replayGainChart" class="portable-storage-chart" title="Checking song loudness…"><span id="replayGainPercent">—</span></div></div>
+          <label class="preference-toggle"><input id="replayGainEnabled" type="checkbox" /><span class="toggle-switch" aria-hidden="true"></span><span>Even out song volume</span></label>
+          <div id="replayGainStatus" class="card-status" role="status">Analysis runs slowly in the background and pauses for playback.</div>
+          <div class="card-actions"><button id="replayGainPause" class="subtle-link" type="button">Pause analysis</button></div>
+        </section>
+        <section class="local-music-card additional-folder-card" aria-labelledby="additionalMusicFolderTitle">
+          <div class="card-title" id="additionalMusicFolderTitle">External Music Folder <span>(optional)</span></div>
           <div class="pro-music-settings-row">
-            <input id="additionalMusicFolder" class="input" type="text" readonly placeholder="Portable Music folder only" />
+            <input id="additionalMusicFolder" class="input" type="text" readonly placeholder="No external folder selected" />
             <button id="chooseAdditionalMusicFolderBtn" class="btn" type="button">Choose Folder…</button>
             <button id="clearAdditionalMusicFolderBtn" class="btn" type="button">Remove</button>
           </div>
-          <div class="hint">WaveDeck always includes the portable <b>Music</b> folder beside <b>Data</b>. This adds one other folder to Music search and playback. Files and tags are never changed.</div>
-          <div class="music-library-status-row">
-            <span id="musicLibraryStatus" role="status">Checking Local Music…</span>
-            <button id="rescanMusicBtn" class="btn" type="button">Rescan</button>
+          <div id="additionalMusicFolderChoice" class="additional-music-folder-choice" hidden>
+            <span>Use this folder on this computer?</span>
+            <button id="rememberAdditionalMusicFolderBtn" class="subtle-link" type="button">Remember this computer</button>
+            <span>·</span>
+            <button id="useAdditionalMusicFolderThisTimeBtn" class="subtle-link" type="button">Use this time only</button>
           </div>
+          <div class="hint">Add one other folder to Local Music search and playback. Its files and tags are never changed.</div>
+          <div class="additional-music-folder-status-row"><span id="additionalMusicFolderStatus" class="additional-music-folder-status" role="status">No External Music Folder selected for this computer.</span></div>
         </section>
-        <section class="lastfm-settings local-music-section" aria-labelledby="lastFmTitle">
-          <div class="pro-music-settings-title" id="lastFmTitle">Last.fm Music Data</div>
-          <label class="preference-toggle">
-            <input id="lastFmEnabled" type="checkbox" />
-            <span class="toggle-switch" aria-hidden="true"></span>
-            <span>Improve Music Data with Last.fm</span>
-          </label>
-          <div class="hint">Refreshes song popularity, genre tags, and related artists in WaveDeck’s own portable database. No Last.fm account or setup is needed. Your MP3 files and tags are never changed.</div>
-          <div id="lastFmDetails" class="lastfm-details" hidden>
-            <button id="queueLastFmRefreshBtn" class="btn" type="button">Refresh Last.fm Music Data</button>
-            <div class="hint">Checks missing or older music data and skips songs checked within the past week.</div>
-            <div id="lastFmProgressWrap" class="lastfm-progress-wrap" hidden>
-              <div id="lastFmUpdating" class="lastfm-updating" hidden>Updating Music Data</div>
-              <progress id="lastFmProgress" class="lastfm-progress" max="100" value="0" aria-label="Last.fm music data progress"></progress>
-              <span id="lastFmProgressLabel" class="lastfm-progress-label">0%</span>
-            </div>
-            <div id="lastFmStatus" class="lastfm-status">Last.fm is ready when you are.</div>
-          </div>
-          <button id="openRadioLogBtn" class="subtle-link" type="button">Open Live Radio Log</button>
+        <section class="local-music-card dashboard-square local-mixes-card" aria-labelledby="localMixSummaryTitle">
+          <div class="card-title" id="localMixSummaryTitle">Local Mixes</div>
+          <div id="localMixSummary" class="library-track-count local-mix-summary"><span id="localMixReadyCount">—</span><span id="localMixReadyLabel">Checking Local Mixes…</span></div>
+          <div class="card-actions"><button id="manageLocalMixesBtn" class="subtle-link" type="button">Manage</button></div>
         </section>
-        <section class="local-music-section" aria-labelledby="localMixManagerTitle">
-          <div class="pro-music-settings-title" id="localMixManagerTitle">Manage Local Mixes</div>
+        <section id="rememberedMusicComputers" class="local-music-card remembered-computers-card" hidden>
+          <div class="card-title">Remembered Computers</div>
+          <div id="rememberedMusicComputersList" class="remembered-music-computers-list"></div>
+        </section>
+        </div>
+        <details id="localMixDetails" class="local-music-section local-mix-details">
+          <summary class="pro-music-settings-title" id="localMixManagerTitle">Manage Local Mixes</summary>
           <div class="hint">Choose which Local Mixes appear in Local Music. A mix needs at least 20 eligible songs before it can be played. You can also add your own books to <b>Data/local-mixes</b>; they stay off until you choose them.</div>
           <div id="localMixManager" class="local-mix-manager" aria-live="polite">Checking installed Local Mixes…</div>
-        </section>
+        </details>
         <div id="statusLocalMusic" class="status"></div>
+      </section>
+
+      <section id="tab-musicmanager" class="panel embedded-panel hidden" hidden>
+        <iframe id="musicManagerFrame" title="Library" data-src="./music-library.html"></iframe>
+      </section>
+      <section id="tab-radiolog" class="panel embedded-panel hidden" hidden>
+        <iframe id="radioLogFrame" title="Log" data-src="./radio-log.html"></iframe>
       </section>
 
       <!-- ABOUT -->
@@ -276,7 +369,7 @@
         <div class="user-guide">
           <h2>User Guide</h2>
           <details open><summary>Getting Started and Portable Data</summary>
-            <p>Choose <b>Streaming</b> for internet radio or <b>Local Music</b> for your MP3 library. Click a station, Local Station, Local Mix, or song to begin. The row below the player shows what is playing and whether it came from Streaming or Local Music.</p>
+            <p>Choose <b>Streaming</b> for internet radio or <b>Local Music</b> for your portable music library. Click a station, Local Station, Local Mix, or song to begin. The row below the player shows what is playing and whether it came from Streaming or Local Music.</p>
             <p>WaveDeck keeps your stations, preferences, listening history, Local Radio settings, and music information in a <code>Data</code> folder beside the application. To move WaveDeck to another computer or a USB stick, keep that folder with the app. Updating WaveDeck replaces the application files; it does not replace your existing Data folder.</p>
           </details>
           <details><summary>Streaming Radio</summary>
@@ -289,14 +382,16 @@
             <p>You can expand a station briefly to read its information or adjust gain. Station details collapse again after a short time to keep the list tidy. Streaming group headings stay open while their subgroups can be expanded or collapsed.</p>
           </details>
           <details><summary>Local Music Setup and Music Information</summary>
-            <p>Turn on <b>Enable Advanced Features</b> in Settings → General to make Local Music available. WaveDeck creates and scans the portable <code>Music</code> folder beside the app, and you can add one optional Additional Music Folder in Settings → Local Music. Use <b>Rescan</b> after adding music or changing tags.</p>
-            <p>WaveDeck reads your MP3 information into its own portable index; it does not change your MP3 files. It uses song, artist, album, Album Artist, year, genre, rating, Favorite, and Do Not Play information when available. Your MP3 <code>RATING</code> tag uses a 0–10 scale: 10 is five stars and 5 is two and a half stars. A rating of 0 means unrated.</p>
+            <p>Turn on <b>Enable Advanced Features</b> in Settings → General to make Local Music available. WaveDeck Opus creates and scans the portable <code>Music</code> folder beside the app, and you can add one optional External Music Folder in Settings → Local Music. Drop MP3s into the portable Music folder and they are available immediately while WaveDeck Opus converts them in the background.</p>
+            <p>Portable Music becomes lean 96 kbps Opus audio. During conversion, WaveDeck Opus preserves title, artist, album, Album Artist, track number, disc number, year, genre, rating, Favorite, Do Not Play, and its stable music ID. It removes embedded artwork, loose cover images, lyric sidecars, and unneeded metadata. The External Music Folder stays read-only.</p>
             <p>A track marked <code>DO_NOT_PLAY=1</code> is never selected by Local Radio or a Local Mix. A Favorite tag gives that song a stronger chance when it fits the station.</p>
+            <p>With Advanced Features on, Settings also has <b>Library</b> and <b>Log</b> tabs. Click a playing portable song’s title to find it in the manager, or use View Log to see why Local Radio chose a song.</p>
           </details>
           <details><summary>Playing Local Music</summary>
-            <p>Search your Local Music library by song, artist, album, or year. Each matching song can start <b>Song Radio</b>, <b>Artist Radio</b>, or <b>Play Album</b>.</p>
+            <p>Search your Local Music library by song, artist, album, or year. Each matching song can start <b>Song Radio</b>, <b>Explore Radio</b>, <b>Artist Radio</b>, or <b>Play Album</b>.</p>
             <ul>
               <li><b>Song Radio</b> starts from a song and looks for music that belongs with it.</li>
+              <li><b>Explore Radio</b> takes a controlled path through related artists, then returns toward the original seed.</li>
               <li><b>Artist Radio</b> stays focused on the selected artist—about 90% of its selections are from that artist, with only an occasional related-artist change.</li>
               <li><b>Play Album</b> plays the album in order, then moves into Artist Radio when the album has a clear Album Artist. Various Artists albums stop when they end.</li>
             </ul>
@@ -312,13 +407,14 @@
             <p>Settings → Local Music → <b>Manage Local Mixes</b> shows every installed book, its eligible-song count, and a readiness label. Enable the mixes you want to see in Local Music; optional books you add later stay hidden until you turn them on. Star a mix to move it to the top of the Local Mixes list.</p>
           </details>
           <details><summary>Local Radio Controls and Crossfade</summary>
-            <p>Open <b>Local Radio Controls</b> from the sliders icon at the left of the Local Music playback controls. It lets you shape Song Radio and Local Mixes. <b>Song Familiarity</b> moves from Play Deep Cuts Too to Balanced Mix to Favor the Hits. It changes the odds among songs that already fit the station; it does not make unrelated music eligible.</p>
+            <p>Open <b>Local Radio Controls</b> from the sliders icon at the left of the Local Music playback controls. It lets you shape Song Radio and Local Mixes. <b>Song Familiarity</b> moves from Allow Deep Cuts to Balanced Mix to Favor the Hits to Hits Only. The Local Mixes Last.fm toggle uses popularity cutoffs of 50, 60, 70, and 80 at those stops; otherwise the stops use your 3/10, 5/10, 7/10, and 8/10 ratings. <b>How Far Should We Stray From the Seed?</b> controls Explore Radio. These controls change the odds among songs that already fit; they do not make unrelated music eligible.</p>
             <p><b>Song Repeat Wait</b> sets how long a song rests before it can return. <b>Artist Repeat Wait</b> sets the break before an artist returns. <b>Artist Sets</b> can play Single Tracks, Two-fers, Three-way, or Four-play sets. Artist Radio itself uses its fixed artist-focused behavior rather than these taste controls.</p>
             <p><b>Enable 8-second crossfade</b> blends Local Music tracks, Local Radio, Local Mixes, and albums. It is on by default and does not affect Streaming Radio.</p>
+            <p>Turn on <b>Finish current song when changing stations</b> if you want a newly selected Local Radio station or Local Mix to start at the next transition. WaveDeck shows the queued station while your current song plays. With crossfade off, the new station starts when the song ends.</p>
           </details>
           <details><summary>Last.fm Music Data and Live Radio Log</summary>
-            <p>When enabled in Settings → Local Music, WaveDeck can refresh song popularity, useful genre tags, and related artists in its own portable music database. It never writes those details into your MP3 files.</p>
-            <p>WaveDeck includes the needed Last.fm access. Use <b>Refresh Last.fm Music Data</b> when you want a catch-up refresh. The progress bar shows when music data is already updating. The subtle <b>Open Live Radio Log</b> link opens selection diagnostics, including prior choices recorded while the log was closed.</p>
+            <p>When enabled in Settings → Local Music, WaveDeck Opus can refresh song popularity, useful genre tags, and related artists in its own portable music database. Last.fm data stays in that database; it is not written into music files. Connect your Last.fm account there to scrobble Local Music playback.</p>
+            <p>WaveDeck includes the needed Last.fm access. Use the <b>Refresh</b> link on the Last.fm card when you want a catch-up refresh. The <b>Live Radio Log</b> Settings tab shows selection diagnostics, including prior choices recorded while it was closed.</p>
           </details>
           <details><summary>Settings, Library Management, and Updates</summary>
             <p>Settings → Streaming Stations lets you add, edit, search, and organize streams. The Groups tab creates, renames, reorders, and removes groups and optional subgroups. Removing a group moves its stations to Other; removing a subgroup leaves its stations in the main group.</p>
@@ -347,6 +443,10 @@
         <div class="about-divider"></div>
         <div class="changelog current-changelog">
           <h2>Changelog</h2>
+          <h3>WaveDeck 1.2 - The DJ Update</h3>
+          <ul><li>Added an optional Auto DJ feature for Local Radio and Local Mixes.</li><li>Song intro and outro clips generate automatically for qualifying popular songs in your library.</li><li>Customizable station name, DJ name, Station IDs, and optional extra lines.</li><li>Implemented artist and song-title pronunciation customization.</li><li>Added optional ReplayGain for volume leveling.</li><li>Added Play Next and a diagnostic queue window.</li><li>Added optional radio start and end points for individual songs.</li></ul>
+          <h3>WaveDeck 1.0.1 - Streaming Update</h3>
+          <ul><li>Added a one-switch personal radio stream for listening to WaveDeck over the internet, with a QR code for CarPlay radio apps.</li></ul>
           <h3>WaveDeck 1.0 - Full Release - Oct 2, 2026</h3>
           <h3>0.11.0 — Various Refinements</h3><ul><li>Artist Radio now stays 90% focused on the selected artist.</li><li>Finished albums now transition into Artist Radio when possible.</li><li>Closing the main WaveDeck window now also closes Settings and Live Radio Log, then fully exits the app.</li></ul>
           <h3>0.10.0 — Interface Tuning</h3><ul><li>Reorganized player controls, toolbars, station rows, and Station Gain styling.</li><li>Unified Streaming and Local Music row styling.</li><li>Added a built-in User Guide and a simplified in-app changelog.</li></ul>

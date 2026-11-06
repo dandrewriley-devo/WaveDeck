@@ -4,7 +4,9 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 
-const { CrossfadeMpvPlayer, getIpcPath, getMpvExecutable } = require("./player");
+const { CrossfadeMpvPlayer, MpvPlayer, getIpcPath, getMpvExecutable } = require("./player");
+const { SongCues } = require('./song-cues');
+const { PersonalStream } = require('./personal-stream');
 const { MediaController, serializeTransport } = require("./media-controller");
 const {
   StreamRecorder,
@@ -14,14 +16,20 @@ const {
   resolveFfmpegExecutable,
   verifyFfmpegExecutable
 } = require("./recorder");
-const { ListeningHistory } = require("./listening-history");
+const { ListeningHistory, cleanLocalRadioProfile } = require("./listening-history");
 const { createLibraryUpdater, nodeHttpsFetch } = require("./library-updater");
 const { copyLegacyData } = require("./data-migration");
 const { RecordingLibrary } = require("./recording-library");
 const { MusicLibrary } = require('./music-library');
-const { MusicRadio } = require('./music-radio');
+const { OpusOptimizer } = require('./opus-optimizer');
+const { RadioSelection } = require('./radio-selection');
+const { PortableManagerIndex, portableManagerArtistKey, portableManagerReleaseKey, portableManagerReleaseYear } = require('./portable-manager-index');
+const { normalize } = require('./music-tags');
 const { mixBookSignature } = require('./local-mixes');
 const { LastFmEnricher } = require('./lastfm-enricher');
+const { DjClips } = require('./dj-clips');
+const { ReplayGain } = require('./replay-gain');
+const { LastFmScrobbler } = require('./lastfm-scrobbler');
 const {
   getLauncherStatus,
   installLauncher,
@@ -34,6 +42,8 @@ const {
   resolveRuntimeDir
 } = require("./portable-paths");
 const { PortableStorage } = require("./storage");
+const { ComputerMusicFolders, resolveComputerIdentity } = require('./computer-music-folders');
+const { PortableImporter } = require('./portable-importer');
 const { probeStream } = require("./stream-probe");
 const {
   clearCinnamonReservedSpace,
@@ -76,12 +86,8 @@ const SETTINGS_DEFAULT_WIDTH = 1100;
 const SETTINGS_DEFAULT_HEIGHT = 800;
 const SETTINGS_MIN_WIDTH = 700;
 const SETTINGS_MIN_HEIGHT = 500;
-const RADIO_LOG_DEFAULT_WIDTH = 860;
-const RADIO_LOG_DEFAULT_HEIGHT = 700;
-const RADIO_LOG_MIN_WIDTH = 560;
-const RADIO_LOG_MIN_HEIGHT = 400;
 const LOCAL_RADIO_CONTROLS_WIDTH = 480;
-const LOCAL_RADIO_CONTROLS_HEIGHT = 480;
+const LOCAL_RADIO_CONTROLS_HEIGHT = 620;
 const LOCAL_RADIO_CONTROLS_MIN_WIDTH = 360;
 const LOCAL_RADIO_CONTROLS_MIN_HEIGHT = 360;
 const MINI_PLAYER_WIDTH = 560;
@@ -90,12 +96,14 @@ const MINI_PLAYER_MIN_WIDTH = 360;
 const RADIO_LOG_SHORTCUT = "CommandOrControl+Alt+Shift+L";
 const LASTFM_REFRESH_SHORTCUT = "CommandOrControl+Alt+Shift+F";
 const MINI_PLAYER_SHORTCUT = "CommandOrControl+Alt+Shift+M";
+const RADIO_IDENTITY_REBUILD_SHORTCUT = "CommandOrControl+Alt+Shift+I";
 const DISPLAY_VERSION = require("../../package.json").wavedeckVersion || app.getVersion();
 
 let mainWindow = null;
 let tray = null;
 let settingsWindow = null;
-let radioLogWindow = null;
+let autoDjIdsWindow = null;
+let queueWindow = null;
 let localRadioControlsWindow = null;
 let miniPlayerWindow = null;
 let miniPlayerReturnToSidebar = false;
@@ -105,17 +113,40 @@ const radioDiagnosticSession = [];
 const RADIO_DIAGNOSTIC_LIMIT = 3000;
 let radioDiagnosticStationKey = '';
 let storage = null;
+let computerMusicFolders = null;
+let currentComputer = null;
+let activeAdditionalMusicFolder = '';
+let additionalMusicFolderMode = 'none';
+let portableImporter = null;
+let manualArtistRelationships = {};
+let relationshipsAppliedTo = null;
+const portableManagerIndex = new PortableManagerIndex();
+let quietMusicCheckTimer = null;
+const QUIET_MUSIC_MAINTENANCE_MS = 180000;
 let player = null;
 let recordingLibrary = null;
 let musicLibrary = null;
 let musicRadio = null;
+let opusOptimizer = null;
+let latestMusicLibraryStatus = {};
 let lastFmEnricher = null;
+let djClips = null;
+let replayGain = null;
+let songCues = null;
+let cuePreview = null;
+let cuePreviewTimer = null;
+let lastFmScrobbler = null;
 let recordingProbeExecutable = "";
+let portableFfmpegExecutable = "";
+let portableFfprobeExecutable = "";
 let mediaController = null;
 let recorder = null;
+let personalStream = null;
+let lastStreamSong = '';
 let mprisService = null;
 let platformMediaKeys = null;
 let listeningHistory = null;
+let activeLocalRadioProfile = null;
 let playbackHeartbeat = null;
 let mediaKeyReclaimTimer = null;
 let mediaKeyReclaimEnabled = false;
@@ -128,6 +159,7 @@ let sidebarTransitioning = false;
 let floatingBounds = null;
 let sectionVisibility = { presets: false, localPresets: false, localMixes: true, localFavoritesOnly: false, favoritesOnly: false, mostPlayed: false, activeTab: "streaming", collapsedGroups: [], collapsedSubgroups: [] };
 let quitFinalizingRecording = false;
+let quitFlushingRadioData = false;
 let cleanupComplete = false;
 const startupWarnings = [];
 
@@ -141,6 +173,138 @@ function getDataDir() {
     execPath: process.execPath,
     projectRoot: PROJECT_ROOT,
     homeDir: os.homedir()
+  });
+}
+
+async function protectedPortableMusicPaths() {
+  const track = mediaController?.getStatus?.().currentMusic?.track;
+  if (!track?.id || !musicLibrary) return new Set();
+  try {
+    const resolved = await musicLibrary.resolve(track.id);
+    return resolved.library === 'portable' ? new Set([resolved.path]) : new Set();
+  } catch { return new Set(); }
+}
+
+function beginOpusOptimization() {
+  if (!opusOptimizer || !storage?.getUiPreferences().proModeEnabled) return;
+  void opusOptimizer.start().then(() => {
+    void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
+  }).catch(error => sendToMain('app:warning', `Portable Music optimization paused: ${error.message}`));
+}
+
+function currentUiPreferences() {
+  const preferences = storage.getUiPreferences();
+  return {
+    ...preferences,
+    additionalMusicFolder: activeAdditionalMusicFolder,
+    additionalMusicFolderRemembered: additionalMusicFolderMode === 'remembered',
+    additionalMusicFolderNeedsDecision: additionalMusicFolderMode === 'decision',
+    currentComputerName: currentComputer?.label || 'this computer'
+  };
+}
+
+function activeMusicLibraryProfile() {
+  if (!activeAdditionalMusicFolder) return 'portable';
+  return `additional:${currentComputer?.id || 'temporary'}:${activeAdditionalMusicFolder}`.slice(0, 180);
+}
+
+function localRadioProfileFromPreferences(preferences = {}) {
+  return cleanLocalRadioProfile(preferences);
+}
+
+function currentLocalRadioControls() {
+  const preferences = currentUiPreferences();
+  return activeLocalRadioProfile
+    ? { ...preferences, ...activeLocalRadioProfile.profile, localRadioStationProfile: { key: activeLocalRadioProfile.key, label: activeLocalRadioProfile.label, mode: activeLocalRadioProfile.mode } }
+    : { ...preferences, localRadioStationProfile: null };
+}
+
+function sendLocalRadioControls() {
+  sendToAll('music:local-radio:controls-changed', currentLocalRadioControls());
+}
+
+function localStationProfileLabel({ mode, seed } = {}) {
+  if (mode === 'explore') return `${String(seed?.title || '').trim() || 'Song'} X Radio`;
+  if (mode === 'artist') return `${String(seed?.albumArtist || seed?.artist || '').trim() || 'Artist'} Radio`;
+  return `${String(seed?.title || '').trim() || 'Song'} Radio`;
+}
+
+function savedLocalStationProfile({ mode, seed } = {}) {
+  if (!['artist', 'radio', 'explore'].includes(mode) || !seed?.id) return null;
+  const libraryProfile = seed.library === 'additional' ? activeMusicLibraryProfile() : 'portable';
+  const saved = listeningHistory?.getLocalStationProfile({ libraryProfile, mode, seedId: seed.id });
+  const profile = saved || localRadioProfileFromPreferences(storage.getUiPreferences());
+  const key = `${libraryProfile}:${mode}:${seed.id}`;
+  const persisted = listeningHistory?.setLocalStationProfile({ libraryProfile, mode, seedId: seed.id, profile }) || profile;
+  return { key, libraryProfile, seedId: seed.id, mode, label: localStationProfileLabel({ mode, seed }), profile: { ...persisted } };
+}
+
+function activateLocalStationProfile(station = {}) {
+  const profile = station?.profile && ['artist', 'radio', 'explore'].includes(station.mode) ? station.profile : null;
+  if (profile) Object.assign(profile, cleanLocalRadioProfile(profile));
+  activeLocalRadioProfile = profile ? { key: station.key, libraryProfile: station.libraryProfile, seedId: station.seedId, mode: station.mode, label: station.label, profile } : null;
+  sendLocalRadioControls();
+}
+
+function updateActiveLocalRadioProfile(changes = {}) {
+  if (!activeLocalRadioProfile) return null;
+  const next = cleanLocalRadioProfile({ ...activeLocalRadioProfile.profile, ...changes });
+  Object.assign(activeLocalRadioProfile.profile, next);
+  if (activeLocalRadioProfile.mode && activeLocalRadioProfile.seedId) listeningHistory?.setLocalStationProfile({ libraryProfile: activeLocalRadioProfile.libraryProfile, mode: activeLocalRadioProfile.mode, seedId: activeLocalRadioProfile.seedId, profile: next });
+  sendLocalRadioControls();
+  return currentLocalRadioControls();
+}
+
+function localStationIsAvailable(station) {
+  const profile = String(station?.libraryProfile || 'portable');
+  if (profile !== 'portable' && profile !== activeMusicLibraryProfile()) return false;
+  const seed = musicLibrary?.tracks?.find(track => track.id === String(station?.seedId || ''));
+  if (!seed || seed.doNotPlay) return false;
+  const root = seed.library === 'additional'
+    ? activeAdditionalMusicFolder
+    : path.join(path.dirname(getDataDir()), 'Music');
+  const file = path.resolve(root || '.', String(seed.relativePath || ''));
+  return Boolean(root && file.startsWith(`${path.resolve(root)}${path.sep}`) && fs.existsSync(file));
+}
+
+function pruneUnavailableRecentLocalStations() {
+  listeningHistory?.removeUnavailableLocalStations(localStationIsAvailable);
+}
+
+async function applyAdditionalMusicFolder(folder, mode = 'none', { rescan = false } = {}) {
+  activeAdditionalMusicFolder = String(folder || '').trim();
+  additionalMusicFolderMode = activeAdditionalMusicFolder ? mode : 'none';
+  await musicLibrary?.setAdditionalMusicFolder(activeAdditionalMusicFolder);
+  setTimeout(pruneUnavailableRecentLocalStations, 0);
+  if (rescan && musicLibrary) {
+    void musicLibrary.rescan().then(status => { if (status.changed) return analyzeLocalMixes(); return null; }).catch(error => sendToMain('app:warning', error.message));
+  } else {
+    void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
+  }
+  return currentUiPreferences();
+}
+
+function scheduleQuietMusicMaintenance() {
+  clearTimeout(quietMusicCheckTimer);
+  quietMusicCheckTimer = setTimeout(() => {
+    if (!storage?.getUiPreferences().proModeEnabled || !musicLibrary?.enabled) return;
+    // Verification and conversion never get first claim on the music worker.
+    if (mediaController?.getStatus?.().currentMusic || portableImporter?.isRunning()) { scheduleQuietMusicMaintenance(); return; }
+    void musicLibrary.rescan().then(status => {
+      if (status.changed) void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
+      beginOpusOptimization();
+    }).catch(error => sendToMain('app:warning', error.message));
+  }, QUIET_MUSIC_MAINTENANCE_MS);
+}
+
+function enableLocalMusic() {
+  return musicLibrary.enable({ scanOnEnable: false }).then(() => {
+    applyManualArtistRelationships();
+    musicLibrary.setLocalMixSourceSignature(mixBookSignature(getDataDir()));
+    lastFmEnricher?.configure();
+    setTimeout(pruneUnavailableRecentLocalStations, 0);
+    // The saved index is the launch experience. Maintenance waits until idle.
+    scheduleQuietMusicMaintenance();
   });
 }
 
@@ -322,17 +486,18 @@ function beginRadioDiagnosticSession(stationKey = '') {
 }
 
 function sendToRadioLog(decision) {
-  if (decision?.selected) {
+  if (decision && typeof decision === 'object') {
     radioDiagnosticSession.push(decision);
     if (radioDiagnosticSession.length > RADIO_DIAGNOSTIC_LIMIT) radioDiagnosticSession.shift();
     persistRadioDiagnostics();
   }
-  if (radioLogWindow && !radioLogWindow.isDestroyed()) {
-    radioLogWindow.webContents.send("music:debug-decision", decision);
-  }
+  if (settingsWindow && !settingsWindow.isDestroyed()) settingsWindow.webContents.send('music:debug-decision', decision);
 }
 
 function radioDiagnosticsPath() { return path.join(getDataDir(), 'radio-diagnostics.json'); }
+let radioDiagnosticsDirty = false;
+let radioDiagnosticsWrite = null;
+let radioDiagnosticsSaveTimer = null;
 function loadRadioDiagnostics() {
   try {
     const saved = JSON.parse(fs.readFileSync(radioDiagnosticsPath(), 'utf8'));
@@ -342,31 +507,69 @@ function loadRadioDiagnostics() {
   } catch {}
 }
 function persistRadioDiagnostics() {
-  try {
-    const destination = radioDiagnosticsPath();
-    fs.mkdirSync(path.dirname(destination), { recursive: true });
-    fs.writeFileSync(destination + '.tmp', JSON.stringify({ version: 1, stationKey: radioDiagnosticStationKey, selections: radioDiagnosticSession }) + '\n', 'utf8');
-    fs.renameSync(destination + '.tmp', destination);
-  } catch {}
+  radioDiagnosticsDirty = true;
+  if (radioDiagnosticsSaveTimer || radioDiagnosticsWrite) return;
+  radioDiagnosticsSaveTimer = setTimeout(() => {
+    radioDiagnosticsSaveTimer = null;
+    void flushRadioDiagnostics();
+  }, 5 * 60 * 1000);
+  radioDiagnosticsSaveTimer.unref?.();
+}
+async function flushRadioDiagnostics() {
+  if (radioDiagnosticsWrite) {
+    await radioDiagnosticsWrite;
+    return flushRadioDiagnostics();
+  }
+  if (!radioDiagnosticsDirty) return false;
+  if (radioDiagnosticsSaveTimer) clearTimeout(radioDiagnosticsSaveTimer);
+  radioDiagnosticsSaveTimer = null;
+  radioDiagnosticsDirty = false;
+  const destination = radioDiagnosticsPath();
+  const stationIdCount = radioDiagnosticSession.filter(item => item?.type === 'station-id').length;
+  const payload = JSON.stringify({ version: 2, stationKey: radioDiagnosticStationKey, entryCount: radioDiagnosticSession.length, stationIdCount, selections: radioDiagnosticSession }) + '\n';
+  radioDiagnosticsWrite = (async () => {
+    try {
+      await fs.promises.mkdir(path.dirname(destination), { recursive: true });
+      await fs.promises.writeFile(destination + '.tmp', payload, 'utf8');
+      await fs.promises.rename(destination + '.tmp', destination);
+    } catch {}
+  })();
+  try { await radioDiagnosticsWrite; }
+  finally {
+    radioDiagnosticsWrite = null;
+    if (radioDiagnosticsDirty) void flushRadioDiagnostics();
+  }
+  return true;
 }
 function clearRadioDiagnostics() {
   radioDiagnosticStationKey = '';
   radioDiagnosticSession.splice(0, radioDiagnosticSession.length);
   persistRadioDiagnostics();
-  if (radioLogWindow && !radioLogWindow.isDestroyed()) radioLogWindow.webContents.send('music:debug:reset');
+  if (settingsWindow && !settingsWindow.isDestroyed()) settingsWindow.webContents.send('music:debug:reset');
 }
 
-function sendLastFmStatus(status) { sendToAll('music:lastfm-changed', status); }
+function sendLastFmStatus(status) {
+  sendToAll('music:lastfm-changed', { ...(status || {}), scrobble: lastFmScrobbler?.getStatus?.() || { connected: false, username: '', pending: 0, connecting: false, message: '' } });
+}
 
 function broadcastPlayerStatus(status = player?.getStatus()) {
   const combinedStatus = mediaController ? mediaController.getStatus(status) : status;
+  if (!combinedStatus?.currentMusic && activeLocalRadioProfile) activateLocalStationProfile(null);
+  const track = combinedStatus?.currentMusic?.track;
+  if (track && combinedStatus.mediaState === 'playing') {
+    const song = [track.artist, track.title].filter(Boolean).join(' - ');
+    if (song && song !== lastStreamSong) { lastStreamSong = song; personalStream?.updateSong(song); }
+  }
+  lastFmScrobbler?.observe?.(combinedStatus);
   listeningHistory?.handleStatus(combinedStatus);
   sendToAll("player:status-changed", combinedStatus);
+  if (queueWindow && !queueWindow.isDestroyed()) queueWindow.webContents.send('music:queue:changed', mediaController?.getQueueView());
   mprisService?.update(combinedStatus);
   return combinedStatus;
 }
 
 function broadcastStationChanged(station) {
+  lastStreamSong = '';
   sendToAll("player:station-changed", station);
   mprisService?.update(mediaController?.getStatus());
   reclaimMediaKeys();
@@ -426,6 +629,11 @@ function createSecureWindow(options, { showOnReady = true } = {}) {
 
   window.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
   window.webContents.on("will-navigate", (event) => event.preventDefault());
+  window.webContents.on('before-input-event', (event, input) => {
+    if (input.type === 'keyDown' && !input.isAutoRepeat && input.control && input.alt && input.shift && input.key.toLowerCase() === 'q') {
+      event.preventDefault(); openQueueWindow();
+    }
+  });
   window.on("focus", () => {
     reclaimMediaKeys();
   });
@@ -438,9 +646,70 @@ function delay(milliseconds) {
 }
 
 function closeAuxiliaryWindows() {
-  for (const auxiliary of [settingsWindow, radioLogWindow, localRadioControlsWindow, miniPlayerWindow]) {
+  for (const auxiliary of [settingsWindow, autoDjIdsWindow, queueWindow, localRadioControlsWindow, miniPlayerWindow]) {
     if (auxiliary && !auxiliary.isDestroyed()) auxiliary.close();
   }
+}
+
+const relationshipKey = value => normalize(value || '');
+function relationshipsFile() { return path.join(getDataDir(), 'artist-relationships.json'); }
+function loadArtistRelationships() { try { manualArtistRelationships = JSON.parse(fs.readFileSync(relationshipsFile(), 'utf8')) || {}; } catch { manualArtistRelationships = {}; } }
+function saveArtistRelationships() { const file = relationshipsFile(); const temporary = `${file}.tmp`; fs.writeFileSync(temporary, `${JSON.stringify(manualArtistRelationships, null, 2)}\n`); fs.renameSync(temporary, file); }
+function relatedForArtist(artist) { return [...new Set(manualArtistRelationships[relationshipKey(artist)] || [])]; }
+function applyManualArtistRelationships(force = false) {
+  if (!musicLibrary || (!force && relationshipsAppliedTo === musicLibrary.tracks)) return;
+  musicLibrary.tracks = musicLibrary.tracks.map(track => ({ ...track, similarArtists: [...new Set([...(track.similarArtists || []), ...relatedForArtist(track.artist)])] }));
+  relationshipsAppliedTo = musicLibrary.tracks;
+}
+function currentPortableManagerIndex() {
+  portableManagerIndex.ensure(musicLibrary?.tracks || [], `${musicLibrary?.revision || 0}:${musicLibrary?.metadataRevision || 0}`);
+  return portableManagerIndex;
+}
+function portableManagerArtistSummaries(query = '') {
+  return currentPortableManagerIndex().summaries(query);
+}
+function portableManagerArtistDetail(key, query = '') {
+  const artistKey = String(key || ''); const manual = relatedForArtist(artistKey);
+  const index = currentPortableManagerIndex();
+  const all = index.tracksForArtist(artistKey);
+  if (!all.length) throw new Error('That artist is no longer available in Portable Music.');
+  const shown = index.tracksForArtist(artistKey, query);
+  const lastFmRelated = [...new Set(all.flatMap(track => track.similarArtists || []))]
+    .filter(value => !manual.some(related => relationshipKey(related) === relationshipKey(value)))
+    .sort((left, right) => left.localeCompare(right, undefined, { sensitivity: 'base' }));
+  const releases = new Map();
+  for (const track of shown) {
+    const releaseKey = portableManagerReleaseKey(track);
+    if (!releases.has(releaseKey)) releases.set(releaseKey, { key: releaseKey, title: String(track.album || track.title || 'Loose Track'), compilation: /^(various( artists)?|va|v\.a\.|soundtrack)/i.test(String(track.albumArtist || '')), tracks: [] });
+    releases.get(releaseKey).tracks.push({ id: track.id, title: track.title, artist: track.artist, album: track.album, albumArtist: track.albumArtist, year: track.year, track: track.track, disc: track.disc, duration: track.duration, rating: track.rating, favorite: track.favorite === true, doNotPlay: track.doNotPlay === true, holiday: track.holiday === true, popularity: track.popularity });
+  }
+  return { key: artistKey, artist: all[0].artist || 'Unknown Artist', manualRelated: manual, lastFmRelated, releases: [...releases.values()].map(release => ({ ...release, year: portableManagerReleaseYear(release.tracks), holiday: release.tracks.length > 0 && release.tracks.every(track => track.holiday === true) })).sort((left, right) => (left.year || Infinity) - (right.year || left.title.localeCompare(right.title, undefined, { sensitivity: 'base' }))).map(release => ({ ...release, tracks: release.tracks.sort((left, right) => (left.disc - right.disc) || (left.track - right.track) || left.title.localeCompare(right.title)) })) };
+}
+const portableTagWriteQueue = new Map();
+let portableTagWriteRunning = false;
+async function writePortableTrackTags(track) {
+  const target = (await musicLibrary.resolve(track.id)).path;
+  const temporary = `${target}.editing`;
+  const args = ['-hide_banner','-loglevel','error','-nostdin','-i',target,'-map','0:a:0','-map_metadata','-1','-vn','-sn','-dn','-c:a','copy','-metadata',`title=${track.title}`,'-metadata',`artist=${track.artist}`,'-metadata',`album=${track.album}`,'-metadata',`album_artist=${track.albumArtist}`,'-metadata',`track=${track.track || ''}`,'-metadata',`disc=${track.disc || ''}`,'-metadata',`date=${track.year || ''}`,'-metadata',`genre=${(track.genres || []).join('; ')}`,'-metadata',`RATING=${track.rating || ''}`,'-metadata',`FAVORITE=${track.favorite ? '1' : ''}`,'-metadata',`DO_NOT_PLAY=${track.doNotPlay ? '1' : ''}`,'-metadata',`HOLIDAY=${track.holiday ? '1' : ''}`,'-metadata',`AMP_TRACK_ID=${track.ampId || ''}`,'-f','opus','-y',temporary];
+  await new Promise((resolve, reject) => execFile(portableFfmpegExecutable, args, { windowsHide: true, maxBuffer: 1024 * 1024 }, error => error ? reject(error) : resolve()));
+  fs.renameSync(temporary, target);
+}
+function queuePortableTrackTagWrite(track) {
+  portableTagWriteQueue.set(track.id, track);
+  if (portableTagWriteRunning) return;
+  portableTagWriteRunning = true;
+  void (async () => {
+    while (portableTagWriteQueue.size) {
+      const [id, next] = portableTagWriteQueue.entries().next().value;
+      portableTagWriteQueue.delete(id);
+      try { await writePortableTrackTags(next); }
+      catch (error) { sendToMain('app:warning', `Could not save tags for ${next.title || 'a portable track'}: ${error.message}`); }
+    }
+    portableTagWriteRunning = false;
+  })();
+}
+function openPortableMusicLibraryWindow(focusTrack = null) {
+  openSettingsWindow('', 'musicmanager', focusTrack);
 }
 
 function createMainWindow({
@@ -516,14 +785,20 @@ function createMainWindow({
   return window;
 }
 
-function openSettingsWindow(stationId = "") {
+function openSettingsWindow(stationId = "", requestedTab = '', focusTrack = null) {
   const requestedStationId = String(stationId ?? "").trim();
+  const sendRequestedView = () => {
+    if (!settingsWindow || settingsWindow.isDestroyed()) return;
+    if (requestedTab) settingsWindow.webContents.send('settings:open-tab', requestedTab);
+    if (focusTrack) settingsWindow.webContents.send('music:library:focus-track', focusTrack);
+  };
   if (settingsWindow && !settingsWindow.isDestroyed()) {
     settingsWindow.show();
     settingsWindow.focus();
     if (requestedStationId) {
       settingsWindow.webContents.send("settings:edit-station", requestedStationId);
     }
+    sendRequestedView();
     return;
   }
 
@@ -569,10 +844,11 @@ function openSettingsWindow(stationId = "") {
     scheduleLibraryUpdateCheck(0);
   });
 
-  if (requestedStationId) {
+  if (requestedStationId || requestedTab || focusTrack) {
     settingsWindow.webContents.once("did-finish-load", () => {
       if (settingsWindow && !settingsWindow.isDestroyed()) {
-        settingsWindow.webContents.send("settings:edit-station", requestedStationId);
+        if (requestedStationId) settingsWindow.webContents.send("settings:edit-station", requestedStationId);
+        sendRequestedView();
       }
     });
   }
@@ -580,39 +856,20 @@ function openSettingsWindow(stationId = "") {
 }
 
 function openRadioLogWindow() {
-  if (radioLogWindow && !radioLogWindow.isDestroyed()) {
-    radioLogWindow.show();
-    radioLogWindow.focus();
-    return;
-  }
-  const display = mainWindow && !mainWindow.isDestroyed()
-    ? screen.getDisplayMatching(mainWindow.getBounds())
-    : screen.getPrimaryDisplay();
-  const savedBounds = storage.getUiPreferences().radioLogWindowBounds;
-  const targetDisplay = savedBounds ? screen.getDisplayMatching(savedBounds) : display;
-  const geometry = constrainBoundsToDisplay(targetDisplay, savedBounds || calculateCenteredBounds(
-    display, RADIO_LOG_DEFAULT_WIDTH, RADIO_LOG_DEFAULT_HEIGHT
-  ), { minWidth: RADIO_LOG_MIN_WIDTH, minHeight: RADIO_LOG_MIN_HEIGHT });
-  radioLogWindow = createSecureWindow({
-    ...geometry,
-    minWidth: Math.min(RADIO_LOG_MIN_WIDTH, geometry.width),
-    minHeight: Math.min(RADIO_LOG_MIN_HEIGHT, geometry.height),
-    resizable: true,
-    title: "WaveDeck Live Radio Log"
-  });
-  radioLogWindow.on("close", () => {
-    if (!radioLogWindow || radioLogWindow.isDestroyed()) return;
-    try {
-      const bounds = radioLogWindow.isMaximized()
-        ? radioLogWindow.getNormalBounds()
-        : radioLogWindow.getBounds();
-      storage.setRadioLogWindowBounds(bounds);
-    } catch (error) {
-      console.warn(`Could not remember the Live Radio Log position: ${error.message}`);
-    }
-  });
-  radioLogWindow.on("closed", () => { radioLogWindow = null; });
-  radioLogWindow.loadFile(path.join(__dirname, "..", "renderer", "radio-log.html"));
+  openSettingsWindow('', 'radiolog');
+}
+
+function openAutoDjIdsWindow() {
+  if (autoDjIdsWindow && !autoDjIdsWindow.isDestroyed()) { autoDjIdsWindow.show(); autoDjIdsWindow.focus(); return; }
+  autoDjIdsWindow = createSecureWindow({ width: 760, height: 760, minWidth: 600, minHeight: 500, resizable: true, title: 'WaveDeck — Station IDs' });
+  autoDjIdsWindow.on('closed', () => { autoDjIdsWindow = null; });
+  autoDjIdsWindow.loadFile(path.join(__dirname, '..', 'renderer', 'auto-dj-ids.html'));
+}
+function openQueueWindow() {
+  if (queueWindow && !queueWindow.isDestroyed()) { queueWindow.show(); queueWindow.focus(); return; }
+  queueWindow = createSecureWindow({ width: 430, height: 500, minWidth: 350, minHeight: 300, resizable: true, title: 'WaveDeck — Queue' });
+  queueWindow.on('closed', () => { queueWindow = null; });
+  queueWindow.loadFile(path.join(__dirname, '..', 'renderer', 'queue.html'));
 }
 
 function openLocalRadioControlsWindow() {
@@ -1116,9 +1373,19 @@ function installIpcHandlers() {
 
   ipcMain.handle("stream:test", (_event, url) => probeStream(url));
 
-  ipcMain.handle("listening:get", () => listeningHistory.getStats());
+  ipcMain.handle("listening:get", () => {
+    const history = listeningHistory.getStats(activeMusicLibraryProfile());
+    // Keep saved stations for a returning library profile, but never offer a
+    // station in the current UI until its seed is actually playable.
+    return {
+      ...history,
+      recentLocalStations: history.recentLocalStations.filter(localStationIsAvailable),
+      localStationPresets: history.localStationPresets.filter(localStationIsAvailable)
+    };
+  });
   ipcMain.handle("listening:reset", () => listeningHistory.reset());
   ipcMain.handle("listening:toggle-local-preset", (_event, station) => listeningHistory.toggleLocalStationPreset(station));
+  ipcMain.handle("listening:remove-local-station", (_event, station) => listeningHistory.removeRecentLocalStation(station));
   ipcMain.handle("sections:get-state", () => ({
     ...sectionVisibility,
     collapsedGroups: [...sectionVisibility.collapsedGroups],
@@ -1154,7 +1421,7 @@ function installIpcHandlers() {
     return getDesktopLauncherState();
   });
 
-  ipcMain.handle("ui:get-preferences", () => storage.getUiPreferences());
+  ipcMain.handle("ui:get-preferences", () => currentUiPreferences());
   ipcMain.handle("ui:set-launch-in-sidebar", (_event, enabled) => {
     if (process.platform !== "linux" && process.platform !== "win32") {
       throw new Error("Sidebar launch is not available on this operating system.");
@@ -1166,6 +1433,7 @@ function installIpcHandlers() {
       throw new Error("Stop the current recording before turning Advanced Features off.");
     }
     const preferences = storage.setProModeEnabled(enabled);
+    opusOptimizer?.setEnabled(preferences.proModeEnabled);
     if (!preferences.proModeEnabled) {
       if (mediaController?.music) await mediaController.stop();
       if (localRadioControlsWindow && !localRadioControlsWindow.isDestroyed()) localRadioControlsWindow.close();
@@ -1178,13 +1446,13 @@ function installIpcHandlers() {
       });
       sendToAll("sections:state-changed", { ...sectionVisibility });
     }
-    if (preferences.proModeEnabled) void musicLibrary.enable({ scanOnEnable: true }).then(() => lastFmEnricher?.configure()).catch(error => sendToMain('app:warning', error.message));
-    sendToAll("ui:preferences-changed", preferences);
-    return preferences;
+    if (preferences.proModeEnabled) void enableLocalMusic().catch(error => sendToMain('app:warning', error.message));
+    sendToAll("ui:preferences-changed", currentUiPreferences());
+    return currentUiPreferences();
   });
   ipcMain.handle('ui:choose-additional-music-folder', async () => {
     const result = await dialog.showOpenDialog(settingsWindow || mainWindow, {
-      title: 'Choose Additional Music Folder', properties: ['openDirectory', 'createDirectory']
+      title: 'Choose External Music Folder', properties: ['openDirectory', 'createDirectory']
     });
     return result.canceled ? '' : (result.filePaths[0] || '');
   });
@@ -1194,15 +1462,51 @@ function installIpcHandlers() {
       const stat = await fs.promises.stat(selected);
       if (!stat.isDirectory()) throw new Error('Choose a folder containing MP3 files.');
     }
-    const preferences = storage.setAdditionalMusicFolder(selected);
-    await musicLibrary?.setAdditionalMusicFolder(preferences.additionalMusicFolder);
-    void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
+    const preferences = await applyAdditionalMusicFolder(selected, selected ? 'decision' : 'none', { rescan: Boolean(selected) });
     sendToAll('ui:preferences-changed', preferences);
     return preferences;
   });
+  ipcMain.handle('ui:remember-additional-music-folder', async () => {
+    if (!activeAdditionalMusicFolder || !currentComputer || !computerMusicFolders) throw new Error('Choose a music folder first.');
+    computerMusicFolders.remember({ ...currentComputer, folder: activeAdditionalMusicFolder });
+    additionalMusicFolderMode = 'remembered';
+    const preferences = currentUiPreferences();
+    sendToAll('ui:preferences-changed', preferences);
+    return preferences;
+  });
+  ipcMain.handle('ui:use-additional-music-folder-this-time', async () => {
+    additionalMusicFolderMode = activeAdditionalMusicFolder ? 'temporary' : 'none';
+    const preferences = currentUiPreferences();
+    sendToAll('ui:preferences-changed', preferences);
+    return preferences;
+  });
+  ipcMain.handle('ui:remove-additional-music-folder', async () => {
+    if (currentComputer && computerMusicFolders) computerMusicFolders.forget(currentComputer.id);
+    const preferences = await applyAdditionalMusicFolder('', 'none');
+    sendToAll('ui:preferences-changed', preferences);
+    return preferences;
+  });
+  ipcMain.handle('ui:get-remembered-music-computers', () => computerMusicFolders?.list() || []);
+  ipcMain.handle('ui:rename-remembered-music-computer', (_event, id, label) => {
+    if (!computerMusicFolders) throw new Error('Remembered computers are not available yet.');
+    const entry = computerMusicFolders.rename(id, label);
+    if (currentComputer?.id === String(id || '')) currentComputer = { ...currentComputer, label: entry.label };
+    return computerMusicFolders.list();
+  });
+  ipcMain.handle('ui:forget-remembered-music-computer', async (_event, id) => {
+    if (!computerMusicFolders) return [];
+    const computerId = String(id || '');
+    computerMusicFolders.forget(computerId);
+    if (currentComputer?.id === computerId) {
+      const preferences = await applyAdditionalMusicFolder('', 'none');
+      sendToAll('ui:preferences-changed', preferences);
+    }
+    return computerMusicFolders.list();
+  });
   ipcMain.handle('music:lastfm:get-status', async () => {
     requireAdvancedFeatures();
-    return lastFmEnricher?.refreshStatus() || { enabled: false, configured: false };
+    const status = await lastFmEnricher?.refreshStatus() || { enabled: false, configured: false };
+    return { ...status, scrobble: lastFmScrobbler?.getStatus?.() || { connected: false, username: '', pending: 0, connecting: false, message: '' } };
   });
   ipcMain.handle('music:lastfm:set-settings', async (_event, settings) => {
     requireAdvancedFeatures();
@@ -1215,28 +1519,151 @@ function installIpcHandlers() {
     requireAdvancedFeatures();
     return lastFmEnricher?.testConnection();
   });
+  ipcMain.handle('music:lastfm:connect', async () => {
+    requireAdvancedFeatures();
+    const scrobble = await lastFmScrobbler?.connect();
+    const status = lastFmEnricher?.status || { enabled: false, configured: false };
+    return { ...status, scrobble: scrobble || { connected: false, username: '', pending: 0, connecting: false, message: '' } };
+  });
+  ipcMain.handle('music:lastfm:disconnect', () => {
+    requireAdvancedFeatures();
+    const scrobble = lastFmScrobbler?.disconnect();
+    const status = lastFmEnricher?.status || { enabled: false, configured: false };
+    return { ...status, scrobble: scrobble || { connected: false, username: '', pending: 0, connecting: false, message: '' } };
+  });
   ipcMain.handle('music:lastfm:queue-full', async () => {
     requireAdvancedFeatures();
     await musicLibrary.enable();
     return lastFmEnricher.queueFullRefresh();
   });
-  ipcMain.handle('music:local-radio:set-familiarity', (_event, familiarity) => {
+  ipcMain.handle('music:dj:get-status', async () => {
     requireAdvancedFeatures();
-    const preferences = storage.setLocalRadioFamiliarity(String(familiarity || ''));
+    await musicLibrary.enable();
+    if (!djClips) throw new Error('DJ Clips are available in the Linux WaveDeck build.');
+    await djClips.start(); return djClips.getStatus();
+  });
+  ipcMain.handle('music:dj:set-settings', async (_event, settings) => {
+    requireAdvancedFeatures();
+    const preferences = storage.setAutoDjSettings(settings || {});
+    djClips?.settingsChanged();
+    await mediaController?.autoDjSettingsChanged?.();
     sendToAll('ui:preferences-changed', preferences);
     return preferences;
   });
+  ipcMain.handle('music:dj:open-station-ids', () => { requireAdvancedFeatures(); openAutoDjIdsWindow(); return true; });
+  ipcMain.handle('music:dj:queue-qualifying', async () => {
+    requireAdvancedFeatures();
+    await musicLibrary.enable();
+    if (!djClips) throw new Error('DJ Clips are available in the Linux WaveDeck build.');
+    return djClips.queueQualifyingTracks();
+  });
+  ipcMain.handle('music:dj:queue-track', async (_event, id) => {
+    requireAdvancedFeatures();
+    await musicLibrary.enable();
+    if (!djClips) throw new Error('DJ Clips are available in the Linux WaveDeck build.');
+    return djClips.queueTrack(String(id || ''), { manual: true });
+  });
+  ipcMain.handle('music:dj:track-state', async (_event, id) => {
+    requireAdvancedFeatures();
+    await musicLibrary.enable();
+    if (!djClips) return { state: 'unavailable' };
+    return djClips.trackState(String(id || ''));
+  });
+  ipcMain.handle('music:dj:pronunciation:get', (_event, artist) => {
+    requireAdvancedFeatures();
+    return storage.getUiPreferences().autoDjArtistPronunciations[String(artist || '').trim().toLocaleLowerCase()] || '';
+  });
+  ipcMain.handle('music:dj:pronunciation:test', async (_event, hint) => {
+    requireAdvancedFeatures();
+    if (!djClips || typeof hint !== 'string' || !hint.trim() || hint.length > 200) throw new Error('Enter a pronunciation to test.');
+    return djClips.previewPronunciation(hint);
+  });
+  ipcMain.handle('music:dj:pronunciation:save', async (_event, artist, hint) => {
+    requireAdvancedFeatures();
+    const previous = storage.getUiPreferences().autoDjArtistPronunciations[String(artist || '').trim().toLocaleLowerCase()] || '';
+    const result = storage.setAutoDjArtistPronunciation(artist, hint);
+    if (previous !== String(hint || '').trim()) await djClips?.queueArtist(artist);
+    return result.autoDjArtistPronunciations[String(artist || '').trim().toLocaleLowerCase()] || '';
+  });
+  ipcMain.handle('music:dj:title-hint:get', (_event, id) => {
+    requireAdvancedFeatures();
+    return storage.getUiPreferences().autoDjTitlePronunciations[String(id || '')] || '';
+  });
+  ipcMain.handle('music:dj:title-hint:save', async (_event, id, hint) => {
+    await requireMusic();
+    const track = musicLibrary.tracks.find(item => item.id === String(id) && item.library === 'portable');
+    if (!track) throw new Error('That portable song is no longer indexed.');
+    const previous = storage.getUiPreferences().autoDjTitlePronunciations[track.id] || '';
+    const preferences = storage.setAutoDjTitlePronunciation(track.id, hint);
+    if (previous !== String(hint || '').trim()) await djClips?.queueRegenerateTrack(track.id);
+    return preferences.autoDjTitlePronunciations[track.id] || '';
+  });
+  ipcMain.handle('music:replay-gain:status', () => replayGain?.status() || { enabled: false, paused: false, running: false, ready: 0, total: 0 });
+  ipcMain.handle('music:replay-gain:set', async (_event, settings) => {
+    requireAdvancedFeatures();
+    const preferences = storage.setReplayGainSettings(settings || {});
+    const status = replayGain?.setSettings({ enabled: preferences.replayGainEnabled, paused: preferences.replayGainPaused });
+    if (mediaController?.music?.current) await player.setStationGain(replayGain?.gainFor(mediaController.music.current) || 0);
+    sendToAll('ui:preferences-changed', preferences);
+    return status;
+  });
+  ipcMain.handle('music:local-radio:set-familiarity', (_event, familiarity) => {
+    requireAdvancedFeatures();
+    const value = String(familiarity || '');
+    const active = updateActiveLocalRadioProfile({ localRadioFamiliarity: value });
+    if (active) return active;
+    const preferences = storage.setLocalRadioFamiliarity(value);
+    sendToAll('ui:preferences-changed', preferences);
+    sendLocalRadioControls();
+    return currentLocalRadioControls();
+  });
   ipcMain.handle('music:local-radio:set-tuning', (_event, tuning) => {
     requireAdvancedFeatures();
+    const active = updateActiveLocalRadioProfile({
+      localRadioSongRepeatHours: tuning?.songRepeatHours,
+      localRadioArtistRepeatMinutes: tuning?.artistRepeatMinutes,
+      localRadioArtistSetSize: tuning?.artistSetSize
+    });
+    if (active) return active;
     const preferences = storage.setLocalRadioTuning(tuning || {});
     sendToAll('ui:preferences-changed', preferences);
-    return preferences;
+    sendLocalRadioControls();
+    return currentLocalRadioControls();
+  });
+  ipcMain.handle('music:local-radio:set-lastfm-mode', (_event, enabled) => {
+    requireAdvancedFeatures();
+    const preferences = storage.setLocalMixFavorLastFm(enabled === true);
+    sendToAll('ui:preferences-changed', preferences);
+    sendLocalRadioControls();
+    return currentLocalRadioControls();
+  });
+  ipcMain.handle('music:local-radio:set-explore-distance', (_event, value) => {
+    requireAdvancedFeatures();
+    const selected = String(value || '');
+    const active = updateActiveLocalRadioProfile({ localRadioExploreDistance: selected });
+    if (active) return active;
+    const preferences = storage.setLocalRadioExploreDistance(selected);
+    sendToAll('ui:preferences-changed', preferences);
+    sendLocalRadioControls();
+    return currentLocalRadioControls();
   });
   ipcMain.handle('music:local-radio:set-crossfade', (_event, enabled) => {
     requireAdvancedFeatures();
     const preferences = storage.setLocalMusicCrossfadeEnabled(enabled === true);
     sendToAll('ui:preferences-changed', preferences);
-    return preferences;
+    sendLocalRadioControls();
+    return currentLocalRadioControls();
+  });
+  ipcMain.handle('music:local-radio:set-finish-current', (_event, enabled) => {
+    requireAdvancedFeatures();
+    const preferences = storage.setFinishCurrentSongOnStationChange(enabled === true);
+    sendToAll('ui:preferences-changed', preferences);
+    sendLocalRadioControls();
+    return currentLocalRadioControls();
+  });
+  ipcMain.handle('music:local-radio:get-controls', () => {
+    requireAdvancedFeatures();
+    return currentLocalRadioControls();
   });
   ipcMain.handle('music:local-radio:open-controls', () => {
     requireAdvancedFeatures();
@@ -1251,12 +1678,19 @@ function installIpcHandlers() {
   };
   ipcMain.handle('music:debug:get-last-decision', () => musicRadio?.getLastDecision() || null);
   ipcMain.handle('music:debug:get-log', () => radioDiagnosticSession.map(item => JSON.parse(JSON.stringify(item))));
+  ipcMain.handle('music:debug:open-track', async (_event, diagnosticId) => {
+    await requireMusic();
+    const track = musicRadio?.trackForDiagnosticId(diagnosticId);
+    if (!track || track.library !== 'portable') return false;
+    openPortableMusicLibraryWindow({ artistKey: portableManagerArtistKey(track.artist), releaseKey: portableManagerReleaseKey(track), trackId: track.id });
+    return true;
+  });
   ipcMain.handle('music:debug:clear-log', () => { clearRadioDiagnostics(); return true; });
   ipcMain.handle('music:debug:open-log', () => { openRadioLogWindow(); return true; });
   ipcMain.handle('music:debug:save-log', async () => {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const defaultPath = path.join(getDataDir(), `WaveDeck_Radio_Diagnostics_${timestamp}.json`);
-    const result = await dialog.showSaveDialog(radioLogWindow || mainWindow, {
+    const result = await dialog.showSaveDialog(settingsWindow || mainWindow, {
       title: 'Save Radio Diagnostics',
       defaultPath,
       filters: [{ name: 'JSON diagnostic log', extensions: ['json'] }]
@@ -1264,10 +1698,12 @@ function installIpcHandlers() {
     if (result.canceled || !result.filePath) return { canceled: true, count: radioDiagnosticSession.length };
     const diagnostics = {
       format: 'WaveDeck Radio Diagnostics',
-      schemaVersion: 2,
+      schemaVersion: 3,
       appVersion: DISPLAY_VERSION,
       exportedAt: new Date().toISOString(),
-      selectionCount: radioDiagnosticSession.length,
+      entryCount: radioDiagnosticSession.length,
+      selectionCount: radioDiagnosticSession.filter(item => item?.type !== 'station-id').length,
+      stationIdCount: radioDiagnosticSession.filter(item => item?.type === 'station-id').length,
       selections: radioDiagnosticSession
     };
     await fs.promises.writeFile(result.filePath, JSON.stringify(diagnostics, null, 2) + '\n', 'utf8');
@@ -1276,7 +1712,7 @@ function installIpcHandlers() {
 
   // Retain the original channels for older renderer bundles and portable data
   // created before the preference became available on Windows.
-  ipcMain.handle("linux-ui:get-preferences", () => storage.getUiPreferences());
+  ipcMain.handle("linux-ui:get-preferences", () => currentUiPreferences());
   ipcMain.handle("linux-ui:set-launch-in-sidebar", (_event, enabled) => {
     if (process.platform !== "linux" && process.platform !== "win32") {
       throw new Error("Sidebar launch is not available on this operating system.");
@@ -1331,25 +1767,123 @@ function installIpcHandlers() {
     if (!storage.getUiPreferences().proModeEnabled) throw new Error('Enable Advanced Features to use Music.');
     await musicLibrary.enable();
     lastFmEnricher?.configure();
+    scheduleQuietMusicMaintenance();
   };
-  ipcMain.handle('music:status', async () => { await requireMusic(); return musicLibrary.call('status'); });
+  ipcMain.handle('music:status', async () => {
+    await requireMusic();
+    return { ...(await musicLibrary.call('status')), ...(opusOptimizer?.getStatus() || {}) };
+  });
   ipcMain.handle('music:search', async (_event, query) => { await requireMusic(); return musicLibrary.call('search', String(query || '')); });
   ipcMain.handle('music:scan', async () => {
     await requireMusic();
     const status = await musicLibrary.rescan();
-    void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
-    return status;
+    beginOpusOptimization();
+    if (status.changed) void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
+    return { ...status, ...(opusOptimizer?.getStatus() || {}) };
+  });
+  ipcMain.handle('music:additional:refresh', async () => {
+    await requireMusic();
+    if (!activeAdditionalMusicFolder) throw new Error('Choose an External Music Folder first.');
+    const status = await musicLibrary.rescan();
+    if (status.changed) void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
+    return { ...status, ...(opusOptimizer?.getStatus() || {}) };
+  });
+  ipcMain.handle('music:portable-storage', async () => {
+    const folder = path.join(path.dirname(getDataDir()), 'Music'); const info = await fs.promises.statfs(folder);
+    const blockSize = Number(info.bsize || info.frsize || 4096); const available = Math.max(0, Number(info.bavail || 0) * blockSize);
+    const total = Math.max(0, Number(info.blocks || 0) * blockSize); return { availableBytes: available, totalBytes: total, usedBytes: Math.max(0, total - available) };
+  });
+  ipcMain.handle('music:import:preview', async () => {
+    await requireMusic();
+    if (!portableImporter) throw new Error('Portable import is unavailable.');
+    await musicLibrary.rescan(); await analyzeLocalMixes();
+    return portableImporter.preview();
+  });
+  ipcMain.handle('music:import:start', async () => {
+    await requireMusic();
+    if (!portableImporter) throw new Error('Portable import is unavailable.');
+    return portableImporter.start();
+  });
+  ipcMain.handle('music:import:status', () => portableImporter?.getStatus() || { state: 'waiting', message: 'Portable import is unavailable.' });
+  ipcMain.handle('music:import:set-workers', (_event, value) => { const preferences = storage.setPortableImportWorkers(value); portableImporter?.setWorkers(); return preferences; });
+  ipcMain.handle('music:library:open', async () => { await requireMusic(); openPortableMusicLibraryWindow(); return true; });
+  ipcMain.handle('music:library:open-track', async (_event, id) => {
+    await requireMusic();
+    const track = musicLibrary.tracks.find(item => item.id === String(id || '') && item.library === 'portable');
+    if (!track) return false;
+    openPortableMusicLibraryWindow({ artistKey: portableManagerArtistKey(track.artist), releaseKey: portableManagerReleaseKey(track), trackId: track.id });
+    return true;
+  });
+  ipcMain.handle('music:library:get', async () => { await requireMusic(); return musicLibrary.tracks.filter(track => track.library === 'portable').map(track => ({ ...track, manualRelatedArtists: relatedForArtist(track.artist) })); });
+  ipcMain.handle('music:library:artists', async (_event, query = '') => { await requireMusic(); return portableManagerArtistSummaries(query); });
+  ipcMain.handle('music:library:artist-detail', async (_event, key, query = '') => {
+    await requireMusic(); const detail = portableManagerArtistDetail(key, query);
+    if (!djClips) return detail;
+    for (const release of detail.releases || []) for (const track of release.tracks || []) track.djClip = await djClips.trackState(track.id);
+    return detail;
+  });
+  ipcMain.handle('music:library:relationships:get', async (_event, artist) => ({ artist: String(artist || ''), related: relatedForArtist(artist) }));
+  ipcMain.handle('music:library:relationships:save', async (_event, artist, related) => {
+    const name = String(artist || '').trim(); const key = relationshipKey(name); if (!key) throw new Error('Choose an artist first.');
+    const values = [...new Set((Array.isArray(related) ? related : []).map(value => String(value || '').trim()).filter(Boolean))].slice(0, 100);
+    manualArtistRelationships[key] = values;
+    for (const value of values) { const other = relationshipKey(value); if (other) manualArtistRelationships[other] = [...new Set([...(manualArtistRelationships[other] || []), name])]; }
+    saveArtistRelationships(); applyManualArtistRelationships(true); return { artist: name, related: values };
+  });
+  ipcMain.handle('music:library:save-track', async (_event, update = {}) => {
+    await requireMusic(); const id = String(update.id || ''); const track = musicLibrary.tracks.find(item => item.id === id && item.library === 'portable');
+    if (!track) throw new Error('That portable track is no longer available.');
+    const clean = value => String(value ?? '').replace(/[\u0000\r\n]/g, ' ').trim().slice(0, 500);
+    const next = { ...track, title: clean(update.title ?? track.title), artist: clean(update.artist ?? track.artist), album: clean(update.album ?? track.album), albumArtist: clean(update.albumArtist ?? track.albumArtist), year: Number(update.year ?? track.year) || '', genres: Array.isArray(update.genres) ? update.genres.map(clean).filter(Boolean) : (track.genres || []), track: Number(update.track ?? track.track) || 0, disc: Number(update.disc ?? track.disc) || 0, rating: Math.max(0, Math.min(10, Number(update.rating ?? track.rating) || 0)), favorite: update.favorite === undefined ? track.favorite === true : update.favorite === true, doNotPlay: update.doNotPlay === undefined ? track.doNotPlay === true : update.doNotPlay === true, holiday: update.holiday === undefined ? track.holiday === true : update.holiday === true };
+    await musicLibrary.updatePortableTrack(next);
+    portableManagerIndex.replaceTrack(track, next, `${musicLibrary.revision}:${musicLibrary.metadataRevision}`, `${musicLibrary.revision - 1}:${musicLibrary.metadataRevision}`);
+    queuePortableTrackTagWrite(next);
+    if (next.doNotPlay !== track.doNotPlay || next.holiday !== track.holiday) void analyzeLocalMixes();
+    return next;
+  });
+  ipcMain.handle('music:cues:get', (_event, id) => songCues.display(String(id || '')));
+  ipcMain.handle('music:cues:save', async (_event, id, values) => {
+    await requireMusic();
+    const track = musicLibrary.tracks.find(item => item.id === String(id) && item.library === 'portable');
+    if (!track) throw new Error('That portable song is no longer indexed.');
+    return songCues.set(track, values);
+  });
+  ipcMain.handle('music:cues:test', async (_event, id, kind, values) => {
+    await requireMusic();
+    const track = await musicLibrary.resolve(String(id));
+    if (track.library !== 'portable' || !['start', 'end'].includes(kind)) throw new Error('Choose a portable song and a test point.');
+    const { parseCue } = require('./song-cues');
+    const start = parseCue(values?.start), end = parseCue(values?.end);
+    const duration = Number(track.duration) || 0;
+    if (kind === 'start' && (start === null || start >= duration - 1)) throw new Error('Enter a valid Start at point first.');
+    if (kind === 'end' && (end === null || end > duration + 1 || end <= (start ?? 0) + 1)) throw new Error('Enter a valid End at point first.');
+    clearTimeout(cuePreviewTimer);
+    if (cuePreview) await cuePreview.stop();
+    if (!cuePreview) cuePreview = new MpvPlayer({ executable: getMpvExecutable({ platform: process.platform, packaged: app.isPackaged, resourcesPath: process.resourcesPath, projectRoot: PROJECT_ROOT }), ipcPath: `${getIpcPath(process.platform, app.getPath('userData'))}-cue` });
+    const position = kind === 'start' ? start : Math.max(start ?? 0, end - 7);
+    await cuePreview.play(track.path, position);
+    cuePreviewTimer = setTimeout(() => void cuePreview?.stop().catch(() => {}), kind === 'start' ? 8000 : Math.max(500, (end - position) * 1000));
+    return { testing: kind, position };
+  });
+  ipcMain.handle('music:library:save-release-holiday', async (_event, ids = [], holiday = false) => {
+    await requireMusic(); const matches = [...new Set(Array.isArray(ids) ? ids.map(String) : [])].map(id => musicLibrary.tracks.find(track => track.id === id && track.library === 'portable')).filter(Boolean);
+    if (!matches.length) throw new Error('That portable release is no longer available.');
+    for (const track of matches) { const next = await musicLibrary.updatePortableTrack({ ...track, holiday: holiday === true }); portableManagerIndex.replaceTrack(track, next, `${musicLibrary.revision}:${musicLibrary.metadataRevision}`, `${musicLibrary.revision - 1}:${musicLibrary.metadataRevision}`); queuePortableTrackTagWrite(next); }
+    void analyzeLocalMixes(); return { ids: matches.map(track => track.id), holiday: holiday === true };
   });
   ipcMain.handle('music:play', async (_event, id, mode) => { await requireMusic(); return mediaController.playMusic(String(id), mode); });
+  ipcMain.handle('music:queue:next', async (_event, id) => { await requireMusic(); return mediaController.queueMusicNext(String(id)); });
+  ipcMain.handle('music:queue:view', () => mediaController?.getQueueView() || { current: null, queued: [] });
   ipcMain.handle('music:mixes', async () => {
     await requireMusic();
-    void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
+    if (!portableImporter?.isRunning()) void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
     const availability = localMixAvailability();
-    return availability.analyzing ? [] : availability.mixes.filter(mix => mix.valid && mix.enabled && mix.ready);
+    // Keep the last complete mix list visible while a background refresh works.
+    return availability.mixes.filter(mix => mix.valid && mix.enabled && mix.ready);
   });
   ipcMain.handle('music:mixes:manage', async () => {
     await requireMusic();
-    void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
+    if (!portableImporter?.isRunning()) void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
     return localMixAvailability();
   });
   ipcMain.handle('music:mixes:set-enabled', async (_event, mixId, enabled) => {
@@ -1372,7 +1906,9 @@ function installIpcHandlers() {
   });
   ipcMain.handle('music:play-mix', async (_event, mixId) => {
     await requireMusic();
-    await analyzeLocalMixes();
+    // An import can take hours. Its last completed availability is a good,
+    // stable answer until the final post-import analysis runs.
+    if (!portableImporter?.isRunning()) await analyzeLocalMixes();
     const mix = localMixAvailability().mixes.find(item => item.id === String(mixId || ''));
     if (!mix?.valid) throw new Error('That Local Mix cannot be played until its JSON book is fixed.');
     if (!mix.enabled) throw new Error('Enable this Local Mix in Settings before playing it.');
@@ -1390,6 +1926,15 @@ function installIpcHandlers() {
   ipcMain.handle("player:stop", () => mediaController.stop());
   ipcMain.handle("player:volume", (_event, value) => player.setVolume(value));
   ipcMain.handle("player:mute", () => player.toggleMute());
+  ipcMain.handle('personal-stream:state', () => personalStream?.state() || { enabled: false, status: 'unavailable' });
+  ipcMain.handle('personal-stream:set-enabled', (_event, enabled) => personalStream.setEnabled(enabled === true));
+  ipcMain.handle('personal-stream:set-host', (_event, host) => personalStream.setHost(host));
+  ipcMain.handle('personal-stream:set-mount-name', (_event, name) => personalStream.setMountName(name));
+  ipcMain.handle('personal-stream:qr', async () => {
+    const state = personalStream.state();
+    if (!state.url) return '';
+    return require('qrcode').toDataURL(state.url, { width: 280, margin: 2, errorCorrectionLevel: 'M' });
+  });
 
   ipcMain.handle("recording:get-state", () => recorder?.getState() || {
     available: false,
@@ -1476,6 +2021,7 @@ if (!hasSingleInstanceLock) {
         sendToAll("app:warning", message);
       }
     });
+    songCues = new SongCues(getDataDir());
     loadRadioDiagnostics();
 
     if (process.platform === "win32") {
@@ -1507,8 +2053,26 @@ if (!hasSingleInstanceLock) {
 
     try {
       storage.initialize();
+      loadArtistRelationships();
       storage.assertWritable();
       sectionVisibility = storage.getStreamingUiState();
+      currentComputer = resolveComputerIdentity();
+      computerMusicFolders = new ComputerMusicFolders({ dataDir: getDataDir() });
+      computerMusicFolders.initialize();
+      const rememberedFolder = computerMusicFolders.get(currentComputer.id);
+      if (rememberedFolder?.folder) {
+        if (rememberedFolder.label) currentComputer = { ...currentComputer, label: rememberedFolder.label };
+        activeAdditionalMusicFolder = rememberedFolder.folder;
+        additionalMusicFolderMode = 'remembered';
+      } else {
+        const legacyFolder = storage.getUiPreferences().additionalMusicFolder;
+        if (legacyFolder) {
+          computerMusicFolders.remember({ ...currentComputer, folder: legacyFolder });
+          storage.setAdditionalMusicFolder('');
+          activeAdditionalMusicFolder = legacyFolder;
+          additionalMusicFolderMode = 'remembered';
+        }
+      }
     } catch (error) {
       startupWarnings.push(`WaveDeck's Data folder is not writable. Changes may not be saved. ${error.message}`);
     }
@@ -1529,6 +2093,8 @@ if (!hasSingleInstanceLock) {
           executable: recorderExecutable,
           runtimeDir: getRuntimeDir()
         });
+        portableFfmpegExecutable = recorderExecutable;
+        portableFfprobeExecutable = recordingProbeExecutable;
         recorder = new StreamRecorder({
           executable: recorderExecutable,
           recordingsDir: getRecordingsDir(),
@@ -1570,10 +2136,28 @@ if (!hasSingleInstanceLock) {
     player = new CrossfadeMpvPlayer({
       executable,
       ipcPath,
-      onMetadata: (metadata) => sendToAll("player:metadata", metadata),
+      onMetadata: (metadata) => { sendToAll("player:metadata", metadata); if (!mediaController?.music) personalStream?.updateSong(metadata); },
       onStatus: (status) => broadcastPlayerStatus(status),
       onEnded: (event) => { void mediaController?.handleEnded(event); }
     });
+
+    if (process.platform === 'linux') {
+      const bundledIcecast = app.isPackaged
+        ? path.join(process.resourcesPath, 'streaming', 'icecast2')
+        : (process.env.WAVEDECK_ICECAST_PATH || '/usr/bin/icecast2');
+      let icecastExecutable = bundledIcecast;
+      try {
+        if (app.isPackaged) icecastExecutable = prepareFfmpegExecutable({
+          executable: bundledIcecast, runtimeDir: getRuntimeDir(), packaged: true, toolName: 'icecast2'
+        });
+      } catch (error) { console.warn(`Personal Stream is unavailable: ${error.message}`); }
+      personalStream = new PersonalStream({
+        dataDir: getDataDir(), player, ffmpeg: portableFfmpegExecutable,
+        icecast: icecastExecutable,
+        icecastLibDir: app.isPackaged ? path.join(process.resourcesPath, 'streaming', 'lib') : '',
+        onChanged: state => sendToAll('personal-stream:changed', state)
+      });
+    }
 
     mediaController = serializeTransport(new MediaController({
       player,
@@ -1584,29 +2168,108 @@ if (!hasSingleInstanceLock) {
       beforeStop: () => recorder?.stop(),
       dataDir: getDataDir(),
       getCrossfadeEnabled: () => storage.getUiPreferences().localMusicCrossfadeEnabled === true,
-      onLocalStationStart: stationKey => beginRadioDiagnosticSession(stationKey)
+      getFinishCurrentSongOnStationChange: () => storage.getUiPreferences().finishCurrentSongOnStationChange === true,
+      getLocalStationProfile: savedLocalStationProfile,
+      stationIdsEnabled: false,
+      isAutoDjEnabled: () => djClips?.enabled() === true,
+      getAutoDjIntervalMinutes: () => storage.getUiPreferences().autoDjBreakIntervalMinutes,
+      canBuildAutoDjBreak: (ending, incoming) => djClips?.canBuildBreak(ending, incoming) === true,
+      getAutoDjClipStatus: track => ({ intro: djClips?.clipsFor(track, 'intro').length || 0, outro: djClips?.clipsFor(track, 'outro').length || 0, ids: djClips?.activeStationIds().length || 0 }),
+      takeAutoDjBreak: (ending, incoming) => djClips?.takeBreak(ending, incoming) || null,
+      onPlaybackRequested: () => { djClips?.deferForPlayback(); replayGain?.deferForPlayback(); },
+      getMusicGain: track => replayGain?.gainFor(track) || 0,
+      getSongCue: track => songCues?.get(track?.id),
+      onLocalStationStart: station => {
+        activateLocalStationProfile(station?.stationProfile || null);
+        beginRadioDiagnosticSession(station?.key || '');
+      },
+      onStationIdPlayed: entry => sendToRadioLog(entry),
+      onAutoDjBreak: entry => sendToRadioLog(entry)
     }));
 
     musicLibrary = new MusicLibrary({
-      dataDir: getDataDir(), additionalMusicFolder: storage.getUiPreferences().additionalMusicFolder,
-      onStatus: status => sendToMain('music:changed', status),
-      onLocalMixAvailability: () => sendToAll('music:mixes-changed')
+      dataDir: getDataDir(), additionalMusicFolder: activeAdditionalMusicFolder,
+      onTracksChanged: () => applyManualArtistRelationships(),
+      onStatus: status => {
+        latestMusicLibraryStatus = status;
+        if (!status.scanning) applyManualArtistRelationships();
+        sendToAll('music:changed', { ...status, ...(opusOptimizer?.getStatus() || {}) });
+      },
+      onLocalMixAvailability: availability => sendToAll('music:mixes-changed', availability)
     });
-    musicRadio = new MusicRadio({ dataDir: getDataDir(), onDecision: sendToRadioLog,
+    if (process.platform === 'linux' && portableFfmpegExecutable) {
+      replayGain = new ReplayGain({ dataDir: getDataDir(), getTracks: () => musicLibrary?.tracks || [], ffmpegPath: () => portableFfmpegExecutable,
+        canAnalyze: () => !portableImporter?.isRunning() && !opusOptimizer?.isRunning() && !latestMusicLibraryStatus.scanning && !djClips?.running,
+        onStatus: status => sendToAll('music:replay-gain:changed', status) });
+      const preferences = storage.getUiPreferences();
+      replayGain.setSettings({ enabled: preferences.replayGainEnabled, paused: preferences.replayGainPaused });
+    }
+    if (process.platform === 'linux' && portableFfmpegExecutable) {
+      const modelDir = app.isPackaged
+        ? path.join(process.resourcesPath, 'dj-models', 'Kokoro-82M-v1.0-ONNX')
+        : path.join(PROJECT_ROOT, '.cache', 'wavedeck-tools', 'dj-models', 'Kokoro-82M-v1.0-ONNX');
+      djClips = new DjClips({
+        dataDir: getDataDir(), getTracks: () => musicLibrary?.tracks || [],
+        ffmpegPath: () => portableFfmpegExecutable, getModelDir: () => modelDir,
+        getSettings: () => storage.getUiPreferences(),
+        onStatus: status => sendToAll('music:dj:changed', status)
+      });
+      setTimeout(() => void djClips?.start().catch(error => console.warn(`Auto DJ clips are unavailable: ${error.message}`)), 15_000).unref?.();
+    }
+    if (process.platform === 'linux' && portableFfmpegExecutable && portableFfprobeExecutable) {
+      opusOptimizer = new OpusOptimizer({
+        musicRoot: path.join(path.dirname(getDataDir()), 'Music'),
+        diagnosticsPath: path.join(getDataDir(), 'opus-dedup-diagnostics.json'),
+        ffmpegExecutable: portableFfmpegExecutable,
+        ffprobeExecutable: portableFfprobeExecutable,
+        getProtectedPaths: protectedPortableMusicPaths,
+        onStatus: status => sendToAll('music:optimization-changed', { ...latestMusicLibraryStatus, ...status }),
+        rescanLibrary: async () => {
+          const status = await musicLibrary.rescan();
+          if (status.changed) void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
+        }
+      });
+      opusOptimizer.setEnabled(storage.getUiPreferences().proModeEnabled);
+      opusOptimizer.watch(async () => {
+        if (!storage.getUiPreferences().proModeEnabled) return;
+        if (opusOptimizer.isRunning()) return;
+        if (portableImporter?.isRunning()) return;
+        await musicLibrary.rescan();
+        beginOpusOptimization();
+      });
+      portableImporter = new PortableImporter({
+        musicRoot: path.join(path.dirname(getDataDir()), 'Music'), ffmpegExecutable: portableFfmpegExecutable, ffprobeExecutable: portableFfprobeExecutable,
+        getAdditionalFolder: () => activeAdditionalMusicFolder, getPortableTracks: () => musicLibrary.tracks.filter(track => track.library === 'portable'),
+        getWorkers: () => storage.getUiPreferences().portableImportWorkers,
+        onStatus: status => sendToAll('music:import-changed', status),
+        onBatch: async () => { await musicLibrary.rescan(); },
+        onComplete: async () => { await musicLibrary.rescan(); await analyzeLocalMixes(); beginOpusOptimization(); }
+      });
+    }
+    musicRadio = new RadioSelection({ dataDir: getDataDir(), onDecision: sendToRadioLog,
+      getDjClipStatus: track => track?.library === 'portable' ? { intro: djClips?.availableClips(track, 'intro').length || 0, outro: djClips?.availableClips(track, 'outro').length || 0, eligible: Number(track?.lastFm?.popularity ?? track?.popularity) >= 70 } : null,
       getFamiliarity: () => storage.getUiPreferences().localRadioFamiliarity,
       getTuning: () => storage.getUiPreferences() });
+    lastFmScrobbler = new LastFmScrobbler({
+      dataDir: getDataDir(),
+      fetchImpl: (...args) => net.fetch(...args),
+      openExternal: url => shell.openExternal(url),
+      onStatus: () => sendLastFmStatus(lastFmEnricher?.status || { enabled: storage.getUiPreferences().lastFmEnabled !== false, configured: true })
+    });
     lastFmEnricher = new LastFmEnricher({
       library: musicLibrary,
       getPreferences: () => storage.getUiPreferences(),
       fetchImpl: (...args) => net.fetch(...args),
-      onStatus: sendLastFmStatus
+      onStatus: sendLastFmStatus,
+      onTrackUpdated: track => { if (track) void djClips?.observeLastFm(track).catch(() => {}); }
     });
-    mediaController.configureMusic(musicLibrary, musicRadio, track => { void lastFmEnricher.queueAlbum(track.id); });
+    mediaController.configureMusic(musicLibrary, musicRadio, track => { void lastFmEnricher.queueAlbum(track.id); lastFmScrobbler?.trackStarted(track); });
     lastFmEnricher.configure();
-    if (storage.getUiPreferences().proModeEnabled) void musicLibrary.enable({ scanOnEnable: true }).then(() => lastFmEnricher.configure()).catch(error => sendToMain('app:warning', error.message));
+    if (storage.getUiPreferences().proModeEnabled) void enableLocalMusic().catch(error => sendToMain('app:warning', error.message));
 
     listeningHistory = new ListeningHistory({
       storage,
+      getAdditionalProfile: activeMusicLibraryProfile,
       onChanged: (history) => sendToAll("listening:changed", history)
     });
 
@@ -1650,6 +2313,18 @@ if (!hasSingleInstanceLock) {
     })) {
       console.warn("WaveDeck could not register the Last.fm refresh shortcut.");
     }
+    if (!globalShortcut.register(RADIO_IDENTITY_REBUILD_SHORTCUT, () => {
+      void (async () => {
+        try {
+          await musicLibrary?.enable();
+          sendToMain('app:warning', 'Rebuilding portable song identities in the background. Local playback stays available.');
+          const result = await musicLibrary?.rebuildRadioIdentities(true);
+          sendToMain('app:warning', `Portable song identity rebuild finished: ${result?.changed || 0} of ${result?.total || 0} tracks updated.`);
+        } catch (error) { sendToMain('app:warning', error.message); }
+      })();
+    })) {
+      console.warn("WaveDeck could not register the portable song-identity rebuild shortcut.");
+    }
     if (supportsMiniPlayer() && !globalShortcut.register(MINI_PLAYER_SHORTCUT, () => {
       void toggleMiniPlayer().catch((error) => console.warn(`Could not toggle Mini Player: ${error.message}`));
     })) {
@@ -1671,6 +2346,7 @@ if (!hasSingleInstanceLock) {
     } catch (error) {
       console.error(error.message);
     }
+    if (personalStream?.config.enabled) void personalStream.setEnabled(true).catch(error => console.warn(`Personal Stream: ${error.message}`));
     startPlaybackHeartbeat();
 
     await mprisService?.start();
@@ -1695,6 +2371,8 @@ if (!hasSingleInstanceLock) {
 function finishShutdown() {
   if (cleanupComplete) return;
   cleanupComplete = true;
+  clearTimeout(cuePreviewTimer);
+  cuePreview?.close();
   if (libraryUpdateTimer) clearTimeout(libraryUpdateTimer);
   libraryUpdateTimer = null;
   if (playbackHeartbeat) clearInterval(playbackHeartbeat);
@@ -1706,15 +2384,22 @@ function finishShutdown() {
   tray = null;
   try { globalShortcut.unregister(RADIO_LOG_SHORTCUT); } catch {}
   try { globalShortcut.unregister(LASTFM_REFRESH_SHORTCUT); } catch {}
+  try { globalShortcut.unregister(RADIO_IDENTITY_REBUILD_SHORTCUT); } catch {}
   try { globalShortcut.unregister(MINI_PLAYER_SHORTCUT); } catch {}
   lastFmEnricher?.stop();
+  void djClips?.close();
+  lastFmScrobbler?.stop();
   listeningHistory?.close();
   platformMediaKeys?.close();
   mprisService?.close();
   windowsSidebar?.close();
+  personalStream?.close();
   player?.close();
   mediaController?.clearMusic();
+  opusOptimizer?.close();
+  replayGain?.close();
   musicLibrary?.close();
+  musicRadio?.close();
 }
 
 app.on("before-quit", (event) => {
@@ -1722,6 +2407,15 @@ app.on("before-quit", (event) => {
     event.preventDefault();
     quitFinalizingRecording = true;
     void recorder.close().finally(() => {
+      finishShutdown();
+      app.quit();
+    });
+    return;
+  }
+  if (!quitFlushingRadioData) {
+    event.preventDefault();
+    quitFlushingRadioData = true;
+    void Promise.all([flushRadioDiagnostics(), musicRadio?.flush?.()]).catch(() => {}).finally(() => {
       finishShutdown();
       app.quit();
     });

@@ -14,12 +14,91 @@ const STARTER_PRESET_NAMES = Object.freeze([
   "Adroit Jazz Underground",
   "Groove Salad"
 ]);
+const DEFAULT_AUTO_DJ_STATION_IDS = Object.freeze([
+  "I'm [dj], and you're listening to [station].",
+  "You're tuned in to [station]. My name is [dj] and I'm your musical guide.",
+  'This is [station].',
+  "Thanks for locking it in to [station], I'm [dj].",
+  "You've got it on [station], with [dj] right here in the studio.",
+  "Hey there, [dj] here, hanging out with you on [station].",
+  "Keeping you company with great music, I'm [dj] on [station].",
+  "You're listening to [station]—I'm [dj] and we've got plenty more music coming up.",
+  'This is [dj], here with you on [station].',
+  "Welcome back to [station]. I'm [dj] and I'm glad you're here.",
+  "Stepping up to the mic, I'm [dj] on [station].",
+  "Your non-stop music choice is [station], with [dj].",
+  'I’m [dj], right here on [station].',
+  "It's [dj] bringing you the best sound on [station].",
+  "Turning up the vibe for you, I'm [dj] on [station].",
+  "From our studio to your speakers, this is [dj] on [station].",
+  "You're locked on [station] with me, [dj].",
+  "Kick back, relax, and turn up [station]. I'm [dj].",
+  "Sounding good wherever you are, this is [station] with [dj].",
+  "I'm [dj] and you've found [station].",
+  "Playing the tracks you love, I'm [dj] on [station].",
+  "Another great set of music starts now—I'm [dj] on [station].",
+  "Thanks for making us part of your listening. This is [dj] on [station].",
+  "Right here, right now, you're tuned to [station] with [dj].",
+  "Hey, it's [dj]. Stick around for more music right here on [station].",
+  'More great music is on the way. I’m [dj] on [station].',
+  "Good to have you along for the ride. I'm [dj] on [station].",
+  "You're in the right place—this is [station] and I'm [dj].",
+  "Playing the best tunes around, I'm [dj] on [station].",
+  "Turn it up and roll down the windows. This is [station] with [dj].",
+  "Taking care of your soundtrack, I'm [dj] on [station].",
+  "I'm [dj], keeping the music flowing on [station].",
+  'You’re right where you need to be—[station], with [dj].',
+  "Your home for great music is [station], and I'm [dj].",
+  "Settling into the groove on [station], I'm [dj].",
+  "Spinning your favorite hits, this is [dj] on [station].",
+  "Wherever you're headed, take [station] along. I'm [dj].",
+  'For great music, stay with [station]. I’m [dj].',
+  "Up next, more of what you love on [station] with me, [dj].",
+  "I'm [dj], steering the ship on [station].",
+  "Dialed in and locked on [station], I'm [dj].",
+  "Keeping the energy up, this is [dj] on [station].",
+  "You're listening to [station]—I'm [dj] and the music never stops.",
+  "Thanks for tuning in to [station]. I'm [dj].",
+  "Crank up [station], I'm [dj] and I'm right here with you.",
+  "Bringing you the music that moves you, I'm [dj] on [station].",
+  "Stay right where you are—this is [dj] on [station].",
+  "Around the clock, you're on [station] with [dj].",
+  "I'm [dj], sharing the best tunes around right here on [station].",
+  "Settling in for another music set, this is [dj] on [station]."
+]);
+const EXTRA_ID_SLOTS = new Set([1, 3, 4, 5, 9, 11, 12, 13, 14, 16, 17, 19, 20, 24, 28, 29, 34, 36, 41, 44]);
+const DEFAULT_AUTO_DJ_EXTRA_LINES = Object.freeze([
+  'Take a moment to enjoy it.', 'The volume knob is yours.', 'Some songs just stay with you.',
+  'I love when a melody sneaks up on me.', 'There’s no wrong way to enjoy a song.',
+  'Let the rhythm do its thing.', 'A little harmony goes a long way.', 'I’m a sucker for a great hook.',
+  'A good chorus can change your whole mood.', 'Sometimes a song says it best.',
+  'It’s the little details that make a record.', 'If you’re tapping your foot, I understand.',
+  'There’s something satisfying about a good melody.', 'Turn it up if you feel like it.',
+  'Every good mix needs a surprise.', 'I like a song that catches me off guard.',
+  'I could listen to that again.', 'I like it when a song takes its time.',
+  'That’s a sound worth remembering.', 'You can never have too much of a good thing.',
+  'A good melody is hard to shake.', 'Some songs sound better every time you hear them.',
+  'That one had a little something extra.', 'I like a song with some heart.',
+  'That’s what I call a good listen.', 'There’s nothing quite like a song that clicks.',
+  'I wouldn’t change a note.', 'Sometimes the quiet parts say the most.',
+  'There’s a lot to love in a good arrangement.', 'I like it when the music makes me stop and listen.',
+  'Now that sounded good.', 'Every record has its own personality.',
+  'Let’s give the music some room to breathe.', 'That hit the spot.',
+  'Some songs deserve a second listen.', 'Sometimes less is more.',
+  'Music can make an ordinary moment feel special.', 'Sometimes it’s the voice that gets you.',
+  'A good groove is hard to resist.', 'I’ll never get tired of a great song.'
+]);
+const normalizeExtraId = text => {
+  const value = String(text || '').replace(/\[xl\]/gi, '').trim();
+  return `${value} [xl]`.trim();
+};
 
 function validateListeningHistory(value) {
   const source = value && typeof value === "object" && !Array.isArray(value) ? value.stations : null;
   const recentSource = value && typeof value === "object" && !Array.isArray(value) ? value.recentStationIds : null;
   const localRecentSource = value && typeof value === "object" && !Array.isArray(value) ? value.recentLocalStations : null;
   const localPresetSource = value && typeof value === "object" && !Array.isArray(value) ? value.localStationPresets : null;
+  const localProfileSource = value && typeof value === "object" && !Array.isArray(value) ? value.localStationProfiles : null;
   const stations = {};
   if (source && typeof source === "object" && !Array.isArray(source)) {
     for (const [rawId, rawEntry] of Object.entries(source)) {
@@ -39,13 +118,15 @@ function validateListeningHistory(value) {
   const recentLocalStations = [];
   for (const rawStation of Array.isArray(localRecentSource) ? localRecentSource : []) {
     if (!rawStation || typeof rawStation !== "object" || Array.isArray(rawStation)) continue;
-    const mode = rawStation.mode === "artist" ? "artist" : rawStation.mode === "radio" ? "radio" : "";
+    const mode = ["artist", "radio", "explore"].includes(rawStation.mode) ? rawStation.mode : "";
     const seedId = String(rawStation.seedId ?? "").trim();
-    const key = `${mode}:${seedId}`;
+    const libraryProfile = String(rawStation.libraryProfile || 'portable').trim().slice(0, 180) || 'portable';
+    const key = `${libraryProfile}:${mode}:${seedId}`;
     if (!mode || !seedId || seenLocalStations.has(key)) continue;
     seenLocalStations.add(key);
     recentLocalStations.push({
       key,
+      libraryProfile,
       mode,
       seedId,
       label: String(rawStation.label ?? "").trim().slice(0, 300),
@@ -60,13 +141,15 @@ function validateListeningHistory(value) {
   const localStationPresets = [];
   for (const rawStation of Array.isArray(localPresetSource) ? localPresetSource : []) {
     if (!rawStation || typeof rawStation !== "object" || Array.isArray(rawStation)) continue;
-    const mode = rawStation.mode === "artist" ? "artist" : rawStation.mode === "radio" ? "radio" : "";
+    const mode = ["artist", "radio", "explore"].includes(rawStation.mode) ? rawStation.mode : "";
     const seedId = String(rawStation.seedId ?? "").trim();
-    const key = `${mode}:${seedId}`;
+    const libraryProfile = String(rawStation.libraryProfile || 'portable').trim().slice(0, 180) || 'portable';
+    const key = `${libraryProfile}:${mode}:${seedId}`;
     if (!mode || !seedId || seenLocalPresets.has(key)) continue;
     seenLocalPresets.add(key);
     localStationPresets.push({
       key,
+      libraryProfile,
       mode,
       seedId,
       label: String(rawStation.label ?? "").trim().slice(0, 300),
@@ -76,7 +159,22 @@ function validateListeningHistory(value) {
       lastPlayedAt: typeof rawStation.lastPlayedAt === "string" ? rawStation.lastPlayedAt : ""
     });
   }
-  return { version: 3, stations, recentStationIds, recentLocalStations, localStationPresets };
+  const localStationProfiles = {};
+  if (localProfileSource && typeof localProfileSource === 'object' && !Array.isArray(localProfileSource)) {
+    for (const [rawKey, rawProfile] of Object.entries(localProfileSource)) {
+      const key = String(rawKey || '').trim().slice(0, 600);
+      if (!/^.+:(artist|radio|explore):.+$/.test(key) || !rawProfile || typeof rawProfile !== 'object' || Array.isArray(rawProfile)) continue;
+      localStationProfiles[key] = {
+        localRadioFamiliarity: ['hits-only', 'hits', 'balanced', 'deep-cuts'].includes(rawProfile.localRadioFamiliarity) ? rawProfile.localRadioFamiliarity : 'balanced',
+        localRadioSongRepeatHours: Number.isInteger(Number(rawProfile.localRadioSongRepeatHours)) && Number(rawProfile.localRadioSongRepeatHours) >= 1 && Number(rawProfile.localRadioSongRepeatHours) <= 24 ? Number(rawProfile.localRadioSongRepeatHours) : 4,
+        localRadioArtistRepeatMinutes: [30, 60, 90, 120, 180].includes(Number(rawProfile.localRadioArtistRepeatMinutes)) ? Number(rawProfile.localRadioArtistRepeatMinutes) : 90,
+        localRadioArtistSetSize: [1, 2, 3, 4].includes(Number(rawProfile.localRadioArtistSetSize)) ? Number(rawProfile.localRadioArtistSetSize) : 1,
+        localRadioExploreDistance: ['close', 'detour', 'explore'].includes(rawProfile.localRadioExploreDistance) ? rawProfile.localRadioExploreDistance : 'detour'
+      };
+      if (Object.keys(localStationProfiles).length >= 500) break;
+    }
+  }
+  return { version: 4, stations, recentStationIds, recentLocalStations, localStationPresets, localStationProfiles };
 }
 
 function lowerKey(value) { return String(value ?? "").trim().toLowerCase(); }
@@ -295,23 +393,64 @@ function validatePreferences(value) {
   const rawSettingsBounds = value?.settingsWindowBounds;
   const rawRadioLogBounds = value?.radioLogWindowBounds;
   const rawLocalRadioControlsBounds = value?.localRadioControlsWindowBounds;
+  const rawMusicLibraryBounds = value?.musicLibraryWindowBounds;
   const rawMainWindowBounds = value?.mainWindowBounds;
   const rawMiniPlayerBounds = value?.miniPlayerWindowBounds;
   const additionalMusicFolder = typeof value?.additionalMusicFolder === "string"
     ? value.additionalMusicFolder.trim()
     : "";
   const lastFmApiKey = typeof value?.lastFmApiKey === 'string' ? value.lastFmApiKey.trim().slice(0, 160) : '';
-  const localRadioFamiliarity = ['hits', 'balanced', 'deep-cuts'].includes(value?.localRadioFamiliarity)
+  const localRadioFamiliarity = ['hits-only', 'hits', 'balanced', 'deep-cuts'].includes(value?.localRadioFamiliarity)
     ? value.localRadioFamiliarity
     : 'balanced';
   const localRadioSongRepeatHours = Number.isInteger(Number(value?.localRadioSongRepeatHours)) && Number(value.localRadioSongRepeatHours) >= 1 && Number(value.localRadioSongRepeatHours) <= 24 ? Number(value.localRadioSongRepeatHours) : 4;
   const localRadioArtistRepeatMinutes = [30, 60, 90, 120, 180].includes(Number(value?.localRadioArtistRepeatMinutes)) ? Number(value.localRadioArtistRepeatMinutes) : 90;
   const localRadioArtistSetSize = [1, 2, 3, 4].includes(Number(value?.localRadioArtistSetSize)) ? Number(value.localRadioArtistSetSize) : 1;
+  const localMixFavorLastFm = value?.localMixFavorLastFm === true;
+  const localRadioExploreDistance = ['close', 'detour', 'explore'].includes(value?.localRadioExploreDistance)
+    ? value.localRadioExploreDistance
+    : 'detour';
   const localMusicCrossfadeEnabled = value?.localMusicCrossfadeEnabled !== false;
+  const replayGainEnabled = value?.replayGainEnabled === true;
+  const replayGainPaused = value?.replayGainPaused === true;
+  const finishCurrentSongOnStationChange = value?.finishCurrentSongOnStationChange === true;
+  const portableImportWorkers = [2, 6, 12].includes(Number(value?.portableImportWorkers)) ? Number(value.portableImportWorkers) : 2;
   const miniPlayerDisplayMode = value?.miniPlayerDisplayMode === 'source' ? 'source' : 'now-playing';
   const miniPlayerColorScheme = ['default', 'inverted', 'chiefs', 'army', 'cherry', 'gray', 'denim', 'rosewood', 'sapphire', 'bamboo', 'aloe'].includes(value?.miniPlayerColorScheme)
     ? value.miniPlayerColorScheme
     : 'default';
+  const suppliedAutoDjIds = Array.isArray(value?.autoDjStationIds) ? value.autoDjStationIds : null;
+  const savedAutoDjIds = Array.from({ length: 50 }, (_unused, index) => typeof suppliedAutoDjIds?.[index] === 'string' ? suppliedAutoDjIds[index].trim().slice(0, 300) : '');
+  // Populate the first real Station ID deck on new installs, and migrate the
+  // all-blank placeholder deck from DJ 0.1.2 once. The marker means a
+  // listener can still intentionally clear every editable line later.
+  const autoDjStationIdDefaultsVersion = Number(value?.autoDjStationIdDefaultsVersion) === 1 ? 1 : 0;
+  const autoDjStationIds = !savedAutoDjIds.some(Boolean) && autoDjStationIdDefaultsVersion !== 1
+    ? [...DEFAULT_AUTO_DJ_STATION_IDS]
+    : savedAutoDjIds;
+  const extrasInitialized = Number(value?.autoDjExtraDefaultsVersion) === 1;
+  const autoDjExtraLines = Array.isArray(value?.autoDjExtraLines)
+    ? Array.from({ length: 40 }, (_unused, index) => String(value.autoDjExtraLines[index] || '').trim().slice(0, 300))
+    : [...DEFAULT_AUTO_DJ_EXTRA_LINES];
+  if (!extrasInitialized) for (const slot of EXTRA_ID_SLOTS) {
+    if (autoDjStationIds[slot - 1] && !/\[xl\]/i.test(autoDjStationIds[slot - 1])) autoDjStationIds[slot - 1] = normalizeExtraId(autoDjStationIds[slot - 1]);
+  }
+  const autoDjStationName = typeof value?.autoDjStationName === 'string' ? value.autoDjStationName.trim().slice(0, 100) : 'WaveDeck Radio';
+  const autoDjName = typeof value?.autoDjName === 'string' ? value.autoDjName.trim().slice(0, 100) : 'Amber Wolfe';
+  const autoDjVoice = 'female';
+  const autoDjArtistPronunciations = {};
+  if (value?.autoDjArtistPronunciations && typeof value.autoDjArtistPronunciations === 'object' && !Array.isArray(value.autoDjArtistPronunciations)) {
+    for (const [artist, hint] of Object.entries(value.autoDjArtistPronunciations)) {
+      if (typeof hint === 'string' && artist.length <= 200 && hint.trim()) autoDjArtistPronunciations[artist.toLocaleLowerCase().trim()] = hint.trim().slice(0, 200);
+    }
+  }
+  const autoDjTitlePronunciations = {};
+  if (value?.autoDjTitlePronunciations && typeof value.autoDjTitlePronunciations === 'object' && !Array.isArray(value.autoDjTitlePronunciations)) {
+    for (const [id, hint] of Object.entries(value.autoDjTitlePronunciations)) {
+      if (typeof hint === 'string' && id.length <= 300 && hint.trim()) autoDjTitlePronunciations[id] = hint.trim().slice(0, 200);
+    }
+  }
+  const autoDjBreakIntervalMinutes = Number.isInteger(Number(value?.autoDjBreakIntervalMinutes)) && Number(value.autoDjBreakIntervalMinutes) >= 1 && Number(value.autoDjBreakIntervalMinutes) <= 60 ? Number(value.autoDjBreakIntervalMinutes) : 15;
   const localMixEnabled = {};
   const rawLocalMixEnabled = value?.localMixEnabled;
   if (rawLocalMixEnabled && typeof rawLocalMixEnabled === 'object' && !Array.isArray(rawLocalMixEnabled)) {
@@ -358,6 +497,15 @@ function validatePreferences(value) {
         height: Math.max(1, Math.round(Number(rawLocalRadioControlsBounds.height)))
       }
     : null;
+  const musicLibraryWindowBounds = rawMusicLibraryBounds && typeof rawMusicLibraryBounds === "object" && !Array.isArray(rawMusicLibraryBounds) &&
+    ["x", "y", "width", "height"].every((key) => Number.isFinite(Number(rawMusicLibraryBounds[key])))
+    ? {
+        x: Math.round(Number(rawMusicLibraryBounds.x)),
+        y: Math.round(Number(rawMusicLibraryBounds.y)),
+        width: Math.max(1, Math.round(Number(rawMusicLibraryBounds.width))),
+        height: Math.max(1, Math.round(Number(rawMusicLibraryBounds.height)))
+      }
+    : null;
   const mainWindowBounds = rawMainWindowBounds && typeof rawMainWindowBounds === "object" && !Array.isArray(rawMainWindowBounds) &&
     ["x", "y", "width", "height"].every((key) => Number.isFinite(Number(rawMainWindowBounds[key])))
     ? {
@@ -392,9 +540,26 @@ function validatePreferences(value) {
     localRadioSongRepeatHours,
     localRadioArtistRepeatMinutes,
     localRadioArtistSetSize,
+    localMixFavorLastFm,
+    localRadioExploreDistance,
     localMusicCrossfadeEnabled,
+    replayGainEnabled,
+    replayGainPaused,
+    finishCurrentSongOnStationChange,
+    portableImportWorkers,
     miniPlayerDisplayMode,
     miniPlayerColorScheme,
+    autoDjEnabled: value?.autoDjEnabled === true,
+    autoDjStationName,
+    autoDjName,
+    autoDjVoice,
+    autoDjExtraLines,
+    autoDjExtraDefaultsVersion: 1,
+    autoDjArtistPronunciations,
+    autoDjTitlePronunciations,
+    autoDjBreakIntervalMinutes,
+    autoDjStationIds,
+    autoDjStationIdDefaultsVersion: 1,
     localMixEnabled,
     localMixFavorites,
     streamingUi: {
@@ -412,6 +577,7 @@ function validatePreferences(value) {
     settingsWindowBounds,
     radioLogWindowBounds,
     localRadioControlsWindowBounds,
+    musicLibraryWindowBounds,
     mainWindowBounds,
     miniPlayerWindowBounds,
     lastLibraryUpdate: Number.isFinite(parsedUpdatedAt) ? new Date(parsedUpdatedAt).toISOString() : "",
@@ -582,9 +748,24 @@ class PortableStorage {
       localRadioSongRepeatHours: preferences.localRadioSongRepeatHours,
       localRadioArtistRepeatMinutes: preferences.localRadioArtistRepeatMinutes,
       localRadioArtistSetSize: preferences.localRadioArtistSetSize,
+      localMixFavorLastFm: preferences.localMixFavorLastFm,
+      localRadioExploreDistance: preferences.localRadioExploreDistance,
       localMusicCrossfadeEnabled: preferences.localMusicCrossfadeEnabled,
+      replayGainEnabled: preferences.replayGainEnabled,
+      replayGainPaused: preferences.replayGainPaused,
+      finishCurrentSongOnStationChange: preferences.finishCurrentSongOnStationChange,
+      portableImportWorkers: preferences.portableImportWorkers,
       miniPlayerDisplayMode: preferences.miniPlayerDisplayMode,
       miniPlayerColorScheme: preferences.miniPlayerColorScheme,
+      autoDjEnabled: preferences.autoDjEnabled,
+      autoDjStationName: preferences.autoDjStationName,
+      autoDjName: preferences.autoDjName,
+      autoDjVoice: preferences.autoDjVoice,
+      autoDjExtraLines: [...preferences.autoDjExtraLines],
+      autoDjArtistPronunciations: { ...preferences.autoDjArtistPronunciations },
+      autoDjTitlePronunciations: { ...preferences.autoDjTitlePronunciations },
+      autoDjBreakIntervalMinutes: preferences.autoDjBreakIntervalMinutes,
+      autoDjStationIds: [...preferences.autoDjStationIds],
       localMixEnabled: { ...preferences.localMixEnabled },
       localMixFavorites: { ...preferences.localMixFavorites },
       launchInSidebarMode: preferences.launchInSidebarMode,
@@ -596,6 +777,9 @@ class PortableStorage {
         : null,
       localRadioControlsWindowBounds: preferences.localRadioControlsWindowBounds
         ? { ...preferences.localRadioControlsWindowBounds }
+        : null,
+      musicLibraryWindowBounds: preferences.musicLibraryWindowBounds
+        ? { ...preferences.musicLibraryWindowBounds }
         : null,
       mainWindowBounds: preferences.mainWindowBounds
         ? { ...preferences.mainWindowBounds }
@@ -691,10 +875,46 @@ class PortableStorage {
     this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
     return this.getUiPreferences();
   }
+  setAutoDjSettings(settings = {}) {
+    const preferences = this.readPreferences();
+    if (typeof settings.enabled === 'boolean') preferences.autoDjEnabled = settings.enabled;
+    if (typeof settings.stationName === 'string') preferences.autoDjStationName = settings.stationName.trim().slice(0, 100);
+    if (typeof settings.djName === 'string') preferences.autoDjName = settings.djName.trim().slice(0, 100);
+    if (Number.isInteger(Number(settings.breakIntervalMinutes)) && Number(settings.breakIntervalMinutes) >= 1 && Number(settings.breakIntervalMinutes) <= 60) preferences.autoDjBreakIntervalMinutes = Number(settings.breakIntervalMinutes);
+    if (Array.isArray(settings.stationIds)) preferences.autoDjStationIds = Array.from({ length: 50 }, (_unused, index) => typeof settings.stationIds[index] === 'string' ? settings.stationIds[index].trim().slice(0, 300) : '');
+    if (Array.isArray(settings.extraLines)) preferences.autoDjExtraLines = Array.from({ length: 40 }, (_unused, index) => typeof settings.extraLines[index] === 'string' ? settings.extraLines[index].trim().slice(0, 300) : '');
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences();
+  }
+  setAutoDjArtistPronunciation(artist, hint) {
+    const key = String(artist || '').trim().toLocaleLowerCase();
+    if (!key || key.length > 200 || typeof hint !== 'string' || hint.length > 200) throw new Error('Enter a valid artist and pronunciation hint.');
+    const preferences = this.readPreferences();
+    if (hint.trim()) preferences.autoDjArtistPronunciations[key] = hint.trim();
+    else delete preferences.autoDjArtistPronunciations[key];
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences();
+  }
+  setAutoDjTitlePronunciation(id, hint) {
+    const key = String(id || '').trim();
+    if (!key || key.length > 300 || typeof hint !== 'string' || hint.length > 200) throw new Error('Enter a valid track and title hint.');
+    const preferences = this.readPreferences();
+    if (hint.trim()) preferences.autoDjTitlePronunciations[key] = hint.trim();
+    else delete preferences.autoDjTitlePronunciations[key];
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences();
+  }
+  setReplayGainSettings(settings = {}) {
+    const preferences = this.readPreferences();
+    if (typeof settings.enabled === 'boolean') preferences.replayGainEnabled = settings.enabled;
+    if (typeof settings.paused === 'boolean') preferences.replayGainPaused = settings.paused;
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences();
+  }
 
   setLocalRadioFamiliarity(value) {
     const preferences = this.readPreferences();
-    preferences.localRadioFamiliarity = ['hits', 'balanced', 'deep-cuts'].includes(value) ? value : 'balanced';
+    preferences.localRadioFamiliarity = ['hits-only', 'hits', 'balanced', 'deep-cuts'].includes(value) ? value : 'balanced';
     this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
     return this.getUiPreferences();
   }
@@ -708,9 +928,35 @@ class PortableStorage {
     return this.getUiPreferences();
   }
 
+  setLocalMixFavorLastFm(enabled) {
+    const preferences = this.readPreferences();
+    preferences.localMixFavorLastFm = enabled === true;
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences();
+  }
+
+  setLocalRadioExploreDistance(value) {
+    const preferences = this.readPreferences();
+    preferences.localRadioExploreDistance = ['close', 'detour', 'explore'].includes(value) ? value : 'detour';
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences();
+  }
+
   setLocalMusicCrossfadeEnabled(enabled) {
     const preferences = this.readPreferences();
     preferences.localMusicCrossfadeEnabled = enabled === true;
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences();
+  }
+  setFinishCurrentSongOnStationChange(enabled) {
+    const preferences = this.readPreferences();
+    preferences.finishCurrentSongOnStationChange = enabled === true;
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences();
+  }
+  setPortableImportWorkers(value) {
+    const preferences = this.readPreferences();
+    preferences.portableImportWorkers = [2, 6, 12].includes(Number(value)) ? Number(value) : 2;
     this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
     return this.getUiPreferences();
   }
@@ -750,6 +996,12 @@ class PortableStorage {
     preferences.localRadioControlsWindowBounds = bounds;
     this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
     return this.getUiPreferences().localRadioControlsWindowBounds;
+  }
+  setMusicLibraryWindowBounds(bounds) {
+    const preferences = this.readPreferences();
+    preferences.musicLibraryWindowBounds = bounds;
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences().musicLibraryWindowBounds;
   }
 
   setMainWindowBounds(bounds) {
@@ -1149,6 +1401,9 @@ class PortableStorage {
 }
 
 module.exports = {
+  DEFAULT_AUTO_DJ_STATION_IDS,
+  DEFAULT_AUTO_DJ_EXTRA_LINES,
+  EXTRA_ID_SLOTS,
   STARTER_PRESET_NAMES,
   PortableStorage,
   cleanStationGainDb,
