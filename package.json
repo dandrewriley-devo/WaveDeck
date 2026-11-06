@@ -1,7 +1,7 @@
 {
   "name": "wavedeck-dj",
-  "version": "0.1.10",
-  "wavedeckVersion": "0.1.10",
+  "version": "0.1.11",
+  "wavedeckVersion": "0.1.11",
   "description": "WaveDeck DJ portable music player for Linux",
   "author": "Andrew Riley",
   "license": "MIT",

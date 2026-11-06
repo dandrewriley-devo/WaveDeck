@@ -96,7 +96,7 @@ jobs:
           echo 'Packaged Icecast opened its listening port.'
       - uses: actions/upload-artifact@v4
         with:
-          name: WaveDeckDJ-0.1.10-Linux
+          name: WaveDeckDJ-0.1.11-Linux
           path: dist/WaveDeckDJ.AppImage
           if-no-files-found: error
           compression-level: 0
@@ -108,7 +108,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: WaveDeckDJ-0.1.10-Linux
+          name: WaveDeckDJ-0.1.11-Linux
           path: release-assets
       - name: Inspect release asset
         shell: bash
@@ -116,13 +116,13 @@ jobs:
           set -euo pipefail
           test -f release-assets/WaveDeckDJ.AppImage
           sha256sum release-assets/WaveDeckDJ.AppImage
-      - name: Publish WaveDeck DJ 0.1.10
+      - name: Publish WaveDeck DJ 0.1.11
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: dj-v0.1.10
+          tag_name: dj-v0.1.11
           target_commitish: ${{ github.sha }}
-          name: WaveDeck DJ 0.1.10
-          body: "Linux x64 WaveDeck DJ. Fixes Personal Stream startup on Linux Mint by bundling Icecast from a compatible build environment and verifying the packaged server opens its listening port. Existing portable music, DJ clips, and settings remain intact."
+          name: WaveDeck DJ 0.1.11
+          body: "Linux x64 WaveDeck DJ. Adds title pronunciation hints, Play Next and a hidden queue, quiet ReplayGain analysis, more even DJ clips, and advance preparation of DJ break outros. Existing portable music, DJ clips, and settings remain intact."
           files: release-assets/WaveDeckDJ.AppImage
           overwrite_files: true
           fail_on_unmatched_files: true

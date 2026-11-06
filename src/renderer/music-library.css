@@ -9,3 +9,5 @@
 .clear-search[hidden]{display:none}
 .pronunciation-editor{display:flex;align-items:end;gap:8px;flex-wrap:wrap;padding:8px;background:#242424;border-top:1px solid #3a3a3a}.pronunciation-editor label{display:grid;gap:3px;color:#aaa;font-size:11px}.pronunciation-editor input{width:min(320px,60vw);padding:6px}.pronunciation-editor button{padding:6px 9px}.hint-status{color:#8feab3;font-size:12px}
 @media(max-width:760px){header .search-wrap{width:100%}}
+.track-row{grid-template-columns:28px 28px 34px minmax(120px,1fr) 48px 38px auto}
+@media(max-width:760px){.track-row{grid-template-columns:27px 27px 28px minmax(80px,1fr) 43px 30px auto}}

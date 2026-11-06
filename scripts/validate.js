@@ -149,8 +149,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck-dj");
-assert.strictEqual(packageJson.version, "0.1.10");
-assert.strictEqual(packageJson.wavedeckVersion, "0.1.10");
+assert.strictEqual(packageJson.version, "0.1.11");
+assert.strictEqual(packageJson.wavedeckVersion, "0.1.11");
 assert.strictEqual(packageJson.desktopName, "wavedeck-dj.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck DJ");
 assert.strictEqual(packageJson.build.appId, "com.a17press.wavedeckdj");
@@ -366,6 +366,8 @@ try {
     localMixFavorLastFm: false,
     localRadioExploreDistance: "detour",
     localMusicCrossfadeEnabled: true,
+    replayGainEnabled: false,
+    replayGainPaused: false,
     finishCurrentSongOnStationChange: false,
     portableImportWorkers: 2,
     miniPlayerDisplayMode: "now-playing",
@@ -378,6 +380,7 @@ try {
     autoDjExtraLines: [...DEFAULT_AUTO_DJ_EXTRA_LINES],
     autoDjExtraDefaultsVersion: 1,
     autoDjArtistPronunciations: {},
+    autoDjTitlePronunciations: {},
     autoDjStationIds: DEFAULT_AUTO_DJ_STATION_IDS.map((text, index) => EXTRA_ID_SLOTS.has(index + 1) ? `${text} [xl]` : text),
     autoDjStationIdDefaultsVersion: 1,
     localMixEnabled: {},
@@ -416,6 +419,8 @@ try {
     localMixFavorLastFm: false,
     localRadioExploreDistance: "detour",
     localMusicCrossfadeEnabled: true,
+    replayGainEnabled: false,
+    replayGainPaused: false,
     finishCurrentSongOnStationChange: false,
     portableImportWorkers: 2,
     miniPlayerDisplayMode: "now-playing",
@@ -427,6 +432,7 @@ try {
     autoDjVoice: "female",
     autoDjExtraLines: [...DEFAULT_AUTO_DJ_EXTRA_LINES],
     autoDjArtistPronunciations: {},
+    autoDjTitlePronunciations: {},
     autoDjStationIds: DEFAULT_AUTO_DJ_STATION_IDS.map((text, index) => EXTRA_ID_SLOTS.has(index + 1) ? `${text} [xl]` : text),
     localMixEnabled: {},
     localMixFavorites: {},
@@ -539,6 +545,8 @@ try {
     localMixFavorLastFm: true,
     localRadioExploreDistance: "explore",
     localMusicCrossfadeEnabled: false,
+    replayGainEnabled: false,
+    replayGainPaused: false,
     finishCurrentSongOnStationChange: true,
     portableImportWorkers: 12,
     miniPlayerDisplayMode: "source",
@@ -550,6 +558,7 @@ try {
     autoDjVoice: "female",
     autoDjExtraLines: [...DEFAULT_AUTO_DJ_EXTRA_LINES],
     autoDjArtistPronunciations: {},
+    autoDjTitlePronunciations: {},
     autoDjStationIds: DEFAULT_AUTO_DJ_STATION_IDS.map((text, index) => EXTRA_ID_SLOTS.has(index + 1) ? `${text} [xl]` : text),
     localMixEnabled: { "classic-rock": false },
     localMixFavorites: { "classic-rock": true },
@@ -1890,14 +1899,14 @@ assert.ok(windowsWorkflow.includes('chmod 755 "$appimage"'));
 const djWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "dj-portable.yml"), "utf8");
 assert.ok(djWorkflow.includes("branches: [dj-portable]"));
 assert.ok(djWorkflow.includes("npm run dist:linux -- --publish never"));
-assert.ok(djWorkflow.includes("WaveDeckDJ-0.1.10-Linux"));
+assert.ok(djWorkflow.includes("WaveDeckDJ-0.1.11-Linux"));
 assert.ok(djWorkflow.includes("dist/WaveDeckDJ.AppImage"));
 assert.ok(djWorkflow.includes("Verify packaged DJ voice"));
 assert.ok(djWorkflow.includes("runs-on: ubuntu-22.04"));
 assert.ok(djWorkflow.includes("Verify packaged Icecast on older glibc"));
 assert.ok(djWorkflow.includes("Packaged Icecast opened its listening port."));
-assert.ok(djWorkflow.includes("tag_name: dj-v0.1.10"));
-assert.ok(djWorkflow.includes("Publish WaveDeck DJ 0.1.10"));
+assert.ok(djWorkflow.includes("tag_name: dj-v0.1.11"));
+assert.ok(djWorkflow.includes("Publish WaveDeck DJ 0.1.11"));
 const djClipsSource = fs.readFileSync(path.join(root, "src", "main", "dj-clips.js"), "utf8");
 assert.ok(djClipsSource.includes("DJ Clips"));
 assert.ok(djClipsSource.includes("__${kind}-"));

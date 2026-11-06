@@ -13,6 +13,7 @@ const { trackKey } = require('../src/main/portable-importer');
 const { ComputerMusicFolders, resolveComputerIdentity } = require('../src/main/computer-music-folders');
 const { MediaController, serializeTransport } = require('../src/main/media-controller');
 const { CrossfadeMpvPlayer } = require('../src/main/player');
+const { ReplayGain } = require('../src/main/replay-gain');
 const { PersonalStream, validHost, validMountName } = require('../src/main/personal-stream');
 const { LastFmEnricher, popularityScore } = require('../src/main/lastfm-enricher');
 const { LastFmScrobbler, signatureFor } = require('../src/main/lastfm-scrobbler');
@@ -60,6 +61,24 @@ async function run() {
     await broadcastPlayer.setBroadcastOutput(null);
     assert.equal(audioDevices.at(-1), 'auto');
     assert.equal(volumeEvents.at(-1), 0, 'speaker mute is restored after broadcast stops');
+    const breakPlayer = new CrossfadeMpvPlayer({ executable: 'mpv', ipcPath: '/tmp/wavedeck-break-test' });
+    const breakEvents = [];
+    for (const [name, lane] of Object.entries(breakPlayer.lanes)) {
+      lane.process = { kill() {} };
+      lane.start = async () => true;
+      lane.stop = async () => { breakEvents.push(`${name}:stop`); };
+      lane.setStationGain = async gain => { breakEvents.push(`${name}:gain:${gain}`); };
+      lane.setVolume = async volume => { breakEvents.push(`${name}:volume:${volume}`); };
+      lane.play = async file => { breakEvents.push(`${name}:play:${file}`); };
+      lane.setPaused = async paused => { breakEvents.push(`${name}:paused:${paused}`); };
+      lane.seek = async position => { breakEvents.push(`${name}:seek:${position}`); };
+    }
+    assert.equal(await breakPlayer.prepareBreak('/dj/outro.opus', 3), true);
+    assert.ok(breakEvents.indexOf('b:volume:0') < breakEvents.indexOf('b:play:/dj/outro.opus'), 'the spare lane is silent before it loads the outro');
+    assert.equal(await breakPlayer.playPreparedBreak('/dj/outro.opus'), true);
+    assert.equal(breakPlayer.activeLane, 'b');
+    assert.equal(breakPlayer.stationGain, 3);
+    assert.ok(breakEvents.includes('b:paused:false'), 'the already-loaded outro is unpaused at the hard boundary');
     const stream = new PersonalStream({ dataDir: personalStreamDir, player: broadcastPlayer, ffmpeg: 'ffmpeg', icecast: 'icecast2' });
     const state = stream.setHost('music.example.org');
     assert.match(state.url, /^http:\/\/music\.example\.org:18037\/[a-f0-9]{48}\.mp3$/);
@@ -105,6 +124,16 @@ async function run() {
     reloadedComputerFolders.initialize();
     assert.equal(reloadedComputerFolders.get(computerIdentity.id).folder, '/mnt/test-music', 'remembered computer folders persist in portable Data');
     const dataDir = path.join(temp, 'Data'); const musicDir = path.join(temp, 'Music'); await fs.mkdir(musicDir, { recursive: true });
+    await fs.mkdir(dataDir, { recursive: true });
+    const gainTrack = track('gain-song', { library: 'portable', relativePath: 'gain-song.opus' });
+    const replayGain = new ReplayGain({ dataDir, getTracks: () => [gainTrack], ffmpegPath: () => 'ffmpeg' });
+    assert.equal(replayGain.source(gainTrack), path.join(musicDir, 'gain-song.opus'), 'loudness analysis resolves the portable source beside Data');
+    assert.deepEqual([replayGain.status().ready, replayGain.status().total], [0, 1]);
+    replayGain.entries.set(replayGain.key(gainTrack), { gainDb: -3 });
+    assert.equal(replayGain.gainFor(gainTrack), 0, 'ReplayGain is opt-in');
+    replayGain.setSettings({ enabled: true, paused: true });
+    assert.equal(replayGain.gainFor(gainTrack), -3, 'measured gain applies when enabled, even while analysis is paused');
+    replayGain.close();
     const file = path.join(musicDir, 'song.MP3'); await fs.writeFile(file, fixture());
     const digest = async () => crypto.createHash('sha256').update(await fs.readFile(file)).digest('hex'); const before = await digest();
     library = new MusicLibrary({ dataDir }); await library.enable(); await library.rescan();
@@ -601,9 +630,15 @@ async function run() {
     assert.equal(isTrackEligibleForMix(grungeTracks[0], grungeMix).eligible, true, 'Grunge Era Rock admits core period material');
 
     const player = { getStatus: () => ({ playing: true, position: 0 }), setStationGain: async () => {}, play: async () => {}, stop: async () => {}, setPaused: async () => {}, seek: async () => {} };
-    const tracks = [track('2', { track: 2 }), track('1'), track('3', { album: 'Other' }), track('blocked', { doNotPlay: true }), track('va-1', { album: 'Hits', albumArtist: 'Various Artists', artist: 'Artist One', artists: ['Artist One'] }), track('va-2', { track: 2, album: 'Hits', albumArtist: 'Various Artists', artist: 'Artist Two', artists: ['Artist Two'] })]; const fakeLibrary = { tracks, resolve: async id => { const found = tracks.find(t => t.id === id); if (!found) throw Error('missing'); return { ...found, path: '/' + id }; } };
+    const tracks = [track('2', { track: 2 }), track('1'), track('3', { album: 'Other', library: 'portable' }), track('blocked', { doNotPlay: true }), track('va-1', { album: 'Hits', albumArtist: 'Various Artists', artist: 'Artist One', artists: ['Artist One'] }), track('va-2', { track: 2, album: 'Hits', albumArtist: 'Various Artists', artist: 'Artist Two', artists: ['Artist Two'] })]; const fakeLibrary = { tracks, resolve: async id => { const found = tracks.find(t => t.id === id); if (!found) throw Error('missing'); return { ...found, path: '/' + id }; } };
     const playbackDiagnostics = [];
     const controller = serializeTransport(new MediaController({ player, getStations: () => [{ id: 's', url: 'https://example.org', name: 'Streaming', preset: true }] })); controller.configureMusic(fakeLibrary, new MusicRadio({ dataDir: path.join(temp, 'playback'), now: () => now, onDecision: decision => playbackDiagnostics.push(decision) }));
+    await controller.playMusic('1', 'song');
+    await assert.rejects(controller.queueMusicNext('blocked'), /playable portable song/);
+    await controller.queueMusicNext('3');
+    assert.equal(controller.getQueueView().queued[0].title, '3', 'the private queue shows the explicit next song');
+    await controller.handleEnded({ reason: 'eof' });
+    assert.equal(controller.getStatus().currentMusic.track.id, '3', 'Play Next takes precedence even after a single selected song');
     await controller.playMusic('2', 'album'); assert.equal(controller.getStatus().currentMusic.track.id, '1'); await controller.handleEnded({ reason: 'eof' }); assert.equal(controller.getStatus().currentMusic.track.id, '2'); await controller.handleEnded({ reason: 'eof' }); assert.equal(controller.getStatus().currentMusic.mode, 'artist'); await controller.playMusic('va-1', 'album'); assert.equal(controller.getStatus().currentMusic.track.id, 'va-1'); await controller.handleEnded({ reason: 'eof' }); assert.equal(controller.getStatus().currentMusic.track.id, 'va-2'); await controller.handleEnded({ reason: 'eof' }); assert.equal(controller.getStatus().currentMusic, null, 'Various Artists albums stop when the album ends'); await controller.playMusic('1', 'radio'); assert.equal(controller.getStatus().currentMusic.seed.id, '1'); assert.equal(playbackDiagnostics.at(-1).selectionTrigger, 'start', 'Song Radio logs its opening seed track after playback begins'); await assert.rejects(controller.playMusic('blocked', 'radio'), /marked Do Not Play/); await controller.playStationById('s'); assert.equal(controller.getStatus().currentMusic, null);
     const profileTracks = [
       track('profile-seed', { title: 'Profile Seed', artist: 'Profile Artist', artists: ['Profile Artist'], albumArtist: 'Profile Artist', similarArtists: ['Profile Neighbor'] }),
@@ -748,16 +783,18 @@ async function run() {
     assert.equal(stationIdPlays.at(-1), path.join(topOfHourIds, 'top.mp3'), 'the Top of Hour has its own Station ID pool');
     assert.equal(stationIdLogs.at(-1).pool, 'Top of Hour');
     await stationIdController.stop();
-    let autoDjNow = 0; let autoDjPosition = 0; const autoDjPlays = []; const autoDjBreaks = []; let autoDjCanChecks = 0;
+    let autoDjNow = 0; let autoDjPosition = 0; const autoDjPlays = []; const autoDjPreloads = []; const autoDjBreaks = []; let autoDjCanChecks = 0;
     const autoDjPlayer = {
       isCrossfading: false,
       getStatus: () => ({ playing: true, position: autoDjPosition, duration: 180 }),
       setStationGain: async () => {}, stop: async () => {}, setPaused: async () => {}, seek: async () => {},
-      play: async file => { autoDjPlays.push(file); }, crossfadeTo: async file => { autoDjPlays.push(file); }
+      play: async file => { autoDjPlays.push(file); }, crossfadeTo: async file => { autoDjPlays.push(file); },
+      prepareBreak: async file => { autoDjPreloads.push(file); return true; },
+      playPreparedBreak: async file => { autoDjPlays.push(file); return true; }
     };
     const autoDjTracks = [
-      track('auto-dj-a', { title: 'Before the Break', artist: 'First Artist', albumArtist: 'First Artist' }),
-      track('auto-dj-b', { title: 'After the Break', artist: 'Second Artist', albumArtist: 'Second Artist' })
+      track('auto-dj-a', { title: 'Before the Break', artist: 'First Artist', albumArtist: 'First Artist', duration: 180 }),
+      track('auto-dj-b', { title: 'After the Break', artist: 'Second Artist', albumArtist: 'Second Artist', duration: 180 })
     ];
     const autoDjRadio = {
       record: async () => {}, setTracks: async () => {}, choose: async () => ({ id: 'auto-dj-b' }),
@@ -775,11 +812,16 @@ async function run() {
     }));
     autoDjController.configureMusic({ tracks: autoDjTracks, revision: 1, resolve: async id => ({ ...autoDjTracks.find(item => item.id === id), path: `/${id}` }) }, autoDjRadio);
     await autoDjController.playMusic('auto-dj-a', 'radio');
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    assert.equal(autoDjController.music.prepared?.id, 'auto-dj-b', 'the incoming song is selected while music is playing');
+    autoDjNow = 60 * 1000; autoDjPosition = 168;
+    await new Promise(resolve => setTimeout(resolve, 350));
+    assert.deepEqual(autoDjPreloads, ['/dj/outro.opus'], 'an eligible outgoing DJ outro is preloaded before the hard boundary');
     autoDjNow = 60 * 1000; autoDjPosition = 173;
     await new Promise(resolve => setTimeout(resolve, 350));
     assert.deepEqual(autoDjPlays, ['/auto-dj-a'], 'a due break with an unprepared next song waits for EOF instead of crossfading past the DJ opportunity');
     await autoDjController.handleEnded({ reason: 'eof' });
-    assert.equal(autoDjCanChecks, 1, 'the due song boundary checks the Auto DJ clip cache');
+    assert.ok(autoDjCanChecks >= 2, 'DJ readiness is checked during preparation and at the actual boundary');
     assert.equal(autoDjPlays.at(-1), '/dj/outro.opus', 'a due Auto DJ break begins with the outgoing song outro');
     assert.equal(autoDjController.getStatus().currentMusic.track.autoDj, true, 'the player exposes a DJ clip while a break is running');
     await autoDjController.handleEnded({ reason: 'eof' });
@@ -789,6 +831,7 @@ async function run() {
     await autoDjController.handleEnded({ reason: 'eof' });
     assert.equal(autoDjPlays.at(-1), '/auto-dj-b', 'the queued song starts only after the full DJ break');
     assert.equal(autoDjBreaks.at(-1).stationIdSlot, 7, 'each Auto DJ break writes a compact Radio Log entry');
+    assert.equal(autoDjBreaks.at(-1).preloaded, true, 'the break log confirms the already prepared outro was used');
     await autoDjController.stop();
     let stationPosition = 0;
     const stationPlays = [], stationFades = [], stationDecisions = [];

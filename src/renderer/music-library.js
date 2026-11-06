@@ -28,7 +28,7 @@ function expandedHeight() {
   if (!activeArtist) return 0;
   if (!detail) return LOADING_DETAIL_HEIGHT;
   const release = detail.releases.find(value => value.key === activeRelease);
-  return expandedDetailHeight || (98 + detail.releases.length * 43 + (release ? release.tracks.length * 39 + (editingTrack ? 125 : 0) : 0));
+  return expandedDetailHeight || (98 + detail.releases.length * 43 + (release ? release.tracks.length * 39 + (editingTrack ? 185 : 0) : 0));
 }
 function loadArtists({ keepOpen = false } = {}) {
   const scrollTop = currentScroll();
@@ -116,7 +116,19 @@ function trackEditor(track) {
     try { await wavedeck.saveDjArtistPronunciation(track.artist, input.value); result.textContent = 'Saved. Existing clips for this artist are queued quietly.'; }
     catch (error) { result.textContent = error.message; }
   };
-  const wrap = document.createElement('div'); wrap.className = 'track-edit-wrap'; wrap.append(editor, pronunciation); return wrap;
+  const titleHint = document.createElement('div'); titleHint.className = 'pronunciation-editor';
+  titleHint.innerHTML = '<label>Song-title pronunciation hint <input maxlength="200" placeholder="Spell the title how the DJ should say it"></label><button type="button" class="test-hint">Test</button><button type="button" class="save-hint">Save hint</button><span class="hint-status"></span>';
+  const titleInput = titleHint.querySelector('input'), titleResult = titleHint.querySelector('.hint-status');
+  void wavedeck.getDjTitleHint(track.id).then(hint => { if (titleHint.isConnected && !titleInput.value) titleInput.value = hint; }).catch(error => { titleResult.textContent = error.message; });
+  titleHint.querySelector('.test-hint').onclick = async () => {
+    try { titleResult.textContent = 'Preparing voice sample…'; const sample = await wavedeck.testDjArtistPronunciation(titleInput.value.trim() || track.title); await new Audio(`data:audio/wav;base64,${sample}`).play(); titleResult.textContent = ''; }
+    catch (error) { titleResult.textContent = error.message; }
+  };
+  titleHint.querySelector('.save-hint').onclick = async () => {
+    try { await wavedeck.saveDjTitleHint(track.id, titleInput.value); titleResult.textContent = 'Saved. Existing clips for this song are queued quietly.'; }
+    catch (error) { titleResult.textContent = error.message; }
+  };
+  const wrap = document.createElement('div'); wrap.className = 'track-edit-wrap'; wrap.append(editor, pronunciation, titleHint); return wrap;
 }
 function trackRow(track) {
   const wrap = document.createElement('div'); wrap.className = 'track-wrap'; const row = document.createElement('div'); row.className = `track-row${track.doNotPlay ? ' disabled-track' : ''}`;
@@ -126,6 +138,7 @@ function trackRow(track) {
     wrap.style.boxShadow = 'inset 3px 0 #70b85a';
   }
   row.append(smallButton(playingTrack === track.id ? '●' : '▶', 'Play this track now', async () => { playingTrack = track.id; render(currentScroll()); await wavedeck.playMusic(track.id, 'song'); }));
+  row.append(smallButton('＋', `Play ${track.title || 'this song'} next`, async () => { try { await wavedeck.queueMusicNext(track.id); summary.textContent = `Queued ${track.title || 'song'} next.`; } catch (error) { summary.textContent = error.message; } }));
   const number = document.createElement('span'); number.className = 'track-number'; number.textContent = track.track ? String(track.track) : '—'; row.append(number);
   const title = document.createElement('button'); title.className = 'track-title'; title.textContent = track.title || 'Untitled track'; title.title = 'Edit track details';
   title.onclick = () => { editingTrack = editingTrack === track.id ? '' : track.id; expandedDetailHeight = 0; render(currentScroll()); }; row.append(title);

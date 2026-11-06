@@ -93,6 +93,7 @@ class MediaController {
     getAutoDjIntervalMinutes = () => 15,
     onAutoDjBreak = () => {},
     onPlaybackRequested = () => {},
+    getMusicGain = () => 0,
     stationIdsEnabled = true,
     now = () => Date.now(),
     random = Math.random
@@ -113,6 +114,7 @@ class MediaController {
     this.getAutoDjClipStatus = getAutoDjClipStatus;
     this.takeAutoDjBreak = takeAutoDjBreak;
     this.onPlaybackRequested = onPlaybackRequested;
+    this.getMusicGain = getMusicGain;
     this.isAutoDjEnabled = isAutoDjEnabled;
     this.getAutoDjIntervalMinutes = getAutoDjIntervalMinutes;
     this.onAutoDjBreak = onAutoDjBreak;
@@ -132,6 +134,8 @@ class MediaController {
     }
     this.stationIdPlaying = null;
     this.autoDjBreak = null;
+    this.preparedAutoDj = null;
+    this.preparingAutoDj = false;
     this.autoDjElapsedMs = 0;
     this.autoDjPlaybackStartedAt = null;
     this.stationIdQueued = null;
@@ -403,6 +407,7 @@ class MediaController {
   clearMusic() {
     this.stationIdPlaying = null;
     this.autoDjBreak = null;
+    this.preparedAutoDj = null;
     this.autoDjElapsedMs = 0;
     this.autoDjPlaybackStartedAt = null;
     this.stationIdQueued = null;
@@ -489,6 +494,22 @@ class MediaController {
     };
   }
 
+  async #prepareAutoDjBreak(endingTrack, incomingTrack, generation) {
+    if (this.preparedAutoDj || this.preparingAutoDj || !this.#canAutoDjBreakAtBoundary(endingTrack, incomingTrack)) return;
+    this.preparingAutoDj = true;
+    try {
+      const startedAt = Date.now();
+      const packet = this.takeAutoDjBreak(endingTrack, incomingTrack);
+      if (!packet?.outro?.file || !packet?.stationId?.file || !packet?.intro?.file) return;
+      const ready = await this.player.prepareBreak?.(packet.outro.file, 3);
+      if (ready && this.music && generation === this.musicGeneration && this.music.current?.id === endingTrack.id) {
+        this.preparedAutoDj = { packet, endingId: endingTrack.id, incomingId: incomingTrack.id, readyAt: Date.now(), prepareMs: Date.now() - startedAt };
+      }
+    } catch {
+      // Preloading is optional; the hard-boundary path can retry without it.
+    } finally { this.preparingAutoDj = false; }
+  }
+
   async #beginAutoDjBreak() {
     if (!this.#autoDjDue() || !this.music?.current || this.musicBusy) return false;
     const generation = this.musicGeneration;
@@ -508,7 +529,9 @@ class MediaController {
         await this.loadMusic(id, 0, incomingTrack);
         return true;
       }
-      const packet = this.takeAutoDjBreak(this.music.current, incomingTrack);
+      const prepared = this.preparedAutoDj?.endingId === this.music.current.id && this.preparedAutoDj?.incomingId === incomingTrack.id ? this.preparedAutoDj : null;
+      const packet = prepared?.packet || this.takeAutoDjBreak(this.music.current, incomingTrack);
+      this.preparedAutoDj = null;
       if (!packet?.outro?.file || !packet?.stationId?.file || !packet?.intro?.file) {
         this.#logSkippedAutoDjBreak(this.music.current, incomingTrack, 'Ready clips could not form a packet');
         await this.loadMusic(id, 0, incomingTrack);
@@ -520,7 +543,12 @@ class MediaController {
         clip: this.#autoDjClip('outro', packet.outro.file),
         endingTrack: this.music.current
       };
-      await this.player.play(packet.outro.file);
+      const handoffStartedAt = Date.now();
+      if (!prepared || !await this.player.playPreparedBreak?.(packet.outro.file)) {
+        await this.player.setStationGain(3);
+        await this.player.play(packet.outro.file);
+      }
+      const handoffMs = Date.now() - handoffStartedAt;
       if (!this.autoDjBreak || generation !== this.musicGeneration) return false;
       try {
         this.onAutoDjBreak({
@@ -530,7 +558,8 @@ class MediaController {
           incoming: { title: incomingTrack.title || '', artist: incomingTrack.artist || '', diagnosticId: this.#diagnosticTrackId(incomingTrack) },
           stationIdSlot: packet.stationId.slot || 0,
           stationId: packet.stationId.text || '',
-          outroClip: path.basename(packet.outro.file), idClip: path.basename(packet.stationId.file), extraClip: packet.extra?.file ? path.basename(packet.extra.file) : '', introClip: path.basename(packet.intro.file)
+          outroClip: path.basename(packet.outro.file), idClip: path.basename(packet.stationId.file), extraClip: packet.extra?.file ? path.basename(packet.extra.file) : '', introClip: path.basename(packet.intro.file),
+          preparedMs: prepared?.prepareMs ?? null, handoffMs, preloaded: Boolean(prepared)
         });
       } catch {}
       this.onStateChanged(this.getStatus());
@@ -731,7 +760,7 @@ class MediaController {
       this.music = {
         seed: target.mode === 'mix' ? { id: target.radioKey, title: target.profile.name, artist: '', album: '', genres: [] } : target.track,
         profile: target.profile, mixId: target.profile?.id, label: target.profile?.name,
-        mode: target.mode, radioKey: target.radioKey, current: null, queue: [], back: [], failed: new Set(),
+        mode: target.mode, radioKey: target.radioKey, current: null, queue: [], manualQueue: [], back: [], failed: new Set(),
         waiting: false, prepared: null, preparing: null,
         pendingPreparedDecision: ready.decision ? { id: ready.track.id, track: ready.track, decision: ready.decision } : null,
         initialRadioSelectionPending: ['radio', 'artist', 'explore'].includes(target.mode), initialArtistSet: ready.plannedSet, radioProfile: ready.radioProfile
@@ -740,6 +769,30 @@ class MediaController {
       this.onStationChanged(null);
       return await this.loadMusic(ready.track.id, crossfadeMs, ready.track);
     } finally { this.musicBusy = false; }
+  }
+
+  async queueMusicNext(id) {
+    if (!this.music) throw new Error('Start Local Music before queuing a song.');
+    const track = await this.musicLibrary.resolve(id);
+    if (track.library !== 'portable' || track.doNotPlay) throw new Error('Choose a playable portable song.');
+    this.music.manualQueue ||= [];
+    this.music.manualQueue.push(track.id);
+    this.music.prepared = null;
+    this.#scheduleMusicPreparation(this.musicGeneration, 50);
+    this.onStateChanged(this.getStatus());
+    return this.getQueueView();
+  }
+
+  getQueueView() {
+    const music = this.music;
+    const resolve = id => {
+      const track = this.musicLibrary.tracks.find(item => item.id === id);
+      return track ? { title: track.title, artist: track.artist, album: track.album } : { title: 'Unavailable song', artist: '', album: '' };
+    };
+    return {
+      current: music?.current ? { title: music.current.title, artist: music.current.artist, album: music.current.album } : null,
+      queued: (music?.manualQueue || []).map(resolve)
+    };
   }
 
   async playMusic(id, mode = 'song') {
@@ -757,7 +810,7 @@ class MediaController {
     if (mode === 'album' && !album.length) album.push(track);
     const albumArtistSeed = mode === 'album' ? artistRadioSeedForAlbum(track) : null;
     const radioProfile = this.getLocalStationProfile({ mode, seed: track });
-    this.music = { seed: track, albumArtistSeed, mode, radioKey: `${mode}:${track.songKey || track.id}`, current: null, queue: mode === 'album' ? album.map(t => t.id) : [], back: [], failed: new Set(), waiting: false, prepared: null, preparing: null, pendingPreparedDecision: null, initialRadioSelectionPending: ['radio', 'artist', 'explore'].includes(mode), radioProfile };
+    this.music = { seed: track, albumArtistSeed, mode, radioKey: `${mode}:${track.songKey || track.id}`, current: null, queue: mode === 'album' ? album.map(t => t.id) : [], manualQueue: [], back: [], failed: new Set(), waiting: false, prepared: null, preparing: null, pendingPreparedDecision: null, initialRadioSelectionPending: ['radio', 'artist', 'explore'].includes(mode), radioProfile };
     if (mode === 'artist') await this.musicRadio?.beginArtistSession?.(track);
     if (mode === 'explore') await this.musicRadio?.beginExploreSession?.(track);
     if (mode === 'radio' || mode === 'explore') {
@@ -780,7 +833,7 @@ class MediaController {
     this.music = {
       seed: { id: `mix:${mix.id}`, title: mix.name, artist: '', album: '', genres: [] },
       profile: mix, mixId: mix.id, label: mix.name, mode: 'mix', radioKey: `mix:${mix.id}`,
-      current: null, queue: [], back: [], failed: new Set(), waiting: false, prepared: null, preparing: null, pendingPreparedDecision: null, radioProfile
+      current: null, queue: [], manualQueue: [], back: [], failed: new Set(), waiting: false, prepared: null, preparing: null, pendingPreparedDecision: null, radioProfile
     };
     this.onLocalStationStart({ key: this.music.radioKey, mode: this.music.mode, seed: this.music.seed, profile: this.music.radioProfile?.profile || null, stationProfile: this.music.radioProfile || null });
     this.onStationChanged(null);
@@ -805,9 +858,10 @@ class MediaController {
     if (!this.music || generation !== this.musicGeneration) return false;
     this.music.waiting = false;
     this.mediaState = 'playing';
-    await this.player.setStationGain(0);
+    const gainDb = this.getMusicGain(track);
+    if (!crossfadeMs) await this.player.setStationGain(gainDb);
     if (!this.music || generation !== this.musicGeneration) return false;
-    if (crossfadeMs > 0) await this.player.crossfadeTo(track.path, crossfadeMs);
+    if (crossfadeMs > 0) await this.player.crossfadeTo(track.path, crossfadeMs, gainDb);
     else await this.player.play(track.path);
     if (!this.music || generation !== this.musicGeneration) return false;
     if (this.music?.pendingPreparedDecision?.id === id) this.music.pendingPreparedDecision = null;
@@ -844,6 +898,12 @@ class MediaController {
 
   async #nextMusicId(reason, { usePrepared = true, deferDecision = false } = {}) {
     const active = this.music;
+    if (active.manualQueue?.length) {
+      if (reason === 'prepared') return active.manualQueue[0];
+      const id = active.manualQueue.shift();
+      if (active.prepared?.id === id) { active.pendingPreparedDecision = active.prepared; active.prepared = null; }
+      return id;
+    }
     if (usePrepared && active.preparing) {
       await active.preparing;
       if (this.music !== active) return '';
@@ -914,6 +974,7 @@ class MediaController {
       const selectionStartedAt = Date.now();
       const id = await this.#nextMusicId('prepared', { usePrepared: false, deferDecision: true });
       if (!id || !this.music || generation !== this.musicGeneration) return false;
+      if (this.music.manualQueue?.length && id !== this.music.manualQueue[0]) return false;
       const selectionMs = Date.now() - selectionStartedAt;
       const resolveStartedAt = Date.now();
       const track = await this.musicLibrary.resolve(id);
@@ -943,7 +1004,7 @@ class MediaController {
 
   #scheduleMusicCrossfade(track, generation) {
     clearInterval(this.musicCrossfadeTimer); this.musicCrossfadeTimer = null;
-    if (!this.getCrossfadeEnabled() || !this.music || this.music.mode === 'song') return;
+    if (!this.music || this.music.mode === 'song') return;
     const fallbackDuration = Number(track?.duration) || 0;
     if (fallbackDuration <= 1) return;
     this.musicCrossfadeTimer = setInterval(() => {
@@ -952,6 +1013,9 @@ class MediaController {
       const duration = Number(status.duration) || fallbackDuration;
       const position = Number(status.position) || 0;
       const fadeSeconds = Math.min(8, Math.max(1, duration - 0.5));
+      if (this.#canAutoDjBreakAtBoundary(track, this.music.prepared?.track) && duration - position <= 15 && !this.preparedAutoDj) {
+        void this.#prepareAutoDjBreak(track, this.music.prepared.track, generation);
+      }
       if (duration > 1 && position >= duration - fadeSeconds) {
         clearInterval(this.musicCrossfadeTimer); this.musicCrossfadeTimer = null;
         // A due, fully prepared DJ break must wait for the hard song boundary.
@@ -963,6 +1027,7 @@ class MediaController {
         if (this.#canAutoDjBreakAtBoundary(track, this.music.prepared?.track)) return;
         if (this.#autoDjDue() && this.music.prepared?.track) this.#logSkippedAutoDjBreak(track, this.music.prepared.track, this.#autoDjSkipReason(track, this.music.prepared.track));
         if (this.#dueStationId()) return;
+        if (!this.getCrossfadeEnabled()) return;
         void this.#beginMusicCrossfade(fadeSeconds * 1000, generation).catch(error => this.musicError(error));
       }
     }, 250);
@@ -989,7 +1054,7 @@ class MediaController {
       const track = preparedTrack || await this.musicLibrary.resolve(id);
       if (track.doNotPlay) throw new Error('This song is marked Do Not Play.');
       if (!this.music || generation !== this.musicGeneration) return false;
-      await this.player.crossfadeTo(track.path, durationMs);
+      await this.player.crossfadeTo(track.path, durationMs, this.getMusicGain(track));
       if (!this.music || generation !== this.musicGeneration) return false;
       if (this.music?.pendingPreparedDecision?.id === id) this.music.pendingPreparedDecision = null;
       // Selecting the following fresh artist can be expensive in a large
@@ -1014,7 +1079,7 @@ class MediaController {
     clearTimeout(this.musicRetry);
     try {
       if (reason === 'error' && this.music.current) this.music.failed.add(this.music.current.id);
-      if (this.music.mode === 'song') { await this.stop(); return true; }
+      if (this.music.mode === 'song' && !this.music.manualQueue?.length) { await this.stop(); return true; }
       while (this.music && generation === this.musicGeneration) {
         const id = await this.#nextMusicId(reason);
         if (!this.music || generation !== this.musicGeneration) return false;
@@ -1086,7 +1151,7 @@ class MediaController {
 function serializeTransport(controller) {
   let pending = Promise.resolve();
   const mutations = new Set(['playStationById', 'playStation', 'playUrl', 'playRecording', 'playMusic', 'playLocalMix',
-    'pause', 'stop', 'play', 'togglePlayPause', 'nextPreset', 'previousPreset', 'handleEnded', 'rateMusic', 'autoDjSettingsChanged']);
+    'pause', 'stop', 'play', 'togglePlayPause', 'nextPreset', 'previousPreset', 'handleEnded', 'rateMusic', 'autoDjSettingsChanged', 'queueMusicNext']);
   return new Proxy(controller, { get(target, key) {
     const value = target[key];
     if (typeof value !== 'function') return value;

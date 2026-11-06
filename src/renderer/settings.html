@@ -307,6 +307,13 @@
           <label class="import-speed-label">Import speed <select id="portableImportSpeed" class="input"><option value="2">USB: 2x speed</option><option value="6">FAST: 6x speed</option><option value="12">TURBO: 12x speed</option></select></label>
           <button id="portableImportBtn" class="btn import-action" type="button" disabled>Import Missing Music</button>
         </section>
+        <section class="local-music-card dashboard-square replay-gain-card" aria-labelledby="replayGainTitle">
+          <div class="card-title" id="replayGainTitle">ReplayGain</div>
+          <div class="card-donut-wrap"><div id="replayGainChart" class="portable-storage-chart" title="Checking song loudness…"><span id="replayGainPercent">—</span></div></div>
+          <label class="preference-toggle"><input id="replayGainEnabled" type="checkbox" /><span class="toggle-switch" aria-hidden="true"></span><span>Even out song volume</span></label>
+          <div id="replayGainStatus" class="card-status" role="status">Analysis runs slowly in the background and pauses for playback.</div>
+          <div class="card-actions"><button id="replayGainPause" class="subtle-link" type="button">Pause analysis</button></div>
+        </section>
         <section class="local-music-card additional-folder-card" aria-labelledby="additionalMusicFolderTitle">
           <div class="card-title" id="additionalMusicFolderTitle">External Music Folder <span>(optional)</span></div>
           <div class="pro-music-settings-row">

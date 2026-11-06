@@ -35,10 +35,10 @@ function clipRelativePath(track, kind, slot) {
   return path.posix.join('tracks', source.parent, `${source.stem}__${kind}-${String(slot).padStart(2, '0')}.opus`);
 }
 
-function templateText(template, track, pronunciation = '') {
+function templateText(template, track, pronunciation = '', titleHint = '') {
   return cleanText(String(template)
     .replaceAll('[artist]', cleanText(pronunciation || track?.artist || track?.albumArtist || 'Unknown Artist'))
-    .replaceAll('[title]', cleanText(track?.title || 'Untitled')));
+    .replaceAll('[title]', cleanText(titleHint || track?.title || 'Untitled')));
 }
 function stationIdText(template, settings) { return cleanText(String(template).replace(/\[xl\]/gi, '').replaceAll('[station]', cleanText(settings.stationName)).replaceAll('[dj]', cleanText(settings.djName))); }
 
@@ -89,7 +89,7 @@ class DjClips {
     while (statement.step()) rows.push(statement.getAsObject()); statement.free(); return rows;
   }
   portableTrack(id) { return this.getTracks().find(track => track.library === 'portable' && track.id === String(id)); }
-  settings() { const value = this.getSettings() || {}; return { enabled: value.autoDjEnabled === true, stationName: value.autoDjStationName || '', djName: value.autoDjName || '', voice: 'female', stationIds: Array.isArray(value.autoDjStationIds) ? value.autoDjStationIds : [], extraLines: Array.isArray(value.autoDjExtraLines) ? value.autoDjExtraLines : [], pronunciations: value.autoDjArtistPronunciations || {} }; }
+  settings() { const value = this.getSettings() || {}; return { enabled: value.autoDjEnabled === true, stationName: value.autoDjStationName || '', djName: value.autoDjName || '', voice: 'female', stationIds: Array.isArray(value.autoDjStationIds) ? value.autoDjStationIds : [], extraLines: Array.isArray(value.autoDjExtraLines) ? value.autoDjExtraLines : [], pronunciations: value.autoDjArtistPronunciations || {}, titleHints: value.autoDjTitlePronunciations || {} }; }
   enabled() { return this.settings().enabled; }
   enabledMessage() { const settings = this.settings(); return settings.stationName && settings.djName ? 'Auto DJ is ready.' : 'Auto DJ is ready. Add Station Name and DJ Name before Station IDs can generate.'; }
   settingsChanged() { if (this.enabled()) { this.status = { ...this.status, message: this.enabledMessage() }; this.emit(); this.schedule(200); } else { clearTimeout(this.timer); this.status = { ...this.status, state: 'idle', message: 'Auto DJ is off.' }; this.emit(); } }
@@ -165,8 +165,8 @@ class DjClips {
   }
   async renderTrack(track) {
     const relative = sourceRelative(track); const clips = [
-      ...INTRO_TEMPLATES.map((template, index) => ({ kind: 'intro', slot: index + 1, text: templateText(template, track, this.pronunciation(track.artist)) })),
-      ...OUTRO_TEMPLATES.map((template, index) => ({ kind: 'outro', slot: index + 1, text: templateText(template, track, this.pronunciation(track.artist)) }))
+      ...INTRO_TEMPLATES.map((template, index) => ({ kind: 'intro', slot: index + 1, text: templateText(template, track, this.pronunciation(track.artist), this.settings().titleHints[track.id]) })),
+      ...OUTRO_TEMPLATES.map((template, index) => ({ kind: 'outro', slot: index + 1, text: templateText(template, track, this.pronunciation(track.artist), this.settings().titleHints[track.id]) }))
     ];
     const sourceFile = path.join(path.dirname(this.dataDir), 'Music', ...relative.split('/'));
     const sourceStat = await fsp.stat(sourceFile);
@@ -191,6 +191,17 @@ class DjClips {
     this.status = { ...this.status, state: 'idle', message: `Generating clips for ${track.artist || 'Unknown artist'}` }; this.emit(); return { cancelled: false };
   }
   pronunciation(artist) { return this.settings().pronunciations[String(artist || '').trim().toLocaleLowerCase()] || ''; }
+  async queueRegenerateTrack(id) {
+    await this.start(); const track = this.portableTrack(id);
+    if (!track) throw new Error('That portable track is no longer available.');
+    const existing = this.rows('SELECT 1 FROM clips WHERE source_path = ? LIMIT 1', [sourceRelative(track)]).length;
+    if (existing) {
+      const previous = Number(this.rows('SELECT requested FROM jobs WHERE track_id = ?', [track.id])[0]?.requested) || 0;
+      this.db.run('INSERT OR REPLACE INTO jobs(track_id, manual, requested) VALUES (?, 1, ?)', [track.id, Math.max(Date.now(), previous + 1)]);
+      await this.save(); this.schedule(10_000); await this.refreshQueueStatus();
+    }
+    return Boolean(existing);
+  }
   async queueArtist(artist) {
     await this.start(); const key = String(artist || '').trim().toLocaleLowerCase();
     for (const track of this.getTracks()) {
@@ -303,7 +314,7 @@ class DjClips {
   async renderStationId(id) { const output = path.join(this.root, 'ids', `id-${String(id.slot).padStart(2, '0')}.opus`); this.status = { ...this.status, state: 'generating', completed: 0, total: 1, created: 0, reused: 0, message: `Generating station ID ${id.slot} of 50` }; this.emit(); await this.render(id.text, output); this.db.run('INSERT OR REPLACE INTO station_ids(slot, signature, created) VALUES (?, ?, ?)', [id.slot, id.signature, Date.now()]); await this.save(); this.status = { ...this.status, state: 'idle', completed: 1, created: 1, message: this.enabledMessage() }; this.emit(); }
   async render(text, output) {
     await fsp.mkdir(path.dirname(output), { recursive: true }); const wav = `${output}.${process.pid}.wav`; const part = `${output}.part`;
-    try { await this.speak(text, wav); await new Promise((resolve, reject) => execFile(this.ffmpegPath(), ['-hide_banner', '-loglevel', 'error', '-y', '-i', wav, '-ac', '1', '-c:a', 'libopus', '-b:a', CLIP_BITRATE, '-f', 'opus', part], error => error ? reject(error) : resolve())); await fsp.rename(part, output); }
+    try { await this.speak(text, wav); await new Promise((resolve, reject) => execFile(this.ffmpegPath(), ['-hide_banner', '-loglevel', 'error', '-y', '-i', wav, '-ac', '1', '-af', 'loudnorm=I=-16:TP=-1.5:LRA=11', '-c:a', 'libopus', '-b:a', CLIP_BITRATE, '-f', 'opus', part], error => error ? reject(error) : resolve())); await fsp.rename(part, output); }
     finally { await Promise.allSettled([fsp.rm(wav, { force: true }), fsp.rm(part, { force: true })]); }
   }
   async speak(text, wavPath) {

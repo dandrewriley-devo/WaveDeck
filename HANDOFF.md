@@ -1,5 +1,12 @@
 # WaveDeck DJ Branch Handoff
 
+## WaveDeck DJ 0.1.11 — Quiet loudness and playback controls
+
+- Library song rows offer Play Next. A read-only queue window opens only with `Ctrl+Alt+Shift+Q` while WaveDeck has focus; it displays the current song and explicit Play Next requests. Song-title pronunciation hints can be tested and saved separately from artist pronunciation; changed hints requeue that portable song's six intros/outros without deleting its old clips first. The Auto DJ name field fills the card width.
+- ReplayGain is opt-in in Local Music, with a donut chart, toggle, and pause/resume. A single low-priority FFmpeg analysis runs between playback demands, at most one track per 30 seconds; playback requests stop it and impose a quiet period. Measurements persist in `Data/replay-gain.jsonl` beside the portable library. It never changes music files or tags. Incoming crossfade lanes receive their own song gain.
+- New DJ clips are normalized to -16 LUFS with a -1.5 dB true-peak target; existing clips remain untouched and receive a bounded playback gain. Eligible DJ outros are selected and preloaded on the spare player lane in the last 15 seconds, then started at EOF. Break diagnostics record preparation and handoff timing. Music playback requests continue to defer clip generation and background analysis.
+- The visible About changelog and `package-lock.json` remain unchanged.
+
 ## WaveDeck DJ 0.1.10 — Personal Stream compatibility
 
 - The 0.1.9 AppImage bundled Icecast dependencies built against GLIBC 2.43. On Andrew's Linux Mint computer, Icecast exited before opening TCP 18037, with a loader error before its own log could record anything. This was a packaging regression, not DNS or port forwarding.

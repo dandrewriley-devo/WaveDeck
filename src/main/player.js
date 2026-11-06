@@ -508,6 +508,7 @@ class CrossfadeMpvPlayer {
     this.onMonitorVolume = () => {};
     this.activeLane = 'a';
     this.crossfade = null;
+    this.preparedBreak = null;
     this.lanes = {};
     for (const name of ['a', 'b']) {
       const lanePath = platform === 'win32' ? `${ipcPath}-${name}` : `${ipcPath}-${name}`;
@@ -554,8 +555,45 @@ class CrossfadeMpvPlayer {
     if (stopBackground) await this.#stopLane(this.#otherLane(this.activeLane));
   }
 
+  async prepareBreak(url, gainDb = 3) {
+    if (this.crossfade || !url) return false;
+    if (this.preparedBreak?.url === url) return true;
+    const incoming = this.#otherLane();
+    this.preparedBreak = null;
+    await this.#stopLane(incoming);
+    const target = this.lanes[incoming];
+    try {
+      await target.start();
+      await target.setStationGain(gainDb);
+      await target.setVolume(0);
+      await target.play(url);
+      await target.setPaused(true);
+      await target.seek(0);
+      this.preparedBreak = { url, incoming, gainDb };
+      return true;
+    } catch {
+      await this.#stopLane(incoming);
+      return false;
+    }
+  }
+
+  async playPreparedBreak(url) {
+    const prepared = this.preparedBreak;
+    if (!prepared || prepared.url !== url || prepared.incoming !== this.#otherLane()) return false;
+    this.preparedBreak = null;
+    const outgoing = this.activeLane;
+    this.activeLane = prepared.incoming;
+    this.stationGain = prepared.gainDb;
+    await this.lanes[prepared.incoming].setVolume(this.#outputVolume());
+    await this.lanes[prepared.incoming].setPaused(false);
+    void this.#stopLane(outgoing);
+    this.onStatus(this.getStatus());
+    return true;
+  }
+
   async play(url) {
     await this.#cancelCrossfade();
+    this.preparedBreak = null;
     await Promise.all(['a', 'b'].map(name => this.#stopLane(name)));
     this.activeLane = 'a';
     await this.lanes.a.setStationGain(this.stationGain);
@@ -564,14 +602,15 @@ class CrossfadeMpvPlayer {
     return true;
   }
 
-  async crossfadeTo(url, durationMs = 8000) {
+  async crossfadeTo(url, durationMs = 8000, gainDb = this.stationGain) {
+    this.preparedBreak = null;
     const outgoing = this.activeLane;
     const incoming = this.#otherLane(outgoing);
     await this.#cancelCrossfade();
     await this.#stopLane(incoming);
     const target = this.lanes[incoming];
     await target.start();
-    await target.setStationGain(this.stationGain);
+    await target.setStationGain(gainDb);
     await target.setVolume(0);
     try {
       await target.play(url);
@@ -581,6 +620,7 @@ class CrossfadeMpvPlayer {
       throw error;
     }
     this.activeLane = incoming;
+    this.stationGain = gainDb;
     const duration = Math.max(1000, Math.round(Number(durationMs) || 8000));
     const startedAt = Date.now();
     const apply = () => {
@@ -609,6 +649,7 @@ class CrossfadeMpvPlayer {
   async seek(seconds) { return this.lanes[this.activeLane].seek(seconds); }
 
   async stop() {
+    this.preparedBreak = null;
     await this.#cancelCrossfade({ stopBackground: false });
     await Promise.all(['a', 'b'].map(name => this.#stopLane(name)));
     this.activeLane = 'a';

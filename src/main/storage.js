@@ -411,6 +411,8 @@ function validatePreferences(value) {
     ? value.localRadioExploreDistance
     : 'detour';
   const localMusicCrossfadeEnabled = value?.localMusicCrossfadeEnabled !== false;
+  const replayGainEnabled = value?.replayGainEnabled === true;
+  const replayGainPaused = value?.replayGainPaused === true;
   const finishCurrentSongOnStationChange = value?.finishCurrentSongOnStationChange === true;
   const portableImportWorkers = [2, 6, 12].includes(Number(value?.portableImportWorkers)) ? Number(value.portableImportWorkers) : 2;
   const miniPlayerDisplayMode = value?.miniPlayerDisplayMode === 'source' ? 'source' : 'now-playing';
@@ -440,6 +442,12 @@ function validatePreferences(value) {
   if (value?.autoDjArtistPronunciations && typeof value.autoDjArtistPronunciations === 'object' && !Array.isArray(value.autoDjArtistPronunciations)) {
     for (const [artist, hint] of Object.entries(value.autoDjArtistPronunciations)) {
       if (typeof hint === 'string' && artist.length <= 200 && hint.trim()) autoDjArtistPronunciations[artist.toLocaleLowerCase().trim()] = hint.trim().slice(0, 200);
+    }
+  }
+  const autoDjTitlePronunciations = {};
+  if (value?.autoDjTitlePronunciations && typeof value.autoDjTitlePronunciations === 'object' && !Array.isArray(value.autoDjTitlePronunciations)) {
+    for (const [id, hint] of Object.entries(value.autoDjTitlePronunciations)) {
+      if (typeof hint === 'string' && id.length <= 300 && hint.trim()) autoDjTitlePronunciations[id] = hint.trim().slice(0, 200);
     }
   }
   const autoDjBreakIntervalMinutes = Number.isInteger(Number(value?.autoDjBreakIntervalMinutes)) && Number(value.autoDjBreakIntervalMinutes) >= 1 && Number(value.autoDjBreakIntervalMinutes) <= 60 ? Number(value.autoDjBreakIntervalMinutes) : 15;
@@ -535,6 +543,8 @@ function validatePreferences(value) {
     localMixFavorLastFm,
     localRadioExploreDistance,
     localMusicCrossfadeEnabled,
+    replayGainEnabled,
+    replayGainPaused,
     finishCurrentSongOnStationChange,
     portableImportWorkers,
     miniPlayerDisplayMode,
@@ -546,6 +556,7 @@ function validatePreferences(value) {
     autoDjExtraLines,
     autoDjExtraDefaultsVersion: 1,
     autoDjArtistPronunciations,
+    autoDjTitlePronunciations,
     autoDjBreakIntervalMinutes,
     autoDjStationIds,
     autoDjStationIdDefaultsVersion: 1,
@@ -740,6 +751,8 @@ class PortableStorage {
       localMixFavorLastFm: preferences.localMixFavorLastFm,
       localRadioExploreDistance: preferences.localRadioExploreDistance,
       localMusicCrossfadeEnabled: preferences.localMusicCrossfadeEnabled,
+      replayGainEnabled: preferences.replayGainEnabled,
+      replayGainPaused: preferences.replayGainPaused,
       finishCurrentSongOnStationChange: preferences.finishCurrentSongOnStationChange,
       portableImportWorkers: preferences.portableImportWorkers,
       miniPlayerDisplayMode: preferences.miniPlayerDisplayMode,
@@ -750,6 +763,7 @@ class PortableStorage {
       autoDjVoice: preferences.autoDjVoice,
       autoDjExtraLines: [...preferences.autoDjExtraLines],
       autoDjArtistPronunciations: { ...preferences.autoDjArtistPronunciations },
+      autoDjTitlePronunciations: { ...preferences.autoDjTitlePronunciations },
       autoDjBreakIntervalMinutes: preferences.autoDjBreakIntervalMinutes,
       autoDjStationIds: [...preferences.autoDjStationIds],
       localMixEnabled: { ...preferences.localMixEnabled },
@@ -878,6 +892,22 @@ class PortableStorage {
     const preferences = this.readPreferences();
     if (hint.trim()) preferences.autoDjArtistPronunciations[key] = hint.trim();
     else delete preferences.autoDjArtistPronunciations[key];
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences();
+  }
+  setAutoDjTitlePronunciation(id, hint) {
+    const key = String(id || '').trim();
+    if (!key || key.length > 300 || typeof hint !== 'string' || hint.length > 200) throw new Error('Enter a valid track and title hint.');
+    const preferences = this.readPreferences();
+    if (hint.trim()) preferences.autoDjTitlePronunciations[key] = hint.trim();
+    else delete preferences.autoDjTitlePronunciations[key];
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences();
+  }
+  setReplayGainSettings(settings = {}) {
+    const preferences = this.readPreferences();
+    if (typeof settings.enabled === 'boolean') preferences.replayGainEnabled = settings.enabled;
+    if (typeof settings.paused === 'boolean') preferences.replayGainPaused = settings.paused;
     this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
     return this.getUiPreferences();
   }

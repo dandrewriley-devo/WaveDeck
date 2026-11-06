@@ -8,7 +8,7 @@ for (const method of [
   'getPortableMusicArtists', 'getPortableMusicArtistDetail', 'playMusic',
   'saveArtistRelationships', 'savePortableMusicReleaseHoliday', 'savePortableMusicTrack',
   'clearMusicDebugHistory', 'getMusicDebugHistory', 'saveMusicDebugLog', 'openMusicDebugTrack', 'queueDjClipsForTrack',
-  'getDjArtistPronunciation', 'testDjArtistPronunciation', 'saveDjArtistPronunciation'
+  'getDjArtistPronunciation', 'testDjArtistPronunciation', 'saveDjArtistPronunciation', 'getDjTitleHint', 'saveDjTitleHint', 'queueMusicNext'
 ]) {
   embeddedWavedeck[method] = (...args) => new Promise((resolve, reject) => {
     const id = ++embeddedRequestId;

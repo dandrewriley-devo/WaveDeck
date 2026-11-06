@@ -27,6 +27,7 @@ const { normalize } = require('./music-tags');
 const { mixBookSignature } = require('./local-mixes');
 const { LastFmEnricher } = require('./lastfm-enricher');
 const { DjClips } = require('./dj-clips');
+const { ReplayGain } = require('./replay-gain');
 const { LastFmScrobbler } = require('./lastfm-scrobbler');
 const {
   getLauncherStatus,
@@ -101,6 +102,7 @@ let mainWindow = null;
 let tray = null;
 let settingsWindow = null;
 let autoDjIdsWindow = null;
+let queueWindow = null;
 let localRadioControlsWindow = null;
 let miniPlayerWindow = null;
 let miniPlayerReturnToSidebar = false;
@@ -128,6 +130,7 @@ let opusOptimizer = null;
 let latestMusicLibraryStatus = {};
 let lastFmEnricher = null;
 let djClips = null;
+let replayGain = null;
 let lastFmScrobbler = null;
 let recordingProbeExecutable = "";
 let portableFfmpegExecutable = "";
@@ -556,6 +559,7 @@ function broadcastPlayerStatus(status = player?.getStatus()) {
   lastFmScrobbler?.observe?.(combinedStatus);
   listeningHistory?.handleStatus(combinedStatus);
   sendToAll("player:status-changed", combinedStatus);
+  if (queueWindow && !queueWindow.isDestroyed()) queueWindow.webContents.send('music:queue:changed', mediaController?.getQueueView());
   mprisService?.update(combinedStatus);
   return combinedStatus;
 }
@@ -621,6 +625,11 @@ function createSecureWindow(options, { showOnReady = true } = {}) {
 
   window.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
   window.webContents.on("will-navigate", (event) => event.preventDefault());
+  window.webContents.on('before-input-event', (event, input) => {
+    if (input.type === 'keyDown' && !input.isAutoRepeat && input.control && input.alt && input.shift && input.key.toLowerCase() === 'q') {
+      event.preventDefault(); openQueueWindow();
+    }
+  });
   window.on("focus", () => {
     reclaimMediaKeys();
   });
@@ -633,7 +642,7 @@ function delay(milliseconds) {
 }
 
 function closeAuxiliaryWindows() {
-  for (const auxiliary of [settingsWindow, autoDjIdsWindow, localRadioControlsWindow, miniPlayerWindow]) {
+  for (const auxiliary of [settingsWindow, autoDjIdsWindow, queueWindow, localRadioControlsWindow, miniPlayerWindow]) {
     if (auxiliary && !auxiliary.isDestroyed()) auxiliary.close();
   }
 }
@@ -851,6 +860,12 @@ function openAutoDjIdsWindow() {
   autoDjIdsWindow = createSecureWindow({ width: 760, height: 760, minWidth: 600, minHeight: 500, resizable: true, title: 'WaveDeck DJ — Station IDs' });
   autoDjIdsWindow.on('closed', () => { autoDjIdsWindow = null; });
   autoDjIdsWindow.loadFile(path.join(__dirname, '..', 'renderer', 'auto-dj-ids.html'));
+}
+function openQueueWindow() {
+  if (queueWindow && !queueWindow.isDestroyed()) { queueWindow.show(); queueWindow.focus(); return; }
+  queueWindow = createSecureWindow({ width: 430, height: 420, minWidth: 350, minHeight: 260, resizable: true, title: 'WaveDeck DJ — Queue' });
+  queueWindow.on('closed', () => { queueWindow = null; });
+  queueWindow.loadFile(path.join(__dirname, '..', 'renderer', 'queue.html'));
 }
 
 function openLocalRadioControlsWindow() {
@@ -1566,6 +1581,28 @@ function installIpcHandlers() {
     if (previous !== String(hint || '').trim()) await djClips?.queueArtist(artist);
     return result.autoDjArtistPronunciations[String(artist || '').trim().toLocaleLowerCase()] || '';
   });
+  ipcMain.handle('music:dj:title-hint:get', (_event, id) => {
+    requireAdvancedFeatures();
+    return storage.getUiPreferences().autoDjTitlePronunciations[String(id || '')] || '';
+  });
+  ipcMain.handle('music:dj:title-hint:save', async (_event, id, hint) => {
+    await requireMusic();
+    const track = musicLibrary.tracks.find(item => item.id === String(id) && item.library === 'portable');
+    if (!track) throw new Error('That portable song is no longer indexed.');
+    const previous = storage.getUiPreferences().autoDjTitlePronunciations[track.id] || '';
+    const preferences = storage.setAutoDjTitlePronunciation(track.id, hint);
+    if (previous !== String(hint || '').trim()) await djClips?.queueRegenerateTrack(track.id);
+    return preferences.autoDjTitlePronunciations[track.id] || '';
+  });
+  ipcMain.handle('music:replay-gain:status', () => replayGain?.status() || { enabled: false, paused: false, running: false, ready: 0, total: 0 });
+  ipcMain.handle('music:replay-gain:set', async (_event, settings) => {
+    requireAdvancedFeatures();
+    const preferences = storage.setReplayGainSettings(settings || {});
+    const status = replayGain?.setSettings({ enabled: preferences.replayGainEnabled, paused: preferences.replayGainPaused });
+    if (mediaController?.music?.current) await player.setStationGain(replayGain?.gainFor(mediaController.music.current) || 0);
+    sendToAll('ui:preferences-changed', preferences);
+    return status;
+  });
   ipcMain.handle('music:local-radio:set-familiarity', (_event, familiarity) => {
     requireAdvancedFeatures();
     const value = String(familiarity || '');
@@ -1807,6 +1844,8 @@ function installIpcHandlers() {
     void analyzeLocalMixes(); return { ids: matches.map(track => track.id), holiday: holiday === true };
   });
   ipcMain.handle('music:play', async (_event, id, mode) => { await requireMusic(); return mediaController.playMusic(String(id), mode); });
+  ipcMain.handle('music:queue:next', async (_event, id) => { await requireMusic(); return mediaController.queueMusicNext(String(id)); });
+  ipcMain.handle('music:queue:view', () => mediaController?.getQueueView() || { current: null, queued: [] });
   ipcMain.handle('music:mixes', async () => {
     await requireMusic();
     if (!portableImporter?.isRunning()) void analyzeLocalMixes().catch(error => sendToMain('app:warning', error.message));
@@ -2108,7 +2147,8 @@ if (!hasSingleInstanceLock) {
       canBuildAutoDjBreak: (ending, incoming) => djClips?.canBuildBreak(ending, incoming) === true,
       getAutoDjClipStatus: track => ({ intro: djClips?.clipsFor(track, 'intro').length || 0, outro: djClips?.clipsFor(track, 'outro').length || 0, ids: djClips?.activeStationIds().length || 0 }),
       takeAutoDjBreak: (ending, incoming) => djClips?.takeBreak(ending, incoming) || null,
-      onPlaybackRequested: () => djClips?.deferForPlayback(),
+      onPlaybackRequested: () => { djClips?.deferForPlayback(); replayGain?.deferForPlayback(); },
+      getMusicGain: track => replayGain?.gainFor(track) || 0,
       onLocalStationStart: station => {
         activateLocalStationProfile(station?.stationProfile || null);
         beginRadioDiagnosticSession(station?.key || '');
@@ -2127,6 +2167,13 @@ if (!hasSingleInstanceLock) {
       },
       onLocalMixAvailability: availability => sendToAll('music:mixes-changed', availability)
     });
+    if (process.platform === 'linux' && portableFfmpegExecutable) {
+      replayGain = new ReplayGain({ dataDir: getDataDir(), getTracks: () => musicLibrary?.tracks || [], ffmpegPath: () => portableFfmpegExecutable,
+        canAnalyze: () => !portableImporter?.isRunning() && !opusOptimizer?.isRunning() && !latestMusicLibraryStatus.scanning && !djClips?.running,
+        onStatus: status => sendToAll('music:replay-gain:changed', status) });
+      const preferences = storage.getUiPreferences();
+      replayGain.setSettings({ enabled: preferences.replayGainEnabled, paused: preferences.replayGainPaused });
+    }
     if (process.platform === 'linux' && portableFfmpegExecutable) {
       const modelDir = app.isPackaged
         ? path.join(process.resourcesPath, 'dj-models', 'Kokoro-82M-v1.0-ONNX')
@@ -2318,6 +2365,7 @@ function finishShutdown() {
   player?.close();
   mediaController?.clearMusic();
   opusOptimizer?.close();
+  replayGain?.close();
   musicLibrary?.close();
   musicRadio?.close();
 }

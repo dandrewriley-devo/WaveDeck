@@ -26,7 +26,7 @@ const embeddedMethods = new Set([
   'getPortableMusicArtists', 'getPortableMusicArtistDetail', 'playMusic',
   'saveArtistRelationships', 'savePortableMusicReleaseHoliday', 'savePortableMusicTrack',
   'clearMusicDebugHistory', 'getMusicDebugHistory', 'saveMusicDebugLog', 'openMusicDebugTrack', 'queueDjClipsForTrack',
-  'getDjArtistPronunciation', 'testDjArtistPronunciation', 'saveDjArtistPronunciation'
+  'getDjArtistPronunciation', 'testDjArtistPronunciation', 'saveDjArtistPronunciation', 'getDjTitleHint', 'saveDjTitleHint', 'queueMusicNext'
 ]);
 window.addEventListener('message', async event => {
   if (![musicManagerFrame.contentWindow, radioLogFrame.contentWindow].includes(event.source)) return;
@@ -116,6 +116,11 @@ const lastFmStatus = document.getElementById('lastFmStatus');
 const lastFmChart = document.getElementById('lastFmChart');
 const lastFmPercent = document.getElementById('lastFmPercent');
 const lastFmConnection = document.getElementById('lastFmConnection');
+const replayGainEnabled = document.getElementById('replayGainEnabled');
+const replayGainPause = document.getElementById('replayGainPause');
+const replayGainStatus = document.getElementById('replayGainStatus');
+const replayGainChart = document.getElementById('replayGainChart');
+const replayGainPercent = document.getElementById('replayGainPercent');
 const connectLastFmBtn = document.getElementById('connectLastFmBtn');
 const disconnectLastFmBtn = document.getElementById('disconnectLastFmBtn');
 const localMixManager = document.getElementById('localMixManager');
@@ -141,6 +146,7 @@ const platform = window.wavedeck.platform;
 const sidebarPlatform = platform === "linux" || platform === "win32";
 if (platform !== "linux") document.querySelectorAll(".linux-launcher-only").forEach((node) => { node.hidden = true; });
 if (platform !== 'linux') document.querySelectorAll('.linux-stream-only').forEach(node => { node.hidden = true; });
+if (platform !== 'linux') document.querySelector('.replay-gain-card').style.display = 'none';
 if (!sidebarPlatform) document.querySelectorAll(".mini-player-platform-only").forEach((node) => { node.hidden = true; });
 
 let stations = [];
@@ -287,7 +293,7 @@ function renderProMusicSettings(preferences) {
   portableImportSpeed.value = String([2, 6, 12].includes(Number(preferences?.portableImportWorkers)) ? preferences.portableImportWorkers : 2);
   if (proEnabled) {
     if (requestedAdvancedTab) { const requested = requestedAdvancedTab; requestedAdvancedTab = ''; showTab(requested); }
-    void loadLastFmStatus(); void loadDjClipStatus(); void loadLocalMixSummary(); void loadMusicLibraryStatus(); void loadRememberedMusicComputers(); void loadPortableStorage();
+    void loadLastFmStatus(); void loadDjClipStatus(); void loadReplayGainStatus(); void loadLocalMixSummary(); void loadMusicLibraryStatus(); void loadRememberedMusicComputers(); void loadPortableStorage();
     if (localMixDetails.open) void loadLocalMixManager();
   }
 }
@@ -372,6 +378,23 @@ function renderLastFmStatus(status) {
 
 async function loadLastFmStatus() {
   try { renderLastFmStatus(await window.wavedeck.getLastFmStatus()); } catch {}
+}
+
+function renderReplayGainStatus(status = {}) {
+  const ready = Number(status.ready || 0);
+  const total = Number(status.total || 0);
+  const percent = total ? Math.round(100 * ready / total) : 0;
+  replayGainChart.style.background = `conic-gradient(#67ce2a 0deg ${percent * 3.6}deg, #3a3a3a ${percent * 3.6}deg 360deg)`;
+  replayGainPercent.textContent = total ? `${percent}%` : '—';
+  replayGainChart.title = `${ready.toLocaleString()} of ${total.toLocaleString()} portable songs analyzed`;
+  replayGainEnabled.checked = status.enabled === true;
+  replayGainPause.textContent = status.paused ? 'Resume analysis' : 'Pause analysis';
+  replayGainPause.disabled = !status.enabled;
+  replayGainStatus.textContent = `${ready.toLocaleString()} of ${total.toLocaleString()} analyzed${status.paused ? ' · paused' : status.running ? ' · analyzing quietly' : status.enabled ? ' · waiting for idle time' : ' · off'}`;
+}
+
+async function loadReplayGainStatus() {
+  try { renderReplayGainStatus(await window.wavedeck.getReplayGainStatus()); } catch {}
 }
 
 function renderDjClipStatus(status = {}) {
@@ -1503,6 +1526,18 @@ autoDjStationName.addEventListener('change', saveAutoDjSettings);
 autoDjName.addEventListener('change', saveAutoDjSettings);
 autoDjBreakInterval.addEventListener('change', saveAutoDjSettings);
 editAutoDjIdsBtn.addEventListener('click', () => { void window.wavedeck.openAutoDjStationIds(); });
+replayGainEnabled.addEventListener('change', async () => {
+  replayGainEnabled.disabled = true;
+  try { renderReplayGainStatus(await window.wavedeck.setReplayGainSettings({ enabled: replayGainEnabled.checked })); }
+  catch (error) { setStatus(statusLocalMusic, `Could not change ReplayGain: ${error.message}`, false); await loadReplayGainStatus(); }
+  finally { replayGainEnabled.disabled = false; }
+});
+replayGainPause.addEventListener('click', async () => {
+  replayGainPause.disabled = true;
+  try { renderReplayGainStatus(await window.wavedeck.setReplayGainSettings({ paused: replayGainPause.textContent === 'Pause analysis' })); }
+  catch (error) { setStatus(statusLocalMusic, `Could not change ReplayGain: ${error.message}`, false); }
+  finally { await loadReplayGainStatus(); }
+});
 
 connectLastFmBtn.addEventListener('click', async () => {
   connectLastFmBtn.disabled = true;
@@ -1559,6 +1594,7 @@ window.wavedeck.onUiPreferencesChanged((preferences) => {
   if (sidebarPlatform) launchInSidebarMode.checked = preferences?.launchInSidebarMode === true;
 });
 window.wavedeck.onLastFmChanged(renderLastFmStatus);
+window.wavedeck.onReplayGainChanged(renderReplayGainStatus);
 window.wavedeck.onDjClipsChanged(renderDjClipStatus);
 window.wavedeck.onMusicDebugLog(decision => {
   if (radioLogFrame.getAttribute('src')) radioLogFrame.contentWindow?.postMessage({ type: 'embedded-event', name: 'debug-log', data: decision }, '*');
