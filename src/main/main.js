@@ -2177,6 +2177,7 @@ if (!hasSingleInstanceLock) {
       getAutoDjClipStatus: track => ({ intro: djClips?.clipsFor(track, 'intro').length || 0, outro: djClips?.clipsFor(track, 'outro').length || 0, ids: djClips?.activeStationIds().length || 0 }),
       takeAutoDjBreak: (ending, incoming) => djClips?.takeBreak(ending, incoming) || null,
       onPlaybackRequested: () => { djClips?.deferForPlayback(); replayGain?.deferForPlayback(); },
+      onMusicSelected: track => { void djClips?.queueStaleSelectedTrack(track).catch(error => console.warn(`Could not queue DJ clip refresh: ${error.message}`)); },
       getMusicGain: track => replayGain?.gainFor(track) || 0,
       getSongCue: track => songCues?.get(track?.id),
       onLocalStationStart: station => {

@@ -149,8 +149,8 @@ function assertValidHeaderPng(filePath) {
 assertValidHeaderPng(path.join(root, "assets", "logo.png"));
 
 assert.strictEqual(packageJson.name, "wavedeck");
-assert.strictEqual(packageJson.version, "1.2.0");
-assert.strictEqual(packageJson.wavedeckVersion, "1.2.0");
+assert.strictEqual(packageJson.version, "1.2.1");
+assert.strictEqual(packageJson.wavedeckVersion, "1.2.1");
 assert.strictEqual(packageJson.desktopName, "wavedeck.desktop");
 assert.strictEqual(packageJson.build.productName, "WaveDeck");
 assert.strictEqual(packageJson.build.appId, "com.a17press.wavedeck");
@@ -1889,7 +1889,7 @@ assert.ok(mainWorkflow.includes("runs-on: ubuntu-22.04"));
 assert.ok(mainWorkflow.includes("npm test"));
 assert.ok(mainWorkflow.includes("npm run dist:linux -- --publish never"));
 assert.ok(mainWorkflow.includes("Verify portable AppImage, voice, and Icecast"));
-assert.ok(mainWorkflow.includes("tag_name: v1.2.0"));
+assert.ok(mainWorkflow.includes("tag_name: v1.2.1"));
 assert.ok(mainWorkflow.includes("release-assets/WaveDeck.AppImage"));
 assert.ok(!fs.existsSync(path.join(root, ".github", "workflows", "windows-portable.yml")), "The obsolete 1.0.5 publication workflow must not be dispatchable");
 const djWorkflow = fs.readFileSync(path.join(root, ".github", "workflows", "dj-portable.yml"), "utf8");

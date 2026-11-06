@@ -14,6 +14,7 @@ const { ComputerMusicFolders, resolveComputerIdentity } = require('../src/main/c
 const { MediaController, serializeTransport } = require('../src/main/media-controller');
 const { CrossfadeMpvPlayer } = require('../src/main/player');
 const { SongCues, parseCue } = require('../src/main/song-cues');
+const { DjClips } = require('../src/main/dj-clips');
 const { ReplayGain } = require('../src/main/replay-gain');
 const { PersonalStream, validHost, validMountName } = require('../src/main/personal-stream');
 const { LastFmEnricher, popularityScore } = require('../src/main/lastfm-enricher');
@@ -126,6 +127,29 @@ async function run() {
   assert.equal(qualityForTrackCount(150), 'Strong');
   assert.equal(qualityForTrackCount(400), 'Excellent');
   const temp = await fs.mkdtemp(path.join(os.tmpdir(), 'wavedeck-music-test-')); let library;
+  const oldClipRoot = path.join(temp, 'old-clips');
+  const oldClipData = path.join(oldClipRoot, 'Data');
+  const oldClipFolder = path.join(oldClipRoot, 'DJ Clips');
+  await fs.mkdir(oldClipData, { recursive: true }); await fs.mkdir(oldClipFolder);
+  await fs.mkdir(path.join(oldClipRoot, 'Music'));
+  const oldTrack = track('old-clip', { library: 'portable', relativePath: 'old.opus', lastFm: { status: 'matched', popularity: 20 } });
+  await fs.writeFile(path.join(oldClipRoot, 'Music', 'old.opus'), 'fixture');
+  const Sql = await require('sql.js')(); const previous = new Sql.Database();
+  previous.run('CREATE TABLE clips (source_path TEXT NOT NULL, kind TEXT NOT NULL, slot INTEGER NOT NULL, output_path TEXT NOT NULL, signature TEXT NOT NULL, created INTEGER NOT NULL, PRIMARY KEY(source_path, kind, slot))');
+  previous.run("INSERT INTO clips VALUES ('old.opus', 'intro', 1, 'tracks/old__intro-01.opus', 'old-signature', 1)");
+  await fs.writeFile(path.join(oldClipFolder, 'clips.sqlite'), Buffer.from(previous.export())); previous.close();
+  const clips = new DjClips({ dataDir: oldClipData, getTracks: () => [oldTrack], getSettings: () => ({ autoDjEnabled: true }), ffmpegPath: () => 'ffmpeg' });
+  await clips.start();
+  assert.equal(clips.rows('SELECT render_version FROM clips')[0].render_version, 0, 'old clip records migrate as unnormalized');
+  assert.equal(await clips.queueStaleSelectedTrack(oldTrack), true, 'selecting an old clip queues its ordinary background regeneration even below the popularity cutoff');
+  assert.equal(await clips.queueStaleSelectedTrack(oldTrack), false, 'repeated selection does not duplicate the job');
+  assert.equal(clips.rows('SELECT manual FROM jobs')[0].manual, 1);
+  clips.render = async (_text, output) => { await fs.mkdir(path.dirname(output), { recursive: true }); await fs.writeFile(output, 'new clip'); };
+  await clips.renderTrack(oldTrack);
+  assert.equal(clips.rows('SELECT COUNT(*) AS count FROM clips WHERE render_version = 1')[0].count, 6, 'the six refreshed clips receive the new version');
+  clips.db.run('DELETE FROM jobs');
+  assert.equal(await clips.queueStaleSelectedTrack(oldTrack), false, 'current clips are not repeatedly queued');
+  clearTimeout(clips.timer); clips.db.close();
   try {
     const computerIdentity = resolveComputerIdentity({ platform: 'linux', hostname: 'test-computer', readFile: () => 'stable-machine-id\n' });
     assert.equal(computerIdentity.label, 'test-computer', 'saved computer folders use a friendly local computer name');
@@ -826,10 +850,10 @@ async function run() {
     assert.equal(stationIdPlays.at(-1), path.join(topOfHourIds, 'top.mp3'), 'the Top of Hour has its own Station ID pool');
     assert.equal(stationIdLogs.at(-1).pool, 'Top of Hour');
     await stationIdController.stop();
-    let autoDjNow = 0; let autoDjPosition = 0; const autoDjPlays = []; const autoDjPreloads = []; const autoDjBreaks = []; let autoDjCanChecks = 0;
+    let autoDjNow = 0; let autoDjPosition = 0; let autoDjDuration = 180; const autoDjPlays = []; const autoDjPreloads = []; const autoDjBreaks = []; let autoDjCanChecks = 0;
     const autoDjPlayer = {
       isCrossfading: false,
-      getStatus: () => ({ playing: true, position: autoDjPosition, duration: 180 }),
+      getStatus: () => ({ playing: true, position: autoDjPosition, duration: autoDjDuration }),
       setStationGain: async () => {}, stop: async () => {}, setPaused: async () => {}, seek: async () => {},
       play: async file => { autoDjPlays.push(file); }, crossfadeTo: async file => { autoDjPlays.push(file); },
       prepareBreak: async file => { autoDjPreloads.push(file); return true; },
@@ -866,6 +890,9 @@ async function run() {
     await autoDjController.handleEnded({ reason: 'eof' });
     assert.ok(autoDjCanChecks >= 2, 'DJ readiness is checked during preparation and at the actual boundary');
     assert.equal(autoDjPlays.at(-1), '/dj/outro.opus', 'a due Auto DJ break begins with the outgoing song outro');
+    autoDjDuration = 2; autoDjPosition = 1.5;
+    await new Promise(resolve => setTimeout(resolve, 350));
+    assert.deepEqual(autoDjPlays, ['/auto-dj-a', '/dj/outro.opus'], 'the former song timer cannot crossfade away a short DJ outro');
     assert.equal(autoDjController.getStatus().currentMusic.track.autoDj, true, 'the player exposes a DJ clip while a break is running');
     await autoDjController.handleEnded({ reason: 'eof' });
     assert.equal(autoDjPlays.at(-1), '/dj/id-07.opus', 'the Station ID follows the outro without a music crossfade');

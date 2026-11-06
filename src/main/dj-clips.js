@@ -17,6 +17,7 @@ const OUTRO_TEMPLATES = [
   '[artist] there with “[title].”'
 ];
 const CLIP_BITRATE = '48k';
+const CLIP_RENDER_VERSION = 1; // Version 1 applies -16 LUFS / -1.5 dBTP normalization.
 const voiceFor = () => 'af_heart';
 const LASTFM_MINIMUM = 70;
 
@@ -70,6 +71,9 @@ class DjClips {
     // in a disk-I/O error state during otherwise read-only clip lookups.
     this.db.run('PRAGMA journal_mode=DELETE');
     this.db.run('CREATE TABLE IF NOT EXISTS clips (source_path TEXT NOT NULL, kind TEXT NOT NULL, slot INTEGER NOT NULL, output_path TEXT NOT NULL, signature TEXT NOT NULL, created INTEGER NOT NULL, PRIMARY KEY(source_path, kind, slot))');
+    if (!this.rows('PRAGMA table_info(clips)').some(column => column.name === 'render_version')) {
+      this.db.run('ALTER TABLE clips ADD COLUMN render_version INTEGER NOT NULL DEFAULT 0');
+    }
     this.db.run('CREATE TABLE IF NOT EXISTS jobs (track_id TEXT PRIMARY KEY, manual INTEGER NOT NULL DEFAULT 0, requested INTEGER NOT NULL)');
     this.db.run('CREATE TABLE IF NOT EXISTS station_ids (slot INTEGER PRIMARY KEY, signature TEXT NOT NULL, created INTEGER NOT NULL)');
     this.db.run('CREATE TABLE IF NOT EXISTS extra_lines (slot INTEGER PRIMARY KEY, signature TEXT NOT NULL, created INTEGER NOT NULL)');
@@ -110,6 +114,19 @@ class DjClips {
     return { ...this.getStatus(), queuedNow: queued };
   }
   async observeLastFm(track) { if (this.enabled() && this.qualifying(track)) await this.queueTrack(track.id); }
+  async queueStaleSelectedTrack(track) {
+    // A selection must never wait on the clip database or a voice render.
+    if (!this.enabled() || track?.library !== 'portable') return false;
+    await this.start();
+    const relative = sourceRelative(track);
+    const older = this.rows('SELECT 1 FROM clips WHERE source_path = ? AND render_version < ? LIMIT 1', [relative, CLIP_RENDER_VERSION]);
+    if (!older.length || this.rows('SELECT 1 FROM jobs WHERE track_id = ? LIMIT 1', [track.id]).length) return false;
+    // Preserve clips for low-scored/manual tracks too; this is a one-time upgrade
+    // of clips already made, not a request to generate a new six-clip set.
+    this.db.run('INSERT OR IGNORE INTO jobs(track_id, manual, requested) VALUES (?, 1, ?)', [track.id, Date.now()]);
+    await this.save(); this.schedule(1500); await this.refreshQueueStatus();
+    return true;
+  }
   schedule(delay = 1500) { clearTimeout(this.timer); this.timer = setTimeout(() => void this.resume(), Math.max(delay, this.quietUntil - Date.now())); this.timer.unref?.(); }
   deferForPlayback() { this.quietUntil = Date.now() + 10_000; this.cancelAfterClip = true; this.schedule(10_000); }
   async refreshQueueStatus() {
@@ -174,14 +191,14 @@ class DjClips {
     for (const clip of clips) {
       const outputRelative = clipRelativePath(track, clip.kind, clip.slot); const output = path.join(this.root, outputRelative);
       const signature = contentHash({ source: relative, bytes: sourceStat.size, modified: sourceStat.mtimeMs, kind: clip.kind, slot: clip.slot, text: clip.text, voice: voiceFor(this.settings()), bitrate: CLIP_BITRATE });
-      const existing = this.rows('SELECT signature, output_path FROM clips WHERE source_path = ? AND kind = ? AND slot = ?', [relative, clip.kind, clip.slot])[0];
-      let reused = existing?.signature === signature && existing.output_path === outputRelative;
+      const existing = this.rows('SELECT signature, output_path, render_version FROM clips WHERE source_path = ? AND kind = ? AND slot = ?', [relative, clip.kind, clip.slot])[0];
+      let reused = existing?.signature === signature && existing.output_path === outputRelative && Number(existing.render_version) >= CLIP_RENDER_VERSION;
       if (reused) { try { reused = (await fsp.stat(output)).isFile(); } catch { reused = false; } }
       if (reused) this.status.reused += 1;
       else {
         this.status.message = `Generating clips for ${track.artist || 'Unknown artist'}`; this.emit();
         await this.render(clip.text, output);
-        this.db.run('INSERT OR REPLACE INTO clips(source_path, kind, slot, output_path, signature, created) VALUES (?, ?, ?, ?, ?, ?)', [relative, clip.kind, clip.slot, outputRelative, signature, Date.now()]);
+        this.db.run('INSERT OR REPLACE INTO clips(source_path, kind, slot, output_path, signature, created, render_version) VALUES (?, ?, ?, ?, ?, ?, ?)', [relative, clip.kind, clip.slot, outputRelative, signature, Date.now(), CLIP_RENDER_VERSION]);
         await this.save(); this.status.created += 1;
       }
       this.status.completed += 1; this.emit();

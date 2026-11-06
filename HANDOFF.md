@@ -1,5 +1,11 @@
 # WaveDeck Main Handoff
 
+## WaveDeck 1.2.1 — Break handoff and gradual clip refresh
+
+- An Auto DJ break stops the preceding song's crossfade timer before starting its outro. The timer and crossfade handoff also refuse to run while a DJ packet or legacy Station ID is playing. This fixes the observed Patsy Cline → Jack Johnson transition where the short outro was mistaken for the end of the prior music track, causing a second song selection during the break.
+- The clip database migrates existing intro/outro rows to `render_version=0`; new renders use version 1, the -16 LUFS / -1.5 dBTP format. When Local Radio selects a portable song or prepares the next one, outdated existing clips are queued once for ordinary quiet regeneration; playback never waits, and the old clips stay usable until each replacement is ready. Previously normalized clips without a version marker are conservatively refreshed when selected. Songs with no existing clips are not added by this migration; the normal Last.fm/manual generation rules remain.
+- Linux release tag `v1.2.1`, `WaveDeck.AppImage`; the visible About changelog and `package-lock.json` remain unchanged. Run `npm test` and `git diff --check`, verify the packaged voice and Icecast compatibility, then confirm the release download.
+
 ## WaveDeck 1.2.0 — The DJ Update
 
 - This release brings the `dj-portable` implementation into `main` as WaveDeck. The Linux AppImage is `WaveDeck.AppImage`, produced by `.github/workflows/wavedeck-1.2.yml` on `main` and published under `v1.2.0`. It retains the bundled offline `af_heart` voice and Icecast; the build verifies the extracted voice runtime, Icecast startup, and compatibility with GLIBC 2.35. No Windows 1.2 build is published; the obsolete manually dispatchable 1.0.5 Windows/Linux publication workflow was removed.

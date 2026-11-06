@@ -1,4 +1,4 @@
-name: Build WaveDeck 1.2
+name: Build WaveDeck 1.2.1
 
 on:
   push:
@@ -58,7 +58,7 @@ jobs:
           if [ "$ready" -ne 1 ]; then cat "$workdir/icecast.out"; exit 1; fi
       - uses: actions/upload-artifact@v4
         with:
-          name: WaveDeck-1.2.0-Linux
+          name: WaveDeck-1.2.1-Linux
           path: dist/WaveDeck.AppImage
           if-no-files-found: error
           compression-level: 0
@@ -69,14 +69,14 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: WaveDeck-1.2.0-Linux
+          name: WaveDeck-1.2.1-Linux
           path: release-assets
-      - name: Publish WaveDeck 1.2
+      - name: Publish WaveDeck 1.2.1
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.2.0
+          tag_name: v1.2.1
           target_commitish: ${{ github.sha }}
-          name: WaveDeck 1.2 - The DJ Update
-          body: "WaveDeck 1.2 brings Auto DJ, optional ReplayGain, pronunciation hints, a diagnostic queue, and radio song start/end points to the main portable player. Keep your Data, Music, and DJ Clips folders beside the new AppImage."
+          name: WaveDeck 1.2.1
+          body: "Fixes interrupted Auto DJ breaks and quietly refreshes older song clips as local stations select them. Keep your Data, Music, and DJ Clips folders beside the new AppImage."
           files: release-assets/WaveDeck.AppImage
           fail_on_unmatched_files: true

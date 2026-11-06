@@ -93,6 +93,7 @@ class MediaController {
     getAutoDjIntervalMinutes = () => 15,
     onAutoDjBreak = () => {},
     onPlaybackRequested = () => {},
+    onMusicSelected = () => {},
     getMusicGain = () => 0,
     getSongCue = () => ({}),
     stationIdsEnabled = true,
@@ -115,6 +116,7 @@ class MediaController {
     this.getAutoDjClipStatus = getAutoDjClipStatus;
     this.takeAutoDjBreak = takeAutoDjBreak;
     this.onPlaybackRequested = onPlaybackRequested;
+    this.onMusicSelected = onMusicSelected;
     this.getMusicGain = getMusicGain;
     this.getSongCue = getSongCue;
     this.isAutoDjEnabled = isAutoDjEnabled;
@@ -551,6 +553,7 @@ class MediaController {
         clip: this.#autoDjClip('outro', packet.outro.file),
         endingTrack: this.music.current
       };
+      clearInterval(this.musicCrossfadeTimer); this.musicCrossfadeTimer = null;
       const handoffStartedAt = Date.now();
       if (!prepared || !await this.player.playPreparedBreak?.(packet.outro.file)) {
         await this.player.setStationGain(3);
@@ -922,6 +925,9 @@ class MediaController {
     if (deferredDecision) await this.musicRadio?.publishDecision?.(deferredDecision);
     if (this.music !== active || generation !== this.musicGeneration) return false;
     try { this.onMusicTrack(track); } catch {}
+    if (['radio', 'artist', 'explore', 'mix'].includes(this.music.mode)) {
+      try { this.onMusicSelected(track); } catch {}
+    }
     this.onStateChanged(this.getStatus());
     this.#scheduleStationIdClockCheck();
     this.#scheduleMusicPreparation(this.musicGeneration, preparationDelay);
@@ -1022,6 +1028,9 @@ class MediaController {
       const decision = this.musicRadio?.getLastDecision?.() || null;
       if (decision) decision.preparation = timing;
       this.music.prepared = { id, track, decision, timing };
+      if (['radio', 'artist', 'explore', 'mix'].includes(this.music.mode)) {
+        try { this.onMusicSelected(track); } catch {}
+      }
       this.onStateChanged(this.getStatus());
       return true;
     } catch {
@@ -1041,7 +1050,7 @@ class MediaController {
     const fallbackDuration = Number(track?.duration) || 0;
     if (fallbackDuration <= 1) return;
     this.musicCrossfadeTimer = setInterval(() => {
-      if (!this.music || generation !== this.musicGeneration || this.mediaState !== 'playing' || this.player.isCrossfading) return;
+      if (!this.music || generation !== this.musicGeneration || this.mediaState !== 'playing' || this.player.isCrossfading || this.autoDjBreak || this.stationIdPlaying) return;
       const status = this.player.getStatus();
       const duration = Number(status.duration) || fallbackDuration;
       const position = Number(status.position) || 0;
@@ -1074,7 +1083,7 @@ class MediaController {
   }
 
   async #beginMusicCrossfade(durationMs, generation) {
-    if (!this.music || generation !== this.musicGeneration || this.musicBusy) return false;
+    if (!this.music || generation !== this.musicGeneration || this.musicBusy || this.autoDjBreak || this.stationIdPlaying) return false;
     this.musicBusy = true;
     let id = '';
     try {
