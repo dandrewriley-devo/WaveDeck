@@ -9,11 +9,11 @@ const { spawnSync } = require("child_process");
 // This exact static x86_64 build is the recorder that works on Linux Mint.
 // Keep the release URL and both hashes pinned so every AppImage contains the
 // same verified binary instead of ffmpeg-static, which previously crashed.
-const ARCHIVE_URL = "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n8.1-latest-linux64-gpl-8.1.tar.xz";
-const ARCHIVE_SHA256 = "e7aad93f155216d82cdb353e1ddb283a5bcde7ed739dbe1da1ef3c11dff72bec";
-const BINARY_SHA256 = "55e97eb579487a04b351802aac38e347e40d9cbc4760cb050a5a998221156253";
-const PROBE_SHA256 = "74f97b04c744b62f92c748d72e5045e3e89f4aeb24414d39730cea0d361e21bc";
-const ARCHIVE_ROOT = "ffmpeg-n8.1-latest-linux64-gpl-8.1/bin";
+const ARCHIVE_URL = "https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-11-06-12-50/ffmpeg-n8.1.3-34-ga35157abb9-linux64-gpl-8.1.tar.xz";
+const ARCHIVE_SHA256 = "2d17c1f53aa6e15882ff76d2a0089d63c3553a401bf2bdc723d798beb5eb4f1b";
+const BINARY_SHA256 = "2acfc7b34b8c66f455eaaeba80af5d39176096292c65a4009a653a716c687f4d";
+const PROBE_SHA256 = "d4d5fde937a2a7a0fd210e2082acb4cd93bd024749026cf215245fefd5183997";
+const ARCHIVE_ROOT = "ffmpeg-n8.1.3-34-ga35157abb9-linux64-gpl-8.1/bin";
 const ARCHIVE_MEMBERS = ["ffmpeg", "ffprobe"];
 const projectRoot = path.resolve(__dirname, "..");
 const destinationDir = path.join(projectRoot, ".cache", "wavedeck-tools", "linux");
