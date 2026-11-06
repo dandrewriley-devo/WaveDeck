@@ -92,6 +92,7 @@ class MediaController {
     isAutoDjEnabled = () => true,
     getAutoDjIntervalMinutes = () => 15,
     onAutoDjBreak = () => {},
+    onPlaybackRequested = () => {},
     stationIdsEnabled = true,
     now = () => Date.now(),
     random = Math.random
@@ -111,6 +112,7 @@ class MediaController {
     this.canBuildAutoDjBreak = canBuildAutoDjBreak;
     this.getAutoDjClipStatus = getAutoDjClipStatus;
     this.takeAutoDjBreak = takeAutoDjBreak;
+    this.onPlaybackRequested = onPlaybackRequested;
     this.isAutoDjEnabled = isAutoDjEnabled;
     this.getAutoDjIntervalMinutes = getAutoDjIntervalMinutes;
     this.onAutoDjBreak = onAutoDjBreak;
@@ -528,7 +530,7 @@ class MediaController {
           incoming: { title: incomingTrack.title || '', artist: incomingTrack.artist || '', diagnosticId: this.#diagnosticTrackId(incomingTrack) },
           stationIdSlot: packet.stationId.slot || 0,
           stationId: packet.stationId.text || '',
-          outroClip: path.basename(packet.outro.file), idClip: path.basename(packet.stationId.file), introClip: path.basename(packet.intro.file)
+          outroClip: path.basename(packet.outro.file), idClip: path.basename(packet.stationId.file), extraClip: packet.extra?.file ? path.basename(packet.extra.file) : '', introClip: path.basename(packet.intro.file)
         });
       } catch {}
       this.onStateChanged(this.getStatus());
@@ -554,6 +556,14 @@ class MediaController {
       return true;
     }
     if (active.phase === 'id') {
+      const extra = active.packet.extra;
+      active.phase = extra?.file ? 'extra' : 'intro';
+      active.clip = this.#autoDjClip(active.phase, extra?.file || active.packet.intro.file);
+      await this.player.play(extra?.file || active.packet.intro.file);
+      this.onStateChanged(this.getStatus());
+      return true;
+    }
+    if (active.phase === 'extra') {
       active.phase = 'intro'; active.clip = this.#autoDjClip('intro', active.packet.intro.file);
       await this.player.play(active.packet.intro.file);
       this.onStateChanged(this.getStatus());
@@ -1082,6 +1092,7 @@ function serializeTransport(controller) {
     if (typeof value !== 'function') return value;
     if (!mutations.has(key)) return value.bind(target);
     return (...args) => {
+      if (['playStationById', 'playStation', 'playUrl', 'playRecording', 'playMusic', 'playLocalMix', 'play', 'togglePlayPause'].includes(key)) target.onPlaybackRequested();
       const result = pending.then(() => value.apply(target, args));
       pending = result.catch(() => {}); return result;
     };

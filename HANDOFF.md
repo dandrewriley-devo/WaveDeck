@@ -1,5 +1,12 @@
 # WaveDeck DJ Branch Handoff
 
+## WaveDeck DJ 0.1.9 — Voice controls and extra lines
+
+- Music playback requests defer background DJ generation for ten seconds and stop after the current clip. DJ startup is deferred after player initialization; routine status reads no longer force a whole-library progress scan.
+- The Library track editor accepts an artist-wide pronunciation hint, can audition it with the bundled voice, and queues existing song clips for that artist to regenerate with the new wording. The six intro/outro templates remain unchanged. Clearing a hint restores the regular artist spelling. Clips are replaced only as their new audio is ready.
+- The DJ voice is exclusively `af_heart`; the male selector is removed. Existing saved Station IDs are preserved, with `[xl]` added to 20 IDs once on migration. The Station ID editor adds 40 editable default extra lines. `[xl]` is normalized to the end of its ID on save and is never spoken; when its ID plays, a ready extra line follows the ID before the incoming intro without crossfade. Extra clips live under `DJ Clips/extras`, rotate through a shuffled pool, and are included in break diagnostics. If no extra is ready, the ID and intro still play normally.
+- The visible About changelog and `package-lock.json` remain unchanged.
+
 ## WaveDeck DJ 0.1.8 — Song Familiarity controls
 
 - Song Familiarity has four stops: Allow Deep Cuts, Balanced Mix, Favor the Hits, Hits Only. User-rating thresholds are 3/5/7/8; when Favor Last.fm Data for Local Mixes is enabled, Local Mix selections use popularity cutoffs 50/60/70/80 instead. Saved preferences and station profiles accept the new Hits Only value.

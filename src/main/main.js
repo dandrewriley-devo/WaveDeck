@@ -1550,6 +1550,22 @@ function installIpcHandlers() {
     if (!djClips) return { state: 'unavailable' };
     return djClips.trackState(String(id || ''));
   });
+  ipcMain.handle('music:dj:pronunciation:get', (_event, artist) => {
+    requireAdvancedFeatures();
+    return storage.getUiPreferences().autoDjArtistPronunciations[String(artist || '').trim().toLocaleLowerCase()] || '';
+  });
+  ipcMain.handle('music:dj:pronunciation:test', async (_event, hint) => {
+    requireAdvancedFeatures();
+    if (!djClips || typeof hint !== 'string' || !hint.trim() || hint.length > 200) throw new Error('Enter a pronunciation to test.');
+    return djClips.previewPronunciation(hint);
+  });
+  ipcMain.handle('music:dj:pronunciation:save', async (_event, artist, hint) => {
+    requireAdvancedFeatures();
+    const previous = storage.getUiPreferences().autoDjArtistPronunciations[String(artist || '').trim().toLocaleLowerCase()] || '';
+    const result = storage.setAutoDjArtistPronunciation(artist, hint);
+    if (previous !== String(hint || '').trim()) await djClips?.queueArtist(artist);
+    return result.autoDjArtistPronunciations[String(artist || '').trim().toLocaleLowerCase()] || '';
+  });
   ipcMain.handle('music:local-radio:set-familiarity', (_event, familiarity) => {
     requireAdvancedFeatures();
     const value = String(familiarity || '');
@@ -2092,6 +2108,7 @@ if (!hasSingleInstanceLock) {
       canBuildAutoDjBreak: (ending, incoming) => djClips?.canBuildBreak(ending, incoming) === true,
       getAutoDjClipStatus: track => ({ intro: djClips?.clipsFor(track, 'intro').length || 0, outro: djClips?.clipsFor(track, 'outro').length || 0, ids: djClips?.activeStationIds().length || 0 }),
       takeAutoDjBreak: (ending, incoming) => djClips?.takeBreak(ending, incoming) || null,
+      onPlaybackRequested: () => djClips?.deferForPlayback(),
       onLocalStationStart: station => {
         activateLocalStationProfile(station?.stationProfile || null);
         beginRadioDiagnosticSession(station?.key || '');
@@ -2120,7 +2137,7 @@ if (!hasSingleInstanceLock) {
         getSettings: () => storage.getUiPreferences(),
         onStatus: status => sendToAll('music:dj:changed', status)
       });
-      void djClips.start().catch(error => console.warn(`Auto DJ clips are unavailable: ${error.message}`));
+      setTimeout(() => void djClips?.start().catch(error => console.warn(`Auto DJ clips are unavailable: ${error.message}`)), 15_000).unref?.();
     }
     if (process.platform === 'linux' && portableFfmpegExecutable && portableFfprobeExecutable) {
       opusOptimizer = new OpusOptimizer({

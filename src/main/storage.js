@@ -66,6 +66,32 @@ const DEFAULT_AUTO_DJ_STATION_IDS = Object.freeze([
   "I'm [dj], sharing the best tunes around right here on [station].",
   "Settling in for another music set, this is [dj] on [station]."
 ]);
+const EXTRA_ID_SLOTS = new Set([1, 3, 4, 5, 9, 11, 12, 13, 14, 16, 17, 19, 20, 24, 28, 29, 34, 36, 41, 44]);
+const DEFAULT_AUTO_DJ_EXTRA_LINES = Object.freeze([
+  'Take a moment to enjoy it.', 'The volume knob is yours.', 'Some songs just stay with you.',
+  'I love when a melody sneaks up on me.', 'There’s no wrong way to enjoy a song.',
+  'Let the rhythm do its thing.', 'A little harmony goes a long way.', 'I’m a sucker for a great hook.',
+  'A good chorus can change your whole mood.', 'Sometimes a song says it best.',
+  'It’s the little details that make a record.', 'If you’re tapping your foot, I understand.',
+  'There’s something satisfying about a good melody.', 'Turn it up if you feel like it.',
+  'Every good mix needs a surprise.', 'I like a song that catches me off guard.',
+  'I could listen to that again.', 'I like it when a song takes its time.',
+  'That’s a sound worth remembering.', 'You can never have too much of a good thing.',
+  'A good melody is hard to shake.', 'Some songs sound better every time you hear them.',
+  'That one had a little something extra.', 'I like a song with some heart.',
+  'That’s what I call a good listen.', 'There’s nothing quite like a song that clicks.',
+  'I wouldn’t change a note.', 'Sometimes the quiet parts say the most.',
+  'There’s a lot to love in a good arrangement.', 'I like it when the music makes me stop and listen.',
+  'Now that sounded good.', 'Every record has its own personality.',
+  'Let’s give the music some room to breathe.', 'That hit the spot.',
+  'Some songs deserve a second listen.', 'Sometimes less is more.',
+  'Music can make an ordinary moment feel special.', 'Sometimes it’s the voice that gets you.',
+  'A good groove is hard to resist.', 'I’ll never get tired of a great song.'
+]);
+const normalizeExtraId = text => {
+  const value = String(text || '').replace(/\[xl\]/gi, '').trim();
+  return `${value} [xl]`.trim();
+};
 
 function validateListeningHistory(value) {
   const source = value && typeof value === "object" && !Array.isArray(value) ? value.stations : null;
@@ -400,9 +426,22 @@ function validatePreferences(value) {
   const autoDjStationIds = !savedAutoDjIds.some(Boolean) && autoDjStationIdDefaultsVersion !== 1
     ? [...DEFAULT_AUTO_DJ_STATION_IDS]
     : savedAutoDjIds;
+  const extrasInitialized = Number(value?.autoDjExtraDefaultsVersion) === 1;
+  const autoDjExtraLines = Array.isArray(value?.autoDjExtraLines)
+    ? Array.from({ length: 40 }, (_unused, index) => String(value.autoDjExtraLines[index] || '').trim().slice(0, 300))
+    : [...DEFAULT_AUTO_DJ_EXTRA_LINES];
+  if (!extrasInitialized) for (const slot of EXTRA_ID_SLOTS) {
+    if (autoDjStationIds[slot - 1] && !/\[xl\]/i.test(autoDjStationIds[slot - 1])) autoDjStationIds[slot - 1] = normalizeExtraId(autoDjStationIds[slot - 1]);
+  }
   const autoDjStationName = typeof value?.autoDjStationName === 'string' ? value.autoDjStationName.trim().slice(0, 100) : '';
   const autoDjName = typeof value?.autoDjName === 'string' ? value.autoDjName.trim().slice(0, 100) : '';
-  const autoDjVoice = value?.autoDjVoice === 'male' ? 'male' : 'female';
+  const autoDjVoice = 'female';
+  const autoDjArtistPronunciations = {};
+  if (value?.autoDjArtistPronunciations && typeof value.autoDjArtistPronunciations === 'object' && !Array.isArray(value.autoDjArtistPronunciations)) {
+    for (const [artist, hint] of Object.entries(value.autoDjArtistPronunciations)) {
+      if (typeof hint === 'string' && artist.length <= 200 && hint.trim()) autoDjArtistPronunciations[artist.toLocaleLowerCase().trim()] = hint.trim().slice(0, 200);
+    }
+  }
   const autoDjBreakIntervalMinutes = Number.isInteger(Number(value?.autoDjBreakIntervalMinutes)) && Number(value.autoDjBreakIntervalMinutes) >= 1 && Number(value.autoDjBreakIntervalMinutes) <= 60 ? Number(value.autoDjBreakIntervalMinutes) : 15;
   const localMixEnabled = {};
   const rawLocalMixEnabled = value?.localMixEnabled;
@@ -504,6 +543,9 @@ function validatePreferences(value) {
     autoDjStationName,
     autoDjName,
     autoDjVoice,
+    autoDjExtraLines,
+    autoDjExtraDefaultsVersion: 1,
+    autoDjArtistPronunciations,
     autoDjBreakIntervalMinutes,
     autoDjStationIds,
     autoDjStationIdDefaultsVersion: 1,
@@ -706,6 +748,8 @@ class PortableStorage {
       autoDjStationName: preferences.autoDjStationName,
       autoDjName: preferences.autoDjName,
       autoDjVoice: preferences.autoDjVoice,
+      autoDjExtraLines: [...preferences.autoDjExtraLines],
+      autoDjArtistPronunciations: { ...preferences.autoDjArtistPronunciations },
       autoDjBreakIntervalMinutes: preferences.autoDjBreakIntervalMinutes,
       autoDjStationIds: [...preferences.autoDjStationIds],
       localMixEnabled: { ...preferences.localMixEnabled },
@@ -822,9 +866,18 @@ class PortableStorage {
     if (typeof settings.enabled === 'boolean') preferences.autoDjEnabled = settings.enabled;
     if (typeof settings.stationName === 'string') preferences.autoDjStationName = settings.stationName.trim().slice(0, 100);
     if (typeof settings.djName === 'string') preferences.autoDjName = settings.djName.trim().slice(0, 100);
-    if (settings.voice === 'male' || settings.voice === 'female') preferences.autoDjVoice = settings.voice;
     if (Number.isInteger(Number(settings.breakIntervalMinutes)) && Number(settings.breakIntervalMinutes) >= 1 && Number(settings.breakIntervalMinutes) <= 60) preferences.autoDjBreakIntervalMinutes = Number(settings.breakIntervalMinutes);
     if (Array.isArray(settings.stationIds)) preferences.autoDjStationIds = Array.from({ length: 50 }, (_unused, index) => typeof settings.stationIds[index] === 'string' ? settings.stationIds[index].trim().slice(0, 300) : '');
+    if (Array.isArray(settings.extraLines)) preferences.autoDjExtraLines = Array.from({ length: 40 }, (_unused, index) => typeof settings.extraLines[index] === 'string' ? settings.extraLines[index].trim().slice(0, 300) : '');
+    this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
+    return this.getUiPreferences();
+  }
+  setAutoDjArtistPronunciation(artist, hint) {
+    const key = String(artist || '').trim().toLocaleLowerCase();
+    if (!key || key.length > 200 || typeof hint !== 'string' || hint.length > 200) throw new Error('Enter a valid artist and pronunciation hint.');
+    const preferences = this.readPreferences();
+    if (hint.trim()) preferences.autoDjArtistPronunciations[key] = hint.trim();
+    else delete preferences.autoDjArtistPronunciations[key];
     this.#atomicWrite(PREFERENCES_FILE, validatePreferences(preferences));
     return this.getUiPreferences();
   }
@@ -1319,6 +1372,8 @@ class PortableStorage {
 
 module.exports = {
   DEFAULT_AUTO_DJ_STATION_IDS,
+  DEFAULT_AUTO_DJ_EXTRA_LINES,
+  EXTRA_ID_SLOTS,
   STARTER_PRESET_NAMES,
   PortableStorage,
   cleanStationGainDb,

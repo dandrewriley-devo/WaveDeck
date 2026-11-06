@@ -28,7 +28,7 @@ function expandedHeight() {
   if (!activeArtist) return 0;
   if (!detail) return LOADING_DETAIL_HEIGHT;
   const release = detail.releases.find(value => value.key === activeRelease);
-  return expandedDetailHeight || (98 + detail.releases.length * 43 + (release ? release.tracks.length * 39 + (editingTrack ? 60 : 0) : 0));
+  return expandedDetailHeight || (98 + detail.releases.length * 43 + (release ? release.tracks.length * 39 + (editingTrack ? 125 : 0) : 0));
 }
 function loadArtists({ keepOpen = false } = {}) {
   const scrollTop = currentScroll();
@@ -104,7 +104,19 @@ function trackEditor(track) {
   editor.innerHTML = `<label>Title <input name="title" value="${esc(track.title)}"></label><label>Artist <input name="artist" value="${esc(track.artist)}"></label><label>Release <input name="album" value="${esc(track.album || '')}"></label><button>Save details</button><button type="button">Cancel</button>`;
   editor.onsubmit = event => { event.preventDefault(); void saveTrack(track, { title: editor.elements.title.value, artist: editor.elements.artist.value, album: editor.elements.album.value }); };
   editor.querySelector('[type="button"]').onclick = () => { editingTrack = ''; expandedDetailHeight = 0; render(currentScroll()); };
-  return editor;
+  const pronunciation = document.createElement('div'); pronunciation.className = 'pronunciation-editor';
+  pronunciation.innerHTML = '<label>Artist pronunciation hint <input maxlength="200" placeholder="Spell it how the DJ should say it"></label><button type="button" class="test-hint">Test</button><button type="button" class="save-hint">Save hint</button><span class="hint-status"></span>';
+  const input = pronunciation.querySelector('input'), result = pronunciation.querySelector('.hint-status');
+  void wavedeck.getDjArtistPronunciation(track.artist).then(hint => { if (pronunciation.isConnected && !input.value) input.value = hint; }).catch(error => { result.textContent = error.message; });
+  pronunciation.querySelector('.test-hint').onclick = async () => {
+    try { result.textContent = 'Preparing voice sample…'; const sample = await wavedeck.testDjArtistPronunciation(input.value.trim() || track.artist); const audio = new Audio(`data:audio/wav;base64,${sample}`); await audio.play(); result.textContent = ''; }
+    catch (error) { result.textContent = error.message; }
+  };
+  pronunciation.querySelector('.save-hint').onclick = async () => {
+    try { await wavedeck.saveDjArtistPronunciation(track.artist, input.value); result.textContent = 'Saved. Existing clips for this artist are queued quietly.'; }
+    catch (error) { result.textContent = error.message; }
+  };
+  const wrap = document.createElement('div'); wrap.className = 'track-edit-wrap'; wrap.append(editor, pronunciation); return wrap;
 }
 function trackRow(track) {
   const wrap = document.createElement('div'); wrap.className = 'track-wrap'; const row = document.createElement('div'); row.className = `track-row${track.doNotPlay ? ' disabled-track' : ''}`;

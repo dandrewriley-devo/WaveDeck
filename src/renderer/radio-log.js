@@ -210,7 +210,7 @@ function renderAutoDjBreak(decision, { prepend = true } = {}) {
   body.append(track);
   if (decision.skipped) body.append(element('div', `Reason: ${decision.reason || 'Unknown'}`, 'reason'));
   else {
-    body.append(element('div', `Outro: ${decision.outroClip || '—'} · ID ${decision.stationIdSlot || '—'}: ${decision.idClip || '—'}`, 'reason'));
+    body.append(element('div', `Outro: ${decision.outroClip || '—'} · ID ${decision.stationIdSlot || '—'}: ${decision.idClip || '—'}${decision.extraClip ? ` · Extra: ${decision.extraClip}` : ''}`, 'reason'));
     body.append(element('div', `Intro: ${decision.introClip || '—'}`, 'reason'));
   }
   entry.append(body);

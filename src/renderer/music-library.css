@@ -7,4 +7,5 @@
 .clear-search{position:absolute;right:5px;top:50%;transform:translateY(-50%);background:none;border:0;color:#bbb;font-size:20px;padding:3px 8px}
 .clear-search:hover{color:#fff;background:none}
 .clear-search[hidden]{display:none}
+.pronunciation-editor{display:flex;align-items:end;gap:8px;flex-wrap:wrap;padding:8px;background:#242424;border-top:1px solid #3a3a3a}.pronunciation-editor label{display:grid;gap:3px;color:#aaa;font-size:11px}.pronunciation-editor input{width:min(320px,60vw);padding:6px}.pronunciation-editor button{padding:6px 9px}.hint-status{color:#8feab3;font-size:12px}
 @media(max-width:760px){header .search-wrap{width:100%}}

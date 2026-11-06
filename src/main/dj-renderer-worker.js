@@ -17,7 +17,7 @@ async function renderer() {
   parentPort.on('message', async request => {
     try {
       const engine = await renderer();
-      const audio = await engine.generate(String(request.text || ''), { voice: request.voice === 'am_echo' ? 'am_echo' : 'af_heart', speed: 1 });
+      const audio = await engine.generate(String(request.text || ''), { voice: 'af_heart', speed: 1 });
       await audio.save(request.wavPath);
       parentPort.postMessage({ id: request.id, ok: true });
     } catch (error) {

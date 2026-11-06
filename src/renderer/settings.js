@@ -25,7 +25,8 @@ let requestedAdvancedTab = '';
 const embeddedMethods = new Set([
   'getPortableMusicArtists', 'getPortableMusicArtistDetail', 'playMusic',
   'saveArtistRelationships', 'savePortableMusicReleaseHoliday', 'savePortableMusicTrack',
-  'clearMusicDebugHistory', 'getMusicDebugHistory', 'saveMusicDebugLog', 'openMusicDebugTrack', 'queueDjClipsForTrack'
+  'clearMusicDebugHistory', 'getMusicDebugHistory', 'saveMusicDebugLog', 'openMusicDebugTrack', 'queueDjClipsForTrack',
+  'getDjArtistPronunciation', 'testDjArtistPronunciation', 'saveDjArtistPronunciation'
 ]);
 window.addEventListener('message', async event => {
   if (![musicManagerFrame.contentWindow, radioLogFrame.contentWindow].includes(event.source)) return;
@@ -132,7 +133,6 @@ const queueQualifyingDjClipsBtn = document.getElementById('queueQualifyingDjClip
 const autoDjEnabled = document.getElementById('autoDjEnabled');
 const autoDjStationName = document.getElementById('autoDjStationName');
 const autoDjName = document.getElementById('autoDjName');
-const autoDjVoice = document.getElementById('autoDjVoice');
 const autoDjBreakInterval = document.getElementById('autoDjBreakInterval');
 const editAutoDjIdsBtn = document.getElementById('editAutoDjIdsBtn');
 const resetListeningBtn = document.getElementById("resetListeningBtn");
@@ -283,7 +283,6 @@ function renderProMusicSettings(preferences) {
   autoDjEnabled.checked = preferences?.autoDjEnabled === true;
   autoDjStationName.value = preferences?.autoDjStationName || '';
   autoDjName.value = preferences?.autoDjName || '';
-  autoDjVoice.value = preferences?.autoDjVoice === 'male' ? 'male' : 'female';
   autoDjBreakInterval.value = String(preferences?.autoDjBreakIntervalMinutes ?? 15);
   portableImportSpeed.value = String([2, 6, 12].includes(Number(preferences?.portableImportWorkers)) ? preferences.portableImportWorkers : 2);
   if (proEnabled) {
@@ -1494,7 +1493,7 @@ async function saveAutoDjSettings() {
   try {
     const minutes = Number(autoDjBreakInterval.value);
     if (!Number.isInteger(minutes) || minutes < 1 || minutes > 60) throw new Error('Choose 1 to 60 minutes between DJ break attempts.');
-    const preferences = await window.wavedeck.setAutoDjSettings({ enabled: autoDjEnabled.checked, stationName: autoDjStationName.value, djName: autoDjName.value, voice: autoDjVoice.value, breakIntervalMinutes: minutes });
+    const preferences = await window.wavedeck.setAutoDjSettings({ enabled: autoDjEnabled.checked, stationName: autoDjStationName.value, djName: autoDjName.value, breakIntervalMinutes: minutes });
     renderProMusicSettings(preferences);
     await loadDjClipStatus();
   } catch (error) { setStatus(statusLocalMusic, `Could not save Auto DJ settings: ${error.message}`, false); }
@@ -1502,7 +1501,6 @@ async function saveAutoDjSettings() {
 autoDjEnabled.addEventListener('change', saveAutoDjSettings);
 autoDjStationName.addEventListener('change', saveAutoDjSettings);
 autoDjName.addEventListener('change', saveAutoDjSettings);
-autoDjVoice.addEventListener('change', saveAutoDjSettings);
 autoDjBreakInterval.addEventListener('change', saveAutoDjSettings);
 editAutoDjIdsBtn.addEventListener('click', () => { void window.wavedeck.openAutoDjStationIds(); });
 
