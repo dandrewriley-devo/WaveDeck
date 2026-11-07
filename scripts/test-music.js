@@ -878,7 +878,9 @@ async function run() {
       onAutoDjBreak: entry => autoDjBreaks.push(entry)
     }));
     autoDjController.configureMusic({ tracks: autoDjTracks, revision: 1, resolve: async id => ({ ...autoDjTracks.find(item => item.id === id), path: `/${id}` }) }, autoDjRadio);
+    assert.equal(autoDjController.getQueueView().break.packet, null, 'queue reads are safe when both prepared packet and next track are absent');
     await autoDjController.playMusic('auto-dj-a', 'radio');
+    assert.equal(autoDjController.getQueueView().break.packet, null, 'queue reads are safe before an outgoing break is prepared');
     await new Promise(resolve => setTimeout(resolve, 1500));
     assert.equal(autoDjController.music.prepared?.id, 'auto-dj-b', 'the incoming song is selected while music is playing');
     autoDjNow = 60 * 1000; autoDjPosition = 168;
@@ -900,8 +902,10 @@ async function run() {
     assert.equal(autoDjPlays.at(-1), '/dj/intro.opus', 'the incoming song intro follows the Station ID');
     await autoDjController.handleEnded({ reason: 'eof' });
     assert.equal(autoDjPlays.at(-1), '/auto-dj-b', 'the queued song starts only after the full DJ break');
-    assert.equal(autoDjBreaks.at(-1).stationIdSlot, 7, 'each Auto DJ break writes a compact Radio Log entry');
-    assert.equal(autoDjBreaks.at(-1).preloaded, true, 'the break log confirms the already prepared outro was used');
+    assert.equal(autoDjBreaks.at(-2).stationIdSlot, 7, 'each Auto DJ break writes a compact planned Radio Log entry');
+    assert.equal(autoDjBreaks.at(-2).preloaded, true, 'the break log confirms the already prepared outro was used');
+    assert.equal(autoDjBreaks.at(-1).status, 'completed', 'the log distinguishes completed playback from a planned packet');
+    assert.deepEqual(autoDjBreaks.at(-1).playedClips.map(clip => clip.phase), ['outro', 'id', 'intro'], 'the completed break confirms each started clip');
     await autoDjController.stop();
     let stationPosition = 0;
     const stationPlays = [], stationFades = [], stationDecisions = [];

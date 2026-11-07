@@ -198,7 +198,7 @@ function renderStationId(decision, { prepend = true } = {}) {
 function renderAutoDjBreak(decision, { prepend = true } = {}) {
   const entry = element('article', '', 'entry');
   const head = element('div', '', 'entry-head');
-  head.append(element('b', decision.skipped ? 'Auto DJ — Break skipped' : 'Auto DJ Break'));
+  head.append(element('b', decision.skipped ? 'Auto DJ — Break skipped' : decision.status === 'completed' ? 'Auto DJ — Break completed' : decision.status === 'interrupted' ? 'Auto DJ — Break interrupted' : 'Auto DJ Break'));
   head.append(element('span', new Date(decision.at).toLocaleString(), 'time'));
   entry.append(head);
   const body = element('div', '', 'entry-body');
@@ -208,7 +208,10 @@ function renderAutoDjBreak(decision, { prepend = true } = {}) {
   track.append(songTitle(decision.incoming?.title || 'Next song', decision.incoming?.diagnosticId));
   track.append(element('span', ` — ${decision.ending?.artist || 'Unknown artist'} → ${decision.incoming?.artist || 'Unknown artist'}`));
   body.append(track);
-  if (decision.skipped) body.append(element('div', `Reason: ${decision.reason || 'Unknown'}`, 'reason'));
+  if (decision.status === 'completed' || decision.status === 'interrupted') {
+    body.append(element('div', `Played: ${(decision.playedClips || []).map(clip => `${clip.phase} ${clip.file}`).join(' · ') || 'No clips confirmed'}`, 'reason'));
+    if (decision.reason) body.append(element('div', `Reason: ${decision.reason}`, 'reason'));
+  } else if (decision.skipped) body.append(element('div', `Reason: ${decision.reason || 'Unknown'}`, 'reason'));
   else {
     body.append(element('div', `Outro: ${decision.outroClip || '—'} · ID ${decision.stationIdSlot || '—'}: ${decision.idClip || '—'}${decision.extraClip ? ` · Extra: ${decision.extraClip}` : ''}`, 'reason'));
     body.append(element('div', `Intro: ${decision.introClip || '—'}`, 'reason'));

@@ -1,7 +1,7 @@
 {
   "name": "wavedeck",
-  "version": "1.2.1",
-  "wavedeckVersion": "1.2.1",
+  "version": "1.2.2",
+  "wavedeckVersion": "1.2.2",
   "description": "WaveDeck portable music and radio player",
   "author": "Andrew Riley",
   "license": "MIT",

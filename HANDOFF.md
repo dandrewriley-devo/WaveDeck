@@ -1,5 +1,12 @@
 # WaveDeck Main Handoff
 
+## WaveDeck 1.2.2 — Queue and Auto DJ diagnostics
+
+- Queue reads no longer dereference a missing prepared DJ packet. The queue window stays safe when no next song or break is prepared.
+- Explore station now-playing context uses the same `<seed> X Radio` label as recents and presets. The search action remains Explore Radio.
+- Auto DJ logs a completed or interrupted result after the planned packet entry, with the clips that actually started. An interrupted result records the reason; old log entries remain readable.
+- Linux release tag `v1.2.2`, `WaveDeck.AppImage`; the visible About changelog and `package-lock.json` remain unchanged.
+
 ## WaveDeck 1.2.1 — Break handoff and gradual clip refresh
 
 - An Auto DJ break stops the preceding song's crossfade timer before starting its outro. The timer and crossfade handoff also refuse to run while a DJ packet or legacy Station ID is playing. This fixes the observed Patsy Cline → Jack Johnson transition where the short outro was mistaken for the end of the prior music track, causing a second song selection during the break.

@@ -60,7 +60,7 @@ function musicContextLabel(music) {
   const seed = music?.seed || music?.current || {};
   if (music?.mode === 'album') return seed.album ? `${seed.album} Radio` : 'Album Radio';
   if (music?.mode === 'artist') return `${radioArtist(seed) || seed.artist || 'Artist'} Radio`;
-  if (music?.mode === 'explore') return seed.title ? `${seed.title} Explore Radio` : 'Explore Radio';
+  if (music?.mode === 'explore') return `${seed.title || 'Song'} X Radio`;
   if (music?.mode === 'radio') return seed.title ? `${seed.title} Radio` : 'Song Radio';
   return seed.title || 'Song';
 }
@@ -409,6 +409,7 @@ class MediaController {
   }
 
   clearMusic() {
+    if (this.autoDjBreak) this.#logAutoDjResult(this.autoDjBreak, 'interrupted', 'Playback changed');
     this.stationIdPlaying = null;
     this.autoDjBreak = null;
     this.preparedAutoDj = null;
@@ -503,6 +504,18 @@ class MediaController {
     };
   }
 
+  #logAutoDjResult(active, status, reason = '') {
+    try {
+      this.onAutoDjBreak({
+        type: 'auto-dj-break', at: new Date(this.now()).toISOString(), status, reason,
+        stationKey: this.music?.radioKey || '', mode: this.music?.mode || '',
+        ending: { title: active.endingTrack?.title || '', artist: active.endingTrack?.artist || '', diagnosticId: this.#diagnosticTrackId(active.endingTrack) },
+        incoming: { title: active.nextTrack?.title || '', artist: active.nextTrack?.artist || '', diagnosticId: this.#diagnosticTrackId(active.nextTrack) },
+        playedClips: active.playedClips.slice()
+      });
+    } catch {}
+  }
+
   async #prepareAutoDjBreak(endingTrack, incomingTrack, generation) {
     if (this.preparedAutoDj || this.preparingAutoDj || !this.#canAutoDjBreakAtBoundary(endingTrack, incomingTrack)) return;
     this.preparingAutoDj = true;
@@ -550,6 +563,7 @@ class MediaController {
       this.#pauseAutoDjClock();
       this.autoDjBreak = {
         packet, nextId: id, nextTrack: incomingTrack, phase: 'outro',
+        playedClips: [],
         clip: this.#autoDjClip('outro', packet.outro.file),
         endingTrack: this.music.current
       };
@@ -561,6 +575,7 @@ class MediaController {
       }
       const handoffMs = Date.now() - handoffStartedAt;
       if (!this.autoDjBreak || generation !== this.musicGeneration) return false;
+      this.autoDjBreak.playedClips.push({ phase: 'outro', file: path.basename(packet.outro.file) });
       try {
         this.onAutoDjBreak({
           type: 'auto-dj-break', at: new Date(this.now()).toISOString(),
@@ -592,6 +607,7 @@ class MediaController {
     if (active.phase === 'outro') {
       active.phase = 'id'; active.clip = this.#autoDjClip('id', active.packet.stationId.file);
       await this.player.play(active.packet.stationId.file);
+      active.playedClips.push({ phase: 'id', file: path.basename(active.packet.stationId.file) });
       this.onStateChanged(this.getStatus());
       return true;
     }
@@ -600,19 +616,23 @@ class MediaController {
       active.phase = extra?.file ? 'extra' : 'intro';
       active.clip = this.#autoDjClip(active.phase, extra?.file || active.packet.intro.file);
       await this.player.play(extra?.file || active.packet.intro.file);
+      active.playedClips.push({ phase: active.phase, file: path.basename(extra?.file || active.packet.intro.file) });
       this.onStateChanged(this.getStatus());
       return true;
     }
     if (active.phase === 'extra') {
       active.phase = 'intro'; active.clip = this.#autoDjClip('intro', active.packet.intro.file);
       await this.player.play(active.packet.intro.file);
+      active.playedClips.push({ phase: 'intro', file: path.basename(active.packet.intro.file) });
       this.onStateChanged(this.getStatus());
       return true;
     }
     if (active.phase === 'intro') {
       this.autoDjBreak = null;
       this.#resetAutoDjClock();
-      return this.loadMusic(active.nextId, 0, active.nextTrack);
+      const started = await this.loadMusic(active.nextId, 0, active.nextTrack);
+      this.#logAutoDjResult(active, started ? 'completed' : 'interrupted', started ? '' : 'Next song did not start');
+      return started;
     }
     return false;
   }
@@ -620,6 +640,7 @@ class MediaController {
   async #skipAutoDjBreak() {
     const active = this.autoDjBreak;
     if (!active) return false;
+    this.#logAutoDjResult(active, 'interrupted', 'Auto DJ disabled or break skipped');
     this.autoDjBreak = null;
     this.#resetAutoDjClock();
     return this.loadMusic(active.nextId, 0, active.nextTrack);
@@ -819,7 +840,7 @@ class MediaController {
         else breakStatus = this.preparedAutoDj?.incomingId === nextTrack.id ? 'Ready — outro preloaded' : this.preparingAutoDj ? 'Preparing the break' : 'Eligible — preparing near the boundary';
       }
     }
-    const packet = this.preparedAutoDj?.incomingId === nextTrack?.id ? this.preparedAutoDj.packet : null;
+    const packet = this.preparedAutoDj && nextTrack && this.preparedAutoDj.incomingId === nextTrack.id ? this.preparedAutoDj.packet : null;
     return {
       current: music?.current ? { title: music.current.title, artist: music.current.artist, album: music.current.album } : null,
       next: nextTrack ? { title: nextTrack.title, artist: nextTrack.artist, album: nextTrack.album, source: music?.manualQueue?.length ? 'Play Next' : 'Automatic pick' } : null,
@@ -1181,7 +1202,10 @@ class MediaController {
       if (event?.reason === 'eof' && await this.#beginAutoDjBreak()) return;
       if (event?.reason === 'eof' && await this.#playStationId()) return;
       await this.advanceMusic(event.reason);
-    } catch (error) { this.musicError(error); }
+    } catch (error) {
+      if (this.autoDjBreak) this.#logAutoDjResult(this.autoDjBreak, 'interrupted', `Clip playback failed: ${error.message}`);
+      this.musicError(error);
+    }
   }
 
   async rateMusic(kind) {
